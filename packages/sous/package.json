@@ -1,0 +1,55 @@
+{
+  "name": "@tenphi/sous",
+  "version": "0.0.0",
+  "description": "Framework-agnostic headless UI behavior: the runtime, interactions and component definitions behind the Sous adapters",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "sous-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dom": {
+      "sous-source": "./src/dom/index.ts",
+      "types": "./dist/dom/index.d.ts",
+      "default": "./dist/dom/index.js"
+    },
+    "./collections": {
+      "sous-source": "./src/collections/index.ts",
+      "types": "./dist/collections/index.d.ts",
+      "default": "./dist/collections/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.core.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/sous.git",
+    "directory": "packages/sous"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "accessibility",
+    "a11y",
+    "aria",
+    "framework-agnostic",
+    "components"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tenphi/sous/issues"
+  },
+  "homepage": "https://github.com/tenphi/sous#readme",
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@tenphi/sous-conformance",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Conformance scenarios every Sous adapter must pass. Changes need the owner's approval.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tenphi/sous": "workspace:*",
+    "@tenphi/sous-testing": "workspace:*"
+  }
+}

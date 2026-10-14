@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/dist/
+coverage/
+**/CHANGELOG.md
+.changeset/*.md
+specs/

@@ -1,0 +1,11 @@
+{
+  // The DOM-free core: runtime and collections compile without the DOM lib, so
+  // any DOM access (values or types) fails here. Host globals the core may use
+  // are allow-listed in types/host.d.ts; everything else comes through ctx.env.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024"]
+  },
+  "include": ["src/runtime", "src/collections", "types/host.d.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

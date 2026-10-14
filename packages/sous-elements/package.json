@@ -1,0 +1,48 @@
+{
+  "name": "@tenphi/sous-elements",
+  "version": "0.0.0",
+  "description": "Light-DOM custom elements for Sous: defineElement turns any Sous component definition into a custom element",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "sous-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/sous.git",
+    "directory": "packages/sous-elements"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "custom-elements",
+    "web-components",
+    "accessibility",
+    "a11y",
+    "aria"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tenphi/sous/issues"
+  },
+  "homepage": "https://github.com/tenphi/sous#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@tenphi/sous": "workspace:*"
+  }
+}

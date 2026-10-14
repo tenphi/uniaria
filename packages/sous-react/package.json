@@ -1,0 +1,56 @@
+{
+  "name": "@tenphi/sous-react",
+  "version": "0.0.0",
+  "description": "React adapter for Sous: one generic useComponent hook over any Sous component definition",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "sous-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/sous.git",
+    "directory": "packages/sous-react"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "react",
+    "accessibility",
+    "a11y",
+    "aria"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tenphi/sous/issues"
+  },
+  "homepage": "https://github.com/tenphi/sous#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@tenphi/sous": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

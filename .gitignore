@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+*.lcov
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vite / Vitest
+vite.config.ts.timestamp-*
+vitest.config.ts.timestamp-*
+__screenshots__/
+
+# Package tarballs
+*.tgz
+
+# Plans
+*.plan.md
+
+# Owner's local design notes (see AGENTS.md → Design source)
+specs/
