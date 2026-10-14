@@ -134,13 +134,17 @@ These are decided; follow them rather than the catalogue.
   is moot. `handleKey` returns `{ isHandled, key }` instead of focusing,
   calling `preventDefault` and stopping propagation (§11.7, 11.13); the
   caller does the first two and never the third.
-- **Typeahead resets on every miss** (§11.6), Space included. React Aria
-  keeps the query, trailing space and all, after a Space that matches
-  nothing, so each Space within the next second is swallowed too. Sous still
-  consumes that Space, which `isSearching()` promised to earlier handlers,
-  but the next Space selects. Disabled items never match, the focused one
-  included (React Aria starts at the focused key without checking it), and
-  an empty query matches nothing.
+- **Typeahead keeps the query on a miss** until a second passes without a
+  keystroke, and handles every key that joins it, as `<select>` does in
+  Chromium (`TypeAhead`, `select_type.cc`) and Firefox
+  (`HTMLSelectEventListener.cpp`): a typo leaves focus where it is instead
+  of starting a new query on the next letter, and Space types a space
+  within a second of any keystroke, matched or not (owner decision,
+  2026-10-14). React Aria empties the query and leaves the key unhandled
+  when a letter misses (§11.6), but keeps it when a Space misses (§11.7).
+  Disabled items never match, the focused one included (React Aria starts
+  at the focused key without checking it), and an empty query matches
+  nothing.
 - **Overlays use the top layer.** `<dialog>` and the Popover API replace
   portals, so the portal rules (§1.55, 2.11, 4.8, 11.11) become plain DOM
   containment, and a modal `<dialog>` already makes the outside inert.
@@ -179,9 +183,6 @@ These are decided; follow them rather than the catalogue.
 
 ## Open questions for the owner
 
-- **Typeahead: Space that matches nothing.** React Aria keeps "foo " as the
-  query and swallows every Space for the next second. Sous handles that one
-  Space but empties the query, so the next Space selects. Keep?
 - **Scroll lock on iOS** (§8) injects an `overscroll-behavior: contain` style
   and a second `focus()` wrapper. AGENTS.md says the only CSS Sous ships is
   `touch-action`. Allow a second behavioral rule, or find another way?

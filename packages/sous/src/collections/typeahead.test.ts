@@ -105,15 +105,21 @@ describe('createTypeahead', () => {
     expect(list.search).toHaveBeenLastCalledWith('l');
   });
 
-  it('empties the query on a miss and leaves the key to the browser', () => {
+  it('keeps the query on a miss and handles the key, as native selects do', () => {
     const list = createList();
 
     expect(list.press('f').key).toBe('Foo');
-    expect(list.press('x')).toEqual({ isHandled: false, key: null });
-    expect(list.typeahead.isSearching(list.time)).toBe(false);
+    expect(list.press('x')).toEqual({ isHandled: true, key: null });
+    expect(list.typeahead.isSearching(list.time)).toBe(true);
     expect(list.focusedKey).toBe('Foo');
 
-    expect(list.press('b').key).toBe('Bar');
+    // A typo does not start a new query on the next letter.
+    expect(list.press('b')).toEqual({ isHandled: true, key: null });
+    expect(list.search).toHaveBeenLastCalledWith('fxb');
+    expect(list.focusedKey).toBe('Foo');
+
+    // A pause does.
+    expect(list.press('b', { after: 1001 }).key).toBe('Bar');
     expect(list.search).toHaveBeenLastCalledWith('b');
   });
 
@@ -149,14 +155,20 @@ describe('createTypeahead', () => {
     expect(list.search).toHaveBeenLastCalledWith('foo b');
   });
 
-  it('consumes a Space that matches nothing, then lets the next one through', () => {
+  it('types every Space within a second of a keystroke, matched or not', () => {
     const list = createList(['Foo', 'Bar']);
     list.press('f');
 
     expect(list.press(' ')).toEqual({ isHandled: true, key: null });
     expect(list.focusedKey).toBe('Foo');
-    expect(list.typeahead.isSearching(list.time)).toBe(false);
-    expect(list.press(' ')).toEqual({ isHandled: false, key: null });
+    expect(list.typeahead.isSearching(list.time)).toBe(true);
+    expect(list.press(' ')).toEqual({ isHandled: true, key: null });
+    expect(list.search).toHaveBeenLastCalledWith('f  ');
+
+    expect(list.press(' ', { after: 1001 })).toEqual({
+      isHandled: false,
+      key: null,
+    });
   });
 
   it.each<keyof Modifiers>(['ctrlKey', 'metaKey', 'altKey'])(

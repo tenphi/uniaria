@@ -23,6 +23,13 @@
  * caller calls `preventDefault`) and which key to focus. It never moves focus
  * or changes selection itself, and it never touches propagation.
  *
+ * The query lasts until a second passes without a keystroke, matched or not,
+ * as in Chromium's and Firefox's `<select>` (React Aria empties it when a
+ * letter misses but keeps it when a Space misses). While it lasts, Space
+ * types a space instead of selecting, so "New York" can be typed, and a typo
+ * leaves focus where it is rather than starting a new query on the next
+ * letter; pausing starts over.
+ *
  * No timers: the query expires when more than a second separates two
  * keystrokes, measured with the events' own `timeStamp`, so an unmounted
  * collection leaves nothing behind.
@@ -40,7 +47,10 @@ export interface TypeaheadInput {
 }
 
 export interface TypeaheadResult<Key> {
-  /** The key joined the query: the caller should call `preventDefault`. */
+  /**
+   * The key joined the query, matched or not: the caller should call
+   * `preventDefault`. Only a Space with no query in progress stays out.
+   */
   readonly isHandled: boolean;
   /** The key to focus (not to select), or `null` when nothing matched. */
   readonly key: Key | null;
@@ -49,9 +59,8 @@ export interface TypeaheadResult<Key> {
 export interface Typeahead {
   /**
    * Adds a printable key to the query and asks `search` for the item to
-   * focus (usually `findByText`). A miss empties the query and leaves the key
-   * unhandled, so it behaves natively, except a Space that continued a query:
-   * that one stays handled (see `isSearching`).
+   * focus (usually `findByText`). A miss keeps the query, so the next key
+   * extends it.
    */
   handleKey<Key>(
     input: TypeaheadInput,
@@ -113,21 +122,14 @@ export function createTypeahead(): Typeahead {
       if (input.ctrlKey || input.metaKey || input.altKey) return NOT_HANDLED;
       const character = characterOf(input.key);
       if (character === '') return NOT_HANDLED;
-      const isSpace = character === ' ';
       if (!isSearching(input.timeStamp)) {
         // Outside a query, Space keeps its native meaning (selection).
-        if (isSpace) return NOT_HANDLED;
+        if (character === ' ') return NOT_HANDLED;
         query = '';
       }
       query += character;
       lastTimeStamp = input.timeStamp;
-      const key = search(query);
-      if (key != null) return { isHandled: true, key };
-      query = '';
-      // Space mid-query is consumed even on a miss: `isSearching()` already
-      // told any handler that saw it first to leave it alone. The query is
-      // empty now, so the next Space selects.
-      return isSpace ? { isHandled: true, key: null } : NOT_HANDLED;
+      return { isHandled: true, key: search(query) };
     },
     isSearching,
     reset() {
