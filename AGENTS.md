@@ -8,8 +8,8 @@ to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason Sous exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
 attributes for the design system to target. The only CSS Sous ships is
-behavioral: `dom/` adopts `touch-action: pan-x pan-y pinch-zoom` for pressable
-parts.
+behavioral: press sets `touch-action: pan-x pan-y pinch-zoom` inline on
+pressable parts, unless the part has an inline value of its own.
 
 Sous is built by AI agents. The owner, **@tenphi**, approves specs, reviews APIs
 at phase gates and runs the manual screen-reader pass. Read this whole file
@@ -278,6 +278,9 @@ handler with its event.
   shadow roots and iframes.
 - Global singletons (layer stack, focus-visible modality) are keyed on
   `Symbol.for('@tenphi/sous/…')` so duplicate installs share one instance.
+  The modality tracker wraps `HTMLElement.prototype.focus` once per window,
+  as React Aria does, so a script's `focus()` call isn't taken for a screen
+  reader moving focus.
 
 ### Overlays and positioning
 

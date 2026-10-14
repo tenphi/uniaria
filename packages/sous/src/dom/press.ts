@@ -17,17 +17,16 @@
  * (Button spec → Keyboard, Pointer and touch). Modelled on React Aria's
  * `usePress` (`references/react-spectrum/packages/react-aria/src/interactions/usePress.ts`).
  *
- * This is the phase 1 press: keyboard, mouse and pen, virtual clicks and
- * disabled behavior. Touch (text-selection suppression, emulated mouse
- * events) and nested pressables arrive with the interaction layer in
- * phase 2.
+ * Covers keyboard, mouse, pen and touch pointers, virtual clicks, disabled
+ * behavior and `touch-action`. Still to come in phase 2: text-selection
+ * suppression during touch presses and nested pressables.
  *
  * Order on activation: `pressstart`, `pressend`, `press`. A cancelled press
  * fires `pressstart` and `pressend` only.
  */
 
 import type { DomHandlers, InteractionContext } from './types';
-import { partElement } from './types';
+import { partEffect, partElement } from './types';
 
 export type PointerType = 'mouse' | 'pen' | 'touch' | 'keyboard' | 'virtual';
 
@@ -74,6 +73,12 @@ interface Active {
   /** Released over the target; `press` fires on the click that follows. */
   isAwaitingClick: boolean;
 }
+
+/**
+ * `manipulation` is equivalent, but it stops Safari from sending
+ * `pointercancel` when a scroll takes over (WebKit bug 240917).
+ */
+const TOUCH_ACTION = 'pan-x pan-y pinch-zoom';
 
 /** iOS and Android drop the click after a long press; wait this long for it. */
 const CLICK_TIMEOUT = 80;
@@ -260,6 +265,18 @@ export function createPress(
   ctx.effect(() => () => {
     reset();
     isPressed.set(false);
+  });
+  // The one behavioral style Sous sets (Button spec, resolved question 4):
+  // no double-tap zoom delay, and a scroll cancels the press. An inline
+  // value the consumer set wins.
+  partEffect(ctx, options.part, (target) => {
+    if (target.style.touchAction) return;
+    target.style.touchAction = TOUCH_ACTION;
+    return () => {
+      if (target.style.touchAction === TOUCH_ACTION) {
+        target.style.removeProperty('touch-action');
+      }
+    };
   });
 
   const handlers: DomHandlers = {

@@ -37,3 +37,51 @@ export function partElement(
 ): HTMLElement | null {
   return (ctx.element(part) as HTMLElement | null) ?? null;
 }
+
+/**
+ * Runs `effect` with the part's element while the instance is started, and
+ * again (after the previous cleanup) whenever a different element is
+ * attached. A custom element connects before the parser adds its children,
+ * so its parts often arrive after `start()`.
+ */
+export function partEffect(
+  ctx: InteractionContext,
+  part: string,
+  effect: (element: HTMLElement) => void | (() => void),
+): void {
+  let cleanup: (() => void) | undefined;
+  const run = (element: HTMLElement | null) => {
+    const previous = cleanup;
+    cleanup = undefined;
+    previous?.();
+    const next = element ? effect(element) : undefined;
+    if (typeof next === 'function') cleanup = next;
+  };
+  ctx.effect(() => {
+    run(partElement(ctx, part));
+    return () => run(null);
+  });
+  ctx.watch(() => partElement(ctx, part), run);
+}
+
+/**
+ * Combines the handlers of several interactions on one part: for each event
+ * type, every handler runs, in argument order.
+ */
+export function mergeHandlers(...maps: readonly DomHandlers[]): DomHandlers {
+  const merged: Record<string, (event: Event) => void> = {};
+  for (const map of maps) {
+    for (const [type, handler] of Object.entries(map)) {
+      if (!handler) continue;
+      const next = handler as (event: Event) => void;
+      const previous = merged[type];
+      merged[type] = previous
+        ? (event) => {
+            previous(event);
+            next(event);
+          }
+        : next;
+    }
+  }
+  return merged;
+}

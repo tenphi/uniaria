@@ -13,11 +13,17 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   host), part discovery for elements, and later the owner lookup (request
   events, id references). Adapters never diff attributes or search the DOM
   themselves. It also holds the interactions definitions build on
-  (`createPress`, `createFocus`) and `warn()` for development warnings.
+  (`createPress`, `createFocus` with focus-visible, `createHover`), the
+  shared input-modality tracker, and `warn()` for development warnings.
 - Interactions take the `setup()` context (`InteractionContext`), keep their
   state in `ctx.state()`, clean up through `ctx.effect()`, and batch any
   document listener they add (`ctx.batch()`), since only part handlers are
   batched for them.
+- Anything that needs a part element goes through `partEffect()`, never a
+  `ctx.effect()` that reads the element once: a custom element connects
+  before the parser adds its children, so parts often attach after
+  `start()`. Several interactions on one part combine with
+  `mergeHandlers()`; spreading handler objects drops handlers.
 - A new subpath needs three edits: an entry in `tsdown.config.ts`, an
   `exports` entry in `package.json` (with the `sous-source` condition first),
   and a line in `src/ssr-safety.test.ts`.
