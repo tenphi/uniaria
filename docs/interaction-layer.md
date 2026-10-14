@@ -145,8 +145,18 @@ These are decided; follow them rather than the catalogue.
   portals, so the portal rules (§1.55, 2.11, 4.8, 11.11) become plain DOM
   containment, and a modal `<dialog>` already makes the outside inert.
 - **Hide outside** (§9) is `hideOutside(targets, { root, shouldUseInert })`
-  and `keepVisible(element)`, which always returns a function. Where it
-  differs from `ariaHideOutside`:
+  and `keepVisible(element)`, which always returns a function. It is only
+  for modal overlays that are not a modal `<dialog>` (a modal popover); a
+  modal `<dialog>` makes the outside inert natively (owner decision,
+  2026-10-14). Where it differs from `ariaHideOutside`:
+  - A newer call lifts what older calls hid on the way to its targets: a
+    target or an ancestor of one that an older call hid loses the attribute
+    while the newer call is active, and its other children are hidden
+    instead. Overlays stay mounted, so a nested modal placed outside its
+    parent modal's element is already hidden by the parent's call when it
+    opens; React Aria mounts portals on open and never meets this. Each
+    call records what it hides and lifts, and the newest call with a say
+    decides, so calls revert in any order.
   - State is per window under `Symbol.for('@tenphi/sous/hide-outside/v1')`,
     with one count per attribute: an `aria-hidden` call and an `inert` call
     each add and remove their own attribute. React Aria shares one count, so
@@ -175,18 +185,9 @@ These are decided; follow them rather than the catalogue.
 - **Scroll lock on iOS** (§8) injects an `overscroll-behavior: contain` style
   and a second `focus()` wrapper. AGENTS.md says the only CSS Sous ships is
   `touch-action`. Allow a second behavioral rule, or find another way?
-- **aria-hidden outside** (§9): is it needed beside a modal `<dialog>`, which
-  makes the outside inert natively? It still matters for non-dialog modal
-  popovers.
 - **Top-layer marker.** React Aria keeps toasts reachable through
   `data-react-aria-top-layer` (§5.11, 6.7, 9.9). Sous needs its own marker
   when toasts arrive. `hideOutside` keeps only the live announcer for now.
-- **Nested overlays outside their parent.** Overlays stay mounted, so a
-  nested modal or non-modal popover placed outside the parent modal's
-  element is already hidden by the parent's `hideOutside` call when it
-  opens. `keepVisible()` only protects elements added later, as in React
-  Aria, where portals mount on open. Require nested overlays inside their
-  parent, or let a newer call lift what older calls hid?
 
 ## Catalogue conventions
 

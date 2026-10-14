@@ -33,11 +33,21 @@
  *   window under a `Symbol.for` key so that every copy of Sous on a page
  *   shares them: an element stays hidden until the last call that hid it
  *   reverts, in any order.
+ * - A newer call lifts what older calls hid on the way to its targets: a
+ *   target, or an ancestor of one, that an older call hid loses the
+ *   attribute while the newer call is active, and its other children are
+ *   hidden instead. Overlays stay mounted, so a nested modal placed outside
+ *   its parent is already hidden by the parent's call when it opens. Which
+ *   calls hide or lift an element is kept, and the newest of them decides,
+ *   so calls can revert in any order.
  * - A `MutationObserver` hides elements added outside the targets later,
  *   judged by where they are when the records arrive. Only the newest call
  *   observes, so a parent modal's call does not hide a nested modal's
  *   content. When the newest call reverts, the previous one walks its root
  *   again to catch up on what it missed, then observes again.
+ *
+ * A modal `<dialog>` makes the outside inert natively; this is for modal
+ * overlays that are not dialogs (a modal popover).
  *
  * Shadow DOM is not supported yet (§9.20): containment and the observer stop
  * at shadow boundaries.
@@ -67,6 +77,8 @@ const OBSERVE: MutationObserverInit = { childList: true, subtree: true };
 
 type HidingAttribute = 'aria-hidden' | 'inert';
 
+const ATTRIBUTES: readonly HidingAttribute[] = ['aria-hidden', 'inert'];
+
 /**
  * Per-window state. Its shape is the contract between copies of Sous, so
  * changing it needs a new key.
@@ -85,6 +97,10 @@ interface SharedState {
 interface ActiveCall {
   /** What the call keeps exposed: targets, live announcers, `keepVisible()`. */
   readonly visible: Set<Element>;
+  /** What the call hides, each also counted in `SharedState.counts`. */
+  readonly hidden: Set<Element>;
+  /** What older calls hid and this call exposes, on the way to its targets. */
+  readonly lifted: Set<Element>;
   /** Stops observing while a newer call is on top. */
   suspend(): void;
   /** Catches up on what changed while suspended, then observes again. */
@@ -116,6 +132,30 @@ function isHiddenWith(element: Element, attribute: HidingAttribute): boolean {
     : element.getAttribute('aria-hidden') === 'true';
 }
 
+/** Whether an active call hides `element`, with either attribute. */
+function isCounted(state: SharedState, element: Element): boolean {
+  return ATTRIBUTES.some((attribute) => state.counts[attribute].has(element));
+}
+
+/**
+ * Brings the attributes of `element` in line with the newest call that hides
+ * or lifts it: each counted attribute is present unless that call lifts it.
+ */
+function sync(state: SharedState, element: Element): void {
+  const newest = state.calls.findLast(
+    (call) => call.hidden.has(element) || call.lifted.has(element),
+  );
+  const isLifted = newest?.lifted.has(element) ?? false;
+  for (const attribute of ATTRIBUTES) {
+    if (!state.counts[attribute].has(element)) continue;
+    const isPresent = isHiddenWith(element, attribute);
+    if (isLifted && isPresent) element.removeAttribute(attribute);
+    if (!isLifted && !isPresent) {
+      element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
+    }
+  }
+}
+
 /**
  * Hides everything under the root except `targets`, their ancestors and
  * their contents, and keeps hiding what is added outside them until the
@@ -134,6 +174,7 @@ export function hideOutside(
   const shouldUseInert = options.shouldUseInert ?? false;
   const visibleElements = new Set<Element>(targets);
   const hiddenElements = new Set<Element>();
+  const liftedElements = new Set<Element>();
 
   const attributeFor = (element: Element): HidingAttribute =>
     shouldUseInert && 'inert' in element ? 'inert' : 'aria-hidden';
@@ -147,11 +188,9 @@ export function hideOutside(
     const count = counts.get(element) ?? 0;
     // Someone else hid it: the attribute stays theirs to remove.
     if (count === 0 && isHiddenWith(element, attribute)) return;
-    if (count === 0) {
-      element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
-    }
     counts.set(element, count + 1);
     hiddenElements.add(element);
+    sync(state, element);
   };
 
   const reveal = (element: Element) => {
@@ -165,6 +204,21 @@ export function hideOutside(
     }
     counts.delete(element);
     element.removeAttribute(attribute);
+  };
+
+  /** Exposes the targets and their ancestors that older calls hid. */
+  const lift = () => {
+    for (const target of targets) {
+      for (
+        let element: Element | null = target;
+        element;
+        element = element.parentElement
+      ) {
+        if (!isCounted(state, element) || liftedElements.has(element)) continue;
+        liftedElements.add(element);
+        sync(state, element);
+      }
+    }
   };
 
   const containsVisible = (element: Element) => {
@@ -230,6 +284,8 @@ export function hideOutside(
   const observer = new view.MutationObserver(onMutations);
   const call: ActiveCall = {
     visible: visibleElements,
+    hidden: hiddenElements,
+    lifted: liftedElements,
     // Pending records are dropped: they may hold a nested modal that is
     // about to call hideOutside itself. resume() walks again instead.
     suspend: () => observer.disconnect(),
@@ -241,6 +297,7 @@ export function hideOutside(
 
   state.calls.at(-1)?.suspend();
   state.calls.push(call);
+  lift();
   call.resume();
 
   let isReverted = false;
@@ -255,7 +312,12 @@ export function hideOutside(
       // an element both hide keeps its attribute throughout.
       if (index === state.calls.length) state.calls.at(-1)?.resume();
     }
-    for (const element of hiddenElements) reveal(element);
+    for (const element of hiddenElements) {
+      reveal(element);
+      sync(state, element);
+    }
+    // What this call lifted goes back to the newest call left with a say.
+    for (const element of liftedElements) sync(state, element);
   };
 }
 

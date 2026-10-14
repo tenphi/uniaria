@@ -289,7 +289,11 @@ handler with its event.
 ### Overlays and positioning
 
 - Overlays use the top layer (Popover API, `<dialog>`); nothing moves nodes
-  into a portal.
+  into a portal. The Popover API is Baseline only since January 2025 (widely
+  available from July 2027), so popovers detect it and need a fallback,
+  designed with the Popover spec.
+- A modal `<dialog>` makes the outside inert natively. Other modal overlays
+  (a modal popover) hide the outside with `dom/` `hideOutside`.
 - Nested overlays coordinate through the global layer stack. Never call
   `stopPropagation` or `stopImmediatePropagation` in components (ESLint
   enforces it).

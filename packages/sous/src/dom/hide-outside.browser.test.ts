@@ -355,6 +355,92 @@ describe('nested hideOutside calls', () => {
   });
 });
 
+describe('hideOutside lifting what older calls hid', () => {
+  it('exposes the way to a nested modal mounted outside its parent', async () => {
+    render(`
+      <div id="app"></div>
+      <div id="modal1"></div>
+      <div id="wrap"><div id="modal2"></div><div id="other"></div></div>
+    `);
+    const revertFirst = hide([byId('modal1')], { shouldUseInert: true });
+    expect(marked('inert')).toEqual(['app', 'wrap']);
+
+    const revertSecond = hide([byId('modal2')]);
+    expect(marked('inert')).toEqual(['app']);
+    expect(marked()).toEqual(['app', 'modal1', 'other']);
+
+    // The lifted wrapper is the newest call's to watch.
+    byId('wrap').append(element('p', 'late'));
+    await tick();
+    expect(marked()).toEqual(['app', 'modal1', 'other', 'late']);
+
+    revertSecond();
+    expect(marked('inert')).toEqual(['app', 'wrap']);
+    expect(marked()).toEqual([]);
+
+    revertFirst();
+    expect(marked('inert')).toEqual([]);
+  });
+
+  it('exposes a target an older call hid, and hides it again on revert', () => {
+    render('<div id="modal1"></div><div id="modal2"></div>');
+    const revertFirst = hide([byId('modal1')]);
+    const revertSecond = hide([byId('modal2')]);
+    expect(marked()).toEqual(['modal1']);
+
+    revertSecond();
+    expect(marked()).toEqual(['modal2']);
+    revertFirst();
+    expect(marked()).toEqual([]);
+  });
+
+  it('keeps the way exposed while a call that needs it is left, in any revert order', () => {
+    render(
+      '<div id="a"></div><div id="x"><div id="b"></div><div id="c"></div></div>',
+    );
+    const revertA = hide([byId('a')]);
+    const revertB = hide([byId('b')]);
+    const revertC = hide([byId('c')]);
+    expect(marked()).toEqual(['a', 'b']);
+
+    revertB();
+    expect(marked()).toEqual(['a', 'b']);
+    revertC();
+    expect(marked()).toEqual(['x']);
+    revertA();
+    expect(marked()).toEqual([]);
+  });
+
+  it('lets a newer call hide what an older one lifted', () => {
+    render(
+      '<div id="a"></div><div id="x"><div id="b"></div></div><div id="c"></div>',
+    );
+    const revertA = hide([byId('a')]);
+    expect(marked()).toEqual(['x', 'c']);
+    const revertB = hide([byId('b')]);
+    expect(marked()).toEqual(['a', 'c']);
+    const revertC = hide([byId('c')]);
+    expect(marked()).toEqual(['a', 'x']);
+
+    revertC();
+    expect(marked()).toEqual(['a', 'c']);
+    revertB();
+    expect(marked()).toEqual(['x', 'c']);
+    revertA();
+    expect(marked()).toEqual([]);
+  });
+
+  it('leaves an element someone else hid on the way as it is', () => {
+    render(
+      '<div id="a"></div><div id="x" aria-hidden="true"><div id="b"></div></div>',
+    );
+    const revert = hide([byId('b')]);
+    expect(marked()).toEqual(['a', 'x']);
+    revert();
+    expect(marked()).toEqual(['x']);
+  });
+});
+
 describe('keepVisible', () => {
   it('keeps an element exposed when the newest call sees it added', async () => {
     render('<div id="modal"></div>');
