@@ -59,7 +59,11 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    * `data-scope` and `data-part` added and every handler run in a batch.
    */
   connect(): ConnectedParts<PartOf<D>>;
-  /** Registers the element for a part (`null` removes it). */
+  /**
+   * Registers the element for a part (`null` removes it). While started, a
+   * different element counts as a state change, so watchers see it: a
+   * custom element's parts can arrive after it connects.
+   */
   attach(part: PartOf<D>, element: unknown): void;
   element(part: PartOf<D>): unknown;
   batch<T>(fn: () => T): T;
@@ -318,8 +322,10 @@ export function createInstance<D extends AnyDefinition>(
       return parts;
     },
     attach(part, element) {
+      if ((elements.get(part) ?? null) === (element ?? null)) return;
       if (element == null) elements.delete(part);
       else elements.set(part, element);
+      if (isStarted) changed();
     },
     element: (part) => elements.get(part) ?? null,
     batch: store.batch,

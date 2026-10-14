@@ -455,4 +455,21 @@ describe('createInstance', () => {
     instance.attach('trigger', null);
     expect(instance.element('trigger')).toBeNull();
   });
+
+  it('counts a new part element as a change while started', () => {
+    const instance = createInstance(disclosure);
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    instance.attach('trigger', {});
+    expect(listener).not.toHaveBeenCalled();
+
+    instance.start();
+    const element = {};
+    instance.attach('trigger', element);
+    expect(listener).toHaveBeenCalledTimes(1);
+    instance.attach('trigger', element);
+    expect(listener).toHaveBeenCalledTimes(1);
+    instance.attach('trigger', null);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
 });
