@@ -277,8 +277,9 @@ Decided by @tenphi on 2026-10-14.
 3. **No pending state in v1.** `isDisabled` with `isFocusableWhenDisabled` covers
    it without dropping focus. Spinner and label stay with the design system.
 4. **`touch-action`.** `dom/` adopts one behavioral rule for pressable parts,
-   `touch-action: pan-x pan-y pinch-zoom`, as React Aria does. It is the only
-   CSS Sous ships, and it is behavior, not styling.
+   `touch-action: pan-x pan-y pinch-zoom`, as React Aria does. It is
+   behavior, not styling: Sous ships CSS only where a behavior can't work
+   without it (root AGENTS.md).
 5. **`type` defaults to `button`**, deliberately unlike HTML's `submit`, as in
    React Aria, Cube UI Kit and Spectrum Web Components.
 6. **Boolean props read as predicates** (@tenphi, 2026-10-14): `is…` for

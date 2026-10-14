@@ -31,13 +31,15 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
 | 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
-Press is complete apart from touch conformance scenarios, which need touch
-input in the harness and owner approval. Text-selection suppression (`dom/text-selection.ts`,
+Press is complete. Button's touch scenarios use real touch input, which only
+Chromium takes in the harness (DevTools `Input.dispatchTouchEvent`), so
+touch runs in Chromium alone; iOS and Android specifics (§1.23, 1.26, 1.62)
+still need a device. Text-selection suppression (`dom/text-selection.ts`,
 §1.58-63) applies to touch presses only, as Button's spec says (React Aria now
 applies it to every pointer press), and restores after 300 ms without waiting
 for CSS transitions to finish (§1.61). Link opening
 (§1.40-44) waits for a component that needs it: Button's link mode is a native
-`<a href>`. Touch items need touch input in the conformance harness first.
+`<a href>`.
 
 Focus scope, not built yet: the focus manager (§5.44-45, until a component
 needs arrow-key focus moves), the cancelable restore event (§5.22-23),
