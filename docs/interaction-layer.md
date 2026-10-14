@@ -28,7 +28,7 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 7. Dismissable layers  | Planned (global layer stack) |                                                             |
 | 8. Scroll lock         | Planned                      |                                                             |
 | 9. aria-hidden outside | Planned                      |                                                             |
-| 10. Live announcer     | Planned                      |                                                             |
+| 10. Live announcer     | Built                        | `dom/announcer.ts`, `announcer.browser.test.ts`             |
 | 11. Typeahead          | Planned (`collections/`)     |                                                             |
 
 Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
@@ -79,6 +79,17 @@ These are decided; follow them rather than the catalogue.
 - **Focus-within listens on the part element**, not through part handlers,
   so it behaves the same in both adapters while the custom-element binder
   delivers a bubbling event to the nearest part only (an open question).
+- **Live announcer** (§10). Plain functions: `announce(message, options)`
+  with `politeness`, `timeout` and `document` options,
+  `clearAnnouncer(politeness?, document?)` and `destroyAnnouncer(document?)`.
+  One container per document (React Aria has one for the global document),
+  stored on its window under `Symbol.for('@tenphi/sous/announcer/v1')` and
+  marked `data-sous-live-announcer`. Messages sent during the 100 ms Safari
+  delay wait and go in together, in order (§10.3); `clearAnnouncer` drops
+  waiting messages too. Empty messages are ignored rather than kept forever
+  (§10.8). A container something else removed (a body swap) is replaced, with
+  the delay again, on the next message. There is no test-environment shortcut
+  (§10.13): tests use fake timers.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.

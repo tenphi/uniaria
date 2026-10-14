@@ -4,15 +4,21 @@
  * re-rendering, part discovery for custom elements, and interactions.
  *
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
- * the shared input-modality tracker, focus-within, focus scopes and the
- * focusable/tabbable rules. Planned: the dismissable layer stack, outside
- * interaction, aria-hidden outside, scroll lock, live announcer, owner
+ * the shared input-modality tracker, focus-within, focus scopes, the
+ * focusable/tabbable rules and the live announcer. Planned: the dismissable
+ * layer stack, outside interaction, aria-hidden outside, scroll lock, owner
  * lookup, and positioning (CSS anchor positioning with the Floating UI
  * fallback behind one wrapper).
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
 
+export { announce, clearAnnouncer, destroyAnnouncer } from './announcer';
+export type {
+  AnnounceOptions,
+  AnnouncerMessage,
+  Politeness,
+} from './announcer';
 export { createBinder } from './binder';
 export { isDevelopment, warn } from './dev';
 export type { Binder, BinderOptions } from './binder';
