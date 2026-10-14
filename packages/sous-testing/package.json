@@ -10,6 +10,16 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./browser": {
+      "sous-source": "./src/browser.ts",
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
+    "./commands": {
+      "sous-source": "./src/commands.ts",
+      "types": "./dist/commands.d.ts",
+      "default": "./dist/commands.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -41,6 +51,10 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@guidepup/virtual-screen-reader": "^0.33.0",
     "@tenphi/sous": "workspace:*"
+  },
+  "peerDependencies": {
+    "vitest": "^5.0.0"
   }
 }

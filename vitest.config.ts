@@ -2,6 +2,8 @@ import { playwright } from '@vitest/browser-playwright';
 import { defaultClientConditions, defaultServerConditions } from 'vite';
 import { defaultExclude, defineConfig } from 'vitest/config';
 
+import { sousCommands } from './packages/sous-testing/src/commands';
+
 /**
  * Two projects, split by file name:
  *
@@ -10,7 +12,9 @@ import { defaultExclude, defineConfig } from 'vitest/config';
  *   A DOM access here fails loudly with `document is not defined`.
  * - `browser` — `*.browser.test.ts(x)`. Anything that renders, touches the
  *   DOM, moves focus or listens to a screen reader. Runs in real Chromium,
- *   Firefox and WebKit through Playwright.
+ *   Firefox and WebKit through Playwright. `sousCommands` give tests real
+ *   mouse and keyboard input that can hold a button or key
+ *   (`@tenphi/sous-testing/browser`).
  *
  * Workspace packages resolve each other's `src/` through the `sous-source`
  * export condition, so tests never need a build first.
@@ -47,6 +51,7 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             screenshotFailures: false,
+            commands: sousCommands,
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },
