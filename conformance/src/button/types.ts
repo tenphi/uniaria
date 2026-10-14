@@ -6,13 +6,13 @@
  */
 
 export interface ButtonProps {
-  disabled: boolean;
-  focusableWhenDisabled: boolean;
+  isDisabled: boolean;
+  isFocusableWhenDisabled: boolean;
   href: string;
   type: 'button' | 'submit' | 'reset';
   elementType: string;
-  excludeFromTabOrder: boolean;
-  preventFocusOnPress: boolean;
+  shouldExcludeFromTabOrder: boolean;
+  shouldPreventFocusOnPress: boolean;
 }
 
 export interface ButtonState {

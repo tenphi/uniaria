@@ -42,11 +42,11 @@ function pressEvents(mounted: MountedButton, name = 'press'): PressEvent[] {
 }
 
 /** Records whether each event of `type` reached the document prevented. */
-function watchDefault(type: string, preventAfterwards = false) {
+function watchDefault(type: string, shouldPreventAfterwards = false) {
   const log: boolean[] = [];
   const listener = (event: Event) => {
     log.push(event.defaultPrevented);
-    if (preventAfterwards) event.preventDefault();
+    if (shouldPreventAfterwards) event.preventDefault();
   };
   document.addEventListener(type, listener);
   return {
@@ -139,14 +139,14 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
       );
 
       scenario(
-        'takes the root out of the tab order with excludeFromTabOrder',
+        'takes the root out of the tab order with shouldExcludeFromTabOrder',
         async ({ mount, keyboard }) => {
           const mounted = await mount({
             template: [
               save(),
               h('button', { id: 'after', tabindex: '0' }, 'After'),
             ],
-            props: { excludeFromTabOrder: true },
+            props: { shouldExcludeFromTabOrder: true },
           });
           expect(mounted.part().getAttribute('tabindex')).toBe('-1');
           await keyboard.tab();
@@ -385,14 +385,14 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
       );
 
       scenario(
-        'preventFocusOnPress leaves focus where it was',
+        'shouldPreventFocusOnPress leaves focus where it was',
         async ({ mount, pointer }) => {
           const mounted = await mount({
             template: [
               h('input', { id: 'draft', 'aria-label': 'Draft' }),
               save(),
             ],
-            props: { preventFocusOnPress: true },
+            props: { shouldPreventFocusOnPress: true },
             events: ['press'],
           });
           const draft = document.getElementById('draft')!;
@@ -437,7 +437,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(root.hasAttribute('data-focus-visible')).toBe(false);
           expect(mounted.state().isFocusVisible).toBe(false);
 
-          await keyboard.tab({ shift: true });
+          await keyboard.tab({ isBackward: true });
           await keyboard.tab();
           expect(document.activeElement).toBe(root);
           expect(root.hasAttribute('data-focus-visible')).toBe(true);
@@ -456,7 +456,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
               save(),
               h('button', { id: 'after', tabindex: '0' }, 'After'),
             ],
-            props: { disabled: true },
+            props: { isDisabled: true },
             events: PRESS_EVENTS,
           });
           const root = mounted.part();
@@ -477,7 +477,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, pointer }) => {
           const mounted = await mount({
             template: h('div', { part: 'root' }, 'Save'),
-            props: { elementType: 'div', disabled: true },
+            props: { elementType: 'div', isDisabled: true },
             events: PRESS_EVENTS,
           });
           const root = mounted.part();
@@ -493,14 +493,14 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
       );
 
       scenario(
-        'focusableWhenDisabled keeps focus and blocks presses and submission',
+        'isFocusableWhenDisabled keeps focus and blocks presses and submission',
         async ({ mount, pointer, keyboard }) => {
           const mounted = await mount({
             template: h('form', null, save()),
             props: {
               type: 'submit',
-              disabled: true,
-              focusableWhenDisabled: true,
+              isDisabled: true,
+              isFocusableWhenDisabled: true,
             },
             events: PRESS_EVENTS,
           });
@@ -538,7 +538,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           });
           const root = mounted.part();
           await pointer.down(root);
-          await mounted.setProps({ disabled: true });
+          await mounted.setProps({ isDisabled: true });
           expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
           expect(root.hasAttribute('data-pressed')).toBe(false);
           await pointer.up();
@@ -551,9 +551,9 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount }) => {
           const mounted = await mount({
             template: save(),
-            props: { disabled: true, focusableWhenDisabled: true },
+            props: { isDisabled: true, isFocusableWhenDisabled: true },
           });
-          await mounted.setProps({ disabled: false });
+          await mounted.setProps({ isDisabled: false });
           const root = mounted.part();
           expect(root.hasAttribute('aria-disabled')).toBe(false);
           expect(root.hasAttribute('data-disabled')).toBe(false);
@@ -588,7 +588,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount }) => {
           const mounted = await mount({
             template: docs(),
-            props: { href: '/docs', disabled: true },
+            props: { href: '/docs', isDisabled: true },
           });
           const root = mounted.part();
           expect(root.hasAttribute('href')).toBe(false);
@@ -597,7 +597,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(root.hasAttribute('data-disabled')).toBe(true);
           expect(root.hasAttribute('tabindex')).toBe(false);
 
-          await mounted.setProps({ disabled: false });
+          await mounted.setProps({ isDisabled: false });
           expect(root.getAttribute('href')).toBe('/docs');
           expect(root.hasAttribute('role')).toBe(false);
           expect(root.hasAttribute('aria-disabled')).toBe(false);
@@ -605,15 +605,15 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
       );
 
       scenario(
-        'a disabled link stays focusable with focusableWhenDisabled',
+        'a disabled link stays focusable with isFocusableWhenDisabled',
         async ({ mount }) => {
           const root = (
             await mount({
               template: docs(),
               props: {
                 href: '/docs',
-                disabled: true,
-                focusableWhenDisabled: true,
+                isDisabled: true,
+                isFocusableWhenDisabled: true,
               },
             })
           ).part();
@@ -682,7 +682,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(mounted.state().isPressed).toBe(true);
           await keyboard.up('Enter');
           expect(mounted.state().isPressed).toBe(false);
-          await mounted.setProps({ disabled: true });
+          await mounted.setProps({ isDisabled: true });
           expect(mounted.state().isDisabled).toBe(true);
         },
       );
@@ -729,7 +729,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
       scenario(
         'announces a natively disabled button as disabled',
         async ({ mount, spoken }) => {
-          await mount({ template: save(), props: { disabled: true } });
+          await mount({ template: save(), props: { isDisabled: true } });
           expect(await spoken()).toContain('button, Save, disabled');
         },
       );
@@ -739,18 +739,18 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, spoken }) => {
           await mount({
             template: h('div', { part: 'root' }, 'Save'),
-            props: { elementType: 'div', disabled: true },
+            props: { elementType: 'div', isDisabled: true },
           });
           expect(await spoken()).toContain('button, Save, disabled');
         },
       );
 
       scenario(
-        'announces focusableWhenDisabled as disabled',
+        'announces isFocusableWhenDisabled as disabled',
         async ({ mount, spoken }) => {
           await mount({
             template: save(),
-            props: { disabled: true, focusableWhenDisabled: true },
+            props: { isDisabled: true, isFocusableWhenDisabled: true },
           });
           expect(await spoken()).toContain('button, Save, disabled');
         },
@@ -761,9 +761,9 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, spoken }) => {
           const mounted = await mount({
             template: save(),
-            props: { disabled: true, focusableWhenDisabled: true },
+            props: { isDisabled: true, isFocusableWhenDisabled: true },
           });
-          await mounted.setProps({ disabled: false });
+          await mounted.setProps({ isDisabled: false });
           const phrases = await spoken();
           expect(phrases).toContain('button, Save');
           expect(
@@ -782,7 +782,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, spoken }) => {
           await mount({
             template: docs(),
-            props: { href: '/docs', disabled: true },
+            props: { href: '/docs', isDisabled: true },
           });
           expect(await spoken()).toContain('link, Docs, disabled');
         },
@@ -825,7 +825,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(root.hasAttribute('data-hovered')).toBe(false);
           expect(mounted.state().isHovered).toBe(false);
 
-          await mounted.setProps({ disabled: true });
+          await mounted.setProps({ isDisabled: true });
           await pointer.move(root);
           expect(root.hasAttribute('data-hovered')).toBe(false);
           expect(mounted.state().isHovered).toBe(false);
@@ -840,10 +840,10 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           // The two values are equivalent, and Chromium serializes this one as
           // `manipulation`. WebKit must get the explicit form: the keyword
           // breaks Safari's pointercancel on scroll.
-          const webkit =
+          const isWebKit =
             /AppleWebKit/.test(navigator.userAgent) &&
             !/Chrome|Chromium/.test(navigator.userAgent);
-          const accepted = webkit
+          const accepted = isWebKit
             ? ['pan-x pan-y pinch-zoom']
             : ['pan-x pan-y pinch-zoom', 'manipulation'];
           expect(accepted).toContain(getComputedStyle(root).touchAction);
