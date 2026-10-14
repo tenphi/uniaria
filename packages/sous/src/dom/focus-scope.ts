@@ -41,7 +41,7 @@ import {
 } from './focusable';
 import { modalityTrackerFor } from './modality';
 import type { InteractionContext } from './types';
-import { partEffect, partElement } from './types';
+import { partEffect } from './types';
 
 export interface FocusScopeOptions {
   /** The part that holds the scope. */
@@ -399,25 +399,10 @@ export function createFocusScope(
   ctx: InteractionContext,
   options: FocusScopeOptions,
 ): void {
-  let current: { element: HTMLElement; end: () => void } | null = null;
-
-  const end = () => {
-    const ending = current;
-    current = null;
-    ending?.end();
-  };
-
-  const sync = () => {
-    const element = partElement(ctx, options.part);
-    const isLive = element !== null && options.isActive();
-    if (isLive && current?.element === element) return;
-    end();
-    if (isLive) current = { element, end: activate(element, options) };
-  };
-
-  partEffect(ctx, options.part, () => {
-    sync();
-    return end;
-  });
-  ctx.watch(options.isActive, sync);
+  partEffect(
+    ctx,
+    options.part,
+    (element) => activate(element, options),
+    options.isActive,
+  );
 }

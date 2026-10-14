@@ -17,19 +17,19 @@ from it keeps the Apache notice (see `dom/press.ts`).
 
 ## Status
 
-| Area                   | Status                       | Where                                                       |
-| ---------------------- | ---------------------------- | ----------------------------------------------------------- |
-| 1. Press               | Built, except as noted       | `dom/press.ts`; Button conformance                          |
-| 2. Hover               | Built                        | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
-| 3. Focus-visible       | Built                        | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Built                        | `dom/focus-within.ts`, its tests                            |
-| 5. Focus scope         | Built, except as noted       | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
-| 6. Interact outside    | Planned                      |                                                             |
-| 7. Dismissable layers  | Planned (global layer stack) |                                                             |
-| 8. Scroll lock         | Planned                      |                                                             |
-| 9. aria-hidden outside | Planned                      |                                                             |
-| 10. Live announcer     | Built                        | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built (core), not wired yet  | `collections/typeahead.ts`, `typeahead.test.ts`             |
+| Area                   | Status                               | Where                                                       |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| 1. Press               | Built, except as noted               | `dom/press.ts`; Button conformance                          |
+| 2. Hover               | Built                                | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
+| 3. Focus-visible       | Built                                | `dom/modality.ts`, `dom/focus.ts`, their tests              |
+| 4. Focus-within        | Built                                | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted               | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
+| 6. Interact outside    | Built                                | `dom/interact-outside.ts`, layer tests                      |
+| 7. Dismissable layers  | Built (stack, Escape, outside, blur) | `dom/layers.ts`, its tests                                  |
+| 8. Scroll lock         | Planned                              |                                                             |
+| 9. aria-hidden outside | Planned                              |                                                             |
+| 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
+| 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
 Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
 workaround (§1.37). Text-selection suppression (`dom/text-selection.ts`,
@@ -101,6 +101,13 @@ These are decided; follow them rather than the catalogue.
   (§10.8). A container something else removed (a body swap) is replaced, with
   the delay again, on the next message. There is no test-environment shortcut
   (§10.13): tests use fake timers.
+- **Outside presses reach their target.** React Aria stops the outside
+  `pointerdown` and `click` of the top layer at the document (§7.12); Sous
+  never stops propagation, so the element under the pointer still gets them,
+  as with the browser's own popover light dismiss. Nested layers resolve
+  Escape through `defaultPrevented` instead of `stopPropagation` (§7.1).
+  The modal, popover and close-on-scroll compositions (§7.17-24) belong to
+  the Popover component.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.

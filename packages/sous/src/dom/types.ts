@@ -39,16 +39,18 @@ export function partElement(
 }
 
 /**
- * Runs `effect` with the part's element while the instance is started, and
- * again (after the previous cleanup) whenever a different element is
- * attached. A custom element connects before the parser adds its children,
- * so its parts often arrive after `start()`.
+ * Runs `effect` with the part's element while the instance is started (and
+ * `isActive()` holds, when given), and again (after the previous cleanup)
+ * whenever a different element is attached. A custom element connects before
+ * the parser adds its children, so its parts often arrive after `start()`.
  */
 export function partEffect(
   ctx: InteractionContext,
   part: string,
   effect: (element: HTMLElement) => void | (() => void),
+  isActive?: () => boolean,
 ): void {
+  const read = () => (isActive && !isActive() ? null : partElement(ctx, part));
   let cleanup: (() => void) | undefined;
   const run = (element: HTMLElement | null) => {
     const previous = cleanup;
@@ -58,10 +60,10 @@ export function partEffect(
     if (typeof next === 'function') cleanup = next;
   };
   ctx.effect(() => {
-    run(partElement(ctx, part));
+    run(read());
     return () => run(null);
   });
-  ctx.watch(() => partElement(ctx, part), run);
+  ctx.watch(read, run);
 }
 
 /**

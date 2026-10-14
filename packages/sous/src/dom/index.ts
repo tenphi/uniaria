@@ -5,8 +5,8 @@
  *
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
  * the shared input-modality tracker, focus-within, focus scopes, the
- * focusable/tabbable rules and the live announcer. Planned: the dismissable
- * layer stack, outside interaction, aria-hidden outside, scroll lock, owner
+ * focusable/tabbable rules, the live announcer, outside interaction and the
+ * dismissable layer stack. Planned: aria-hidden outside, scroll lock, owner
  * lookup, and positioning (CSS anchor positioning with the Floating UI
  * fallback behind one wrapper).
  *
@@ -44,6 +44,10 @@ export {
   modalityTrackerFor,
 } from './modality';
 export type { Modality, ModalityEvent, ModalityTracker } from './modality';
+export { interactOutside } from './interact-outside';
+export type { InteractOutsideHandlers } from './interact-outside';
+export { createLayer } from './layers';
+export type { DismissReason, LayerOptions } from './layers';
 export { observeParts, queryParts } from './parts';
 export { createPress, isVirtualClick } from './press';
 export type { PointerType, Press, PressEvent, PressOptions } from './press';
