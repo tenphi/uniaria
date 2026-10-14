@@ -7,7 +7,9 @@ Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason Sous exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
-attributes for the design system to target.
+attributes for the design system to target. The only CSS Sous ships is
+behavioral: `dom/` adopts `touch-action: pan-x pan-y pinch-zoom` for pressable
+parts.
 
 Sous is built by AI agents. The owner, **@tenphi**, approves specs, reviews APIs
 at phase gates and runs the manual screen-reader pass. Read this whole file
@@ -335,9 +337,10 @@ Naming: folder and subpath in kebab-case (`checkbox-group`,
 (`checkboxGroup`); `name: 'checkbox-group'`; element `<sous-checkbox-group>`.
 The cuisine theme stays in the brand only — APIs get descriptive names.
 
-First scope, in roadmap order: Button, Field, TextInput, TextArea, Checkbox,
-CheckboxGroup, Switch, RadioGroup → Popover, NumberInput → Listbox, Select,
-ComboBox.
+First scope, in roadmap order: Button, ToggleButton, Field, TextInput,
+TextArea, Checkbox, CheckboxGroup, Switch, RadioGroup → Popover, NumberInput →
+Listbox, Select, ComboBox. Button also covers navigation (link mode with
+`href`); there is no separate Link component.
 
 ## Conformance
 
