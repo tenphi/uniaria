@@ -6,9 +6,9 @@
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
  * the shared input-modality tracker, focus-within, focus scopes, the
  * focusable/tabbable rules, the live announcer, outside interaction, the
- * dismissable layer stack and hiding everything outside a modal. Planned:
- * scroll lock, owner lookup, and positioning (CSS anchor positioning with
- * the Floating UI fallback behind one wrapper).
+ * dismissable layer stack, hiding everything outside a modal and scroll lock
+ * (iOS strategy pending). Planned: owner lookup, and positioning (CSS anchor
+ * positioning with the Floating UI fallback behind one wrapper).
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -52,6 +52,8 @@ export { createLayer } from './layers';
 export type { DismissReason, LayerOptions } from './layers';
 export { observeParts, queryParts } from './parts';
 export { createPress, isVirtualClick } from './press';
+export { createScrollLock, lockScroll } from './scroll-lock';
+export type { ScrollLockOptions } from './scroll-lock';
 export type { PointerType, Press, PressEvent, PressOptions } from './press';
 export { mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';

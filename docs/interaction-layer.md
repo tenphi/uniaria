@@ -17,19 +17,19 @@ from it keeps the Apache notice (see `dom/press.ts`).
 
 ## Status
 
-| Area                   | Status                               | Where                                                       |
-| ---------------------- | ------------------------------------ | ----------------------------------------------------------- |
-| 1. Press               | Built, except as noted               | `dom/press.ts`; Button conformance                          |
-| 2. Hover               | Built                                | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
-| 3. Focus-visible       | Built                                | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Built                                | `dom/focus-within.ts`, its tests                            |
-| 5. Focus scope         | Built, except as noted               | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
-| 6. Interact outside    | Built                                | `dom/interact-outside.ts`, layer tests                      |
-| 7. Dismissable layers  | Built (stack, Escape, outside, blur) | `dom/layers.ts`, its tests                                  |
-| 8. Scroll lock         | Planned                              |                                                             |
-| 9. aria-hidden outside | Built, except shadow DOM             | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
-| 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
+| Area                   | Status                                | Where                                                       |
+| ---------------------- | ------------------------------------- | ----------------------------------------------------------- |
+| 1. Press               | Built, except as noted                | `dom/press.ts`; Button conformance                          |
+| 2. Hover               | Built                                 | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
+| 3. Focus-visible       | Built                                 | `dom/modality.ts`, `dom/focus.ts`, their tests              |
+| 4. Focus-within        | Built                                 | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted                | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
+| 6. Interact outside    | Built                                 | `dom/interact-outside.ts`, layer tests                      |
+| 7. Dismissable layers  | Built (stack, Escape, outside, blur)  | `dom/layers.ts`, its tests                                  |
+| 8. Scroll lock         | Built: standard strategy; iOS pending | `dom/scroll-lock.ts`, its tests                             |
+| 9. aria-hidden outside | Built, except shadow DOM              | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
+| 10. Live announcer     | Built                                 | `dom/announcer.ts`, `announcer.browser.test.ts`             |
+| 11. Typeahead          | Built (core), not wired yet           | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
 Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
 workaround (§1.37). Text-selection suppression (`dom/text-selection.ts`,
@@ -62,6 +62,10 @@ inside a shadow root gets its host hidden. It keeps the live announcer
 (`[data-sous-live-announcer]`) exposed but has no top-layer marker yet
 (§9.9-10; see Open questions). §9.16 and §9.21 still need a real screen
 reader.
+
+Scroll lock has the standard strategy only (§8.1-6, 8.18): the iOS strategy
+(§8.7-17) waits for the open question below. Non-iOS focus override
+(§8.14, React Aria's `UNSTABLE_overrideFocus`) is not built.
 
 ## Where Sous differs
 
