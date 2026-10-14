@@ -4,4 +4,10 @@
  * virtualization. DOM-free; compiled without the DOM lib.
  */
 
-export {};
+export { createTypeahead, findByText } from './typeahead';
+export type {
+  FindByTextOptions,
+  Typeahead,
+  TypeaheadInput,
+  TypeaheadResult,
+} from './typeahead';
