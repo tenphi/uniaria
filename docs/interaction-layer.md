@@ -31,8 +31,8 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 10. Live announcer     | Built                                 | `dom/announcer.ts`, `announcer.browser.test.ts`             |
 | 11. Typeahead          | Built (core), not wired yet           | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
-Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
-workaround (§1.37). Text-selection suppression (`dom/text-selection.ts`,
+Press is complete apart from touch conformance scenarios, which need touch
+input in the harness and owner approval. Text-selection suppression (`dom/text-selection.ts`,
 §1.58-63) applies to touch presses only, as Button's spec says (React Aria now
 applies it to every pointer press), and restores after 300 ms without waiting
 for CSS transitions to finish (§1.61). Link opening
@@ -73,9 +73,12 @@ These are decided; follow them rather than the catalogue.
 
 - **No `stopPropagation`.** Components never stop propagation (AGENTS.md,
   ESLint). React Aria stops it for nested pressables (§1.53-56, 1.19) and for
-  the outside `pointerdown` and `click` of the top overlay (§7.12). Sous marks
-  an event as handled instead, and nested overlays coordinate through the
-  global layer stack.
+  the outside `pointerdown` and `click` of the top overlay (§7.12). Instead,
+  every pressable element joins a per-window registry and a pressable ignores
+  events whose target sits inside a nearer one, which works whichever
+  instance sees the event first (the element adapter's capture-phase
+  delegation shows the outer one first); nested overlays coordinate through
+  the global layer stack.
 - **Press events.** `pressstart`, `pressend`, `press`; there is no `pressup`
   or `presschange` (§1.1, 1.13, 1.45), no `shouldCancelOnPointerExit` (§1.8)
   and no `continuePropagation` (§1.19).

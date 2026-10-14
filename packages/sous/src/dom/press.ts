@@ -18,8 +18,14 @@
  * `usePress` (`references/react-spectrum/packages/react-aria/src/interactions/usePress.ts`).
  *
  * Covers keyboard, mouse, pen and touch pointers, virtual clicks, disabled
- * behavior, `touch-action` and text-selection suppression during touch
- * presses. Still to come in phase 2: nested pressables.
+ * behavior, `touch-action`, text-selection suppression during touch presses
+ * and nested pressables.
+ *
+ * Nested pressables: only the innermost one handles a press. Sous can't stop
+ * propagation, and the element adapter's capture-phase delegation shows an
+ * outer instance the event before an inner one, so every pressable element
+ * joins a per-window registry (`Symbol.for`) and a pressable ignores events
+ * whose target sits inside a nearer one. That works in any order.
  *
  * Order on activation: `pressstart`, `pressend`, `press`. A cancelled press
  * fires `pressstart` and `pressend` only.
@@ -69,6 +75,8 @@ interface Active {
   readonly pointerType: PointerType;
   readonly pointerId?: number;
   readonly key?: string;
+  /** The keydown, when Meta was held on a Mac (see `onKeyUp`). */
+  readonly metaKeyDown?: KeyboardEvent;
   /** The pointer is over the target. */
   isOver: boolean;
   /** Released over the target; `press` fires on the click that follows. */
@@ -83,6 +91,34 @@ const TOUCH_ACTION = 'pan-x pan-y pinch-zoom';
 
 /** iOS and Android drop the click after a long press; wait this long for it. */
 const CLICK_TIMEOUT = 80;
+
+const PRESSABLES = Symbol.for('@tenphi/sous/pressables/v1');
+
+type PressableWindow = Window & { [PRESSABLES]?: WeakSet<Element> };
+
+/** Every pressable element in a window, shared by copies of Sous. */
+function pressablesFor(view: Window): WeakSet<Element> {
+  return ((view as PressableWindow)[PRESSABLES] ??= new WeakSet());
+}
+
+/**
+ * The event happened inside `target` and not inside a pressable nested in
+ * it, which handles the event itself.
+ */
+function isOwnEvent(event: Event, target: HTMLElement): boolean {
+  const view = target.ownerDocument.defaultView;
+  const pressables = view ? pressablesFor(view) : null;
+  let node = event.target as Node | null;
+  for (; node && node !== target; node = node.parentNode) {
+    if (pressables?.has(node as Element)) return false;
+  }
+  return node === target;
+}
+
+function isMac(element: Element): boolean {
+  const view = element.ownerDocument.defaultView;
+  return view !== null && /^Mac/i.test(view.navigator.platform);
+}
 
 /**
  * A click with no pointer behind it: `element.click()`, or a screen reader
@@ -203,7 +239,11 @@ export function createPress(
   const begin = (
     pointerType: PointerType,
     source: Event,
-    extra: { pointerId?: number; key?: string } = {},
+    extra: {
+      pointerId?: number;
+      key?: string;
+      metaKeyDown?: KeyboardEvent;
+    } = {},
   ) => {
     active = { pointerType, isOver: true, isAwaitingClick: false, ...extra };
     isPressed.set(true);
@@ -235,6 +275,13 @@ export function createPress(
   const onKeyUp = (event: KeyboardEvent) => {
     const target = element();
     if (!active || active.pointerType !== 'keyboard' || !target) return;
+    // macOS sends no keyup for other keys while Meta is held (Chromium
+    // 1393524, WebKit 55291, Mozilla 1299553): releasing Meta stands in for
+    // them, as in React Aria.
+    if (event.key === 'Meta' && active.metaKeyDown) {
+      target.dispatchEvent(new KeyboardEvent('keyup', active.metaKeyDown));
+      return;
+    }
     if (event.key !== active.key) return;
     if (!hasNativeActivation(target)) event.preventDefault();
     const isInside = target.contains(event.target as Node);
@@ -271,14 +318,19 @@ export function createPress(
     reset();
     isPressed.set(false);
   });
-  // The one behavioral style Sous sets (Button spec, resolved question 4):
+  // Registers the part as a pressable for nesting, and sets the one
+  // behavioral style Sous ships (Button spec, resolved question 4):
   // no double-tap zoom delay, and a scroll cancels the press. An inline
   // value the consumer set wins.
   partEffect(ctx, options.part, (target) => {
-    if (target.style.touchAction) return;
-    target.style.touchAction = TOUCH_ACTION;
+    const view = target.ownerDocument.defaultView;
+    const pressables = view ? pressablesFor(view) : null;
+    pressables?.add(target);
+    const hasOwnTouchAction = target.style.touchAction !== '';
+    if (!hasOwnTouchAction) target.style.touchAction = TOUCH_ACTION;
     return () => {
-      if (target.style.touchAction === TOUCH_ACTION) {
+      pressables?.delete(target);
+      if (!hasOwnTouchAction && target.style.touchAction === TOUCH_ACTION) {
         target.style.removeProperty('touch-action');
       }
     };
@@ -287,7 +339,7 @@ export function createPress(
   const handlers: DomHandlers = {
     keydown(event) {
       const target = element();
-      if (!target || !target.contains(event.target as Node)) return;
+      if (!target || !isOwnEvent(event, target)) return;
       if (!isPressKey(event, target)) return;
       if (options.isDisabled()) {
         event.preventDefault();
@@ -295,18 +347,23 @@ export function createPress(
       }
       if (!hasNativeActivation(target)) event.preventDefault();
       if (event.repeat || active) return;
-      begin('keyboard', event, { key: event.key });
+      begin('keyboard', event, {
+        key: event.key,
+        ...(event.metaKey && isMac(target) ? { metaKeyDown: event } : {}),
+      });
       listen(target.ownerDocument, 'keyup', onKeyUp, true);
     },
     keyup(event) {
       const target = element();
-      if (!target || !options.isDisabled()) return;
+      if (!target || !options.isDisabled() || !isOwnEvent(event, target)) {
+        return;
+      }
       if (isPressKey(event, target)) event.preventDefault();
     },
     pointerdown(event) {
       const target = element();
       if (!target || event.button !== 0) return;
-      if (!target.contains(event.target as Node)) return;
+      if (!isOwnEvent(event, target)) return;
       if (options.isDisabled() || active) return;
       if (
         !options.shouldPreventFocusOnPress?.() &&
@@ -333,6 +390,8 @@ export function createPress(
       listen(doc, 'pointercancel', onPointerCancel, false);
     },
     mousedown(event) {
+      const target = element();
+      if (!target || !isOwnEvent(event, target)) return;
       if (event.button === 0 && options.shouldPreventFocusOnPress?.()) {
         event.preventDefault();
       }
@@ -359,7 +418,7 @@ export function createPress(
     },
     click(event) {
       const target = element();
-      if (!target || !target.contains(event.target as Node)) return;
+      if (!target || !isOwnEvent(event, target)) return;
       if (options.isDisabled()) {
         event.preventDefault();
         return;

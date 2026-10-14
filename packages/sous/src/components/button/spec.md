@@ -183,8 +183,10 @@ button on click only when it has one. React Aria does the same.
   way React Aria does (`references/react-spectrum/packages/react-aria/src/utils/isVirtualEvent.ts`)
   and fires `pressstart`, `pressend` and `press` on the click with
   `pointerType: 'virtual'`. `element.click()` counts as virtual.
-- Nested pressables: only the innermost one handles a press. Sous marks the
-  event as handled instead of stopping propagation (decision 4).
+- Nested pressables: only the innermost one handles a press. Sous never
+  stops propagation (decision 4): a pressable ignores events whose target
+  sits inside a nearer pressable, so the order listeners run in doesn't
+  matter.
 - While disabled, no press events fire and the click's default is prevented,
   which also blocks form submission in `isFocusableWhenDisabled` mode.
 - Context menu and Escape have no special handling, matching React Aria.
