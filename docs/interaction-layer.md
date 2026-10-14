@@ -31,9 +31,11 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 10. Live announcer     | Planned                      |                                                             |
 | 11. Typeahead          | Planned (`collections/`)     |                                                             |
 
-Press, still to build: text-selection suppression during touch presses
-(§1.58-64), nested pressables (§1.53-56), pointer-capture release for touch
-(§1.21-22) and the macOS Meta keyup workaround (§1.37). Link opening
+Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
+workaround (§1.37). Text-selection suppression (`dom/text-selection.ts`,
+§1.58-63) applies to touch presses only, as Button's spec says (React Aria now
+applies it to every pointer press), and restores after 300 ms without waiting
+for CSS transitions to finish (§1.61). Link opening
 (§1.40-44) waits for a component that needs it: Button's link mode is a native
 `<a href>`. Touch items need touch input in the conformance harness first.
 

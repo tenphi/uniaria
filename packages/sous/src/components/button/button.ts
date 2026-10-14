@@ -3,8 +3,7 @@
  * `<a href>` in link mode, or any element with `role="button"`, with one
  * `press` event for every input and state attributes for styling.
  *
- * Still to come with the interaction layer: text-selection suppression
- * during touch presses and nested pressables.
+ * Still to come with the interaction layer: nested pressables.
  */
 
 import {

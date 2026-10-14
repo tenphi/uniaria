@@ -18,13 +18,14 @@
  * `usePress` (`references/react-spectrum/packages/react-aria/src/interactions/usePress.ts`).
  *
  * Covers keyboard, mouse, pen and touch pointers, virtual clicks, disabled
- * behavior and `touch-action`. Still to come in phase 2: text-selection
- * suppression during touch presses and nested pressables.
+ * behavior, `touch-action` and text-selection suppression during touch
+ * presses. Still to come in phase 2: nested pressables.
  *
  * Order on activation: `pressstart`, `pressend`, `press`. A cancelled press
  * fires `pressstart` and `pressend` only.
  */
 
+import { disableTextSelection, restoreTextSelection } from './text-selection';
 import type { DomHandlers, InteractionContext } from './types';
 import { partEffect, partElement } from './types';
 
@@ -140,6 +141,8 @@ export function createPress(
   let shouldIgnoreClick = false;
   const listeners: (() => void)[] = [];
   let clickTimer: ReturnType<typeof setTimeout> | undefined;
+  // The element whose text selection a touch press turned off.
+  let unselectable: HTMLElement | null = null;
 
   const element = () => partElement(ctx, options.part);
 
@@ -151,6 +154,8 @@ export function createPress(
     removeListeners();
     clearTimeout(clickTimer);
     active = null;
+    if (unselectable) restoreTextSelection(unselectable);
+    unselectable = null;
   };
 
   const listen = <K extends keyof DocumentEventMap>(
@@ -314,6 +319,11 @@ export function createPress(
       const origin = event.target as Element;
       if (origin.hasPointerCapture?.(event.pointerId)) {
         origin.releasePointerCapture(event.pointerId);
+      }
+      // A long press would select the label and the text around it.
+      if (event.pointerType === 'touch') {
+        disableTextSelection(target);
+        unselectable = target;
       }
       begin((event.pointerType || 'mouse') as PointerType, event, {
         pointerId: event.pointerId,
