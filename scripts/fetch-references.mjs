@@ -19,6 +19,12 @@ const REFERENCES = [
   { name: 'floating-ui', repo: 'floating-ui/floating-ui' },
   { name: 'aria-practices', repo: 'w3c/aria-practices' },
   { name: 'virtual-screen-reader', repo: 'guidepup/virtual-screen-reader' },
+  { name: 'community-protocols', repo: 'webcomponents-cg/community-protocols' },
+  { name: 'lit', repo: 'lit/lit' },
+  { name: 'lion', repo: 'ing-bank/lion' },
+  { name: 'spectrum-web-components', repo: 'adobe/spectrum-web-components' },
+  { name: 'catalyst', repo: 'github/catalyst' },
+  { name: 'auto-complete-element', repo: 'github/auto-complete-element' },
 ];
 
 const root = join(import.meta.dirname, '..', 'references');
