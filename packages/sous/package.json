@@ -20,6 +20,11 @@
       "types": "./dist/collections/index.d.ts",
       "default": "./dist/collections/index.js"
     },
+    "./button": {
+      "sous-source": "./src/components/button/index.ts",
+      "types": "./dist/button/index.d.ts",
+      "default": "./dist/button/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

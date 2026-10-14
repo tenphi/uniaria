@@ -7,6 +7,7 @@ export default defineConfig({
     index: 'src/index.ts',
     'dom/index': 'src/dom/index.ts',
     'collections/index': 'src/collections/index.ts',
+    'button/index': 'src/components/button/index.ts',
   },
   format: 'esm',
   platform: 'neutral',
