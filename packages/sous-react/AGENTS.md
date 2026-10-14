@@ -12,9 +12,10 @@ for internal state". Local rules:
   later changes. `useSyncExternalStore` appears only inside
   `useComponentState`, with the selected value as the snapshot (cached per
   store version so it stays stable).
-- `useComponent` provides its instance through a React context whose value
-  never changes (the instance, never state). Children take an explicit
-  `owner` prop first, then this context, then the DOM ancestor after mount.
+- `useComponent` will provide its instance through a React context whose
+  value never changes (the instance, never state), with the first composed
+  component. Children take an explicit `owner` prop first, then this
+  context, then the DOM ancestor after mount.
 - Handlers are stable wrappers that call the latest `connect()` handler with
   `event.nativeEvent`.
 - Ids with `useId`. Call `setProps()` during render (silent) and
@@ -22,7 +23,12 @@ for internal state". Local rules:
 - Map neutral part props to React props: `focusin` → `onFocus`, `focusout` →
   `onBlur`, `input` → `onChange`, `class` → `className`, `for` → `htmlFor`,
   `tabindex` → `tabIndex`.
-- Warn in development when a consumer passes an attribute the binder owns.
+- Warn in development when a consumer passes an attribute the binder owns
+  (checked in the part's ref, against what React just rendered).
 - Tests: render counts (zero for internal interactions), StrictMode (double
   mount), SSR + hydration.
+- `src/conformance-adapter.tsx` implements the mount contract (inside
+  StrictMode) and `src/conformance.browser.test.ts` runs every suite. Raise
+  its `phase` as the roadmap advances, and register each new definition in
+  the adapter's `definitions` map.
 - `react` stays a peer dependency (`^18 || ^19`).

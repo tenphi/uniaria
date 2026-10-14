@@ -1,11 +1,12 @@
 /**
- * `@tenphi/sous-react` — the React adapter (design decision 9).
+ * `@tenphi/sous-react` — the React adapter (design decisions 2, 4 and 9).
  *
- * One generic `useComponent(definition, props)`: it binds the instance store
- * with `useSyncExternalStore`, generates ids with `useId`, calls `setProps()`
- * during render and `sync()` in a layout effect, and maps neutral part props to
- * React props (`focusin` → `onFocus`, `click` → `onClick`, handlers receive
- * `event.nativeEvent`). No component-specific code belongs in this package.
+ * `useComponent(definition, props)` renders any Sous definition: spread
+ * `ui.parts.<name>` onto each part element. Internal state never re-renders
+ * the component; the DOM binder writes it to the elements. Read state only
+ * where the render needs it, with `useComponentState(ui, selector)`. No
+ * component-specific code belongs in this package.
  */
 
-export {};
+export { useComponent, useComponentState } from './use-component';
+export type { ComponentHandle, ReactPartProps } from './use-component';
