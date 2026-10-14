@@ -57,6 +57,7 @@ sous/
 │   └── sous-testing/
 ├── conformance/                    Scenarios; owner approval required (see Conformance)
 ├── docs/component-spec-template.md
+├── docs/interaction-layer.md       What dom/ must do, from React Aria; status
 ├── scripts/                        Repo checks run by CI
 ├── specs/                          Owner's local design notes (gitignored)
 ├── references/                     Read-only clones of related repos (gitignored)
