@@ -4,9 +4,9 @@ Read the root [AGENTS.md](../AGENTS.md) first. This folder is the oracle every
 adapter is judged by, so it has the strictest rules in the repo:
 
 - **Every change needs the owner's approval.** Scenarios come from an approved
-  component spec and land in a pull request with no implementation changes.
-  CI fails pull requests that touch both; only the owner's
-  `conformance-approved` label overrides it.
+  component spec and land in commits with no implementation changes. CI fails
+  any commit or pull request that touches both; only the owner's
+  `conformance-approved` label on a pull request overrides it.
 - Never edit a scenario to make an implementation pass. If a scenario looks
   wrong, stop and explain why to the owner.
 - Scenarios are adapter-agnostic: they mount through the `mount(component,

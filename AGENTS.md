@@ -63,22 +63,22 @@ sous/
 
 ## Commands
 
-| Command                                          | Description                                                            |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `pnpm install`                                   | Install. Versions younger than 14 days are refused on purpose.         |
-| `pnpm build`                                     | Build every published package with tsdown (ESM, `.d.ts`, sourcemaps).  |
-| `pnpm test`                                      | All tests: `node` project, then `browser` (Chromium, Firefox, WebKit). |
-| `pnpm test:node`                                 | Only the DOM-free tests.                                               |
-| `pnpm test:browser`                              | Only the browser tests.                                                |
-| `pnpm vitest run --project "browser (chromium)"` | One browser engine.                                                    |
-| `pnpm test:setup`                                | Install the Playwright browsers.                                       |
-| `pnpm typecheck`                                 | Type-check every package, including the DOM-free core config.          |
-| `pnpm lint` / `pnpm lint:fix`                    | ESLint, including architecture boundaries.                             |
-| `pnpm format` / `pnpm format:check`              | Prettier.                                                              |
-| `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                            |
-| `pnpm check:conformance`                         | The conformance-separation check CI runs on pull requests.             |
-| `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).             |
-| `pnpm changeset`                                 | Create a changeset entry.                                              |
+| Command                                          | Description                                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `pnpm install`                                   | Install. Versions younger than 14 days are refused on purpose.                             |
+| `pnpm build`                                     | Build every published package with tsdown (ESM, `.d.ts`, sourcemaps).                      |
+| `pnpm test`                                      | All tests: `node` project, then `browser` (Chromium, Firefox, WebKit).                     |
+| `pnpm test:node`                                 | Only the DOM-free tests.                                                                   |
+| `pnpm test:browser`                              | Only the browser tests.                                                                    |
+| `pnpm vitest run --project "browser (chromium)"` | One browser engine.                                                                        |
+| `pnpm test:setup`                                | Install the Playwright browsers.                                                           |
+| `pnpm typecheck`                                 | Type-check every package, including the DOM-free core config.                              |
+| `pnpm lint` / `pnpm lint:fix`                    | ESLint, including architecture boundaries.                                                 |
+| `pnpm format` / `pnpm format:check`              | Prettier.                                                                                  |
+| `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                                                |
+| `pnpm check:conformance`                         | Check that no unpushed commit changes both conformance and implementation. CI runs it too. |
+| `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).                                 |
+| `pnpm changeset`                                 | Create a changeset entry. Not used until the first release.                                |
 
 ## Stack
 
@@ -91,7 +91,8 @@ sous/
   Chromium, Firefox and WebKit through Playwright.
 - **Lint:** ESLint 10 flat config + typescript-eslint + `eslint-config-prettier`.
 - **Format:** Prettier — single quotes, semicolons, trailing commas, 80 cols.
-- **Versioning:** Changesets with `@changesets/changelog-github`.
+- **Versioning:** Changesets with `@changesets/changelog-github`, from the
+  first release on. Until then there are no changesets and no version bumps.
 - **Package manager:** pnpm 11 workspaces. Node ≥ 22.
 
 Workspace packages resolve each other's `src/` through the `sous-source`
@@ -252,14 +253,14 @@ owner's approval**, including small utility packages, Lit, state libraries
 
 ## Component workflow
 
-One component per task, small pull requests, in this order:
+One component per task, small commits, in this order:
 
 1. **Spec.** Copy `docs/component-spec-template.md` to
-   `packages/sous/src/components/<name>/spec.md` and fill it in. Open a pull
-   request with only the spec. Do not go further until the owner sets its
-   status to `approved`.
+   `packages/sous/src/components/<name>/spec.md` and fill it in. Commit the
+   spec on its own and ask the owner to review it. Do not go further until
+   the owner sets its status to `approved`.
 2. **Conformance scenarios.** Written from the approved spec in
-   `conformance/src/<name>/`, in a pull request of their own, including
+   `conformance/src/<name>/`, in commits of their own, including
    spoken-output checks with the virtual screen reader.
 3. **Definition.** `packages/sous/src/components/<name>/`, iterated until the
    scenarios pass in both adapters. Register the subpath in three places:
@@ -281,10 +282,12 @@ ComboBox.
 
 - Conformance scenarios are the oracle. An agent never edits a scenario to
   make an implementation pass.
-- Scenarios and implementation never change in the same pull request. CI
-  (`scripts/check-conformance-separation.mjs`) fails a pull request that
-  touches both `conformance/` and non-test files under `packages/*/src/`. Only
-  the owner may override it, with the `conformance-approved` label.
+- Scenarios and implementation never change in the same commit or pull
+  request. `scripts/check-conformance-separation.mjs` fails any commit pushed
+  to `main` (and any pull request) that touches both `conformance/` and
+  non-test files under `packages/*/src/`. Run `pnpm check:conformance` before
+  pushing. Only the owner may override it, and only on a pull request, with
+  the `conformance-approved` label.
 - If a scenario looks wrong, stop and describe the problem to the owner; do
   not work around it.
 
@@ -294,8 +297,8 @@ ComboBox.
   `*.browser.test.ts(x)` runs in Chromium, Firefox and WebKit.
 - Import test functions explicitly from `vitest`; there are no globals.
 - Interactions are tested in real browsers, not in a simulated DOM.
-- Spoken output is checked with `@guidepup/virtual-screen-reader` on every
-  pull request. Real screen readers (VoiceOver, NVDA through Guidepup) run in
+- Spoken output is checked with `@guidepup/virtual-screen-reader` in CI on
+  every push. Real screen readers (VoiceOver, NVDA through Guidepup) run in
   a nightly workflow that is not set up yet.
 - If one engine fails to launch locally, run the others by project name
   (`browser (chromium)`, `browser (webkit)`) and rely on CI for the rest.
@@ -314,7 +317,7 @@ ComboBox.
 
 ## Stop and ask the owner
 
-Before any of these, stop and ask in the pull request or the conversation:
+Before any of these, stop and ask the owner in the conversation:
 
 - Starting a component without an approved spec.
 - Any change to `conformance/`.
@@ -373,14 +376,17 @@ Manifest generation, and demo pages.
 
 ## Before pushing changes
 
-Follow [`.cursor/commands/submit-changes.md`](.cursor/commands/submit-changes.md).
-At minimum:
+Until the first release, work goes straight to `main`: no branches, pull
+requests or changesets. Follow
+[`.cursor/commands/submit-changes.md`](.cursor/commands/submit-changes.md). At
+minimum:
 
 1. `pnpm hygiene` — lint, format check, typecheck. Fix errors before going on.
 2. `pnpm test` — all projects pass.
-3. **Changeset** for any user-visible change to a published package.
-4. **Commit** with Conventional Commits (`feat`, `fix`, `refactor`, `test`,
+3. **Commit** with Conventional Commits (`feat`, `fix`, `refactor`, `test`,
    `docs`, `chore`, `perf`, `ci`); scope is the component or layer
-   (`feat(checkbox): …`, `fix(runtime): …`).
-5. **Push** — never to `main`. Work on a branch and open a pull request with
-   `gh pr create`.
+   (`feat(checkbox): …`, `fix(runtime): …`). Conformance scenarios and
+   implementation go in separate commits.
+4. `pnpm check:conformance` — no unpushed commit touches both.
+5. **Push** to `main` and make sure CI passes; fix a failure in a follow-up
+   commit.

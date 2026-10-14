@@ -65,11 +65,11 @@ jobs:
       - name: Test
         run: pnpm test
 
-  # Conformance scenarios and implementation never change in the same pull
-  # request (AGENTS.md → Conformance). Re-runs when labels change, so the
-  # owner's `conformance-approved` label takes effect without a new push.
+  # Conformance scenarios and implementation never change in the same commit
+  # or pull request (AGENTS.md → Conformance). On pull requests it re-runs
+  # when labels change, so the owner's `conformance-approved` label takes
+  # effect without a new push.
   conformance-separation:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -79,8 +79,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check conformance and implementation are separate
+      - name: Check each pushed commit
+        if: github.event_name == 'push'
         run: node scripts/check-conformance-separation.mjs
         env:
-          BASE_REF: origin/${{ github.base_ref }}
+          COMMIT_RANGE: ${{ github.event.before }}..${{ github.sha }}
+
+      - name: Check the pull request
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-conformance-separation.mjs
+        env:
+          PR_BASE: origin/${{ github.base_ref }}
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
