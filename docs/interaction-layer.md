@@ -29,7 +29,7 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 8. Scroll lock         | Planned                      |                                                             |
 | 9. aria-hidden outside | Planned                      |                                                             |
 | 10. Live announcer     | Built                        | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Planned (`collections/`)     |                                                             |
+| 11. Typeahead          | Built (core), not wired yet  | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
 Press, still to build: nested pressables (§1.53-56) and the macOS Meta keyup
 workaround (§1.37). Text-selection suppression (`dom/text-selection.ts`,
@@ -44,6 +44,17 @@ needs arrow-key focus moves), the cancelable restore event (§5.22-23),
 waiting for CSS transitions before restoring in virtual modality (§5.25),
 the top-layer exception (§5.11) and shadow DOM (§5.49). Focus-within doesn't
 watch for a focused control becoming disabled in Firefox (§4.7).
+
+Typeahead is the DOM-free core only (`createTypeahead`, `findByText`); the
+first collection component (Listbox) wires `keydown`. That wiring owns:
+calling `handleKey(event, search)` with a `findByText` search from the
+focused key over the item keys; focusing the returned key without selecting
+it (§11.13) and calling `preventDefault` when `isHandled`; ignoring keydowns
+whose target sits outside the collection element (§11.11) or in a text input
+inside an item (§11.12: React Aria's row stops their propagation, Sous checks
+the target instead); making sure an earlier Space handler, such as an item's
+press, leaves Space alone while `isSearching(event.timeStamp)` (§11.7); and
+not calling `handleKey` at all when typeahead is turned off (§11.14).
 
 ## Where Sous differs
 
@@ -93,6 +104,19 @@ These are decided; follow them rather than the catalogue.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.
+- **Typeahead has no timer and no listeners.** The query expires when more
+  than 1000 ms separate two keystrokes, measured with the events'
+  `timeStamp` (§11.5), so there is no timeout to clear on unmount and §11.15
+  is moot. `handleKey` returns `{ isHandled, key }` instead of focusing,
+  calling `preventDefault` and stopping propagation (§11.7, 11.13); the
+  caller does the first two and never the third.
+- **Typeahead resets on every miss** (§11.6), Space included. React Aria
+  keeps the query, trailing space and all, after a Space that matches
+  nothing, so each Space within the next second is swallowed too. Sous still
+  consumes that Space, which `isSearching()` promised to earlier handlers,
+  but the next Space selects. Disabled items never match, the focused one
+  included (React Aria starts at the focused key without checking it), and
+  an empty query matches nothing.
 - **Overlays use the top layer.** `<dialog>` and the Popover API replace
   portals, so the portal rules (§1.55, 2.11, 4.8, 11.11) become plain DOM
   containment, and a modal `<dialog>` already makes the outside inert.
