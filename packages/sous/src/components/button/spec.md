@@ -40,15 +40,15 @@ No element-owned parts.
 
 ## Props
 
-| Prop                  | Type                              | Default    | Bindable | Change event | Notes                                                                                                                                                                                                                                                                          |
-| --------------------- | --------------------------------- | ---------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| disabled              | `boolean`                         | `false`    | no       | —            | Native `disabled` on `button` and `input`; `aria-disabled="true"` and no `tabindex` elsewhere.                                                                                                                                                                                 |
-| focusableWhenDisabled | `boolean`                         | `false`    | no       | —            | When disabled, use `aria-disabled="true"` instead of `disabled` and keep the root focusable and in the tab order. Presses, clicks and form submission are still blocked.                                                                                                       |
-| href                  | `string \| undefined`             | —          | no       | —            | Link mode: the root is a native `<a href>` with link semantics, and the same press events, states and data attributes. Removed while disabled.                                                                                                                                 |
-| type                  | `'button' \| 'submit' \| 'reset'` | `'button'` | no       | —            | Native button roots only; ignored in link mode. Deliberately not HTML's `submit` default (see Resolved questions).                                                                                                                                                             |
-| elementType           | `string`                          | `'button'` | no       | —            | The tag the consumer renders as root. `button` and `input` are native; anything else gets `role="button"` and keyboard handling. Ignored in link mode, where the root is `a`. The element adapter reads the real tag; the React adapter warns in development when they differ. |
-| excludeFromTabOrder   | `boolean`                         | `false`    | no       | —            | `tabindex="-1"`: still focusable by pointer and script, skipped by Tab.                                                                                                                                                                                                        |
-| preventFocusOnPress   | `boolean`                         | `false`    | no       | —            | A pointer press leaves focus where it was, for buttons that act on something else that keeps focus (a toolbar over an editor).                                                                                                                                                 |
+| Prop                      | Type                              | Default    | Bindable | Change event | Notes                                                                                                                                                                                                                                                                          |
+| ------------------------- | --------------------------------- | ---------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| isDisabled                | `boolean`                         | `false`    | no       | —            | Native `disabled` on `button` and `input`; `aria-disabled="true"` and no `tabindex` elsewhere.                                                                                                                                                                                 |
+| isFocusableWhenDisabled   | `boolean`                         | `false`    | no       | —            | When disabled, use `aria-disabled="true"` instead of `disabled` and keep the root focusable and in the tab order. Presses, clicks and form submission are still blocked.                                                                                                       |
+| href                      | `string \| undefined`             | —          | no       | —            | Link mode: the root is a native `<a href>` with link semantics, and the same press events, states and data attributes. Removed while disabled.                                                                                                                                 |
+| type                      | `'button' \| 'submit' \| 'reset'` | `'button'` | no       | —            | Native button roots only; ignored in link mode. Deliberately not HTML's `submit` default (see Resolved questions).                                                                                                                                                             |
+| elementType               | `string`                          | `'button'` | no       | —            | The tag the consumer renders as root. `button` and `input` are native; anything else gets `role="button"` and keyboard handling. Ignored in link mode, where the root is `a`. The element adapter reads the real tag; the React adapter warns in development when they differ. |
+| shouldExcludeFromTabOrder | `boolean`                         | `false`    | no       | —            | `tabindex="-1"`: still focusable by pointer and script, skipped by Tab.                                                                                                                                                                                                        |
+| shouldPreventFocusOnPress | `boolean`                         | `false`    | no       | —            | A pointer press leaves focus where it was, for buttons that act on something else that keeps focus (a toolbar over an editor).                                                                                                                                                 |
 
 ### Events
 
@@ -94,7 +94,7 @@ public API: adding a field is a feature, changing one is a breaking change.
 | isHovered      | `boolean` | A mouse or pen is over the root. Never set by touch, never while disabled.        |
 | isFocused      | `boolean` | The root has focus.                                                               |
 | isFocusVisible | `boolean` | The root has focus and the last interaction was keyboard or virtual, not pointer. |
-| isDisabled     | `boolean` | `disabled` is true.                                                               |
+| isDisabled     | `boolean` | The `isDisabled` prop is true.                                                    |
 
 ## Keyboard
 
@@ -105,7 +105,7 @@ public API: adding a field is a feature, changing one is a breaking change.
 | —     | —               | Key repeats never start a press. A keyup that lands elsewhere because focus moved during the press ends it without activation. The keyup is tracked on the document for this. |
 | Enter | root, link mode | The browser navigates on keydown, natively; Sous doesn't prevent it. The press still starts on keydown and fires `press` on keyup.                                            |
 | Space | root, link mode | Nothing, as on any link: the page scrolls.                                                                                                                                    |
-| Tab   | —               | Normal focus order. The root is in the tab order unless it is natively disabled, disabled without `focusableWhenDisabled`, or `excludeFromTabOrder`.                          |
+| Tab   | —               | Normal focus order. The root is in the tab order unless it is natively disabled, disabled without `isFocusableWhenDisabled`, or `shouldExcludeFromTabOrder`.                  |
 
 Exactly one `press` fires per activation. On `type="button"` and non-native
 roots Sous prevents the native activation click. On `type="submit"` and
@@ -124,19 +124,19 @@ State attributes are presence attributes (`data-pressed=""`) and are removed
 when false. ARIA values are strings. Sous never writes `aria-disabled="false"`
 (screen readers announce "not disabled"); it removes the attribute.
 
-| State                                 | Part | Attributes                                                                                                                                               |
-| ------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| idle, native                          | root | `type="button"` (or the `type` prop), `tabindex="0"`, `data-scope="button"`, `data-part="root"`                                                          |
-| idle, non-native                      | root | `role="button"`, `tabindex="0"`, `data-scope`, `data-part`                                                                                               |
-| hovered                               | root | + `data-hovered`                                                                                                                                         |
-| pressed                               | root | + `data-pressed`                                                                                                                                         |
-| focused                               | root | + `data-focused`; + `data-focus-visible` after keyboard or virtual interaction                                                                           |
-| `excludeFromTabOrder`                 | root | `tabindex="-1"`                                                                                                                                          |
-| disabled, native                      | root | `disabled`, `data-disabled`; no hover or press attributes                                                                                                |
-| disabled, non-native                  | root | `aria-disabled="true"`, no `tabindex`, `data-disabled`                                                                                                   |
-| disabled with `focusableWhenDisabled` | root | `aria-disabled="true"`, `tabindex` kept, `data-disabled`; no `disabled` attribute                                                                        |
-| idle, link mode                       | root | `href`, `tabindex="0"`, `data-scope`, `data-part`; no `role` (a link is already a link)                                                                  |
-| disabled, link mode                   | root | `href` removed, `role="link"` (an `a` without `href` has no role), `aria-disabled="true"`, `data-disabled`; `tabindex` only with `focusableWhenDisabled` |
+| State                                   | Part | Attributes                                                                                                                                                 |
+| --------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| idle, native                            | root | `type="button"` (or the `type` prop), `tabindex="0"`, `data-scope="button"`, `data-part="root"`                                                            |
+| idle, non-native                        | root | `role="button"`, `tabindex="0"`, `data-scope`, `data-part`                                                                                                 |
+| hovered                                 | root | + `data-hovered`                                                                                                                                           |
+| pressed                                 | root | + `data-pressed`                                                                                                                                           |
+| focused                                 | root | + `data-focused`; + `data-focus-visible` after keyboard or virtual interaction                                                                             |
+| `shouldExcludeFromTabOrder`             | root | `tabindex="-1"`                                                                                                                                            |
+| disabled, native                        | root | `disabled`, `data-disabled`; no hover or press attributes                                                                                                  |
+| disabled, non-native                    | root | `aria-disabled="true"`, no `tabindex`, `data-disabled`                                                                                                     |
+| disabled with `isFocusableWhenDisabled` | root | `aria-disabled="true"`, `tabindex` kept, `data-disabled`; no `disabled` attribute                                                                          |
+| idle, link mode                         | root | `href`, `tabindex="0"`, `data-scope`, `data-part`; no `role` (a link is already a link)                                                                    |
+| disabled, link mode                     | root | `href` removed, `role="link"` (an `a` without `href` has no role), `aria-disabled="true"`, `data-disabled`; `tabindex` only with `isFocusableWhenDisabled` |
 
 `tabindex` is set on native buttons too: Safari and Firefox on macOS focus a
 button on click only when it has one. React Aria does the same.
@@ -147,12 +147,12 @@ button on click only when it has one. React Aria does the same.
   pattern describes: opening a dialog moves focus into it, and a plain action
   leaves it on the button.
 - A pointer press focuses the root in every browser, without scrolling,
-  unless `preventFocusOnPress` is set. In that case focus stays where it was.
+  unless `shouldPreventFocusOnPress` is set. In that case focus stays where it was.
 - `isFocusVisible` comes from the shared modality tracker: keyboard and
   virtual interaction make focus visible, pointer interaction does not.
 - Disabling a focused button with native `disabled` drops focus to the body.
   For transient disabling, such as while an action is running, use
-  `focusableWhenDisabled` so focus stays.
+  `isFocusableWhenDisabled` so focus stays.
 
 ## Pointer and touch
 
@@ -187,7 +187,7 @@ button on click only when it has one. React Aria does the same.
 - Nested pressables: only the innermost one handles a press. Sous marks the
   event as handled instead of stopping propagation (decision 4).
 - While disabled, no press events fire and the click's default is prevented,
-  which also blocks form submission in `focusableWhenDisabled` mode.
+  which also blocks form submission in `isFocusableWhenDisabled` mode.
 - Context menu and Escape have no special handling, matching React Aria.
 - Link mode never prevents the link's default action. Navigation stays native,
   including modifier clicks, middle click and the context menu's "open in new
@@ -206,7 +206,7 @@ Phrases follow `@guidepup/virtual-screen-reader`'s format
 | non-native root (`role="button"`), text "Save" | `button, Save`                        |
 | native, disabled                               | `button, Save, disabled`              |
 | non-native, disabled                           | `button, Save, disabled`              |
-| `focusableWhenDisabled`, disabled              | `button, Save, disabled`              |
+| `isFocusableWhenDisabled`, disabled            | `button, Save, disabled`              |
 | re-enabled after being disabled                | `button, Save` (never "not disabled") |
 | link mode, text "Docs"                         | `link, Docs`                          |
 | link mode, disabled                            | `link, Docs, disabled`                |
@@ -217,8 +217,8 @@ Phrases follow `@guidepup/virtual-screen-reader`'s format
 // React
 const button = useButton({
   onPress: save,
-  disabled: isSaving,
-  focusableWhenDisabled: true,
+  isDisabled: isSaving,
+  isFocusableWhenDisabled: true,
 });
 const isPressed = useButtonState(button, (s) => s.isPressed); // only if the render needs it
 return <button {...button.parts.root}>Save</button>;
@@ -241,9 +241,10 @@ return <a {...docs.parts.root}>Docs</a>; // or the router's link component
 </script>
 ```
 
-Element attributes mirror the props in kebab case (`focusable-when-disabled`,
-`exclude-from-tab-order`, `prevent-focus-on-press`); properties use camel
-case. There is no `elementType` attribute: the element reads the root's tag.
+Element attributes are the props in kebab case without their `is` or
+`should` prefix (`disabled`, `focusable-when-disabled`,
+`exclude-from-tab-order`, `prevent-focus-on-press`); properties use the prop
+names (`isDisabled`). There is no `elementType` attribute: the element reads the root's tag.
 In link mode the element adopts the root's `href` on upgrade, so the link
 works before JavaScript runs, and owns it from then on; set the `href`
 property to change it.
@@ -269,16 +270,20 @@ Decided by @tenphi on 2026-10-14.
    follow the job, so screen-reader link and button lists stay correct; looks
    stay the consumer's. There is no separate Link component, and future menu
    items follow the same rule. Cube UI Kit's `to` maps to `href`.
-2. **Toggle buttons** are a separate ToggleButton (bindable `selected` →
+2. **Toggle buttons** are a separate ToggleButton (bindable `isSelected` →
    `aria-pressed`, with a label that never changes), next in the first scope.
    Cube UI Kit's `isSelected` maps to it.
-3. **No pending state in v1.** `disabled` with `focusableWhenDisabled` covers
+3. **No pending state in v1.** `isDisabled` with `isFocusableWhenDisabled` covers
    it without dropping focus. Spinner and label stay with the design system.
 4. **`touch-action`.** `dom/` adopts one behavioral rule for pressable parts,
    `touch-action: pan-x pan-y pinch-zoom`, as React Aria does. It is the only
    CSS Sous ships, and it is behavior, not styling.
 5. **`type` defaults to `button`**, deliberately unlike HTML's `submit`, as in
    React Aria, Cube UI Kit and Spectrum Web Components.
+6. **Boolean props read as predicates** (@tenphi, 2026-10-14): `is…` for
+   states, `should…` for behavior, as in Cube UI Kit. The props were renamed
+   from `disabled`, `focusableWhenDisabled`, `excludeFromTabOrder` and
+   `preventFocusOnPress`; element attributes keep the HTML-style names.
 
 ## Open questions
 

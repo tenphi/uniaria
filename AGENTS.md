@@ -161,7 +161,8 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   or attribute, like Button's `elementType` and `href`).
 - Event names are camelCase (`pressStart`, `openChange`): the DOM event is
   lowercase (`pressstart`) and the callback prop is `onPressStart`. A
-  bindable's change event defaults to `<key>Change`.
+  bindable's change event defaults to `<name>Change`, where the name drops an
+  `is` prefix (`isOpen` → `openChange`, seeded by `defaultOpen`).
 - Adapters are generic over definitions. `sous-react` and `sous-elements`
   contain no component-specific behavior, only optional thin sugar
   (`sous-elements` also has one registering entry per component).
@@ -189,8 +190,8 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 
 - Every stateful value is a bindable, declared in the props schema
   (`bindable(default, { event })`). The consumer seeds it with
-  `default<Key>`, which applies until the first uncontrolled change, like a
-  form control's `value` attribute.
+  `default<Name>` (`defaultOpen` for `isOpen`), which applies until the first
+  uncontrolled change, like a form control's `value` attribute.
 - Uncontrolled: the core commits the change. Controlled: the core only calls
   `onChange` and reads the value back from props on the next render. Never
   assume a requested change took effect.
@@ -313,9 +314,11 @@ handler with its event.
   host in the capture phase: a bubbling event reaches the nearest part above
   its target; one that doesn't bubble (`pointerenter`) reaches only the part
   it targets.
-- State goes in through properties and out through events: the `open`
+- State goes in through properties and out through events: the `isOpen`
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.
+  Attributes drop the `is` and `should` prefixes (`disabled`,
+  `prevent-focus-on-press`); properties keep the prop names.
 - Properties set before upgrade are re-applied on upgrade. Registration is
   skipped when the name is already defined.
 - A host never sits between `<table>` and `<tr>`, inside `<ul>` or inside
@@ -426,6 +429,12 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
 
 ## Code conventions
 
+- Booleans read as predicates, in public API and inside the code alike:
+  `is…` for states (`isDisabled`, `isOpen`, `isPressed`), `should…`,
+  `has…`, `allows…` or `can…` for behavior (`shouldPreventFocusOnPress`,
+  `hasArrow`). This covers props, public state, options, variables,
+  parameters and functions that return booleans. DOM-defined names stay as
+  the DOM has them (`shiftKey`, the `disabled` attribute).
 - Each module starts with a JSDoc block stating its responsibility (and the
   design decision it implements, if any). Keep it in sync with behavior.
 - Functional style: factories and plain objects. The only classes are custom

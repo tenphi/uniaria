@@ -25,10 +25,15 @@ Mark element-owned parts (content the custom element writes) explicitly.
 
 ## Props
 
-| Prop     | Type      | Default | Bindable | Change event | Notes |
-| -------- | --------- | ------- | -------- | ------------ | ----- |
-| open     | `boolean` | `false` | yes      | `openchange` |       |
-| disabled | `boolean` | `false` | no       | —            |       |
+Boolean props read as predicates: `is…` for states (`isOpen`,
+`isDisabled`), `should…`, `has…` or `allows…` for behavior
+(`shouldPreventFocusOnPress`). A bindable `isOpen` is seeded by `defaultOpen`
+and reports `openChange` (DOM `openchange`, React `onOpenChange`).
+
+| Prop       | Type      | Default | Bindable | Change event | Notes |
+| ---------- | --------- | ------- | -------- | ------------ | ----- |
+| isOpen     | `boolean` | `false` | yes      | `openChange` |       |
+| isDisabled | `boolean` | `false` | no       | —            |       |
 
 ## Public state
 
