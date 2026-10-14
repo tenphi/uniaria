@@ -31,7 +31,13 @@ const FRAMEWORKS = {
 
 export default defineConfig(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'coverage/**', 'specs/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'coverage/**',
+      'specs/**',
+      'references/**',
+    ],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,

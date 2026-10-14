@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:conformance": "node scripts/check-conformance-separation.mjs",
+    "references": "node scripts/fetch-references.mjs",
     "hygiene": "pnpm lint && pnpm format:check && pnpm typecheck",
     "hygiene:fix": "pnpm lint:fix && pnpm format && pnpm typecheck",
     "changeset": "changeset",

@@ -43,3 +43,6 @@ __screenshots__/
 
 # Owner's local design notes (see AGENTS.md → Design source)
 specs/
+
+# Read-only reference repositories (`pnpm references`, AGENTS.md → Reference repos)
+references/

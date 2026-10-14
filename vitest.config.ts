@@ -18,6 +18,8 @@ import { defaultExclude, defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: { conditions: ['sous-source', ...defaultClientConditions] },
   ssr: { resolve: { conditions: ['sous-source', ...defaultServerConditions] } },
+  // Reference repos are large and read-only; watching them wastes file handles.
+  server: { watch: { ignored: ['**/references/**', '**/specs/**'] } },
   test: {
     projects: [
       {

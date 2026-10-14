@@ -54,6 +54,7 @@ sous/
 ├── docs/component-spec-template.md
 ├── scripts/                        Repo checks run by CI
 ├── specs/                          Owner's local design notes (gitignored)
+├── references/                     Read-only clones of related repos (gitignored)
 ├── eslint.config.js                Includes the architecture boundary rules
 ├── vitest.config.ts                `node` and `browser` projects
 ├── tsconfig.base.json
@@ -76,6 +77,7 @@ sous/
 | `pnpm format` / `pnpm format:check`              | Prettier.                                                              |
 | `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                            |
 | `pnpm check:conformance`                         | The conformance-separation check CI runs on pull requests.             |
+| `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).             |
 | `pnpm changeset`                                 | Create a changeset entry.                                              |
 
 ## Stack
@@ -332,10 +334,35 @@ Before any of these, stop and ask in the pull request or the conversation:
 - [WAI-ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/),
   [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/),
   [Accessible Name Computation](https://www.w3.org/TR/accname-1.2/).
-- [React Aria source](https://github.com/adobe/react-spectrum) for interaction
-  edge cases (press, focus-visible, mobile screen readers). Code adapted from
-  it keeps its Apache 2.0 notice in the file header.
 - [Guidepup](https://www.guidepup.dev) for screen-reader testing.
+
+### Reference repos
+
+`references/` holds shallow clones of related projects so agents can read
+their source and tests locally. It is gitignored and nothing in the build,
+lint or tests touches it. Run `pnpm references` to clone or update all of
+them, or `pnpm references zag virtual` for some. Updating resets each clone to
+its latest default branch and discards local changes, so never edit them.
+
+| Folder                  | Repository                                                                          | License                   | Look at                                                                                                                                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cube-ui-kit`           | [cube-js/cube-ui-kit](https://github.com/cube-js/cube-ui-kit)                       | MIT                       | The owner's React design system and Sous's first consumer. `src/components/` (fields, overlays, collections) shows the APIs Sous has to serve.                                                       |
+| `react-spectrum`        | [adobe/react-spectrum](https://github.com/adobe/react-spectrum)                     | Apache 2.0                | `packages/@react-aria/*` (interactions, focus, overlays, selection, listbox, combobox, numberfield) and `packages/@react-stately/*`: interaction edge cases, mobile screen readers, and their tests. |
+| `zag`                   | [chakra-ui/zag](https://github.com/chakra-ui/zag)                                   | MIT                       | `packages/machines/*` for framework-agnostic component logic, `packages/core` and `packages/store` for runtime ideas, `packages/frameworks/*` for adapters.                                          |
+| `virtual`               | [TanStack/virtual](https://github.com/TanStack/virtual)                             | MIT                       | `packages/virtual-core`, the virtualization candidate (see Collections).                                                                                                                             |
+| `floating-ui`           | [floating-ui/floating-ui](https://github.com/floating-ui/floating-ui)               | MIT                       | `packages/dom`, the positioning fallback.                                                                                                                                                            |
+| `aria-practices`        | [w3c/aria-practices](https://github.com/w3c/aria-practices)                         | W3C Software and Document | `content/patterns/<pattern>/`: the APG pattern text and its working examples, which each spec follows.                                                                                               |
+| `virtual-screen-reader` | [guidepup/virtual-screen-reader](https://github.com/guidepup/virtual-screen-reader) | MIT                       | `src/`, to understand the spoken output that pull-request tests assert.                                                                                                                              |
+
+- Read them for behavior, edge cases and test ideas, then write Sous code
+  from the approved spec. Never import from `references/`, add it to a
+  tsconfig or build config, or copy files wholesale.
+- Code adapted from a reference keeps its license notice in the file header
+  (Apache 2.0 for React Aria, the MIT notice for the others).
+- The clones track default branches, not the versions Sous installs. For the
+  exact behavior of a dependency, read it in `node_modules`.
+- To add a repository, add it to `scripts/fetch-references.mjs` and this
+  table, with the owner's approval.
 
 ## Not set up yet
 
