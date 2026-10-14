@@ -27,7 +27,7 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 6. Interact outside    | Built                                | `dom/interact-outside.ts`, layer tests                      |
 | 7. Dismissable layers  | Built (stack, Escape, outside, blur) | `dom/layers.ts`, its tests                                  |
 | 8. Scroll lock         | Planned                              |                                                             |
-| 9. aria-hidden outside | Planned                              |                                                             |
+| 9. aria-hidden outside | Built, except shadow DOM             | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
 | 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
 | 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
@@ -55,6 +55,13 @@ inside an item (§11.12: React Aria's row stops their propagation, Sous checks
 the target instead); making sure an earlier Space handler, such as an item's
 press, leaves Space alone while `isSearching(event.timeStamp)` (§11.7); and
 not calling `handleKey` at all when typeahead is turned off (§11.14).
+
+Hide outside (`hideOutside`, `keepVisible`), still to build: shadow DOM
+(§9.20). Containment and the observer stop at shadow boundaries, so a target
+inside a shadow root gets its host hidden. It keeps the live announcer
+(`[data-sous-live-announcer]`) exposed but has no top-layer marker yet
+(§9.9-10; see Open questions). §9.16 and §9.21 still need a real screen
+reader.
 
 ## Where Sous differs
 
@@ -127,6 +134,28 @@ These are decided; follow them rather than the catalogue.
 - **Overlays use the top layer.** `<dialog>` and the Popover API replace
   portals, so the portal rules (§1.55, 2.11, 4.8, 11.11) become plain DOM
   containment, and a modal `<dialog>` already makes the outside inert.
+- **Hide outside** (§9) is `hideOutside(targets, { root, shouldUseInert })`
+  and `keepVisible(element)`, which always returns a function. Where it
+  differs from `ariaHideOutside`:
+  - State is per window under `Symbol.for('@tenphi/sous/hide-outside/v1')`,
+    with one count per attribute: an `aria-hidden` call and an `inert` call
+    each add and remove their own attribute. React Aria shares one count, so
+    a nested `inert` call over an `aria-hidden` one leaves the outside
+    focusable, and removing `aria-hidden` also clears an `inert` someone
+    else set (§9.18).
+  - An element someone else hid is skipped with its subtree; React Aria
+    hides its children (§9.3-4).
+  - An added node is judged where it is when the records arrive, not by the
+    record's parent, so a node added outside and moved into a target before
+    the observer runs stays exposed (§9.12). Children added to a hidden row
+    are hidden one by one, as the first walk does; React Aria skips them
+    (§9.16).
+  - When the newest call reverts, the previous one walks its root again
+    before observing, so nodes added while it was suspended are hidden too;
+    React Aria leaves them exposed (§9.15). It walks before the newest call
+    lets go, so a node both hide keeps its attribute throughout.
+  - Reverting twice is harmless. With no targets and no root, it does
+    nothing.
 
 ## Open questions for the owner
 
@@ -135,7 +164,9 @@ These are decided; follow them rather than the catalogue.
   decision 8); React calls every ancestor part's handler. Composites will
   diverge between adapters. Proposal: deliver to every part on the path,
   innermost first, like the DOM and React.
-
+- **Typeahead: Space that matches nothing.** React Aria keeps "foo " as the
+  query and swallows every Space for the next second. Sous handles that one
+  Space but empties the query, so the next Space selects. Keep?
 - **Scroll lock on iOS** (§8) injects an `overscroll-behavior: contain` style
   and a second `focus()` wrapper. AGENTS.md says the only CSS Sous ships is
   `touch-action`. Allow a second behavioral rule, or find another way?
@@ -144,7 +175,13 @@ These are decided; follow them rather than the catalogue.
   popovers.
 - **Top-layer marker.** React Aria keeps toasts reachable through
   `data-react-aria-top-layer` (§5.11, 6.7, 9.9). Sous needs its own marker
-  when toasts arrive.
+  when toasts arrive. `hideOutside` keeps only the live announcer for now.
+- **Nested overlays outside their parent.** Overlays stay mounted, so a
+  nested modal or non-modal popover placed outside the parent modal's
+  element is already hidden by the parent's `hideOutside` call when it
+  opens. `keepVisible()` only protects elements added later, as in React
+  Aria, where portals mount on open. Require nested overlays inside their
+  parent, or let a newer call lift what older calls hid?
 
 ## Catalogue conventions
 

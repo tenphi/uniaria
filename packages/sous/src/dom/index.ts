@@ -5,10 +5,10 @@
  *
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
  * the shared input-modality tracker, focus-within, focus scopes, the
- * focusable/tabbable rules, the live announcer, outside interaction and the
- * dismissable layer stack. Planned: aria-hidden outside, scroll lock, owner
- * lookup, and positioning (CSS anchor positioning with the Floating UI
- * fallback behind one wrapper).
+ * focusable/tabbable rules, the live announcer, outside interaction, the
+ * dismissable layer stack and hiding everything outside a modal. Planned:
+ * scroll lock, owner lookup, and positioning (CSS anchor positioning with
+ * the Floating UI fallback behind one wrapper).
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -36,6 +36,8 @@ export {
   lastFocusable,
 } from './focusable';
 export type { FocusableOptions } from './focusable';
+export { hideOutside, keepVisible } from './hide-outside';
+export type { HideOutsideOptions } from './hide-outside';
 export { createHover } from './hover';
 export type { Hover, HoverOptions } from './hover';
 export {
