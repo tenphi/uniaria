@@ -192,6 +192,74 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
       );
     });
 
+    group('touch', () => {
+      scenario(
+        'taps with a real finger',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: h('button', { part: 'root' }, 'Save'),
+          });
+          const log: string[] = [];
+          for (const type of ['pointerdown', 'pointerup', 'click']) {
+            mounted.part().addEventListener(type, (event) => {
+              log.push(`${type}:${(event as PointerEvent).pointerType}`);
+            });
+          }
+          await touch.tap(mounted.part());
+          expect(log).toEqual([
+            'pointerdown:touch',
+            'pointerup:touch',
+            'click:touch',
+          ]);
+        },
+        { needs: ['touch'] },
+      );
+
+      scenario(
+        'turns a finger moving away into a scroll',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: h('button', { part: 'root' }, 'Save'),
+          });
+          const log = track(mounted.part(), ['pointercancel', 'click']);
+          await touch.down(mounted.part());
+          await touch.moveOutside(mounted.part());
+          await touch.up();
+          expect(log).toEqual(['pointercancel']);
+        },
+        { needs: ['touch'] },
+      );
+
+      scenario(
+        'leaves a finger down at the end of a scenario',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: h('button', { part: 'root' }, 'Save'),
+          });
+          await touch.down(mounted.part());
+        },
+        { needs: ['touch'] },
+      );
+
+      scenario(
+        'starts the next scenario with no finger down',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: h('button', { part: 'root' }, 'Save'),
+          });
+          const touches: number[] = [];
+          mounted
+            .part()
+            .addEventListener('touchstart', (event) =>
+              touches.push(event.touches.length),
+            );
+          await touch.tap(mounted.part());
+          expect(touches).toEqual([1]);
+        },
+        { needs: ['touch'] },
+      );
+    });
+
     scenario(
       'reads spoken output for the whole document',
       async ({ mount, spoken }) => {

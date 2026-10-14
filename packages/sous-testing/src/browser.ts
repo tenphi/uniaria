@@ -6,7 +6,13 @@
  * project.
  */
 
-export { keyboard, pointer, releaseInput } from './conformance/input';
+export {
+  isTouchSupported,
+  keyboard,
+  pointer,
+  releaseInput,
+  touch,
+} from './conformance/input';
 export { runConformance } from './conformance/run';
 export type { RunOptions } from './conformance/run';
 export { spokenPhrases } from './conformance/spoken';

@@ -66,7 +66,63 @@ export const sousKeyUp: BrowserCommand<[key: string]> = async (
   await context.page.keyboard.up(key);
 };
 
+type TouchPhase = 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel';
+
+type CDPSession = Awaited<
+  ReturnType<BrowserCommandContext['context']['newCDPSession']>
+>;
+
+/** One DevTools session per page, for touch input. */
+const sessions = new WeakMap<object, Promise<CDPSession>>();
+
+function isChromium(context: BrowserCommandContext): boolean {
+  return context.context.browser()?.browserType().name() === 'chromium';
+}
+
+/**
+ * Whether `sousTouch` works in this browser. Only Chromium takes real touch
+ * input through DevTools (`Input.dispatchTouchEvent`); Playwright's own
+ * touchscreen needs `hasTouch` on the whole context, which would make every
+ * other test run as if on a touch device.
+ */
+export const sousTouchSupported: BrowserCommand<[]> = (context) =>
+  isChromium(context);
+
+/**
+ * A finger at the target's centre (or 24px below it, `outside`) for
+ * `touchStart` and `touchMove`; lifted for `touchEnd` and `touchCancel`.
+ */
+export const sousTouch: BrowserCommand<
+  [phase: TouchPhase, selector?: string, where?: 'center' | 'outside']
+> = async (context, phase, selector, where = 'center') => {
+  if (!isChromium(context)) {
+    throw new Error('Conformance input: touch needs Chromium.');
+  }
+  let session = sessions.get(context.page);
+  if (!session) {
+    session = context.context.newCDPSession(context.page);
+    sessions.set(context.page, session);
+  }
+  const touchPoints = [];
+  if (selector !== undefined) {
+    const box = await boxOf(context, selector);
+    const y =
+      where === 'center'
+        ? box.y + box.height / 2
+        : box.y + box.height + OUTSIDE_OFFSET;
+    touchPoints.push({ x: box.x + box.width / 2, y, id: 0 });
+  }
+  await (
+    await session
+  ).send('Input.dispatchTouchEvent', {
+    type: phase,
+    touchPoints,
+  });
+};
+
 export const sousCommands = {
+  sousTouchSupported,
+  sousTouch,
   sousPointerDown,
   sousPointerMove,
   sousPointerUp,

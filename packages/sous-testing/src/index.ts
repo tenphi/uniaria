@@ -20,6 +20,7 @@ export { defineConformance } from './conformance/scenario';
 export type {
   ConformanceBuilder,
   ConformanceSuite,
+  InputNeed,
   KeyboardInput,
   MouseButton,
   PointerInput,
@@ -28,6 +29,7 @@ export type {
   ScenarioGroup,
   ScenarioOptions,
   ScenarioRun,
+  TouchInput,
 } from './conformance/scenario';
 export { h, renderTemplate, templateParts } from './conformance/template';
 export type {

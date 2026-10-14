@@ -6,7 +6,8 @@
  * Each scenario is tagged with the roadmap phase whose features it needs.
  * An adapter run declares the phase it has reached, and later scenarios are
  * reported as skipped instead of failing (Button's touch and virtual-click
- * scenarios wait for the phase 2 interaction layer).
+ * scenarios wait for the phase 2 interaction layer). A scenario can also need
+ * input that only some browsers take (touch); elsewhere it is skipped too.
  */
 
 import type { MountOptions, Mounted } from './contract';
@@ -41,11 +42,35 @@ export interface KeyboardInput {
   tab(options?: { isBackward?: boolean }): Promise<void>;
 }
 
+/**
+ * Real touch input, one finger at a time, through DevTools: only Chromium
+ * takes it, so scenarios that use it declare `needs: ['touch']`. The browser
+ * turns it into touch and pointer events, compatibility mouse events and a
+ * click, and a finger that moves away starts a scroll.
+ */
+export interface TouchInput {
+  /** Puts a finger down on the target's centre. */
+  down(target: Element): Promise<void>;
+  /** Moves the finger to the target's centre. */
+  move(target: Element): Promise<void>;
+  /** Moves the finger 24px below the target. */
+  moveOutside(target: Element): Promise<void>;
+  /** Lifts the finger wherever it is. */
+  up(): Promise<void>;
+  /** `down` on the target, then `up`. */
+  tap(target: Element): Promise<void>;
+}
+
+/** Input a scenario needs beyond mouse and keyboard. */
+export type InputNeed = 'touch';
+
 export interface ScenarioContext<Props, State> {
   /** Mounts the suite's component through the adapter under test. */
   mount(options: MountOptions<Props>): Promise<Mounted<Props, State>>;
   pointer: PointerInput;
   keyboard: KeyboardInput;
+  /** Only in scenarios that declare `needs: ['touch']`. */
+  touch: TouchInput;
   /**
    * Reads the whole document with the virtual screen reader and returns every
    * phrase, from `document` to `end of document`.
@@ -60,12 +85,18 @@ export type ScenarioRun<Props, State> = (
 export interface ScenarioOptions {
   /** Roadmap phase whose features the scenario needs. Default 1. */
   readonly phase?: number;
+  /**
+   * Input beyond mouse and keyboard. Where the browser can't take it, the
+   * scenario is skipped.
+   */
+  readonly needs?: readonly InputNeed[];
 }
 
 export interface Scenario<Props, State> {
   readonly kind: 'scenario';
   readonly name: string;
   readonly phase: number;
+  readonly needs: readonly InputNeed[];
   readonly run: ScenarioRun<Props, State>;
 }
 
@@ -118,7 +149,13 @@ export function defineConformance<Props, State>(
 
   define({
     scenario(name, run, options) {
-      current.push({ kind: 'scenario', name, run, phase: options?.phase ?? 1 });
+      current.push({
+        kind: 'scenario',
+        name,
+        run,
+        phase: options?.phase ?? 1,
+        needs: options?.needs ?? [],
+      });
     },
     group(name, defineGroup) {
       const children: Child[] = [];

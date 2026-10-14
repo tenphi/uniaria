@@ -2,7 +2,8 @@
  * Runs conformance suites against one adapter as Vitest browser tests. The
  * runner owns everything adapter-neutral: a fresh container per mount, part
  * lookup, the event log, real input, spoken output, cleanup after each
- * scenario, and skipping scenarios from later roadmap phases.
+ * scenario, and skipping scenarios from later roadmap phases or that need
+ * input the browser can't take.
  *
  * An adapter's conformance test file is one call:
  * `runConformance(reactAdapter, suites, { phase: 1 })`.
@@ -17,7 +18,13 @@ import type {
   Mounted,
   RecordedEvent,
 } from './contract';
-import { keyboard, pointer, releaseInput } from './input';
+import {
+  isTouchSupported,
+  keyboard,
+  pointer,
+  releaseInput,
+  touch,
+} from './input';
 import type {
   ConformanceSuite,
   Scenario,
@@ -76,6 +83,7 @@ export function runConformance(
       const context: ScenarioContext<unknown, unknown> = {
         pointer,
         keyboard,
+        touch,
         spoken: () => spokenPhrases(),
         async mount(mountOptions: MountOptions<unknown>) {
           const container = document.createElement('div');
@@ -130,7 +138,15 @@ export function runConformance(
           } else if (child.phase > phase) {
             it.skip(`${child.name} (phase ${child.phase})`);
           } else {
-            it(child.name, () => child.run(context));
+            it(child.name, async ({ skip }) => {
+              if (
+                child.needs.includes('touch') &&
+                !(await isTouchSupported())
+              ) {
+                skip('needs touch input, which only Chromium takes');
+              }
+              await child.run(context);
+            });
           }
         }
       };

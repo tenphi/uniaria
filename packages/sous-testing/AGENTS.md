@@ -12,10 +12,15 @@ contract". Local rules:
   - `./commands` holds the Node-side Playwright commands (`sousCommands`),
     registered in the browser project of `vitest.config.ts`.
 - The runner owns everything adapter-neutral: containers, part lookup, the
-  event log, input, spoken output, cleanup and phase skipping. Adapters only
-  render, apply props, report events and expose state.
+  event log, input, spoken output, cleanup and skipping (later phases, input
+  the browser can't take). Adapters only render, apply props, report events
+  and expose state.
 - Real input goes through Playwright, never synthetic `dispatchEvent`, so
   scenarios see the browser's own event sequences.
+- Touch goes through DevTools (`Input.dispatchTouchEvent`), which only
+  Chromium takes; scenarios that touch declare `needs: ['touch']` and are
+  skipped elsewhere. Don't turn on Playwright's `hasTouch`: it applies to
+  the whole browser context, so every test would run as on a touch device.
 - `src/conformance/run.browser.test.ts` checks the runner against a plain-DOM
   fixture adapter in every browser. Keep it passing; every adapter's
   conformance run depends on it.

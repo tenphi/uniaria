@@ -1,13 +1,18 @@
 /**
- * Browser side of the conformance input helpers: real mouse and keyboard
- * input through the Playwright commands in `../commands.ts`. Held buttons and
- * keys are tracked so the runner can release them after each scenario, even
- * one that failed mid-press.
+ * Browser side of the conformance input helpers: real mouse, keyboard and
+ * touch input through the Playwright commands in `../commands.ts`. Held
+ * buttons, keys and fingers are tracked so the runner can release them after
+ * each scenario, even one that failed mid-press.
  */
 
 import { commands, userEvent } from 'vitest/browser';
 
-import type { KeyboardInput, MouseButton, PointerInput } from './scenario';
+import type {
+  KeyboardInput,
+  MouseButton,
+  PointerInput,
+  TouchInput,
+} from './scenario';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
@@ -19,11 +24,24 @@ declare module 'vitest/browser' {
     sousPointerUp(button: MouseButton): Promise<void>;
     sousKeyDown(key: string): Promise<void>;
     sousKeyUp(key: string): Promise<void>;
+    sousTouchSupported(): Promise<boolean>;
+    sousTouch(
+      phase: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel',
+      selector?: string,
+      where?: 'center' | 'outside',
+    ): Promise<void>;
   }
 }
 
 const heldButtons = new Set<MouseButton>();
 const heldKeys = new Set<string>();
+let isFingerDown = false;
+let touchSupport: Promise<boolean> | undefined;
+
+/** Whether this browser takes `touch` input (Chromium only). */
+export function isTouchSupported(): Promise<boolean> {
+  return (touchSupport ??= commands.sousTouchSupported());
+}
 
 /** A selector that finds exactly this element, without touching the DOM. */
 export function selectorFor(element: Element): string {
@@ -84,8 +102,37 @@ export const keyboard: KeyboardInput = {
   tab: (options) => userEvent.tab({ shift: options?.isBackward ?? false }),
 };
 
-/** Releases every button and key a scenario left held. */
+const touchDown: TouchInput['down'] = async (target) => {
+  await commands.sousTouch('touchStart', selectorFor(target));
+  isFingerDown = true;
+};
+
+const touchUp: TouchInput['up'] = async () => {
+  await commands.sousTouch('touchEnd');
+  isFingerDown = false;
+};
+
+export const touch: TouchInput = {
+  down: touchDown,
+  up: touchUp,
+  move: (target) => commands.sousTouch('touchMove', selectorFor(target)),
+  moveOutside: (target) =>
+    commands.sousTouch('touchMove', selectorFor(target), 'outside'),
+  async tap(target) {
+    await touchDown(target);
+    await touchUp();
+  },
+};
+
+/**
+ * Releases every button and key a scenario left held, and cancels a touch
+ * left down, so it presses nothing in the next scenario.
+ */
 export async function releaseInput(): Promise<void> {
   for (const button of [...heldButtons]) await up({ button });
   for (const key of [...heldKeys]) await keyUp(key);
+  if (isFingerDown) {
+    await commands.sousTouch('touchCancel');
+    isFingerDown = false;
+  }
 }
