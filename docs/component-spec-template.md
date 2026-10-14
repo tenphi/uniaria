@@ -28,6 +28,16 @@ Mark element-owned parts (content the custom element writes) explicitly.
 | open     | `boolean` | `false` | yes      | `openchange` |       |
 | disabled | `boolean` | `false` | no       | —            |       |
 
+## Public state
+
+What `expose()` returns. Selectors (`useComponentState`) read it, so it is
+public API: adding a field is a feature, changing one is a breaking change.
+
+| Field      | Type      | Meaning |
+| ---------- | --------- | ------- |
+| isOpen     | `boolean` |         |
+| isDisabled | `boolean` |         |
+
 ## Keyboard
 
 | Key    | Where   | Behavior |

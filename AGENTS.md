@@ -3,6 +3,9 @@
 Sous is a framework-agnostic headless UI library. Component behavior (state,
 keyboard, focus, ARIA, dismissal, selection) is written once in plain
 TypeScript; thin adapters bind it to React and to light-DOM custom elements.
+Internal state changes never re-render a framework component: they go straight
+to the DOM, and a component re-renders only for state it reads explicitly.
+This is the reason Sous exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
 attributes for the design system to target.
 
@@ -23,7 +26,7 @@ before changing anything; it is the binding summary of the design.
 | Package                    | Path                     | Contents                                                                                                                    | Published |
 | -------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `@tenphi/sous`             | `packages/sous`          | Runtime (`.`), interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, `./select`, …) | Yes       |
-| `@tenphi/sous-react`       | `packages/sous-react`    | Generic `useComponent(definition, props)`; peer `react` ≥ 18                                                                | Yes       |
+| `@tenphi/sous-react`       | `packages/sous-react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                    | Yes       |
 | `@tenphi/sous-elements`    | `packages/sous-elements` | Generic `defineElement(definition, options)`; light DOM, `sous-` prefix by default; one registering entry per component     | Yes       |
 | `@tenphi/sous-testing`     | `packages/sous-testing`  | `createInstance`, the conformance runner, virtual and real screen-reader helpers; development only                          | Yes       |
 | `@tenphi/sous-conformance` | `conformance`            | Adapter-agnostic scenarios every adapter must pass                                                                          | No        |
@@ -117,9 +120,35 @@ host globals allowed there are listed in `types/host.d.ts`; everything else
 reaches the core through `ctx.env`. Framework imports never appear in
 `@tenphi/sous`. ESLint enforces the import rules.
 
+### No re-renders for internal state
+
+- Adapters render each part once with its current part props (correct server
+  HTML and first paint) plus a `ref`. After mount, the DOM binder in `dom/`,
+  shared by both adapters, subscribes to the store, re-runs `connect()` after
+  each flush and writes only the changed attributes to the part elements. No
+  framework render happens.
+- State reaches React only on demand: `useComponentState(instance, selector,
+isEqual?)` reads one selected value through `useSyncExternalStore` and
+  re-renders only when it changes (`Object.is` by default). Per-component
+  sugar looks like `useButtonState(button, (s) => s.isPressed)`. Never
+  subscribe a component to the whole store.
+- Controlled props still arrive through normal renders (`setProps()`, then
+  `sync()`).
+- Handlers are passed as stable wrappers (same identity on every render) that
+  call the handler from the latest `connect()`.
+- The binder owns state attributes (ARIA state, `data-state` and other state
+  attributes). Consumers don't pass them; adapters warn in development if
+  they do.
+- Every render reads current state, so a parent re-render writes the values
+  the binder already set.
+- Changing the rendered tree by state (other content, lazy mounting) needs a
+  selector. Overlays use the top layer and stay mounted, so opening one
+  renders nothing.
+
 ### Behavior lives in definitions
 
-- Every component is one `defineComponent({ name, parts, props, setup, connect })`
+- Every component is one
+  `defineComponent({ name, parts, props, setup, expose, connect })`
   definition in `packages/sous/src/components/<name>/`.
 - Adapters are generic over definitions. `sous-react` and `sous-elements`
   contain no component-specific behavior, only optional thin sugar
@@ -128,8 +157,10 @@ reaches the core through `ctx.env`. Framework imports never appear in
   is Listbox + Popover + trigger and ComboBox is Listbox + Popover + input, so
   there is exactly one Listbox implementation.
 - `setup(ctx)` runs once per instance and returns actions. `connect()` is a
-  pure function of current state that returns part props; it runs on every
-  change, so keep it cheap.
+  pure function of current state that returns part props; the DOM binder runs
+  it after every store flush, so keep it cheap. `expose()` returns the public
+  state selectors read (`isOpen`, `isPressed`, …); it is public API, and the
+  spec documents it.
 
 ### Controlled and uncontrolled values
 
@@ -297,6 +328,8 @@ ComboBox.
   `*.browser.test.ts(x)` runs in Chromium, Firefox and WebKit.
 - Import test functions explicitly from `vitest`; there are no globals.
 - Interactions are tested in real browsers, not in a simulated DOM.
+- React tests count renders: an internal interaction (hover, press, focus,
+  highlight, opening an overlay) re-renders the owning component zero times.
 - Spoken output is checked with `@guidepup/virtual-screen-reader` in CI on
   every push. Real screen readers (VoiceOver, NVDA through Guidepup) run in
   a nightly workflow that is not set up yet.

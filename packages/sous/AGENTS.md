@@ -8,6 +8,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   them with `tsconfig.core.json`, which has no DOM lib. Host globals they may
   use are listed in `types/host.d.ts` (owner approval to extend).
 - No framework imports anywhere in this package.
+- `dom/` holds the DOM binder both adapters use to write part attributes
+  after mount; adapters never diff attributes themselves.
 - A new subpath needs three edits: an entry in `tsdown.config.ts`, an
   `exports` entry in `package.json` (with the `sous-source` condition first),
   and a line in `src/ssr-safety.test.ts`.
