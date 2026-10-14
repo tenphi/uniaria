@@ -3,12 +3,12 @@
  * (`packages/sous/src/components/button/spec.md`). Phase 1 covers attributes,
  * keyboard, mouse, disabled modes, link mode, public state, render counts and
  * spoken output. Phase 2 adds what the interaction layer brings: hover,
- * focus-visible, screen-reader (virtual) clicks and `touch-action`.
- *
- * Not covered yet, because the runner has no touch input: touch presses,
- * text-selection suppression, emulated mouse events after touch and the
- * long-press click fallback. They join with touch input in phase 2. Nested
- * pressables need a second component and join with the first composite.
+ * focus-visible, screen-reader (virtual) clicks, `touch-action` and touch:
+ * touch presses, text-selection suppression, emulated mouse events after
+ * touch, a touch that turns into a scroll and the long-press click
+ * fallback. Touch scenarios need real touch input, which only Chromium
+ * takes; elsewhere they are skipped. Nested pressables need a second
+ * component and join with the first composite.
  */
 
 import { defineConformance, h } from '@tenphi/sous-testing';
@@ -40,6 +40,9 @@ function pressEvents(mounted: MountedButton, name = 'press'): PressEvent[] {
     .filter((event) => event.name === name)
     .map((event) => event.detail as PressEvent);
 }
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** Records whether each event of `type` reached the document prevented. */
 function watchDefault(type: string, shouldPreventAfterwards = false) {
@@ -849,6 +852,163 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(accepted).toContain(getComputedStyle(root).touchAction);
         },
         { phase: 2 },
+      );
+    });
+
+    group('touch', () => {
+      const TOUCH = { phase: 2, needs: ['touch'] } as const;
+
+      scenario(
+        'a tap presses with pointerType touch, pressed while the finger is down',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+
+          await touch.down(root);
+          expect(mounted.eventNames()).toEqual(['pressStart']);
+          expect(root.hasAttribute('data-pressed')).toBe(true);
+          expect(mounted.state().isPressed).toBe(true);
+
+          await touch.up();
+          // The click that activates follows the finger lifting.
+          await expect
+            .poll(() => mounted.eventNames())
+            .toEqual(['pressStart', 'pressEnd', 'press']);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+          expect(mounted.state().isPressed).toBe(false);
+          for (const name of PRESS_EVENTS) {
+            expect(pressEvents(mounted, name)[0]).toMatchObject({
+              pointerType: 'touch',
+            });
+          }
+          expect(document.activeElement).toBe(root);
+          expect(root.hasAttribute('data-focus-visible')).toBe(false);
+        },
+        TOUCH,
+      );
+
+      scenario(
+        'a touch press turns off text selection on the root until it ends',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: h('div', { part: 'root' }, 'Save'),
+            events: ['press'],
+          });
+          const root = mounted.part();
+          const userSelect = () => getComputedStyle(root).userSelect;
+          const before = userSelect();
+          expect(before).not.toBe('none');
+
+          await touch.down(root);
+          expect(userSelect()).toBe('none');
+          await touch.up();
+          await expect.poll(() => mounted.eventNames()).toEqual(['press']);
+          expect(userSelect()).toBe(before);
+        },
+        TOUCH,
+      );
+
+      scenario(
+        "a tap's emulated mouse events neither hover nor press again",
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+
+          await touch.tap(root);
+          await expect
+            .poll(() => mounted.eventNames())
+            .toEqual(['pressStart', 'pressEnd', 'press']);
+          await wait(100);
+          expect(mounted.eventNames()).toHaveLength(3);
+          expect(root.hasAttribute('data-hovered')).toBe(false);
+          expect(mounted.state().isHovered).toBe(false);
+        },
+        TOUCH,
+      );
+
+      scenario(
+        'a mouse entering within 500 ms of a touch does not hover',
+        async ({ mount, pointer, touch }) => {
+          const mounted = await mount({ template: save() });
+          const root = mounted.part();
+          await pointer.moveOutside(root);
+
+          // iOS emulates a mouse enter after a tap.
+          await touch.tap(root);
+          await pointer.move(root);
+          expect(root.hasAttribute('data-hovered')).toBe(false);
+          expect(mounted.state().isHovered).toBe(false);
+
+          await wait(600);
+          await pointer.moveOutside(root);
+          await pointer.move(root);
+          expect(root.hasAttribute('data-hovered')).toBe(true);
+        },
+        TOUCH,
+      );
+
+      scenario(
+        'a touch that turns into a scroll ends the press without pressing',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+
+          await touch.down(root);
+          await touch.moveOutside(root);
+          await expect
+            .poll(() => mounted.eventNames())
+            .toEqual(['pressStart', 'pressEnd']);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+
+          await touch.up();
+          await wait(150);
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+        },
+        TOUCH,
+      );
+
+      scenario(
+        'a long press whose click never comes still presses, once',
+        async ({ mount, touch }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          // iOS and Android send no click after a long press. Desktop
+          // Chromium does, so drop the browser's own click here.
+          const dropClick = (event: MouseEvent) => {
+            if (!event.isTrusted) return;
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          };
+          window.addEventListener('click', dropClick, true);
+          try {
+            await touch.down(root);
+            await wait(600);
+            await touch.up();
+            await expect
+              .poll(() => mounted.eventNames())
+              .toEqual(['pressStart', 'pressEnd', 'press']);
+            await wait(150);
+            expect(pressEvents(mounted)).toHaveLength(1);
+            expect(pressEvents(mounted)[0]).toMatchObject({
+              pointerType: 'touch',
+            });
+          } finally {
+            window.removeEventListener('click', dropClick, true);
+          }
+        },
+        TOUCH,
       );
     });
   },
