@@ -18,17 +18,41 @@ export interface Store {
   batch<T>(fn: () => T): T;
 }
 
+/**
+ * A listener that keeps changing the store would flush forever; past this
+ * many passes the store reports the loop and stops.
+ */
+const MAX_PASSES = 100;
+
 export function createStore(): Store {
   let version = 0;
   let depth = 0;
   let dirty = false;
+  let flushing = false;
   const listeners = new Set<() => void>();
 
+  // A change made by a listener (a watcher reacting to a prop, say) is not
+  // flushed in the middle of the pass that caused it: it marks the store dirty
+  // and the loop runs one more pass, so every listener sees each version once.
   const flush = (): void => {
-    if (!dirty || depth > 0) return;
-    dirty = false;
-    version++;
-    listeners.forEach((listener) => listener());
+    if (!dirty || depth > 0 || flushing) return;
+    flushing = true;
+    try {
+      for (let pass = 1; dirty; pass++) {
+        if (pass > MAX_PASSES) {
+          dirty = false;
+          console.error(
+            `[sous] The store changed on each of ${MAX_PASSES} flushes in a row; a listener keeps changing state.`,
+          );
+          break;
+        }
+        dirty = false;
+        version++;
+        for (const listener of Array.from(listeners)) listener();
+      }
+    } finally {
+      flushing = false;
+    }
   };
 
   return {

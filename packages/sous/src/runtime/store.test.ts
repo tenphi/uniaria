@@ -80,6 +80,34 @@ describe('createStore', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('runs another pass for changes a listener makes, never a nested one', () => {
+    const store = createStore();
+    const seen: string[] = [];
+    store.subscribe(() => {
+      seen.push(`a${store.getSnapshot()}`);
+      if (store.getSnapshot() === 1) store.batch(() => store.notify());
+    });
+    store.subscribe(() => seen.push(`b${store.getSnapshot()}`));
+
+    store.notify();
+
+    expect(seen).toEqual(['a1', 'b1', 'a2', 'b2']);
+  });
+
+  it('stops a listener that changes the store on every flush', () => {
+    const store = createStore();
+    const error = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    store.subscribe(() => store.notify());
+
+    store.notify();
+
+    expect(store.getSnapshot()).toBe(100);
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+
   it('stops calling a listener after it unsubscribes', () => {
     const store = createStore();
     const listener = vi.fn();

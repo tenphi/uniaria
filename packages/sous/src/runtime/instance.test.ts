@@ -1,0 +1,431 @@
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+
+import { defineComponent } from './define';
+import type { PropsOf, StateOf } from './define';
+import { createInstance } from './instance';
+import { bindable, event, prop } from './schema';
+
+/** A disclosure like design decision 9's example, plus a watcher and an effect. */
+const disclosure = defineComponent({
+  name: 'disclosure',
+  parts: ['trigger', 'panel'],
+  props: {
+    open: bindable(false),
+    disabled: prop(false),
+    label: prop<string | undefined>(undefined),
+  },
+  events: { toggle: event<{ open: boolean }>() },
+  setup(ctx) {
+    const toggles = ctx.state(0);
+    const log: string[] = [];
+    ctx.watch(
+      () => ctx.props.disabled(),
+      (disabled, previous) => log.push(`disabled ${previous} → ${disabled}`),
+    );
+    ctx.effect(() => {
+      log.push('start');
+      return () => log.push('stop');
+    });
+    const toggle = () => {
+      if (ctx.props.disabled()) return;
+      const open = !ctx.props.open.get();
+      toggles.set(toggles.get() + 1);
+      ctx.props.open.set(open);
+      ctx.emit('toggle', { open });
+    };
+    const setOpen = (open: boolean) => ctx.props.open.set(open);
+    return { toggle, setOpen, toggles: () => toggles.get(), log };
+  },
+  expose({ props, api }) {
+    return {
+      isOpen: props.open.get(),
+      isDisabled: props.disabled(),
+      toggles: api.toggles(),
+    };
+  },
+  connect({ props, ids, api }) {
+    const open = props.open.get();
+    return {
+      trigger: {
+        attrs: {
+          id: ids.trigger,
+          'aria-expanded': String(open),
+          'aria-controls': ids.panel,
+          'aria-label': props.label(),
+        },
+        on: { click: api.toggle },
+      },
+      panel: {
+        attrs: { id: ids.panel, hidden: open ? undefined : '' },
+        style: { '--toggles': String(api.toggles()) },
+      },
+    };
+  },
+});
+
+const click = (
+  instance: ReturnType<typeof createInstance<typeof disclosure>>,
+) => instance.connect().trigger.on!.click!(undefined as never);
+
+describe('defineComponent', () => {
+  it('derives props, callbacks and state types from the definition', () => {
+    expectTypeOf<PropsOf<typeof disclosure>>().toEqualTypeOf<
+      {
+        readonly open?: boolean;
+        readonly disabled?: boolean;
+        readonly label?: string | undefined;
+      } & { readonly defaultOpen?: boolean } & {
+        readonly onOpenChange?: (value: boolean) => void;
+      } & { readonly onToggle?: (detail: { open: boolean }) => void }
+    >();
+    expectTypeOf<StateOf<typeof disclosure>>().toEqualTypeOf<{
+      isOpen: boolean;
+      isDisabled: boolean;
+      toggles: number;
+    }>();
+  });
+
+  it('resolves attributes and events for adapters', () => {
+    expect(disclosure.schema).toEqual({
+      props: [
+        {
+          key: 'open',
+          kind: 'bindable',
+          defaultValue: false,
+          type: 'boolean',
+          attribute: 'default-open',
+          changeEvent: 'openChange',
+        },
+        {
+          key: 'disabled',
+          kind: 'prop',
+          defaultValue: false,
+          type: 'boolean',
+          attribute: 'disabled',
+        },
+        {
+          key: 'label',
+          kind: 'prop',
+          defaultValue: undefined,
+          type: 'string',
+          attribute: 'label',
+        },
+      ],
+      events: ['openChange', 'toggle'],
+    });
+  });
+
+  it('takes a custom change event and attribute', () => {
+    const def = defineComponent({
+      name: 'custom',
+      parts: ['root'],
+      props: {
+        value: bindable(0, { event: 'valueCommit', attribute: 'initial' }),
+        maxCount: prop(3, { attribute: false }),
+      },
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    expectTypeOf<PropsOf<typeof def>>().toHaveProperty('onValueCommit');
+    expect(def.schema.events).toEqual(['valueCommit']);
+    expect(def.schema.props.map((info) => info.attribute)).toEqual([
+      'initial',
+      false,
+    ]);
+  });
+
+  it('rejects names that are not kebab-case', () => {
+    expect(() =>
+      defineComponent({
+        name: 'BadName',
+        parts: ['root'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      }),
+    ).toThrow(/kebab-case/);
+  });
+
+  it('rejects a prop that collides with a callback', () => {
+    expect(() =>
+      defineComponent({
+        name: 'clash',
+        parts: ['root'],
+        props: { onPress: prop<string | undefined>(undefined) },
+        events: { press: event() },
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      }),
+    ).toThrow(/defined twice/);
+  });
+});
+
+describe('createInstance', () => {
+  it('connects parts with data-scope, data-part and stable ids', () => {
+    const instance = createInstance(disclosure, { id: 'd' });
+    const { trigger, panel } = instance.connect();
+    expect(trigger.attrs).toEqual({
+      id: 'd-trigger',
+      'aria-expanded': 'false',
+      'aria-controls': 'd-panel',
+      'aria-label': undefined,
+      'data-scope': 'disclosure',
+      'data-part': 'trigger',
+    });
+    expect(panel.attrs).toMatchObject({ id: 'd-panel', hidden: '' });
+    expect(panel.style).toEqual({ '--toggles': '0' });
+    expect(instance.ids).toEqual({ trigger: 'd-trigger', panel: 'd-panel' });
+  });
+
+  it('generates an id when the adapter gives none', () => {
+    const a = createInstance(disclosure);
+    const b = createInstance(disclosure);
+    expect(a.id).not.toBe(b.id);
+  });
+
+  it('never serves a stale cache inside a batch', () => {
+    const instance = createInstance(disclosure);
+    instance.batch(() => {
+      expect(instance.getState().isOpen).toBe(false);
+      instance.api.setOpen(true);
+      expect(instance.getState().isOpen).toBe(true);
+      expect(instance.connect().trigger.attrs['aria-expanded']).toBe('true');
+    });
+  });
+
+  it('caches connect() and expose() until something changes', () => {
+    const instance = createInstance(disclosure);
+    expect(instance.connect()).toBe(instance.connect());
+    expect(instance.getState()).toBe(instance.getState());
+
+    const parts = instance.connect();
+    const state = instance.getState();
+    click(instance);
+    expect(instance.connect()).not.toBe(parts);
+    expect(instance.getState()).not.toBe(state);
+  });
+
+  describe('bindables', () => {
+    it('commits uncontrolled changes and reports them', () => {
+      const onOpenChange = vi.fn();
+      const instance = createInstance(disclosure, {
+        props: { defaultOpen: true, onOpenChange },
+      });
+      expect(instance.getState().isOpen).toBe(true);
+
+      click(instance);
+
+      expect(instance.getState().isOpen).toBe(false);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it('follows its default until the first uncontrolled change', () => {
+      const instance = createInstance(disclosure);
+      instance.setProps({ defaultOpen: true });
+      expect(instance.getState().isOpen).toBe(true);
+
+      click(instance);
+      expect(instance.getState().isOpen).toBe(false);
+
+      instance.setProps({ defaultOpen: true, label: 'x' });
+      expect(instance.getState().isOpen).toBe(false);
+    });
+
+    it('only requests controlled changes', () => {
+      const onOpenChange = vi.fn();
+      const instance = createInstance(disclosure, {
+        props: { open: false, onOpenChange },
+      });
+
+      click(instance);
+
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+      expect(instance.getState().isOpen).toBe(false);
+      expect(instance.connect().trigger.attrs['aria-expanded']).toBe('false');
+
+      instance.setProps({ open: true, onOpenChange });
+      instance.sync();
+      expect(instance.getState().isOpen).toBe(true);
+    });
+
+    it('does not report a change to the current value', () => {
+      const onOpenChange = vi.fn();
+      const instance = createInstance(disclosure, { props: { onOpenChange } });
+      instance.api.setOpen(false);
+      expect(onOpenChange).not.toHaveBeenCalled();
+      instance.api.setOpen(true);
+      instance.api.setOpen(true);
+      expect(onOpenChange.mock.calls).toEqual([[true]]);
+    });
+  });
+
+  describe('props', () => {
+    it('falls back to defaults and reads the latest props', () => {
+      const instance = createInstance(disclosure);
+      expect(instance.getState().isDisabled).toBe(false);
+      instance.setProps({ disabled: true });
+      expect(instance.getState().isDisabled).toBe(true);
+    });
+
+    it('stores props silently and notifies on sync', () => {
+      const instance = createInstance(disclosure);
+      const listener = vi.fn();
+      instance.subscribe(listener);
+
+      instance.setProps({ disabled: true });
+      expect(listener).not.toHaveBeenCalled();
+
+      instance.sync();
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      instance.sync();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores new callback identities', () => {
+      const instance = createInstance(disclosure, {
+        props: { onToggle: () => undefined },
+      });
+      const listener = vi.fn();
+      instance.subscribe(listener);
+      instance.setProps({ onToggle: () => undefined });
+      instance.sync();
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('calls the latest event callback', () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const instance = createInstance(disclosure, {
+        props: { onToggle: first },
+      });
+      instance.setProps({ onToggle: second });
+      click(instance);
+      expect(first).not.toHaveBeenCalled();
+      expect(second).toHaveBeenCalledWith({ open: true });
+    });
+  });
+
+  describe('handlers', () => {
+    it('run in a batch, so one action flushes once', () => {
+      const instance = createInstance(disclosure);
+      const listener = vi.fn();
+      instance.subscribe(listener);
+
+      click(instance);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(instance.getState()).toEqual({
+        isOpen: true,
+        isDisabled: false,
+        toggles: 1,
+      });
+    });
+  });
+
+  describe('lifecycle', () => {
+    it('runs effects between start and stop, idempotently', () => {
+      const instance = createInstance(disclosure);
+      const { log } = instance.api;
+
+      instance.start();
+      instance.start();
+      instance.stop();
+      instance.stop();
+      instance.start();
+
+      expect(log).toEqual(['start', 'stop', 'start']);
+      expect(instance.isStarted()).toBe(true);
+    });
+
+    it('runs watchers after a flush, only while started', () => {
+      const instance = createInstance(disclosure);
+      const { log } = instance.api;
+
+      instance.setProps({ disabled: true });
+      instance.sync();
+      expect(log).toEqual([]);
+
+      instance.start();
+      instance.setProps({ disabled: false });
+      instance.sync();
+      expect(log).toEqual(['start', 'disabled true → false']);
+
+      instance.stop();
+      instance.setProps({ disabled: true });
+      instance.sync();
+      instance.start();
+      instance.setProps({ disabled: true, label: 'x' });
+      instance.sync();
+      expect(log).toEqual(['start', 'disabled true → false', 'stop', 'start']);
+    });
+
+    it('settles state changed by watchers before other listeners read it', () => {
+      const def = defineComponent({
+        name: 'settle',
+        parts: ['root'],
+        props: { disabled: prop(false) },
+        setup(ctx) {
+          const pressed = ctx.state(true);
+          ctx.watch(
+            () => ctx.props.disabled(),
+            (disabled) => {
+              if (disabled) pressed.set(false);
+            },
+          );
+          return { pressed: () => pressed.get() };
+        },
+        expose: ({ api }) => ({ isPressed: api.pressed() }),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(def);
+      instance.start();
+      const seen: boolean[] = [];
+      instance.subscribe(() => seen.push(instance.getState().isPressed));
+
+      instance.setProps({ disabled: true });
+      instance.sync();
+
+      // No listener ever sees the press the watcher cancelled.
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen).not.toContain(true);
+    });
+  });
+
+  describe('memo', () => {
+    it('recomputes only when a dependency changes', () => {
+      const compute = vi.fn((label: string | undefined) => label?.length ?? 0);
+      const def = defineComponent({
+        name: 'memo',
+        parts: ['root'],
+        props: { label: prop<string | undefined>(undefined) },
+        setup(ctx) {
+          return { length: ctx.memo(() => [ctx.props.label()], compute) };
+        },
+        expose: ({ api }) => ({ length: api.length() }),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(def, { props: { label: 'ab' } });
+      const { length } = instance.api;
+
+      expect(length()).toBe(2);
+      expect(length()).toBe(2);
+      instance.setProps({ label: 'abc' });
+      expect(length()).toBe(3);
+      expect(compute).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('registers part elements', () => {
+    const instance = createInstance(disclosure);
+    const element = {};
+    expect(instance.element('trigger')).toBeNull();
+    instance.attach('trigger', element);
+    expect(instance.element('trigger')).toBe(element);
+    instance.attach('trigger', null);
+    expect(instance.element('trigger')).toBeNull();
+  });
+});
