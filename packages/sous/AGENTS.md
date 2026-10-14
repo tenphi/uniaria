@@ -9,7 +9,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   use are listed in `types/host.d.ts` (owner approval to extend).
 - No framework imports anywhere in this package.
 - `dom/` holds the DOM binder both adapters use to write part attributes
-  after mount; adapters never diff attributes themselves.
+  after mount, and the owner lookup (request events, id references);
+  adapters never diff attributes or search the DOM themselves.
 - A new subpath needs three edits: an entry in `tsdown.config.ts`, an
   `exports` entry in `package.json` (with the `sous-source` condition first),
   and a line in `src/ssr-safety.test.ts`.

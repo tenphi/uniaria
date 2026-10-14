@@ -12,6 +12,9 @@ for internal state". Local rules:
   later changes. `useSyncExternalStore` appears only inside
   `useComponentState`, with the selected value as the snapshot (cached per
   store version so it stays stable).
+- `useComponent` provides its instance through a React context whose value
+  never changes (the instance, never state). Children take an explicit
+  `owner` prop first, then this context, then the DOM ancestor after mount.
 - Handlers are stable wrappers that call the latest `connect()` handler with
   `event.nativeEvent`.
 - Ids with `useId`. Call `setProps()` during render (silent) and

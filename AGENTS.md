@@ -155,7 +155,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   (`sous-elements` also has one registering entry per component).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
   is Listbox + Popover + trigger and ComboBox is Listbox + Popover + input, so
-  there is exactly one Listbox implementation.
+  there is exactly one Listbox implementation. Separate instances that work
+  together (a field and its control, a radio group and its radios) link
+  through `ctx.owner(def)` instead (see Composition between instances).
 - `setup(ctx)` runs once per instance and returns actions. `connect()` is a
   pure function of current state that returns part props; the DOM binder runs
   it after every store flush, so keep it cheap. `expose()` returns the public
@@ -170,6 +172,34 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `onChange` and reads the value back from props on the next render. Never
   assume a requested change took effect.
 - The core reads props only through getters and never keeps a copy.
+
+### Composition between instances
+
+- A child instance (a radio, a field's control) resolves its owner (the radio
+  group, the field) in this order:
+  1. **Explicit link** for parts that sit apart: an id-reference attribute on
+     elements, like HTML's `for` (`<sous-radio group="plan">`), resolved in
+     the instance's root node; the instance itself in an `owner` prop in
+     React.
+  2. **React instance context.** `useComponent` provides its instance through
+     a context that holds only the stable instance, so first render and SSR
+     know the owner. React context crosses portals.
+  3. **Nearest DOM ancestor.** The child dispatches a bubbling request event
+     on connect, following the Context Community Protocol's shape
+     (`references/community-protocols/proposals/context.md`). An owner that
+     connects later announces itself and waiting children ask again.
+- React contexts carry instances, never state. A context value that changes
+  is a bug.
+- State flows between stores: `ctx.owner(def)` returns the owner's actions
+  and exposed state and subscribes the child's binder to the owner's store.
+  It is `undefined` until the owner is resolved; resolving it triggers a
+  flush.
+- Request events are not `composed`; lookup stops at shadow roots.
+- Collections stay data. Owner links are for composed components, not for
+  collection items.
+- Lookup code lives in `dom/`; the DOM-free runtime only sees `ctx.owner()`.
+- Tests cover each path: nested, consumer portal (React), another branch,
+  React child inside a custom-element owner, and an owner that connects late.
 
 ### Store
 

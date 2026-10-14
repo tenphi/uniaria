@@ -10,6 +10,8 @@ any.
 - **WAI-ARIA pattern:** <link to the Authoring Practices pattern>
 - **Builds on:** <definitions it composes with `ctx.use()`, interaction
   primitives from `dom/`>
+- **Owner:** <the instance it registers with (`ctx.owner()`) and its
+  explicit-link attribute, e.g. `group`> or none
 - **Custom element:** <yes | static options only | native adapter only> — why
 
 ## Anatomy

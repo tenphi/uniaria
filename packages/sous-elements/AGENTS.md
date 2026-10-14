@@ -11,6 +11,10 @@ Read the root [AGENTS.md](../../AGENTS.md) first, especially "Custom elements
   the DOM binder in `@tenphi/sous/dom`, the same one the React adapter uses.
 - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
+- Owner lookup (root AGENTS.md → Composition between instances): an
+  id-reference attribute first (`group="plan"`), then the nearest owner
+  through a bubbling request event. Owners announce themselves on connect so
+  children that connected first can retry.
 - Properties in, events out (`openchange` with `detail`). Re-apply properties
   set before upgrade. Skip registration when the name is already defined.
 - Each component gets one registering entry that calls `defineElement` with
