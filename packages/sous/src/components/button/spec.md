@@ -13,10 +13,9 @@ suite in both adapters.
 
 - **WAI-ARIA pattern:** [Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)
   (`references/aria-practices/content/patterns/button/button-pattern.html`)
-- **Builds on:** `press`, `hover` and `focus-visible` from `dom/`. Phase 1
-  ships a minimal press: keyboard, mouse and disabled behavior. Touch,
-  virtual-click and hover behavior arrive with the full interaction layer in
-  phase 2, together with their conformance scenarios.
+- **Builds on:** `press`, `hover` and `focus-visible` from `dom/`.
+  Text-selection suppression during touch presses and nested pressables
+  arrive later in phase 2, together with their conformance scenarios.
 - **Owner:** none
 - **Custom element:** yes. `<sous-button>` hosts one native
   `<button data-part="root">` (or `<a data-part="root" href>`) written by the

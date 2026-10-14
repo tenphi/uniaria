@@ -3,12 +3,18 @@
  * `<a href>` in link mode, or any element with `role="button"`, with one
  * `press` event for every input and state attributes for styling.
  *
- * Phase 1: keyboard, mouse, virtual clicks and disabled modes. Hover,
- * focus-visible, touch and `touch-action` arrive with the interaction layer
- * in phase 2; until then `isHovered` and `isFocusVisible` stay false.
+ * Still to come with the interaction layer: text-selection suppression
+ * during touch presses and nested pressables.
  */
 
-import { createFocus, createPress, partElement, warn } from '../../dom';
+import {
+  createFocus,
+  createHover,
+  createPress,
+  mergeHandlers,
+  partEffect,
+  warn,
+} from '../../dom';
 import type { DomPartProps, PressEvent } from '../../dom';
 import { defineComponent, event, prop } from '../../runtime';
 
@@ -57,12 +63,15 @@ export const button = defineComponent({
       onPressEnd: (detail) => ctx.emit('pressEnd', detail),
       onPress: (detail) => ctx.emit('press', detail),
     });
+    const hover = createHover(ctx, {
+      part: 'root',
+      isDisabled: ctx.props.isDisabled,
+    });
     const focus = createFocus(ctx, 'root');
     // The element adapter reads the tag; React can only check it.
-    ctx.effect(() => {
-      const root = partElement(ctx, 'root');
+    partEffect(ctx, 'root', (root) => {
       const expected = ctx.props.elementType();
-      if (!root || ctx.props.href() !== undefined) return;
+      if (ctx.props.href() !== undefined) return;
       if (root.localName !== expected) {
         warn(
           `button: the root is <${root.localName}> but elementType is "${expected}". ` +
@@ -72,16 +81,18 @@ export const button = defineComponent({
     });
     return {
       isPressed: press.isPressed,
+      isHovered: hover.isHovered,
       isFocused: focus.isFocused,
-      handlers: { ...press.handlers, ...focus.handlers },
+      isFocusVisible: focus.isFocusVisible,
+      handlers: mergeHandlers(press.handlers, hover.handlers, focus.handlers),
     };
   },
   expose({ props, api }) {
     return {
       isPressed: api.isPressed(),
-      isHovered: false,
+      isHovered: api.isHovered(),
       isFocused: api.isFocused(),
-      isFocusVisible: false,
+      isFocusVisible: api.isFocusVisible(),
       isDisabled: props.isDisabled(),
     };
   },
@@ -106,9 +117,9 @@ export const button = defineComponent({
         'aria-disabled': isAriaDisabled ? 'true' : undefined,
         tabindex: isFocusable ? tabindex : undefined,
         'data-pressed': flag(api.isPressed()),
-        'data-hovered': undefined,
+        'data-hovered': flag(api.isHovered()),
         'data-focused': flag(api.isFocused()),
-        'data-focus-visible': undefined,
+        'data-focus-visible': flag(api.isFocusVisible()),
         'data-disabled': flag(isDisabled),
       },
       on: api.handlers,
