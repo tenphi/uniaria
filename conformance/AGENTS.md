@@ -9,8 +9,12 @@ adapter is judged by, so it has the strictest rules in the repo:
   `conformance-approved` label on a pull request overrides it.
 - Never edit a scenario to make an implementation pass. If a scenario looks
   wrong, stop and explain why to the owner.
-- Scenarios are adapter-agnostic: they mount through the `mount(component,
-props)` contract from `@tenphi/sous-testing` and assert on the DOM, keyboard
-  behavior, focus movement and spoken output (virtual screen reader).
+- Scenarios are adapter-agnostic: they mount through the contract in
+  `@tenphi/sous-testing` (root AGENTS.md → The mount contract) and assert on
+  the DOM, keyboard behavior, focus movement, events, public state, render
+  counts and spoken output (virtual screen reader). Never import a
+  definition or an adapter here.
+- Each suite declares its `Props` and `State` types from the approved spec,
+  and tags scenarios that need a later roadmap phase (`{ phase: 2 }`).
 - One folder per component, `conformance/src/<name>/`, mirroring the spec's
   keyboard map and ARIA table.

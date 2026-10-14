@@ -1,0 +1,855 @@
+/**
+ * Button conformance, from the spec approved by @tenphi on 2026-10-14
+ * (`packages/sous/src/components/button/spec.md`). Phase 1 covers attributes,
+ * keyboard, mouse, disabled modes, link mode, public state, render counts and
+ * spoken output. Phase 2 adds what the interaction layer brings: hover,
+ * focus-visible, screen-reader (virtual) clicks and `touch-action`.
+ *
+ * Not covered yet, because the runner has no touch input: touch presses,
+ * text-selection suppression, emulated mouse events after touch and the
+ * long-press click fallback. They join with touch input in phase 2. Nested
+ * pressables need a second component and join with the first composite.
+ */
+
+import { defineConformance, h } from '@tenphi/sous-testing';
+import type { Mounted, TemplateAttrs } from '@tenphi/sous-testing';
+import { expect } from 'vitest';
+
+import type { ButtonProps, ButtonState, PressEvent } from './types';
+
+type MountedButton = Mounted<ButtonProps, ButtonState>;
+
+const PRESS_EVENTS = ['pressStart', 'pressEnd', 'press'];
+
+const STATE_ATTRIBUTES = [
+  'data-pressed',
+  'data-hovered',
+  'data-focused',
+  'data-focus-visible',
+  'data-disabled',
+];
+
+const save = (attrs: TemplateAttrs = {}) =>
+  h('button', { part: 'root', ...attrs }, 'Save');
+
+const docs = (attrs: TemplateAttrs = {}) =>
+  h('a', { part: 'root', ...attrs }, 'Docs');
+
+function pressEvents(mounted: MountedButton, name = 'press'): PressEvent[] {
+  return mounted.events
+    .filter((event) => event.name === name)
+    .map((event) => event.detail as PressEvent);
+}
+
+/** Records whether each event of `type` reached the document prevented. */
+function watchDefault(type: string, preventAfterwards = false) {
+  const log: boolean[] = [];
+  const listener = (event: Event) => {
+    log.push(event.defaultPrevented);
+    if (preventAfterwards) event.preventDefault();
+  };
+  document.addEventListener(type, listener);
+  return {
+    log,
+    stop: () => document.removeEventListener(type, listener),
+  };
+}
+
+export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
+  'button',
+  ({ scenario, group }) => {
+    group('anatomy', () => {
+      scenario(
+        'renders a native button with the attributes Sous owns',
+        async ({ mount }) => {
+          const root = (await mount({ template: save() })).part();
+          expect(root.tagName).toBe('BUTTON');
+          expect(root.getAttribute('type')).toBe('button');
+          expect(root.getAttribute('tabindex')).toBe('0');
+          expect(root.getAttribute('data-scope')).toBe('button');
+          expect(root.getAttribute('data-part')).toBe('root');
+          for (const name of [
+            'role',
+            'disabled',
+            'aria-disabled',
+            ...STATE_ATTRIBUTES,
+          ]) {
+            expect(root.hasAttribute(name), name).toBe(false);
+          }
+        },
+      );
+
+      scenario('uses the type prop on native buttons', async ({ mount }) => {
+        const mounted = await mount({
+          template: save(),
+          props: { type: 'submit' },
+        });
+        expect(mounted.part().getAttribute('type')).toBe('submit');
+        await mounted.setProps({ type: 'reset' });
+        expect(mounted.part().getAttribute('type')).toBe('reset');
+      });
+
+      scenario(
+        'gives a non-native root a button role and a tabindex',
+        async ({ mount }) => {
+          const root = (
+            await mount({
+              template: h('div', { part: 'root' }, 'Save'),
+              props: { elementType: 'div' },
+            })
+          ).part();
+          expect(root.getAttribute('role')).toBe('button');
+          expect(root.getAttribute('tabindex')).toBe('0');
+          expect(root.hasAttribute('type')).toBe(false);
+        },
+      );
+
+      scenario(
+        'leaves consumer-owned attributes alone',
+        async ({ mount, pointer, keyboard }) => {
+          const consumer = {
+            id: 'save',
+            class: 'primary',
+            'aria-label': 'Save draft',
+            'aria-describedby': 'hint',
+            name: 'action',
+            value: 'save',
+          };
+          const mounted = await mount({
+            template: [
+              save(consumer),
+              h('p', { id: 'hint' }, 'Saves without publishing'),
+            ],
+          });
+          const root = mounted.part();
+          root.focus();
+          await keyboard.press('Enter');
+          await pointer.click(root);
+          for (const [name, value] of Object.entries(consumer)) {
+            expect(root.getAttribute(name), name).toBe(value);
+          }
+          for (const name of [
+            'aria-pressed',
+            'aria-expanded',
+            'aria-haspopup',
+          ]) {
+            expect(root.hasAttribute(name), name).toBe(false);
+          }
+        },
+      );
+
+      scenario(
+        'takes the root out of the tab order with excludeFromTabOrder',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: [
+              save(),
+              h('button', { id: 'after', tabindex: '0' }, 'After'),
+            ],
+            props: { excludeFromTabOrder: true },
+          });
+          expect(mounted.part().getAttribute('tabindex')).toBe('-1');
+          await keyboard.tab();
+          expect(document.activeElement?.id).toBe('after');
+        },
+      );
+    });
+
+    group('keyboard', () => {
+      scenario(
+        'Enter starts the press on keydown and presses on keyup',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          root.focus();
+
+          await keyboard.down('Enter');
+          expect(mounted.eventNames()).toEqual(['pressStart']);
+          expect(root.hasAttribute('data-pressed')).toBe(true);
+          expect(mounted.state().isPressed).toBe(true);
+
+          await keyboard.up('Enter');
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'press',
+          ]);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+          expect(mounted.state().isPressed).toBe(false);
+
+          const [press] = pressEvents(mounted);
+          expect(press).toMatchObject({
+            type: 'press',
+            pointerType: 'keyboard',
+            key: 'Enter',
+          });
+          expect(press!.target).toBe(root);
+        },
+      );
+
+      scenario(
+        'Space presses on keyup and does not scroll the page',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          root.focus();
+          const keydown = watchDefault('keydown');
+
+          await keyboard.down('Space');
+          expect(mounted.eventNames()).toEqual(['pressStart']);
+          expect(root.hasAttribute('data-pressed')).toBe(true);
+          await keyboard.up('Space');
+          keydown.stop();
+
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'press',
+          ]);
+          expect(pressEvents(mounted)[0]).toMatchObject({
+            pointerType: 'keyboard',
+          });
+          expect(keydown.log).toEqual([true]);
+        },
+      );
+
+      scenario('ignores key repeats', async ({ mount, keyboard }) => {
+        const mounted = await mount({ template: save(), events: PRESS_EVENTS });
+        mounted.part().focus();
+        await keyboard.down('Enter');
+        await keyboard.down('Enter');
+        await keyboard.down('Enter');
+        await keyboard.up('Enter');
+        expect(mounted.eventNames()).toEqual([
+          'pressStart',
+          'pressEnd',
+          'press',
+        ]);
+      });
+
+      scenario(
+        'ends without pressing when focus moves away before keyup',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: [save(), h('button', { id: 'other' }, 'Other')],
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          root.focus();
+          await keyboard.down('Enter');
+          document.getElementById('other')!.focus();
+          await keyboard.up('Enter');
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+        },
+      );
+
+      scenario(
+        'submits a form exactly once with Enter and with Space',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: h('form', null, save()),
+            props: { type: 'submit' },
+            events: ['press'],
+          });
+          const form = mounted.container.querySelector('form')!;
+          let submits = 0;
+          form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submits++;
+          });
+          mounted.part().focus();
+
+          await keyboard.press('Enter');
+          expect(submits).toBe(1);
+          expect(mounted.eventNames()).toEqual(['press']);
+
+          await keyboard.press('Space');
+          expect(submits).toBe(2);
+          expect(mounted.eventNames()).toEqual(['press', 'press']);
+        },
+      );
+    });
+
+    group('pointer', () => {
+      scenario(
+        'a mouse press starts on down and presses on release',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+
+          await pointer.down(root);
+          expect(mounted.eventNames()).toEqual(['pressStart']);
+          expect(root.hasAttribute('data-pressed')).toBe(true);
+          expect(mounted.state().isPressed).toBe(true);
+
+          await pointer.up();
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'press',
+          ]);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+
+          const [press] = pressEvents(mounted);
+          const box = root.getBoundingClientRect();
+          expect(press).toMatchObject({ type: 'press', pointerType: 'mouse' });
+          expect(press!.target).toBe(root);
+          expect(press!.x).toBeGreaterThanOrEqual(0);
+          expect(press!.x).toBeLessThanOrEqual(box.width);
+          expect(press!.y).toBeGreaterThanOrEqual(0);
+          expect(press!.y).toBeLessThanOrEqual(box.height);
+        },
+      );
+
+      scenario(
+        'leaving while pressed ends the press and coming back restarts it',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+
+          await pointer.down(root);
+          await pointer.moveOutside(root);
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+          expect(mounted.state().isPressed).toBe(false);
+
+          await pointer.move(root);
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'pressStart',
+          ]);
+          expect(root.hasAttribute('data-pressed')).toBe(true);
+
+          await pointer.up();
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'pressStart',
+            'pressEnd',
+            'press',
+          ]);
+        },
+      );
+
+      scenario(
+        'releasing outside does not press',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          await pointer.down(root);
+          await pointer.moveOutside(root);
+          await pointer.up();
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+        },
+      );
+
+      scenario(
+        'only the primary button presses',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          await pointer.click(mounted.part(), { button: 'middle' });
+          await pointer.click(mounted.part(), { button: 'right' });
+          expect(mounted.eventNames()).toEqual([]);
+        },
+      );
+
+      scenario(
+        'a pointer press focuses the root',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({ template: save() });
+          const root = mounted.part();
+          await pointer.click(root);
+          expect(document.activeElement).toBe(root);
+          expect(root.hasAttribute('data-focused')).toBe(true);
+        },
+      );
+
+      scenario(
+        'preventFocusOnPress leaves focus where it was',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: [
+              h('input', { id: 'draft', 'aria-label': 'Draft' }),
+              save(),
+            ],
+            props: { preventFocusOnPress: true },
+            events: ['press'],
+          });
+          const draft = document.getElementById('draft')!;
+          draft.focus();
+          await pointer.click(mounted.part());
+          expect(document.activeElement).toBe(draft);
+          expect(mounted.eventNames()).toEqual(['press']);
+        },
+      );
+    });
+
+    group('focus', () => {
+      scenario(
+        'Tab reaches the root and marks it focused',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({ template: save() });
+          const root = mounted.part();
+          await keyboard.tab();
+          expect(document.activeElement).toBe(root);
+          expect(root.hasAttribute('data-focused')).toBe(true);
+          expect(mounted.state().isFocused).toBe(true);
+
+          root.blur();
+          expect(root.hasAttribute('data-focused')).toBe(false);
+          expect(mounted.state().isFocused).toBe(false);
+        },
+      );
+
+      scenario(
+        'focus is visible after keyboard focus, not after a pointer press',
+        async ({ mount, pointer, keyboard }) => {
+          const mounted = await mount({
+            template: [
+              h('button', { id: 'before', tabindex: '0' }, 'Before'),
+              save(),
+            ],
+          });
+          const root = mounted.part();
+
+          await pointer.click(root);
+          expect(root.hasAttribute('data-focused')).toBe(true);
+          expect(root.hasAttribute('data-focus-visible')).toBe(false);
+          expect(mounted.state().isFocusVisible).toBe(false);
+
+          await keyboard.tab({ shift: true });
+          await keyboard.tab();
+          expect(document.activeElement).toBe(root);
+          expect(root.hasAttribute('data-focus-visible')).toBe(true);
+          expect(mounted.state().isFocusVisible).toBe(true);
+        },
+        { phase: 2 },
+      );
+    });
+
+    group('disabled', () => {
+      scenario(
+        'native disabled: no presses, skipped by Tab',
+        async ({ mount, pointer, keyboard }) => {
+          const mounted = await mount({
+            template: [
+              save(),
+              h('button', { id: 'after', tabindex: '0' }, 'After'),
+            ],
+            props: { disabled: true },
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          expect(root.hasAttribute('disabled')).toBe(true);
+          expect(root.hasAttribute('data-disabled')).toBe(true);
+          expect(root.hasAttribute('aria-disabled')).toBe(false);
+          expect(mounted.state().isDisabled).toBe(true);
+
+          await keyboard.tab();
+          expect(document.activeElement?.id).toBe('after');
+          await pointer.click(root);
+          expect(mounted.eventNames()).toEqual([]);
+        },
+      );
+
+      scenario(
+        'non-native disabled: aria-disabled, not focusable, no presses',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: h('div', { part: 'root' }, 'Save'),
+            props: { elementType: 'div', disabled: true },
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          expect(root.getAttribute('aria-disabled')).toBe('true');
+          expect(root.hasAttribute('tabindex')).toBe(false);
+          expect(root.hasAttribute('data-disabled')).toBe(true);
+
+          root.focus();
+          expect(document.activeElement).not.toBe(root);
+          await pointer.click(root);
+          expect(mounted.eventNames()).toEqual([]);
+        },
+      );
+
+      scenario(
+        'focusableWhenDisabled keeps focus and blocks presses and submission',
+        async ({ mount, pointer, keyboard }) => {
+          const mounted = await mount({
+            template: h('form', null, save()),
+            props: {
+              type: 'submit',
+              disabled: true,
+              focusableWhenDisabled: true,
+            },
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          const form = mounted.container.querySelector('form')!;
+          let submits = 0;
+          form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submits++;
+          });
+
+          expect(root.getAttribute('aria-disabled')).toBe('true');
+          expect(root.getAttribute('tabindex')).toBe('0');
+          expect(root.hasAttribute('disabled')).toBe(false);
+          expect(root.hasAttribute('data-disabled')).toBe(true);
+
+          await keyboard.tab();
+          expect(document.activeElement).toBe(root);
+          await keyboard.press('Enter');
+          await keyboard.press('Space');
+          await pointer.click(root);
+
+          expect(mounted.eventNames()).toEqual([]);
+          expect(submits).toBe(0);
+          expect(document.activeElement).toBe(root);
+        },
+      );
+
+      scenario(
+        'becoming disabled mid-press cancels the press',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          await pointer.down(root);
+          await mounted.setProps({ disabled: true });
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+          expect(root.hasAttribute('data-pressed')).toBe(false);
+          await pointer.up();
+          expect(mounted.eventNames()).toEqual(['pressStart', 'pressEnd']);
+        },
+      );
+
+      scenario(
+        're-enabling removes aria-disabled instead of writing "false"',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: save(),
+            props: { disabled: true, focusableWhenDisabled: true },
+          });
+          await mounted.setProps({ disabled: false });
+          const root = mounted.part();
+          expect(root.hasAttribute('aria-disabled')).toBe(false);
+          expect(root.hasAttribute('data-disabled')).toBe(false);
+          expect(mounted.state().isDisabled).toBe(false);
+        },
+      );
+    });
+
+    group('link mode', () => {
+      scenario(
+        'renders a link with href and no button role',
+        async ({ mount }) => {
+          const root = (
+            await mount({ template: docs(), props: { href: '/docs' } })
+          ).part();
+          expect(root.getAttribute('href')).toBe('/docs');
+          expect(root.getAttribute('tabindex')).toBe('0');
+          expect(root.getAttribute('data-scope')).toBe('button');
+          for (const name of [
+            'role',
+            'type',
+            'aria-disabled',
+            'data-disabled',
+          ]) {
+            expect(root.hasAttribute(name), name).toBe(false);
+          }
+        },
+      );
+
+      scenario(
+        'a disabled link drops href and keeps link semantics',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: docs(),
+            props: { href: '/docs', disabled: true },
+          });
+          const root = mounted.part();
+          expect(root.hasAttribute('href')).toBe(false);
+          expect(root.getAttribute('role')).toBe('link');
+          expect(root.getAttribute('aria-disabled')).toBe('true');
+          expect(root.hasAttribute('data-disabled')).toBe(true);
+          expect(root.hasAttribute('tabindex')).toBe(false);
+
+          await mounted.setProps({ disabled: false });
+          expect(root.getAttribute('href')).toBe('/docs');
+          expect(root.hasAttribute('role')).toBe(false);
+          expect(root.hasAttribute('aria-disabled')).toBe(false);
+        },
+      );
+
+      scenario(
+        'a disabled link stays focusable with focusableWhenDisabled',
+        async ({ mount }) => {
+          const root = (
+            await mount({
+              template: docs(),
+              props: {
+                href: '/docs',
+                disabled: true,
+                focusableWhenDisabled: true,
+              },
+            })
+          ).part();
+          expect(root.hasAttribute('href')).toBe(false);
+          expect(root.getAttribute('tabindex')).toBe('0');
+          expect(root.getAttribute('aria-disabled')).toBe('true');
+        },
+      );
+
+      scenario(
+        'Enter presses and navigates natively; Space does nothing',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: docs(),
+            props: { href: '#sous-docs' },
+            events: ['press'],
+          });
+          // Records whether Sous prevented the link's click, then stops the
+          // navigation itself so the test page stays put.
+          const click = watchDefault('click', true);
+          mounted.part().focus();
+
+          await keyboard.press('Enter');
+          expect(mounted.eventNames()).toEqual(['press']);
+          expect(click.log).toEqual([false]);
+
+          await keyboard.press('Space');
+          click.stop();
+          expect(mounted.eventNames()).toEqual(['press']);
+          expect(click.log).toEqual([false]);
+        },
+      );
+
+      scenario(
+        'a mouse click presses without preventing navigation',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: docs(),
+            props: { href: '#sous-docs' },
+            events: ['press'],
+          });
+          const click = watchDefault('click', true);
+          await pointer.click(mounted.part());
+          click.stop();
+          expect(mounted.eventNames()).toEqual(['press']);
+          expect(click.log).toEqual([false]);
+        },
+      );
+    });
+
+    group('state and renders', () => {
+      scenario(
+        'public state follows focus, presses and props',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({ template: save() });
+          expect(mounted.state()).toEqual({
+            isPressed: false,
+            isHovered: false,
+            isFocused: false,
+            isFocusVisible: false,
+            isDisabled: false,
+          });
+          mounted.part().focus();
+          expect(mounted.state().isFocused).toBe(true);
+          await keyboard.down('Enter');
+          expect(mounted.state().isPressed).toBe(true);
+          await keyboard.up('Enter');
+          expect(mounted.state().isPressed).toBe(false);
+          await mounted.setProps({ disabled: true });
+          expect(mounted.state().isDisabled).toBe(true);
+        },
+      );
+
+      scenario(
+        'internal interactions never re-render the owner',
+        async ({ mount, pointer, keyboard }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          const root = mounted.part();
+          const renders = mounted.renderCount();
+
+          await keyboard.tab();
+          await keyboard.down('Enter');
+          await keyboard.up('Enter');
+          await pointer.down(root);
+          await pointer.moveOutside(root);
+          await pointer.move(root);
+          await pointer.up();
+          root.blur();
+
+          expect(mounted.eventNames()).toContain('press');
+          expect(mounted.renderCount()).toBe(renders);
+        },
+      );
+    });
+
+    group('spoken output', () => {
+      scenario('announces a native button', async ({ mount, spoken }) => {
+        await mount({ template: save() });
+        expect(await spoken()).toContain('button, Save');
+      });
+
+      scenario('announces a non-native button', async ({ mount, spoken }) => {
+        await mount({
+          template: h('div', { part: 'root' }, 'Save'),
+          props: { elementType: 'div' },
+        });
+        expect(await spoken()).toContain('button, Save');
+      });
+
+      scenario(
+        'announces a natively disabled button as disabled',
+        async ({ mount, spoken }) => {
+          await mount({ template: save(), props: { disabled: true } });
+          expect(await spoken()).toContain('button, Save, disabled');
+        },
+      );
+
+      scenario(
+        'announces a disabled non-native button as disabled',
+        async ({ mount, spoken }) => {
+          await mount({
+            template: h('div', { part: 'root' }, 'Save'),
+            props: { elementType: 'div', disabled: true },
+          });
+          expect(await spoken()).toContain('button, Save, disabled');
+        },
+      );
+
+      scenario(
+        'announces focusableWhenDisabled as disabled',
+        async ({ mount, spoken }) => {
+          await mount({
+            template: save(),
+            props: { disabled: true, focusableWhenDisabled: true },
+          });
+          expect(await spoken()).toContain('button, Save, disabled');
+        },
+      );
+
+      scenario(
+        'never announces "not disabled" after re-enabling',
+        async ({ mount, spoken }) => {
+          const mounted = await mount({
+            template: save(),
+            props: { disabled: true, focusableWhenDisabled: true },
+          });
+          await mounted.setProps({ disabled: false });
+          const phrases = await spoken();
+          expect(phrases).toContain('button, Save');
+          expect(
+            phrases.some((phrase) => phrase.includes('not disabled')),
+          ).toBe(false);
+        },
+      );
+
+      scenario('announces link mode as a link', async ({ mount, spoken }) => {
+        await mount({ template: docs(), props: { href: '/docs' } });
+        expect(await spoken()).toContain('link, Docs');
+      });
+
+      scenario(
+        'announces a disabled link as a disabled link',
+        async ({ mount, spoken }) => {
+          await mount({
+            template: docs(),
+            props: { href: '/docs', disabled: true },
+          });
+          expect(await spoken()).toContain('link, Docs, disabled');
+        },
+      );
+    });
+
+    group('interaction layer', () => {
+      scenario(
+        'a screen-reader click presses with pointerType virtual',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: save(),
+            events: PRESS_EVENTS,
+          });
+          mounted.part().click();
+          expect(mounted.eventNames()).toEqual([
+            'pressStart',
+            'pressEnd',
+            'press',
+          ]);
+          for (const name of PRESS_EVENTS) {
+            expect(pressEvents(mounted, name)[0]).toMatchObject({
+              pointerType: 'virtual',
+            });
+          }
+        },
+        { phase: 2 },
+      );
+
+      scenario(
+        'hover follows the mouse and never starts while disabled',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({ template: save() });
+          const root = mounted.part();
+
+          await pointer.move(root);
+          expect(root.hasAttribute('data-hovered')).toBe(true);
+          expect(mounted.state().isHovered).toBe(true);
+          await pointer.moveOutside(root);
+          expect(root.hasAttribute('data-hovered')).toBe(false);
+          expect(mounted.state().isHovered).toBe(false);
+
+          await mounted.setProps({ disabled: true });
+          await pointer.move(root);
+          expect(root.hasAttribute('data-hovered')).toBe(false);
+          expect(mounted.state().isHovered).toBe(false);
+        },
+        { phase: 2 },
+      );
+
+      scenario(
+        'pressable roots get touch-action: pan-x pan-y pinch-zoom',
+        async ({ mount }) => {
+          const root = (await mount({ template: save() })).part();
+          // The two values are equivalent, and Chromium serializes this one as
+          // `manipulation`. WebKit must get the explicit form: the keyword
+          // breaks Safari's pointercancel on scroll.
+          const webkit =
+            /AppleWebKit/.test(navigator.userAgent) &&
+            !/Chrome|Chromium/.test(navigator.userAgent);
+          const accepted = webkit
+            ? ['pan-x pan-y pinch-zoom']
+            : ['pan-x pan-y pinch-zoom', 'manipulation'];
+          expect(accepted).toContain(getComputedStyle(root).touchAction);
+        },
+        { phase: 2 },
+      );
+    });
+  },
+);

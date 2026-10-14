@@ -1,11 +1,18 @@
 /**
  * Conformance scenarios: one module per component, written from its approved
  * spec before the implementation exists. Each scenario is adapter-agnostic —
- * it mounts through a `mount(component, props)` contract from
- * `@tenphi/sous-testing` and asserts on the DOM, keyboard behavior, focus and
- * spoken output. Every adapter runs every scenario.
+ * it mounts through the contract in `@tenphi/sous-testing` and asserts on the
+ * DOM, keyboard behavior, focus, events, state and spoken output. Every
+ * adapter runs every suite:
+ * `runConformance(adapter, suites, { phase })`.
  *
  * See conformance/AGENTS.md before changing anything here.
  */
 
-export {};
+import { buttonConformance } from './button/button.conformance';
+
+export { buttonConformance };
+export type { ButtonProps, ButtonState, PressEvent } from './button/types';
+
+/** Every suite, in roadmap order. */
+export const suites = [buttonConformance];
