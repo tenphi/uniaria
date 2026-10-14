@@ -7,9 +7,12 @@ Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason Sous exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
-attributes for the design system to target. The only CSS Sous ships is
-behavioral: press sets `touch-action: pan-x pan-y pinch-zoom` inline on
-pressable parts, unless the part has an inline value of its own.
+attributes for the design system to target. Sous ships CSS only where a
+behavior can't work without it, and as little as possible. Per-element rules go
+inline and yield to an inline value the consumer set (press sets
+`touch-action: pan-x pan-y pinch-zoom` on pressable parts). A rule that must be
+global is adopted as a constructed stylesheet inside an anonymous `@layer`, so
+any consumer CSS wins, and only while the behavior is active.
 
 Sous is built by AI agents. The owner, **@tenphi**, approves specs, reviews APIs
 at phase gates and runs the manual screen-reader pass. Read this whole file
@@ -439,6 +442,15 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   `hasArrow`). This covers props, public state, options, variables,
   parameters and functions that return booleans. DOM-defined names stay as
   the DOM has them (`shiftKey`, the `disabled` attribute).
+- Use only web platform features that are Baseline widely available. A newer
+  feature is allowed only behind feature detection, with a fallback that
+  keeps the behavior working. Check with the `web-features` development
+  dependency:
+  `node -e "import('web-features').then(({features: f}) => console.log(f['<id>'].status))"`.
+  `baseline: 'high'` is widely available; `low` and `false` need the
+  fallback. A feature's `status.by_compat_key` covers its single APIs, which
+  can lag the feature (`api.KeyboardEvent.isComposing`, under
+  `keyboard-events`, is only `low`).
 - Each module starts with a JSDoc block stating its responsibility (and the
   design decision it implements, if any). Keep it in sync with behavior.
 - Functional style: factories and plain objects. The only classes are custom

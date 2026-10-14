@@ -17,9 +17,9 @@
  * (`docs/interaction-layer.md` §1.58-63), after React Aria's
  * `textSelection.ts`.
  *
- * - Elsewhere: `user-select: none` inline on the pressed element only, and its
- *   previous inline value back when the press ends. Page-wide toggling was
- *   slow (React Spectrum #1609).
+ * - Elsewhere: `user-select: none` (`-webkit-user-select` in Safari) inline
+ *   on the pressed element only, and its previous inline value back when the
+ *   press ends. Page-wide toggling was slow (React Spectrum #1609).
  * - iOS: a long press selects the text around the element too, so the whole
  *   page gets `-webkit-user-select: none`, restored 300 ms after the last
  *   press ends (iOS can still select just after the finger lifts). The state
@@ -67,8 +67,16 @@ export function disableTextSelection(element: HTMLElement): void {
     page.state = 'disabled';
     return;
   }
-  saved.set(element, element.style.userSelect);
-  element.style.userSelect = 'none';
+  const property = userSelectProperty(element);
+  saved.set(element, element.style[property]);
+  element.style[property] = 'none';
+}
+
+/** Safari supports only the prefixed property. */
+function userSelectProperty(
+  element: HTMLElement,
+): 'userSelect' | 'webkitUserSelect' {
+  return 'userSelect' in element.style ? 'userSelect' : 'webkitUserSelect';
 }
 
 /** Undoes `disableTextSelection(element)`. */
@@ -92,8 +100,9 @@ export function restoreTextSelection(element: HTMLElement): void {
   }
   if (!saved.has(element)) return;
   // Keep a value the consumer set during the press.
-  if (element.style.userSelect === 'none') {
-    element.style.userSelect = saved.get(element)!;
+  const property = userSelectProperty(element);
+  if (element.style[property] === 'none') {
+    element.style[property] = saved.get(element)!;
   }
   saved.delete(element);
   if (element.getAttribute('style') === '') element.removeAttribute('style');

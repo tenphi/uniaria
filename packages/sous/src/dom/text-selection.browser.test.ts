@@ -42,8 +42,9 @@ function pointer(target: Element, type: string, pointerType: string) {
   );
 }
 
-/** The `user-select` press leaves inline, ignoring `touch-action`. */
-const userSelect = (element: HTMLElement) => element.style.userSelect;
+/** The inline `user-select`; Safari has only the prefixed property. */
+const userSelect = (element: HTMLElement) =>
+  element.style.userSelect || element.style.webkitUserSelect;
 
 function mockPlatform(platform: string, maxTouchPoints = 5) {
   vi.spyOn(navigator, 'platform', 'get').mockReturnValue(platform);
@@ -93,11 +94,11 @@ describe('text selection during a touch press', () => {
   it('restores the previous inline value, and drops an empty style attribute', () => {
     mockPlatform('Linux x86_64', 0);
     const element = document.createElement('div');
-    element.setAttribute('style', 'user-select: text');
+    element.setAttribute('style', '-webkit-user-select: text');
     disableTextSelection(element);
-    expect(element.style.userSelect).toBe('none');
+    expect(userSelect(element)).toBe('none');
     restoreTextSelection(element);
-    expect(element.style.userSelect).toBe('text');
+    expect(userSelect(element)).toBe('text');
 
     const bare = document.createElement('div');
     disableTextSelection(bare);
@@ -109,9 +110,9 @@ describe('text selection during a touch press', () => {
     mockPlatform('Linux x86_64', 0);
     const element = document.createElement('div');
     disableTextSelection(element);
-    element.style.userSelect = 'all';
+    element.style.webkitUserSelect = 'all';
     restoreTextSelection(element);
-    expect(element.style.userSelect).toBe('all');
+    expect(userSelect(element)).toBe('all');
   });
 
   it('turns it off for the whole page on iOS, restored 300 ms after', () => {

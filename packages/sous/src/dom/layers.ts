@@ -34,6 +34,7 @@
  * component sets its open state.
  */
 
+import { isComposing } from './events';
 import { interactOutside } from './interact-outside';
 import type { InteractionContext } from './types';
 import { partEffect } from './types';
@@ -71,7 +72,7 @@ function isEscape(event: KeyboardEvent): boolean {
   return (
     event.key === 'Escape' &&
     !event.repeat &&
-    !event.isComposing &&
+    !isComposing(event) &&
     !event.shiftKey &&
     !event.ctrlKey &&
     !event.altKey &&

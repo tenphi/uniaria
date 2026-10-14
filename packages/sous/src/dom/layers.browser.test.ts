@@ -105,6 +105,8 @@ describe('createLayer Escape', () => {
     const { reasons } = open('layer');
     escape(byId('in'), { repeat: true });
     escape(byId('in'), { isComposing: true });
+    // Safari's composition-commit keydown: not composing, but keyCode 229.
+    escape(byId('in'), { keyCode: 229 });
     escape(byId('in'), { shiftKey: true });
     byId('in').addEventListener('keydown', (event) => event.preventDefault(), {
       once: true,

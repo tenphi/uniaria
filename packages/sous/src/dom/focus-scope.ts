@@ -33,6 +33,7 @@
  * and containment skips Tab events whose default was prevented.
  */
 
+import { isComposing } from './events';
 import {
   firstFocusable,
   focusableWalker,
@@ -151,7 +152,7 @@ function isTabNavigation(event: KeyboardEvent): boolean {
     !event.altKey &&
     !event.ctrlKey &&
     !event.metaKey &&
-    !event.isComposing
+    !isComposing(event)
   );
 }
 

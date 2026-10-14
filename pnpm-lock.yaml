@@ -53,6 +53,9 @@ importers:
       vitest:
         specifier: ^5.0.2
         version: 5.0.2(@types/node@22.20.4)(@vitest/browser-playwright@5.0.2)(@vitest/ui@5.0.2)(vite@8.3.1(@types/node@22.20.4)(yaml@2.9.1))
+      web-features:
+        specifier: ^3.40.0
+        version: 3.40.0
 
   conformance:
     dependencies:
@@ -1465,6 +1468,9 @@ packages:
       jsdom:
         optional: true
 
+  web-features@3.40.0:
+    resolution: {integrity: sha512-3AzfKxVv7hWTRZSubYBVu1LHk62mdGg+vIpVAf6+nNC3pC7g455nKSry5OlwsaSYMzuzL2DxSTwlyb5z0+XZdQ==}
+
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
@@ -2648,6 +2654,8 @@ snapshots:
       '@vitest/ui': 5.0.2(vitest@5.0.2)
     transitivePeerDependencies:
       - msw
+
+  web-features@3.40.0: {}
 
   which@2.0.2:
     dependencies:
