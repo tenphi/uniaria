@@ -4,10 +4,11 @@
  * re-rendering, part discovery for custom elements, and interactions.
  *
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
- * and the shared input-modality tracker. Planned: focus scope, the
- * dismissable layer stack, outside interaction, aria-hidden outside, scroll
- * lock, live announcer, typeahead, owner lookup, and positioning (CSS anchor
- * positioning with the Floating UI fallback behind one wrapper).
+ * the shared input-modality tracker, focus-within, focus scopes and the
+ * focusable/tabbable rules. Planned: the dismissable layer stack, outside
+ * interaction, aria-hidden outside, scroll lock, live announcer, owner
+ * lookup, and positioning (CSS anchor positioning with the Floating UI
+ * fallback behind one wrapper).
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -17,6 +18,18 @@ export { isDevelopment, warn } from './dev';
 export type { Binder, BinderOptions } from './binder';
 export { createFocus } from './focus';
 export type { Focus, FocusOptions } from './focus';
+export { createFocusScope } from './focus-scope';
+export type { FocusScopeOptions } from './focus-scope';
+export { createFocusWithin } from './focus-within';
+export type { FocusWithin, FocusWithinOptions } from './focus-within';
+export {
+  firstFocusable,
+  focusableWalker,
+  isFocusable,
+  isTabbable,
+  lastFocusable,
+} from './focusable';
+export type { FocusableOptions } from './focusable';
 export { createHover } from './hover';
 export type { Hover, HoverOptions } from './hover';
 export {

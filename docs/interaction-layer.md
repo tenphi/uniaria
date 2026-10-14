@@ -22,8 +22,8 @@ from it keeps the Apache notice (see `dom/press.ts`).
 | 1. Press               | Built, except as noted       | `dom/press.ts`; Button conformance                          |
 | 2. Hover               | Built                        | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
 | 3. Focus-visible       | Built                        | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Planned                      |                                                             |
-| 5. Focus scope         | Planned                      |                                                             |
+| 4. Focus-within        | Built                        | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted       | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
 | 6. Interact outside    | Planned                      |                                                             |
 | 7. Dismissable layers  | Planned (global layer stack) |                                                             |
 | 8. Scroll lock         | Planned                      |                                                             |
@@ -38,6 +38,12 @@ applies it to every pointer press), and restores after 300 ms without waiting
 for CSS transitions to finish (§1.61). Link opening
 (§1.40-44) waits for a component that needs it: Button's link mode is a native
 `<a href>`. Touch items need touch input in the conformance harness first.
+
+Focus scope, not built yet: the focus manager (§5.44-45, until a component
+needs arrow-key focus moves), the cancelable restore event (§5.22-23),
+waiting for CSS transitions before restoring in virtual modality (§5.25),
+the top-layer exception (§5.11) and shadow DOM (§5.49). Focus-within doesn't
+watch for a focused control becoming disabled in Firefox (§4.7).
 
 ## Where Sous differs
 
@@ -61,6 +67,18 @@ These are decided; follow them rather than the catalogue.
   torn down (§3.17 tears down on `beforeunload`). It still wraps
   `HTMLElement.prototype.focus`, as React Aria does (§3.7). The iOS emulated
   mouse window for hover lives in the same tracker.
+- **Focus scopes are one part element** (React Aria brackets a fragment with
+  sentinel spans), live while `isActive()` holds, because a closed popover
+  keeps its instance. A scope's logical parent is the innermost scope around
+  it in the DOM, else the active scope. Ending a scope restores focus when
+  focus is still inside its (now hidden) element, not only when it fell to
+  the body. Containment skips a Tab whose default was already prevented, so
+  the Tab-out redirect needs no `stopPropagation`, and a `MutationObserver`
+  notices a removed focused element, which gets no `focusout` in WebKit.
+  The fallback for focus lost in a scope ends with the scope element itself.
+- **Focus-within listens on the part element**, not through part handlers,
+  so it behaves the same in both adapters while the custom-element binder
+  delivers a bubbling event to the nearest part only (an open question).
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.
@@ -69,6 +87,12 @@ These are decided; follow them rather than the catalogue.
   containment, and a modal `<dialog>` already makes the outside inert.
 
 ## Open questions for the owner
+
+- **Bubbling events across nested parts.** The custom-element binder hands a
+  bubbling event to the nearest part above its target only (design doc,
+  decision 8); React calls every ancestor part's handler. Composites will
+  diverge between adapters. Proposal: deliver to every part on the path,
+  innermost first, like the DOM and React.
 
 - **Scroll lock on iOS** (§8) injects an `overscroll-behavior: contain` style
   and a second `focus()` wrapper. AGENTS.md says the only CSS Sous ships is
