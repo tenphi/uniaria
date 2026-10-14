@@ -4,10 +4,8 @@
  * the `mount` contract adapters implement, and `defineConformance` for
  * writing suites. Running suites, real input and spoken output live in
  * `@tenphi/sous-testing/browser`; the Playwright commands they need live in
- * `@tenphi/sous-testing/commands`.
- *
- * Planned here: `createInstance(definition, props)` for driving a definition
- * without a framework or a DOM.
+ * `@tenphi/sous-testing/commands`. To drive a definition without a
+ * framework or a DOM, use `createInstance` from `@tenphi/sous`.
  */
 
 export type {

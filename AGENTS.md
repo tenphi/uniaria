@@ -25,13 +25,13 @@ before changing anything; it is the binding summary of the design.
 
 ## Packages
 
-| Package                    | Path                     | Contents                                                                                                                    | Published |
-| -------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `@tenphi/sous`             | `packages/sous`          | Runtime (`.`), interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, `./select`, …) | Yes       |
-| `@tenphi/sous-react`       | `packages/sous-react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                    | Yes       |
-| `@tenphi/sous-elements`    | `packages/sous-elements` | Generic `defineElement(definition, options)`; light DOM, `sous-` prefix by default; one registering entry per component     | Yes       |
-| `@tenphi/sous-testing`     | `packages/sous-testing`  | `createInstance`, the conformance runner, virtual and real screen-reader helpers; development only                          | Yes       |
-| `@tenphi/sous-conformance` | `conformance`            | Adapter-agnostic scenarios every adapter must pass                                                                          | No        |
+| Package                    | Path                     | Contents                                                                                                                             | Published |
+| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| `@tenphi/sous`             | `packages/sous`          | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, …)   | Yes       |
+| `@tenphi/sous-react`       | `packages/sous-react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                             | Yes       |
+| `@tenphi/sous-elements`    | `packages/sous-elements` | Generic `defineElement(definition, options)`; light DOM, `sous-` prefix by default; one registering entry per component (`./button`) | Yes       |
+| `@tenphi/sous-testing`     | `packages/sous-testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                 | Yes       |
+| `@tenphi/sous-conformance` | `conformance`            | Adapter-agnostic scenarios every adapter must pass                                                                                   | No        |
 
 All published packages share one version (Changesets `fixed` group). Each
 package has its own short `AGENTS.md` with local rules.
@@ -150,8 +150,18 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 ### Behavior lives in definitions
 
 - Every component is one
-  `defineComponent({ name, parts, props, setup, expose, connect })`
+  `defineComponent({ name, parts, props, events, setup, expose, connect })`
   definition in `packages/sous/src/components/<name>/`.
+- The schema is the one source for adapter props, element attributes and
+  events: `prop(default, options?)` for plain values, `bindable(default,
+{ event? })` for stateful ones, and `event<Detail>()` under `events` for
+  what the component reports. Options: `attribute` (the element attribute;
+  `false` for a property only), `type` (attribute conversion, inferred from
+  the default) and `adopt` (an element reads an unset prop from a part's tag
+  or attribute, like Button's `elementType` and `href`).
+- Event names are camelCase (`pressStart`, `openChange`): the DOM event is
+  lowercase (`pressstart`) and the callback prop is `onPressStart`. A
+  bindable's change event defaults to `<key>Change`.
 - Adapters are generic over definitions. `sous-react` and `sous-elements`
   contain no component-specific behavior, only optional thin sugar
   (`sous-elements` also has one registering entry per component).
@@ -160,16 +170,27 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   there is exactly one Listbox implementation. Separate instances that work
   together (a field and its control, a radio group and its radios) link
   through `ctx.owner(def)` instead (see Composition between instances).
-- `setup(ctx)` runs once per instance and returns actions. `connect()` is a
-  pure function of current state that returns part props; the DOM binder runs
-  it after every store flush, so keep it cheap. `expose()` returns the public
-  state selectors read (`isOpen`, `isPressed`, …); it is public API, and the
-  spec documents it.
+- `setup(ctx)` runs once per instance and returns actions and readers;
+  `expose()` and `connect()` receive them as `api`, and consumers see them as
+  `instance.api`. `connect()` is a pure function of current state that
+  returns part props; the DOM binder runs it after every store flush, so keep
+  it cheap. `expose()` returns the public state selectors read (`isOpen`,
+  `isPressed`, …); it is public API, and the spec documents it.
+- `createInstance(definition, { props, id, env })` in the runtime is the
+  instance both adapters drive. Node tests use it directly: call part
+  handlers from `instance.connect()` and read `attrs` and `getState()`
+  without a framework or a DOM.
+- Interactions (`createPress`, `createFocus`) live in `dom/` and take the
+  `setup()` context. Definitions type part props with `DomPartProps` and read
+  part elements with `partElement(ctx, part)`. Development warnings go
+  through `warn()` from `dom/`.
 
 ### Controlled and uncontrolled values
 
 - Every stateful value is a bindable, declared in the props schema
-  (`bindable(default, { event })`).
+  (`bindable(default, { event })`). The consumer seeds it with
+  `default<Key>`, which applies until the first uncontrolled change, like a
+  form control's `value` attribute.
 - Uncontrolled: the core commits the change. Controlled: the core only calls
   `onChange` and reads the value back from props on the next render. Never
   assume a requested change took effect.
@@ -232,8 +253,9 @@ type PartProps = {
 };
 ```
 
-The DOM-free runtime defines this type without DOM types (generic over the
-event type); the DOM-typed version lives in `dom/`.
+The DOM-free runtime types handlers as `(event: never) => void`, so it needs
+no DOM types; definitions use `DomPartProps` from `dom/`, which types each
+handler with its event.
 
 - ARIA values are always strings: `'true'`/`'false'`, never booleans.
 - Event names are DOM names: `click`, `keydown`, `focusin`, `focusout`,
@@ -286,9 +308,11 @@ event type); the DOM-typed version lives in `dom/`.
   `data-state`; the consumer owns content, classes and every other attribute.
   A part can be declared element-owned (Select's displayed value): the
   consumer leaves it empty and the element writes its text.
-- Parts are resolved by event delegation (`event.target.closest('[data-part]')`),
-  a query that stops at nested instances, and a `MutationObserver` for parts
-  added later.
+- Parts are found by a query that stops at nested instances, plus a
+  `MutationObserver` for parts added later. Listeners are delegated from the
+  host in the capture phase: a bubbling event reaches the nearest part above
+  its target; one that doesn't bubble (`pointerenter`) reaches only the part
+  it targets.
 - State goes in through properties and out through events: the `open`
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.

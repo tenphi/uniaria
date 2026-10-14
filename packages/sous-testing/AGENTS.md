@@ -5,8 +5,8 @@ contract". Local rules:
 
 - Three entries:
   - `.` is safe anywhere, including the `node` project: templates (`h`), the
-    contract types and `defineConformance`. `createInstance(definition,
-props)` will live here too.
+    contract types and `defineConformance`. Driving a definition without a
+    framework needs nothing from here: `createInstance` is in the runtime.
   - `./browser` runs suites (`runConformance`) and holds real input and
     spoken output. Browser tests only.
   - `./commands` holds the Node-side Playwright commands (`sousCommands`),
