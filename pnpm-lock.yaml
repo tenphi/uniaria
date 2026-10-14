@@ -70,6 +70,25 @@ importers:
       '@tenphi/sous':
         specifier: workspace:*
         version: link:../sous
+    devDependencies:
+      '@tenphi/sous-conformance':
+        specifier: workspace:*
+        version: link:../../conformance
+      '@tenphi/sous-testing':
+        specifier: workspace:*
+        version: link:../sous-testing
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
 
   packages/sous-react:
     dependencies:

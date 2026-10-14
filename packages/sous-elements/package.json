@@ -3,12 +3,20 @@
   "version": "0.0.0",
   "description": "Light-DOM custom elements for Sous: defineElement turns any Sous component definition into a custom element",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/button.ts",
+    "./dist/button.js"
+  ],
   "exports": {
     ".": {
       "sous-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./button": {
+      "sous-source": "./src/button.ts",
+      "types": "./dist/button.d.ts",
+      "default": "./dist/button.js"
     },
     "./package.json": "./package.json"
   },
@@ -44,5 +52,13 @@
   },
   "dependencies": {
     "@tenphi/sous": "workspace:*"
+  },
+  "devDependencies": {
+    "@tenphi/sous-conformance": "workspace:*",
+    "@tenphi/sous-testing": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

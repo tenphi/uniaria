@@ -5,9 +5,22 @@ import { describe, expect, it } from 'vitest';
  * `HTMLElement`, so they are created inside `defineElement()`, never at module
  * scope (design decision 7).
  */
+const entries = {
+  '@tenphi/sous-elements': () => import('./index'),
+  '@tenphi/sous-elements/button': () => import('./button'),
+};
+
 describe('SSR safety', () => {
-  it('imports @tenphi/sous-elements without a DOM', async () => {
+  it('runs without a DOM', () => {
     expect(typeof HTMLElement).toBe('undefined');
-    await expect(import('./index')).resolves.toBeDefined();
+  });
+
+  it.each(Object.entries(entries))('imports %s', async (_name, load) => {
+    await expect(load()).resolves.toBeDefined();
+  });
+
+  it('registers nothing where there are no custom elements', async () => {
+    const { SousButton } = await import('./button');
+    expect(SousButton).toBeUndefined();
   });
 });
