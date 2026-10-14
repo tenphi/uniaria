@@ -15,7 +15,10 @@
  *
  * Custom elements also pass their host: the binder then delegates each
  * part's listeners from it (capture phase, so events that don't bubble, like
- * `pointerenter`, are seen too). React attaches its own listeners.
+ * `pointerenter`, are seen too). A bubbling event reaches every part on its
+ * path, innermost first, as React's listeners on each part element would; one
+ * that doesn't bubble reaches only its target's part. React attaches its own
+ * listeners.
  */
 
 import type { AnyDefinition, Instance, PartProps } from '../runtime';
@@ -51,22 +54,32 @@ export function createBinder<D extends AnyDefinition>(
   const delegated = new Set<string>();
   let unsubscribe: (() => void) | undefined;
 
-  const partOf = (event: Event): string | undefined => {
+  /**
+   * The parts an event reaches, innermost first: every part on the path from
+   * the target up to the host for a bubbling event, as the bubble phase
+   * would, and only the target's own part for one that doesn't bubble.
+   */
+  const partsOf = (event: Event): string[] => {
     let node = event.target as Node | null;
-    if (!event.bubbles) return node ? parts.get(node as Element) : undefined;
+    if (!event.bubbles) {
+      const part = node ? parts.get(node as Element) : undefined;
+      return part === undefined ? [] : [part];
+    }
+    const path: string[] = [];
     while (node && node !== host) {
       const part = parts.get(node as Element);
-      if (part !== undefined) return part;
+      if (part !== undefined) path.push(part);
       node = node.parentNode;
     }
-    return undefined;
+    return path;
   };
 
   const dispatch = (event: Event): void => {
-    const part = partOf(event);
-    if (part === undefined) return;
-    const props = instance.connect() as Readonly<Record<string, PartProps>>;
-    props[part]?.on?.[event.type]?.(event as never);
+    for (const part of partsOf(event)) {
+      // Fresh props for each part: a handler may have changed state.
+      const props = instance.connect() as Readonly<Record<string, PartProps>>;
+      props[part]?.on?.[event.type]?.(event as never);
+    }
   };
 
   const delegate = (types: readonly string[]): void => {

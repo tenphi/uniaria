@@ -318,9 +318,9 @@ handler with its event.
   consumer leaves it empty and the element writes its text.
 - Parts are found by a query that stops at nested instances, plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
-  host in the capture phase: a bubbling event reaches the nearest part above
-  its target; one that doesn't bubble (`pointerenter`) reaches only the part
-  it targets.
+  host in the capture phase: a bubbling event reaches every part on its
+  path, innermost first, as in React; one that doesn't bubble
+  (`pointerenter`) reaches only the part it targets.
 - State goes in through properties and out through events: the `isOpen`
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.

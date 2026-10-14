@@ -102,8 +102,11 @@ These are decided; follow them rather than the catalogue.
   notices a removed focused element, which gets no `focusout` in WebKit.
   The fallback for focus lost in a scope ends with the scope element itself.
 - **Focus-within listens on the part element**, not through part handlers,
-  so it behaves the same in both adapters while the custom-element binder
-  delivers a bubbling event to the nearest part only (an open question).
+  so a component has nothing to merge for it.
+- **The custom-element binder delivers a bubbling event to every part on
+  its path**, innermost first, as React calls each ancestor part's handler
+  (owner decision, 2026-10-14). An event that doesn't bubble reaches only
+  its target's part.
 - **Live announcer** (§10). Plain functions: `announce(message, options)`
   with `politeness`, `timeout` and `document` options,
   `clearAnnouncer(politeness?, document?)` and `destroyAnnouncer(document?)`.
@@ -166,11 +169,6 @@ These are decided; follow them rather than the catalogue.
 
 ## Open questions for the owner
 
-- **Bubbling events across nested parts.** The custom-element binder hands a
-  bubbling event to the nearest part above its target only (design doc,
-  decision 8); React calls every ancestor part's handler. Composites will
-  diverge between adapters. Proposal: deliver to every part on the path,
-  innermost first, like the DOM and React.
 - **Typeahead: Space that matches nothing.** React Aria keeps "foo " as the
   query and swallows every Space for the next second. Sous handles that one
   Space but empties the query, so the next Space selects. Keep?

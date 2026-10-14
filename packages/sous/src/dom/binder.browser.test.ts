@@ -183,6 +183,44 @@ describe('createBinder', () => {
       expect(instance.getState().entered).toBe(1);
     });
 
+    it('delivers a bubbling event to every part on its path, innermost first', () => {
+      const calls: string[] = [];
+      const log = (part: string) => (event: Event) =>
+        calls.push(`${part}:${event.type}`);
+      const nested = defineComponent({
+        name: 'nested',
+        parts: ['root', 'item'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({
+          root: {
+            attrs: {},
+            on: { click: log('root'), pointerenter: log('root') },
+          },
+          item: {
+            attrs: {},
+            on: { click: log('item'), pointerenter: log('item') },
+          },
+        }),
+      });
+      const { host, root } = setup(
+        '<div data-part="root"><p data-part="item"><span>Go</span></p></div>',
+      );
+      const item = host.querySelector<HTMLElement>('[data-part="item"]')!;
+      const binder = createBinder(createInstance(nested), { host });
+      binder.attach('root', root);
+      binder.attach('item', item);
+      binder.start();
+
+      item.querySelector('span')!.click();
+      expect(calls).toEqual(['item:click', 'root:click']);
+
+      calls.length = 0;
+      item.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false }));
+      expect(calls).toEqual(['item:pointerenter']);
+    });
+
     it('removes its listeners on stop', () => {
       const { host, root } = setup();
       const instance = createInstance(toy);
