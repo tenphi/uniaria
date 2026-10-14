@@ -13,32 +13,36 @@ const disclosure = defineComponent({
   name: 'test-disclosure',
   parts: ['trigger', 'panel'],
   props: {
-    open: bindable(false),
-    disabled: prop(false),
+    isOpen: bindable(false),
+    isDisabled: prop(false),
     delay: prop(0),
     label: prop<string | undefined>(undefined),
-    options: prop<{ modal: boolean } | undefined>(undefined, { type: 'json' }),
+    options: prop<{ isModal: boolean } | undefined>(undefined, {
+      type: 'json',
+    }),
   },
   setup(ctx) {
     return {
       toggle: () => {
-        if (!ctx.props.disabled()) ctx.props.open.set(!ctx.props.open.get());
+        if (!ctx.props.isDisabled()) {
+          ctx.props.isOpen.set(!ctx.props.isOpen.get());
+        }
       },
     };
   },
   expose: ({ props }) => ({
-    isOpen: props.open.get(),
-    isDisabled: props.disabled(),
+    isOpen: props.isOpen.get(),
+    isDisabled: props.isDisabled(),
     delay: props.delay(),
     label: props.label(),
     options: props.options(),
   }),
   connect: ({ props, api }) => ({
     trigger: {
-      attrs: { 'aria-expanded': String(props.open.get()) },
+      attrs: { 'aria-expanded': String(props.isOpen.get()) },
       on: { click: api.toggle },
     },
-    panel: { attrs: { hidden: props.open.get() ? undefined : '' } },
+    panel: { attrs: { hidden: props.isOpen.get() ? undefined : '' } },
   }),
 });
 
@@ -95,20 +99,20 @@ describe('defineElement', () => {
 
   it('converts attributes to props', () => {
     const container = mount(
-      `<sous-test-disclosure disabled delay="300" label="More" options='{"modal":true}'>${MARKUP}</sous-test-disclosure>`,
+      `<sous-test-disclosure disabled delay="300" label="More" options='{"isModal":true}'>${MARKUP}</sous-test-disclosure>`,
     );
     const { host } = disclosureIn(container);
     expect(host.instance.getState()).toMatchObject({
       isDisabled: true,
       delay: 300,
       label: 'More',
-      options: { modal: true },
+      options: { isModal: true },
     });
-    expect(host.disabled).toBe(true);
+    expect(host.isDisabled).toBe(true);
 
     host.removeAttribute('disabled');
     expect(host.instance.getState().isDisabled).toBe(false);
-    expect(host.disabled).toBe(false);
+    expect(host.isDisabled).toBe(false);
   });
 
   describe('bindables', () => {
@@ -135,7 +139,7 @@ describe('defineElement', () => {
         `<sous-test-disclosure>${MARKUP}</sous-test-disclosure>`,
       );
       const { host, trigger } = disclosureIn(container);
-      host.open = false;
+      host.isOpen = false;
       const onChange = vi.fn();
       host.addEventListener('openchange', (event) =>
         onChange((event as CustomEvent).detail),
@@ -145,7 +149,7 @@ describe('defineElement', () => {
       expect(onChange).toHaveBeenCalledWith(true);
       expect(trigger.getAttribute('aria-expanded')).toBe('false');
 
-      host.open = true;
+      host.isOpen = true;
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
   });
@@ -264,23 +268,23 @@ describe('<sous-button>', () => {
     expect(link.getAttribute('href')).toBe('/docs');
     expect(link.hasAttribute('role')).toBe(false);
 
-    (host as unknown as { disabled: boolean }).disabled = true;
+    (host as unknown as { isDisabled: boolean }).isDisabled = true;
     expect(link.hasAttribute('href')).toBe(false);
     expect(link.getAttribute('role')).toBe('link');
 
-    (host as unknown as { disabled: boolean }).disabled = false;
+    (host as unknown as { isDisabled: boolean }).isDisabled = false;
     expect(link.getAttribute('href')).toBe('/docs');
   });
 
   it('shares its DOM with React without either one undoing the other', () => {
     const container = mount('');
     const root = createRoot(container);
-    const render = (label: string, disabled: boolean) =>
+    const render = (label: string, isDisabled: boolean) =>
       flushSync(() =>
         root.render(
           createElement(
             'sous-button',
-            { disabled },
+            { isDisabled },
             createElement(
               'button',
               { 'data-part': 'root', className: label },

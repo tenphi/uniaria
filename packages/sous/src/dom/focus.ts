@@ -13,23 +13,23 @@ export interface Focus {
 }
 
 export function createFocus(ctx: InteractionContext, part: string): Focus {
-  const focused = ctx.state(false);
+  const isFocused = ctx.state(false);
 
   // The part may already have focus when the instance starts (autofocus).
   ctx.effect(() => {
     const element = partElement(ctx, part);
-    focused.set(element?.ownerDocument.activeElement === element);
-    return () => focused.set(false);
+    isFocused.set(element?.ownerDocument.activeElement === element);
+    return () => isFocused.set(false);
   });
 
   return {
-    isFocused: () => focused.get(),
+    isFocused: () => isFocused.get(),
     handlers: {
       focusin(event) {
-        if (event.target === partElement(ctx, part)) focused.set(true);
+        if (event.target === partElement(ctx, part)) isFocused.set(true);
       },
       focusout(event) {
-        if (event.target === partElement(ctx, part)) focused.set(false);
+        if (event.target === partElement(ctx, part)) isFocused.set(false);
       },
     },
   };

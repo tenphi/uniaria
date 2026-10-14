@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest';
 
 import { useComponent, useComponentState } from './use-component';
 
-function Docs({ disabled = false }: { readonly disabled?: boolean }) {
-  const ui = useComponent(button, { href: '/docs', disabled });
-  const isDisabled = useComponentState(ui, (state) => state.isDisabled);
+function Docs({ isDisabled = false }: { readonly isDisabled?: boolean }) {
+  const ui = useComponent(button, { href: '/docs', isDisabled });
+  const isUnavailable = useComponentState(ui, (state) => state.isDisabled);
   return (
-    <a {...ui.parts.root} title={isDisabled ? 'Unavailable' : undefined}>
+    <a {...ui.parts.root} title={isUnavailable ? 'Unavailable' : undefined}>
       Docs
     </a>
   );
@@ -23,7 +23,7 @@ describe('server rendering without a DOM', () => {
   });
 
   it('renders state read through a selector', () => {
-    const html = renderToString(<Docs disabled />);
+    const html = renderToString(<Docs isDisabled />);
     expect(html).toContain('role="link"');
     expect(html).toContain('aria-disabled="true"');
     expect(html).toContain('title="Unavailable"');

@@ -5,9 +5,17 @@
  *
  * - `prop(default)` — a plain value the consumer owns.
  * - `bindable(default)` — a stateful value that is controlled when the
- *   consumer passes it and uncontrolled otherwise (`default<Key>` seeds it).
- *   Changes are reported through the `<key>Change` event.
+ *   consumer passes it and uncontrolled otherwise (`default<Name>` seeds it).
+ *   Changes are reported through the `<name>Change` event.
  * - `event<Detail>()` — something the component reports, such as `press`.
+ *
+ * Boolean props read as predicates: `is…` for states (`isDisabled`,
+ * `isOpen`), `should…`, `has…` or `allows…` for behavior
+ * (`shouldPreventFocusOnPress`). Derived names drop the prefix where HTML
+ * would: a bindable `isOpen` is seeded by `defaultOpen` and reports
+ * `openChange`, and element attributes drop `is` and `should`
+ * (`isDisabled` → `disabled`, `shouldExcludeFromTabOrder` →
+ * `exclude-from-tab-order`).
  *
  * Event names are camelCase (`pressStart`, `openChange`). Adapters derive the
  * rest: the DOM event is lowercase (`pressstart`), the callback prop is
@@ -46,7 +54,7 @@ export interface PropSpec<T> {
 export interface BindableOptions<
   Event extends string | undefined,
 > extends PropOptions {
-  /** The change event. Defaults to `<key>Change`. */
+  /** The change event. Defaults to `<name>Change` (`isOpen` → `openChange`). */
   readonly event?: Event;
 }
 
@@ -99,6 +107,8 @@ export type EventsSchema = Readonly<Record<string, EventSpec<any>>>;
 /** One prop as the adapters see it, resolved from the schema. */
 export interface PropInfo {
   readonly key: string;
+  /** Bindables only: the prop that seeds it (`isOpen` → `defaultOpen`). */
+  readonly defaultKey?: string;
   readonly kind: 'prop' | 'bindable';
   readonly defaultValue: unknown;
   readonly type: PropType;
@@ -117,6 +127,35 @@ export interface ResolvedSchema {
 
 export function capitalize<S extends string>(value: S): Capitalize<S> {
   return (value.charAt(0).toUpperCase() + value.slice(1)) as Capitalize<S>;
+}
+
+/** `isOpen` → `open`; names without a predicate prefix stay as they are. */
+export type StateName<Key extends string> = Unprefixed<Key, 'is'>;
+
+type Unprefixed<
+  Key extends string,
+  Prefix extends string,
+> = Key extends `${Prefix}${infer Rest}`
+  ? Rest extends ''
+    ? Key
+    : Rest extends Capitalize<Rest>
+      ? Uncapitalize<Rest>
+      : Key
+  : Key;
+
+function unprefixed(key: string, prefixes: readonly string[]): string {
+  for (const prefix of prefixes) {
+    const rest = key.slice(prefix.length);
+    if (key.startsWith(prefix) && /^[A-Z]/.test(rest)) {
+      return rest.charAt(0).toLowerCase() + rest.slice(1);
+    }
+  }
+  return key;
+}
+
+/** The name a bindable's derived props use: `isOpen` → `open`. */
+export function stateName(key: string): string {
+  return unprefixed(key, ['is']);
 }
 
 export function kebabCase(value: string): string {
@@ -155,15 +194,19 @@ export function resolveSchema(
   const infos: PropInfo[] = [];
   const names: string[] = [];
   for (const [key, spec] of Object.entries(props)) {
-    const bindable = spec.kind === 'bindable';
-    const changeEvent = bindable
-      ? ((spec.event as string | undefined) ?? `${key}Change`)
+    const isBindable = spec.kind === 'bindable';
+    const name = stateName(key);
+    const changeEvent = isBindable
+      ? ((spec.event as string | undefined) ?? `${name}Change`)
       : undefined;
     const attribute =
       spec.options.attribute ??
-      (bindable ? `default-${kebabCase(key)}` : kebabCase(key));
+      (isBindable
+        ? `default-${kebabCase(name)}`
+        : kebabCase(unprefixed(key, ['is', 'should'])));
     infos.push({
       key,
+      ...(isBindable ? { defaultKey: `default${capitalize(name)}` } : {}),
       kind: spec.kind,
       defaultValue: spec.defaultValue,
       type: inferType(spec),

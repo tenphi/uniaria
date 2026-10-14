@@ -37,8 +37,8 @@ export interface KeyboardInput {
   up(key: string): Promise<void>;
   /** `down`, then `up`. */
   press(key: string): Promise<void>;
-  /** Moves focus with Tab (Shift+Tab with `shift`). */
-  tab(options?: { shift?: boolean }): Promise<void>;
+  /** Moves focus with Tab, or Shift+Tab with `isBackward`. */
+  tab(options?: { isBackward?: boolean }): Promise<void>;
 }
 
 export interface ScenarioContext<Props, State> {

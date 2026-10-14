@@ -18,6 +18,7 @@ import type {
   PropSpec,
   PropsSchema,
   ResolvedSchema,
+  StateName,
 } from './schema';
 import { capitalize, resolveSchema } from './schema';
 
@@ -75,7 +76,7 @@ type ChangeEventOf<Key extends string, Spec> =
   Spec extends BindableSpec<infer _T, infer Event>
     ? Event extends string
       ? Event
-      : `${Key}Change`
+      : `${StateName<Key>}Change`
     : never;
 
 /** How definitions read props: a getter per prop, a `Bindable` per bindable. */
@@ -93,7 +94,7 @@ export type InputProps<P extends PropsSchema, E extends EventsSchema> = {
 } & {
   readonly [
     K in keyof P & string as P[K] extends BindableSpec<infer _T, infer _Event>
-      ? `default${Capitalize<K>}`
+      ? `default${Capitalize<StateName<K>>}`
       : never
   ]?: ValueOf<P[K]>;
 } & {
@@ -225,7 +226,7 @@ export function defineComponent<
   };
   for (const info of schema.props) {
     callback(info.key);
-    if (info.kind === 'bindable') callback(`default${capitalize(info.key)}`);
+    if (info.defaultKey) callback(info.defaultKey);
   }
   for (const name of schema.events) callback(`on${capitalize(name)}`);
   return { ...config, events, schema };

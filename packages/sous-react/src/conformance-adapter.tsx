@@ -33,9 +33,9 @@ const UNCONTROLLED: Readonly<Record<string, string>> = {
 
 function templateProps(node: TemplateElement): Record<string, unknown> {
   const props: Record<string, unknown> = {};
-  const formControl = ['input', 'textarea', 'select'].includes(node.tag);
+  const isFormControl = ['input', 'textarea', 'select'].includes(node.tag);
   for (const [name, value] of Object.entries(node.attrs)) {
-    const prop = (formControl && UNCONTROLLED[name]) || reactPropName(name);
+    const prop = (isFormControl && UNCONTROLLED[name]) || reactPropName(name);
     props[prop] = reactPropValue(prop, value);
   }
   return props;

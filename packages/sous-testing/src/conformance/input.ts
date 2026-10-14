@@ -81,7 +81,7 @@ export const keyboard: KeyboardInput = {
     await keyDown(key);
     await keyUp(key);
   },
-  tab: (options) => userEvent.tab({ shift: options?.shift ?? false }),
+  tab: (options) => userEvent.tab({ shift: options?.isBackward ?? false }),
 };
 
 /** Releases every button and key a scenario left held. */

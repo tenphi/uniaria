@@ -27,31 +27,31 @@ const MAX_PASSES = 100;
 export function createStore(): Store {
   let version = 0;
   let depth = 0;
-  let dirty = false;
-  let flushing = false;
+  let isDirty = false;
+  let isFlushing = false;
   const listeners = new Set<() => void>();
 
   // A change made by a listener (a watcher reacting to a prop, say) is not
   // flushed in the middle of the pass that caused it: it marks the store dirty
   // and the loop runs one more pass, so every listener sees each version once.
   const flush = (): void => {
-    if (!dirty || depth > 0 || flushing) return;
-    flushing = true;
+    if (!isDirty || depth > 0 || isFlushing) return;
+    isFlushing = true;
     try {
-      for (let pass = 1; dirty; pass++) {
+      for (let pass = 1; isDirty; pass++) {
         if (pass > MAX_PASSES) {
-          dirty = false;
+          isDirty = false;
           console.error(
             `[sous] The store changed on each of ${MAX_PASSES} flushes in a row; a listener keeps changing state.`,
           );
           break;
         }
-        dirty = false;
+        isDirty = false;
         version++;
         for (const listener of Array.from(listeners)) listener();
       }
     } finally {
-      flushing = false;
+      isFlushing = false;
     }
   };
 
@@ -64,7 +64,7 @@ export function createStore(): Store {
       };
     },
     notify() {
-      dirty = true;
+      isDirty = true;
       flush();
     },
     batch(fn) {

@@ -49,7 +49,7 @@ function Docs() {
 
 describe('useComponent', () => {
   it('renders part props for the first paint', () => {
-    const element = render(<Save disabled />).querySelector('button')!;
+    const element = render(<Save isDisabled />).querySelector('button')!;
     expect(element.getAttribute('data-scope')).toBe('button');
     expect(element.getAttribute('data-part')).toBe('root');
     expect(element.getAttribute('type')).toBe('button');
@@ -215,7 +215,7 @@ describe('useComponentState', () => {
 
 describe('server rendering', () => {
   it('hydrates server HTML without mismatches', async () => {
-    const html = renderToString(<Save excludeFromTabOrder />);
+    const html = renderToString(<Save shouldExcludeFromTabOrder />);
     container = document.createElement('div');
     container.innerHTML = html;
     document.body.append(container);
@@ -228,7 +228,7 @@ describe('server rendering', () => {
     flushSync(() => {
       root = hydrateRoot(
         container!,
-        <Save excludeFromTabOrder onPress={onPress} />,
+        <Save shouldExcludeFromTabOrder onPress={onPress} />,
         {
           onRecoverableError,
         },

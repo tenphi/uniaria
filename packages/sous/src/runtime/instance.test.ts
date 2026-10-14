@@ -10,53 +10,54 @@ const disclosure = defineComponent({
   name: 'disclosure',
   parts: ['trigger', 'panel'],
   props: {
-    open: bindable(false),
-    disabled: prop(false),
+    isOpen: bindable(false),
+    isDisabled: prop(false),
     label: prop<string | undefined>(undefined),
   },
-  events: { toggle: event<{ open: boolean }>() },
+  events: { toggle: event<{ isOpen: boolean }>() },
   setup(ctx) {
     const toggles = ctx.state(0);
     const log: string[] = [];
     ctx.watch(
-      () => ctx.props.disabled(),
-      (disabled, previous) => log.push(`disabled ${previous} → ${disabled}`),
+      () => ctx.props.isDisabled(),
+      (isDisabled, previous) =>
+        log.push(`disabled ${previous} → ${isDisabled}`),
     );
     ctx.effect(() => {
       log.push('start');
       return () => log.push('stop');
     });
     const toggle = () => {
-      if (ctx.props.disabled()) return;
-      const open = !ctx.props.open.get();
+      if (ctx.props.isDisabled()) return;
+      const isOpen = !ctx.props.isOpen.get();
       toggles.set(toggles.get() + 1);
-      ctx.props.open.set(open);
-      ctx.emit('toggle', { open });
+      ctx.props.isOpen.set(isOpen);
+      ctx.emit('toggle', { isOpen });
     };
-    const setOpen = (open: boolean) => ctx.props.open.set(open);
+    const setOpen = (isOpen: boolean) => ctx.props.isOpen.set(isOpen);
     return { toggle, setOpen, toggles: () => toggles.get(), log };
   },
   expose({ props, api }) {
     return {
-      isOpen: props.open.get(),
-      isDisabled: props.disabled(),
+      isOpen: props.isOpen.get(),
+      isDisabled: props.isDisabled(),
       toggles: api.toggles(),
     };
   },
   connect({ props, ids, api }) {
-    const open = props.open.get();
+    const isOpen = props.isOpen.get();
     return {
       trigger: {
         attrs: {
           id: ids.trigger,
-          'aria-expanded': String(open),
+          'aria-expanded': String(isOpen),
           'aria-controls': ids.panel,
           'aria-label': props.label(),
         },
         on: { click: api.toggle },
       },
       panel: {
-        attrs: { id: ids.panel, hidden: open ? undefined : '' },
+        attrs: { id: ids.panel, hidden: isOpen ? undefined : '' },
         style: { '--toggles': String(api.toggles()) },
       },
     };
@@ -71,12 +72,12 @@ describe('defineComponent', () => {
   it('derives props, callbacks and state types from the definition', () => {
     expectTypeOf<PropsOf<typeof disclosure>>().toEqualTypeOf<
       {
-        readonly open?: boolean;
-        readonly disabled?: boolean;
+        readonly isOpen?: boolean;
+        readonly isDisabled?: boolean;
         readonly label?: string | undefined;
       } & { readonly defaultOpen?: boolean } & {
         readonly onOpenChange?: (value: boolean) => void;
-      } & { readonly onToggle?: (detail: { open: boolean }) => void }
+      } & { readonly onToggle?: (detail: { isOpen: boolean }) => void }
     >();
     expectTypeOf<StateOf<typeof disclosure>>().toEqualTypeOf<{
       isOpen: boolean;
@@ -89,7 +90,8 @@ describe('defineComponent', () => {
     expect(disclosure.schema).toEqual({
       props: [
         {
-          key: 'open',
+          key: 'isOpen',
+          defaultKey: 'defaultOpen',
           kind: 'bindable',
           defaultValue: false,
           type: 'boolean',
@@ -97,7 +99,7 @@ describe('defineComponent', () => {
           changeEvent: 'openChange',
         },
         {
-          key: 'disabled',
+          key: 'isDisabled',
           kind: 'prop',
           defaultValue: false,
           type: 'boolean',
@@ -113,6 +115,31 @@ describe('defineComponent', () => {
       ],
       events: ['openChange', 'toggle'],
     });
+  });
+
+  it('drops predicate prefixes from derived names', () => {
+    const def = defineComponent({
+      name: 'prefixes',
+      parts: ['root'],
+      props: {
+        shouldPreventFocusOnPress: prop(false),
+        hasArrow: prop(false),
+        isolate: prop(false),
+        isExpanded: bindable(false),
+      },
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    expectTypeOf<PropsOf<typeof def>>().toHaveProperty('defaultExpanded');
+    expectTypeOf<PropsOf<typeof def>>().toHaveProperty('onExpandedChange');
+    expect(def.schema.props.map((info) => info.attribute)).toEqual([
+      'prevent-focus-on-press',
+      'has-arrow',
+      'isolate',
+      'default-expanded',
+    ]);
+    expect(def.schema.events).toEqual(['expandedChange']);
   });
 
   it('takes a custom change event and attribute', () => {
@@ -237,7 +264,7 @@ describe('createInstance', () => {
     it('only requests controlled changes', () => {
       const onOpenChange = vi.fn();
       const instance = createInstance(disclosure, {
-        props: { open: false, onOpenChange },
+        props: { isOpen: false, onOpenChange },
       });
 
       click(instance);
@@ -246,7 +273,7 @@ describe('createInstance', () => {
       expect(instance.getState().isOpen).toBe(false);
       expect(instance.connect().trigger.attrs['aria-expanded']).toBe('false');
 
-      instance.setProps({ open: true, onOpenChange });
+      instance.setProps({ isOpen: true, onOpenChange });
       instance.sync();
       expect(instance.getState().isOpen).toBe(true);
     });
@@ -266,7 +293,7 @@ describe('createInstance', () => {
     it('falls back to defaults and reads the latest props', () => {
       const instance = createInstance(disclosure);
       expect(instance.getState().isDisabled).toBe(false);
-      instance.setProps({ disabled: true });
+      instance.setProps({ isDisabled: true });
       expect(instance.getState().isDisabled).toBe(true);
     });
 
@@ -275,7 +302,7 @@ describe('createInstance', () => {
       const listener = vi.fn();
       instance.subscribe(listener);
 
-      instance.setProps({ disabled: true });
+      instance.setProps({ isDisabled: true });
       expect(listener).not.toHaveBeenCalled();
 
       instance.sync();
@@ -305,7 +332,7 @@ describe('createInstance', () => {
       instance.setProps({ onToggle: second });
       click(instance);
       expect(first).not.toHaveBeenCalled();
-      expect(second).toHaveBeenCalledWith({ open: true });
+      expect(second).toHaveBeenCalledWith({ isOpen: true });
     });
   });
 
@@ -345,20 +372,20 @@ describe('createInstance', () => {
       const instance = createInstance(disclosure);
       const { log } = instance.api;
 
-      instance.setProps({ disabled: true });
+      instance.setProps({ isDisabled: true });
       instance.sync();
       expect(log).toEqual([]);
 
       instance.start();
-      instance.setProps({ disabled: false });
+      instance.setProps({ isDisabled: false });
       instance.sync();
       expect(log).toEqual(['start', 'disabled true → false']);
 
       instance.stop();
-      instance.setProps({ disabled: true });
+      instance.setProps({ isDisabled: true });
       instance.sync();
       instance.start();
-      instance.setProps({ disabled: true, label: 'x' });
+      instance.setProps({ isDisabled: true, label: 'x' });
       instance.sync();
       expect(log).toEqual(['start', 'disabled true → false', 'stop', 'start']);
     });
@@ -367,18 +394,18 @@ describe('createInstance', () => {
       const def = defineComponent({
         name: 'settle',
         parts: ['root'],
-        props: { disabled: prop(false) },
+        props: { isDisabled: prop(false) },
         setup(ctx) {
-          const pressed = ctx.state(true);
+          const isPressed = ctx.state(true);
           ctx.watch(
-            () => ctx.props.disabled(),
-            (disabled) => {
-              if (disabled) pressed.set(false);
+            () => ctx.props.isDisabled(),
+            (isDisabled) => {
+              if (isDisabled) isPressed.set(false);
             },
           );
-          return { pressed: () => pressed.get() };
+          return { isPressed: () => isPressed.get() };
         },
-        expose: ({ api }) => ({ isPressed: api.pressed() }),
+        expose: ({ api }) => ({ isPressed: api.isPressed() }),
         connect: () => ({ root: { attrs: {} } }),
       });
       const instance = createInstance(def);
@@ -386,7 +413,7 @@ describe('createInstance', () => {
       const seen: boolean[] = [];
       instance.subscribe(() => seen.push(instance.getState().isPressed));
 
-      instance.setProps({ disabled: true });
+      instance.setProps({ isDisabled: true });
       instance.sync();
 
       // No listener ever sees the press the watcher cancelled.

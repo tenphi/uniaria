@@ -15,20 +15,20 @@ import { defineComponent, event, prop } from '../../runtime';
 /** Roots with native button semantics; anything else gets `role="button"`. */
 const NATIVE = new Set(['button', 'input']);
 
-const flag = (on: boolean): string | undefined => (on ? '' : undefined);
+const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
-function role(link: boolean, native: boolean, disabled: boolean) {
+function role(isLink: boolean, isNative: boolean, isDisabled: boolean) {
   // An `a` without `href` has no role, so a disabled link needs one.
-  if (link) return disabled ? 'link' : undefined;
-  return native ? undefined : 'button';
+  if (isLink) return isDisabled ? 'link' : undefined;
+  return isNative ? undefined : 'button';
 }
 
 export const button = defineComponent({
   name: 'button',
   parts: ['root'],
   props: {
-    disabled: prop(false),
-    focusableWhenDisabled: prop(false),
+    isDisabled: prop(false),
+    isFocusableWhenDisabled: prop(false),
     // Link mode. The element adopts the root's href on upgrade, so the link
     // works before JavaScript runs.
     href: prop<string | undefined>(undefined, {
@@ -40,8 +40,8 @@ export const button = defineComponent({
       attribute: false,
       adopt: { part: 'root', tag: true },
     }),
-    excludeFromTabOrder: prop(false),
-    preventFocusOnPress: prop(false),
+    shouldExcludeFromTabOrder: prop(false),
+    shouldPreventFocusOnPress: prop(false),
   },
   events: {
     pressStart: event<PressEvent>(),
@@ -51,8 +51,8 @@ export const button = defineComponent({
   setup(ctx) {
     const press = createPress(ctx, {
       part: 'root',
-      isDisabled: ctx.props.disabled,
-      preventFocusOnPress: ctx.props.preventFocusOnPress,
+      isDisabled: ctx.props.isDisabled,
+      shouldPreventFocusOnPress: ctx.props.shouldPreventFocusOnPress,
       onPressStart: (detail) => ctx.emit('pressStart', detail),
       onPressEnd: (detail) => ctx.emit('pressEnd', detail),
       onPress: (detail) => ctx.emit('press', detail),
@@ -82,32 +82,34 @@ export const button = defineComponent({
       isHovered: false,
       isFocused: api.isFocused(),
       isFocusVisible: false,
-      isDisabled: props.disabled(),
+      isDisabled: props.isDisabled(),
     };
   },
   connect({ props, api }) {
-    const disabled = props.disabled();
+    const isDisabled = props.isDisabled();
     const href = props.href();
-    const link = href !== undefined;
-    const native = !link && NATIVE.has(props.elementType());
+    const isLink = href !== undefined;
+    const isNative = !isLink && NATIVE.has(props.elementType());
     // Native disabled drops focus; aria-disabled keeps it.
-    const nativeDisabled = disabled && native && !props.focusableWhenDisabled();
-    const ariaDisabled = disabled && !nativeDisabled;
-    const focusable = !disabled || props.focusableWhenDisabled() || native;
-    const tabindex = props.excludeFromTabOrder() ? '-1' : '0';
+    const isNativelyDisabled =
+      isDisabled && isNative && !props.isFocusableWhenDisabled();
+    const isAriaDisabled = isDisabled && !isNativelyDisabled;
+    const isFocusable =
+      !isDisabled || props.isFocusableWhenDisabled() || isNative;
+    const tabindex = props.shouldExcludeFromTabOrder() ? '-1' : '0';
     const root: DomPartProps = {
       attrs: {
-        type: native ? props.type() : undefined,
-        href: link && !disabled ? href : undefined,
-        role: role(link, native, disabled),
-        disabled: flag(nativeDisabled),
-        'aria-disabled': ariaDisabled ? 'true' : undefined,
-        tabindex: focusable ? tabindex : undefined,
+        type: isNative ? props.type() : undefined,
+        href: isLink && !isDisabled ? href : undefined,
+        role: role(isLink, isNative, isDisabled),
+        disabled: flag(isNativelyDisabled),
+        'aria-disabled': isAriaDisabled ? 'true' : undefined,
+        tabindex: isFocusable ? tabindex : undefined,
         'data-pressed': flag(api.isPressed()),
         'data-hovered': undefined,
         'data-focused': flag(api.isFocused()),
         'data-focus-visible': undefined,
-        'data-disabled': flag(disabled),
+        'data-disabled': flag(isDisabled),
       },
       on: api.handlers,
     };

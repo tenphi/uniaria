@@ -25,7 +25,7 @@ import type {
   ViewContext,
 } from './define';
 import type { EventsSchema, PropsSchema } from './schema';
-import { callbackName, capitalize } from './schema';
+import { callbackName } from './schema';
 import { createStore } from './store';
 
 export interface InstanceOptions<D extends AnyDefinition> {
@@ -76,7 +76,7 @@ type Callback = ((value: unknown) => void) | undefined;
 let counter = 0;
 
 /** True when a value other than a callback differs. Callbacks change every render. */
-function propsChanged(
+function havePropsChanged(
   previous: Readonly<Record<string, unknown>>,
   next: Readonly<Record<string, unknown>>,
 ): boolean {
@@ -103,8 +103,8 @@ export function createInstance<D extends AnyDefinition>(
   };
   let props = (options.props ?? {}) as Readonly<Record<string, unknown>>;
   let propsVersion = 0;
-  let propsDirty = false;
-  let started = false;
+  let hasUnsyncedProps = false;
+  let isStarted = false;
   const id = options.id ?? `sous-${++counter}`;
   const ids: Record<string, string> = {};
   for (const part of definition.parts) ids[part] = `${id}-${part}`;
@@ -128,14 +128,14 @@ export function createInstance<D extends AnyDefinition>(
     // Like a form control's value attribute, the default applies until the
     // first uncontrolled change ("dirty"), so a default that arrives late (an
     // element's attribute after construction) still seeds the value.
-    const defaultKey = `default${capitalize(key)}`;
-    let dirty = false;
+    const defaultKey = info.defaultKey!;
+    let isDirty = false;
     let inner: unknown;
     const onChange = callbackName(info.changeEvent!);
     const isControlled = () => props[key] !== undefined;
     const get = () => {
       if (isControlled()) return props[key];
-      if (dirty) return inner;
+      if (isDirty) return inner;
       return props[defaultKey] ?? defaultValue;
     };
     readers[key] = {
@@ -146,7 +146,7 @@ export function createInstance<D extends AnyDefinition>(
         store.batch(() => {
           if (!isControlled()) {
             inner = value;
-            dirty = true;
+            isDirty = true;
             changed();
           }
           (props[onChange] as Callback)?.(value);
@@ -177,11 +177,11 @@ export function createInstance<D extends AnyDefinition>(
       let value: unknown;
       return () => {
         const next = deps();
-        const changed =
+        const hasChanged =
           last === undefined ||
           next.length !== last.length ||
           next.some((dep, index) => !Object.is(dep, last![index]));
-        if (changed) {
+        if (hasChanged) {
           last = next;
           value = compute(...next);
         }
@@ -190,13 +190,13 @@ export function createInstance<D extends AnyDefinition>(
     },
     effect(effect) {
       effects.push(effect);
-      if (started) store.batch(() => runEffect(effect));
+      if (isStarted) store.batch(() => runEffect(effect));
     },
     watch(read, callback) {
       const watcher: Watcher = {
         read,
         callback: callback as Watcher['callback'],
-        value: started ? read() : undefined,
+        value: isStarted ? read() : undefined,
       };
       watchers.push(watcher);
     },
@@ -217,7 +217,7 @@ export function createInstance<D extends AnyDefinition>(
   // Subscribed before any adapter, so watchers settle state before the
   // binder and selectors read it.
   store.subscribe(() => {
-    if (!started || watchers.length === 0) return;
+    if (!isStarted || watchers.length === 0) return;
     store.batch(() => {
       for (const watcher of watchers) {
         const next = watcher.read();
@@ -258,34 +258,34 @@ export function createInstance<D extends AnyDefinition>(
     setProps(next) {
       const previous = props;
       props = next as Readonly<Record<string, unknown>>;
-      if (propsChanged(previous, props)) {
+      if (havePropsChanged(previous, props)) {
         propsVersion++;
-        propsDirty = true;
+        hasUnsyncedProps = true;
       }
     },
     sync() {
-      if (!propsDirty) return;
-      propsDirty = false;
+      if (!hasUnsyncedProps) return;
+      hasUnsyncedProps = false;
       store.notify();
     },
     start() {
-      if (started) return;
-      started = true;
+      if (isStarted) return;
+      isStarted = true;
       store.batch(() => {
         for (const watcher of watchers) watcher.value = watcher.read();
         for (const effect of effects) runEffect(effect);
       });
     },
     stop() {
-      if (!started) return;
-      started = false;
+      if (!isStarted) return;
+      isStarted = false;
       const list = cleanups;
       cleanups = [];
       store.batch(() => {
         for (let index = list.length - 1; index >= 0; index--) list[index]!();
       });
     },
-    isStarted: () => started,
+    isStarted: () => isStarted,
     getSnapshot: store.getSnapshot,
     subscribe: store.subscribe,
     getState() {

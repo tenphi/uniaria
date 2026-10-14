@@ -18,12 +18,7 @@
  */
 
 import type { AnyDefinition, Instance, PropInfo, PropsOf } from '@tenphi/sous';
-import {
-  callbackName,
-  capitalize,
-  createInstance,
-  domEventName,
-} from '@tenphi/sous';
+import { callbackName, createInstance, domEventName } from '@tenphi/sous';
 import type { Binder } from '@tenphi/sous/dom';
 import { createBinder, observeParts, queryParts } from '@tenphi/sous/dom';
 
@@ -88,7 +83,7 @@ export function defineElement<D extends AnyDefinition>(
   for (const info of infos) {
     properties.set(info.key, info);
     if (info.kind === 'bindable') {
-      properties.set(`default${capitalize(info.key)}`, info);
+      properties.set(info.defaultKey!, info);
     }
   }
   const builtIn = Object.getOwnPropertyNames(HTMLElement.prototype);
@@ -179,8 +174,7 @@ export function defineElement<D extends AnyDefinition>(
     ): void {
       const info = byAttribute.get(attribute);
       if (!info) return;
-      const property =
-        info.kind === 'bindable' ? `default${capitalize(info.key)}` : info.key;
+      const property = info.kind === 'bindable' ? info.defaultKey! : info.key;
       this.#set(property, convert(info, value));
     }
 
@@ -188,8 +182,8 @@ export function defineElement<D extends AnyDefinition>(
       return { ...this.#values, ...this.#callbacks } as PropsOf<D>;
     }
 
-    #set(property: string, value: unknown, explicit = true): void {
-      if (explicit && value !== undefined) this.#explicit.add(property);
+    #set(property: string, value: unknown, isExplicit = true): void {
+      if (isExplicit && value !== undefined) this.#explicit.add(property);
       else this.#explicit.delete(property);
       if (Object.is(this.#values[property], value)) return;
       if (value === undefined) delete this.#values[property];

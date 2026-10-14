@@ -23,7 +23,7 @@ const fixtureAdapter: ConformanceAdapter = {
     );
     const root = container.querySelector<HTMLElement>('[data-part="root"]')!;
     const apply = () =>
-      root.toggleAttribute('disabled', current.disabled === true);
+      root.toggleAttribute('disabled', current.isDisabled === true);
     const onClick = (event: MouseEvent) => {
       if (events.includes('press')) record('press', { detail: event.detail });
     };
@@ -34,7 +34,7 @@ const fixtureAdapter: ConformanceAdapter = {
         current = { ...current, ...next };
         apply();
       },
-      state: () => ({ disabled: current.disabled === true }),
+      state: () => ({ isDisabled: current.isDisabled === true }),
       renderCount: () => 0,
       async unmount() {
         root.removeEventListener('click', onClick);
@@ -45,11 +45,11 @@ const fixtureAdapter: ConformanceAdapter = {
 };
 
 interface FixtureProps {
-  disabled: boolean;
+  isDisabled: boolean;
 }
 
 interface FixtureState {
-  disabled: boolean;
+  isDisabled: boolean;
 }
 
 function track(element: Element, types: string[]) {
@@ -78,12 +78,12 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
     scenario('applies and updates props', async ({ mount }) => {
       const mounted = await mount({
         template: h('button', { part: 'root' }, 'Save'),
-        props: { disabled: true },
+        props: { isDisabled: true },
       });
       expect(mounted.part().hasAttribute('disabled')).toBe(true);
-      await mounted.setProps({ disabled: false });
+      await mounted.setProps({ isDisabled: false });
       expect(mounted.part().hasAttribute('disabled')).toBe(false);
-      expect(mounted.state()).toEqual({ disabled: false });
+      expect(mounted.state()).toEqual({ isDisabled: false });
     });
 
     group('pointer', () => {
@@ -171,7 +171,7 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
           expect(document.activeElement).toBe(mounted.part());
           await keyboard.tab();
           expect(document.activeElement?.id).toBe('two');
-          await keyboard.tab({ shift: true });
+          await keyboard.tab({ isBackward: true });
           expect(document.activeElement).toBe(mounted.part());
         },
       );
@@ -197,7 +197,7 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
       async ({ mount, spoken }) => {
         await mount({
           template: h('button', { part: 'root' }, 'Save'),
-          props: { disabled: true },
+          props: { isDisabled: true },
         });
         const phrases = await spoken();
         expect(phrases[0]).toBe('document');

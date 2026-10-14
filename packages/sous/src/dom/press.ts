@@ -52,7 +52,7 @@ export interface PressOptions {
   readonly part: string;
   isDisabled(): boolean;
   /** A pointer press leaves focus where it was. */
-  preventFocusOnPress?(): boolean;
+  shouldPreventFocusOnPress?(): boolean;
   onPressStart?(event: PressEvent): void;
   onPressEnd?(event: PressEvent): void;
   onPress?(event: PressEvent): void;
@@ -70,9 +70,9 @@ interface Active {
   readonly pointerId?: number;
   readonly key?: string;
   /** The pointer is over the target. */
-  over: boolean;
+  isOver: boolean;
   /** Released over the target; `press` fires on the click that follows. */
-  awaitingClick: boolean;
+  isAwaitingClick: boolean;
 }
 
 /** iOS and Android drop the click after a long press; wait this long for it. */
@@ -104,8 +104,8 @@ function isPressKey(event: KeyboardEvent, element: HTMLElement): boolean {
   }
   if (element.localName === 'input') {
     const { type } = element as HTMLInputElement;
-    const text = !['button', 'submit', 'reset', 'image'].includes(type);
-    if (text) return false;
+    const isTextField = !['button', 'submit', 'reset', 'image'].includes(type);
+    if (isTextField) return false;
   }
   return !isLink(element) || event.key === 'Enter';
 }
@@ -116,7 +116,7 @@ function isPressKey(event: KeyboardEvent, element: HTMLElement): boolean {
  * native click that follows is ignored. Everywhere else the native activation
  * is prevented.
  */
-function keepsNativeActivation(element: HTMLElement): boolean {
+function hasNativeActivation(element: HTMLElement): boolean {
   if (isLink(element)) return true;
   if (element.localName !== 'button' && element.localName !== 'input') {
     return false;
@@ -130,9 +130,9 @@ export function createPress(
   ctx: InteractionContext,
   options: PressOptions,
 ): Press {
-  const pressed = ctx.state(false);
+  const isPressed = ctx.state(false);
   let active: Active | null = null;
-  let ignoreClick = false;
+  let shouldIgnoreClick = false;
   const listeners: (() => void)[] = [];
   let clickTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -152,13 +152,13 @@ export function createPress(
     doc: Document,
     type: K,
     listener: (event: DocumentEventMap[K]) => void,
-    capture: boolean,
+    isCapture: boolean,
   ) => {
     // Document listeners run outside part handlers, so batch them here.
     const batched = (event: DocumentEventMap[K]) =>
       ctx.batch(() => listener(event));
-    doc.addEventListener(type, batched, capture);
-    listeners.push(() => doc.removeEventListener(type, batched, capture));
+    doc.addEventListener(type, batched, isCapture);
+    listeners.push(() => doc.removeEventListener(type, batched, isCapture));
   };
 
   const pressEvent = (
@@ -169,7 +169,7 @@ export function createPress(
     const target = element()!;
     const rect = target.getBoundingClientRect();
     const input = source as (MouseEvent & KeyboardEvent) | undefined;
-    const located =
+    const hasPosition =
       pointerType !== 'keyboard' &&
       pointerType !== 'virtual' &&
       input !== undefined &&
@@ -185,8 +185,8 @@ export function createPress(
       ...(pointerType === 'keyboard' && input?.key !== undefined
         ? { key: input.key }
         : {}),
-      x: located ? input.clientX - rect.left : rect.width / 2,
-      y: located ? input.clientY - rect.top : rect.height / 2,
+      x: hasPosition ? input.clientX - rect.left : rect.width / 2,
+      y: hasPosition ? input.clientY - rect.top : rect.height / 2,
     };
   };
 
@@ -195,30 +195,30 @@ export function createPress(
     source: Event,
     extra: { pointerId?: number; key?: string } = {},
   ) => {
-    active = { pointerType, over: true, awaitingClick: false, ...extra };
-    pressed.set(true);
+    active = { pointerType, isOver: true, isAwaitingClick: false, ...extra };
+    isPressed.set(true);
     options.onPressStart?.(pressEvent('pressstart', pointerType, source));
   };
 
   /** Ends the active press: `pressend` if still pressed, then `press`. */
-  const finish = (activate: boolean, source?: Event) => {
+  const finish = (shouldActivate: boolean, source?: Event) => {
     const current = active;
     if (!current) return;
     reset();
-    if (pressed.get()) {
-      pressed.set(false);
+    if (isPressed.get()) {
+      isPressed.set(false);
       options.onPressEnd?.(pressEvent('pressend', current.pointerType, source));
     }
-    if (activate) {
+    if (shouldActivate) {
       options.onPress?.(pressEvent('press', current.pointerType, source));
     }
   };
 
   /** Swallows the native click a keyboard activation may still produce. */
   const ignoreNextClick = () => {
-    ignoreClick = true;
+    shouldIgnoreClick = true;
     setTimeout(() => {
-      ignoreClick = false;
+      shouldIgnoreClick = false;
     }, 0);
   };
 
@@ -226,23 +226,23 @@ export function createPress(
     const target = element();
     if (!active || active.pointerType !== 'keyboard' || !target) return;
     if (event.key !== active.key) return;
-    if (!keepsNativeActivation(target)) event.preventDefault();
-    const inside = target.contains(event.target as Node);
-    if (inside) ignoreNextClick();
-    finish(inside, event);
+    if (!hasNativeActivation(target)) event.preventDefault();
+    const isInside = target.contains(event.target as Node);
+    if (isInside) ignoreNextClick();
+    finish(isInside, event);
   };
 
   const onPointerUp = (event: PointerEvent) => {
     const target = element();
     if (!active || event.pointerId !== active.pointerId) return;
     if (event.button !== 0) return;
-    if (target && active.over && target.contains(event.target as Node)) {
+    if (target && active.isOver && target.contains(event.target as Node)) {
       // Activate on the click that follows, so `press` lines up with native
       // click semantics. If none comes, click ourselves.
       removeListeners();
-      active.awaitingClick = true;
+      active.isAwaitingClick = true;
       clickTimer = setTimeout(() => {
-        if (active?.awaitingClick) target.click();
+        if (active?.isAwaitingClick) target.click();
       }, CLICK_TIMEOUT);
     } else {
       finish(false, event);
@@ -254,12 +254,12 @@ export function createPress(
   };
 
   // Becoming disabled cancels the press; leaving the document drops it.
-  ctx.watch(options.isDisabled, (disabled) => {
-    if (disabled) finish(false);
+  ctx.watch(options.isDisabled, (isDisabled) => {
+    if (isDisabled) finish(false);
   });
   ctx.effect(() => () => {
     reset();
-    pressed.set(false);
+    isPressed.set(false);
   });
 
   const handlers: DomHandlers = {
@@ -271,7 +271,7 @@ export function createPress(
         event.preventDefault();
         return;
       }
-      if (!keepsNativeActivation(target)) event.preventDefault();
+      if (!hasNativeActivation(target)) event.preventDefault();
       if (event.repeat || active) return;
       begin('keyboard', event, { key: event.key });
       listen(target.ownerDocument, 'keyup', onKeyUp, true);
@@ -287,7 +287,7 @@ export function createPress(
       if (!target.contains(event.target as Node)) return;
       if (options.isDisabled() || active) return;
       if (
-        !options.preventFocusOnPress?.() &&
+        !options.shouldPreventFocusOnPress?.() &&
         target.ownerDocument.activeElement !== target
       ) {
         target.focus({ preventScroll: true });
@@ -306,24 +306,24 @@ export function createPress(
       listen(doc, 'pointercancel', onPointerCancel, false);
     },
     mousedown(event) {
-      if (event.button === 0 && options.preventFocusOnPress?.()) {
+      if (event.button === 0 && options.shouldPreventFocusOnPress?.()) {
         event.preventDefault();
       }
     },
     pointerenter(event) {
       if (!active || active.pointerId !== event.pointerId) return;
-      if (active.over || active.awaitingClick) return;
-      active.over = true;
-      pressed.set(true);
+      if (active.isOver || active.isAwaitingClick) return;
+      active.isOver = true;
+      isPressed.set(true);
       options.onPressStart?.(
         pressEvent('pressstart', active.pointerType, event),
       );
     },
     pointerleave(event) {
       if (!active || active.pointerId !== event.pointerId) return;
-      if (!active.over || active.awaitingClick) return;
-      active.over = false;
-      pressed.set(false);
+      if (!active.isOver || active.isAwaitingClick) return;
+      active.isOver = false;
+      isPressed.set(false);
       options.onPressEnd?.(pressEvent('pressend', active.pointerType, event));
     },
     dragstart() {
@@ -337,14 +337,14 @@ export function createPress(
         event.preventDefault();
         return;
       }
-      if (ignoreClick) {
-        ignoreClick = false;
+      if (shouldIgnoreClick) {
+        shouldIgnoreClick = false;
         return;
       }
       if (active) {
         // A keyboard press ignores the native click it causes (Enter on
         // links and submit buttons); a pointer press activates on its click.
-        if (active.awaitingClick) finish(true, event);
+        if (active.isAwaitingClick) finish(true, event);
         return;
       }
       if (isVirtualClick(event)) {
@@ -354,5 +354,5 @@ export function createPress(
     },
   };
 
-  return { isPressed: () => pressed.get(), handlers };
+  return { isPressed: () => isPressed.get(), handlers };
 }
