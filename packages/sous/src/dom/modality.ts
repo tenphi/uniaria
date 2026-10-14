@@ -30,6 +30,7 @@
  * without the wrapper it would look like a screen reader moving focus.
  */
 
+import { isMac } from './platform';
 import { isVirtualClick } from './press';
 
 export type Modality = 'keyboard' | 'pointer' | 'virtual';
@@ -134,7 +135,7 @@ function createTracker(view: Window): ModalityTracker {
   // The window lost focus; the browser restores focus when it comes back.
   let hasBlurredWindow = false;
   let lastTouchUp = -Infinity;
-  const isMac = /^Mac/i.test(view.navigator.platform);
+  const isMacPlatform = isMac(view);
 
   const notify = (next: Modality, event: ModalityEvent) => {
     modality = next;
@@ -146,7 +147,7 @@ function createTracker(view: Window): ModalityTracker {
   const isNavigationKey = (event: KeyboardEvent) =>
     !(
       event.metaKey ||
-      (!isMac && event.altKey) ||
+      (!isMacPlatform && event.altKey) ||
       event.ctrlKey ||
       event.key === 'Control' ||
       event.key === 'Shift' ||

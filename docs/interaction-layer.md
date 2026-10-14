@@ -17,19 +17,19 @@ from it keeps the Apache notice (see `dom/press.ts`).
 
 ## Status
 
-| Area                   | Status                                | Where                                                       |
-| ---------------------- | ------------------------------------- | ----------------------------------------------------------- |
-| 1. Press               | Built, except as noted                | `dom/press.ts`; Button conformance                          |
-| 2. Hover               | Built                                 | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
-| 3. Focus-visible       | Built                                 | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Built                                 | `dom/focus-within.ts`, its tests                            |
-| 5. Focus scope         | Built, except as noted                | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
-| 6. Interact outside    | Built                                 | `dom/interact-outside.ts`, layer tests                      |
-| 7. Dismissable layers  | Built (stack, Escape, outside, blur)  | `dom/layers.ts`, its tests                                  |
-| 8. Scroll lock         | Built: standard strategy; iOS pending | `dom/scroll-lock.ts`, its tests                             |
-| 9. aria-hidden outside | Built, except shadow DOM              | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
-| 10. Live announcer     | Built                                 | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built (core), not wired yet           | `collections/typeahead.ts`, `typeahead.test.ts`             |
+| Area                   | Status                               | Where                                                       |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| 1. Press               | Built, except as noted               | `dom/press.ts`; Button conformance                          |
+| 2. Hover               | Built                                | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
+| 3. Focus-visible       | Built                                | `dom/modality.ts`, `dom/focus.ts`, their tests              |
+| 4. Focus-within        | Built                                | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted               | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
+| 6. Interact outside    | Built                                | `dom/interact-outside.ts`, layer tests                      |
+| 7. Dismissable layers  | Built (stack, Escape, outside, blur) | `dom/layers.ts`, its tests                                  |
+| 8. Scroll lock         | Built; iOS unverified on a device    | `dom/scroll-lock.ts`, its tests                             |
+| 9. aria-hidden outside | Built, except shadow DOM             | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
+| 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
+| 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
 Press is complete apart from touch conformance scenarios, which need touch
 input in the harness and owner approval. Text-selection suppression (`dom/text-selection.ts`,
@@ -63,9 +63,12 @@ inside a shadow root gets its host hidden. It keeps the live announcer
 (§9.9-10; see Open questions). §9.16 and §9.21 still need a real screen
 reader.
 
-Scroll lock has the standard strategy only (§8.1-6, 8.18): the iOS strategy
-(§8.7-17) waits for the open question below. Non-iOS focus override
-(§8.14, React Aria's `UNSTABLE_overrideFocus`) is not built.
+Scroll lock has both strategies (§8.1-13). The iOS one is tested with a
+mocked platform in Chromium and WebKit (touches in Chromium only, the
+others have no touch events to dispatch); §8.8-13 and 15 still need an
+iPhone and an iPad. Non-iOS focus override (§8.14, React Aria's
+`UNSTABLE_overrideFocus`) and the Android `interactive-widget` check
+(§8.16) are not built.
 
 ## Where Sous differs
 
@@ -180,12 +183,30 @@ These are decided; follow them rather than the catalogue.
     lets go, so a node both hide keeps its attribute throughout.
   - Reverting twice is harmless. With no targets and no root, it does
     nothing.
+- **Scroll lock on iOS** (§8.7-17), allowed by the owner on 2026-10-14:
+  - The `overscroll-behavior` rule is a constructed stylesheet adopted by
+    the document, inside an anonymous `@layer`. React Aria prepends a
+    `<style>` with the page's CSP nonce; a constructed sheet needs none.
+  - The `focus()` wrapper is installed once per window, the first time iOS
+    locks, and passes calls through while no lock holds. React Aria puts
+    the original back on unlock (§8.18), which would drop a wrapper
+    installed after it, such as the modality tracker's.
+  - Keyboard detection has no state: the keyboard is open while the visual
+    viewport, times its zoom, is 100 px or more shorter than the layout
+    viewport. The wrapper scrolls two frames after focus if the keyboard
+    is already as the focused element implies (open for a text field),
+    else on the visual viewport's `resize` that makes it so, and after
+    600 ms at the latest. React Aria tracks the screen size from focus on,
+    debounces resizes outside WebKit and learns whether a device has an
+    on-screen keyboard (§8.15, 8.17); on an iPad with a hardware keyboard,
+    Sous scrolls a focused text field 600 ms late.
+  - Scrolling into view centres the element in the part of each scroll
+    parent above the keyboard when it starts above the parent or ends
+    below that part. React Aria compares the end with the parent's top
+    plus the element's own height, which reads as a slip.
 
 ## Open questions for the owner
 
-- **Scroll lock on iOS** (§8) injects an `overscroll-behavior: contain` style
-  and a second `focus()` wrapper. AGENTS.md says the only CSS Sous ships is
-  `touch-action`. Allow a second behavioral rule, or find another way?
 - **Top-layer marker.** React Aria keeps toasts reachable through
   `data-react-aria-top-layer` (§5.11, 6.7, 9.9). Sous needs its own marker
   when toasts arrive. `hideOutside` keeps only the live announcer for now.

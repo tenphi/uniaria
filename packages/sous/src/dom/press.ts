@@ -31,6 +31,7 @@
  * fires `pressstart` and `pressend` only.
  */
 
+import { isMac } from './platform';
 import { disableTextSelection, restoreTextSelection } from './text-selection';
 import type { DomHandlers, InteractionContext } from './types';
 import { partEffect, partElement } from './types';
@@ -115,9 +116,9 @@ function isOwnEvent(event: Event, target: HTMLElement): boolean {
   return node === target;
 }
 
-function isMac(element: Element): boolean {
+function isMacElement(element: Element): boolean {
   const view = element.ownerDocument.defaultView;
-  return view !== null && /^Mac/i.test(view.navigator.platform);
+  return view !== null && isMac(view);
 }
 
 /**
@@ -349,7 +350,9 @@ export function createPress(
       if (event.repeat || active) return;
       begin('keyboard', event, {
         key: event.key,
-        ...(event.metaKey && isMac(target) ? { metaKeyDown: event } : {}),
+        ...(event.metaKey && isMacElement(target)
+          ? { metaKeyDown: event }
+          : {}),
       });
       listen(target.ownerDocument, 'keyup', onKeyUp, true);
     },

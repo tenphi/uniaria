@@ -284,7 +284,9 @@ handler with its event.
   `Symbol.for('@tenphi/sous/…')` so duplicate installs share one instance.
   The modality tracker wraps `HTMLElement.prototype.focus` once per window,
   as React Aria does, so a script's `focus()` call isn't taken for a screen
-  reader moving focus.
+  reader moving focus. iOS scroll lock wraps it once per window too, the
+  first time it locks, and passes calls through while unlocked. A wrapper
+  is never removed, since that would drop any wrapper installed after it.
 
 ### Overlays and positioning
 

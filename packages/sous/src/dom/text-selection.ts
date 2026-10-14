@@ -27,6 +27,8 @@
  *   of Sous share it.
  */
 
+import { isIOS } from './platform';
+
 const KEY = Symbol.for('@tenphi/sous/text-selection/v1');
 
 /** iOS can start a selection just after the finger lifts. */
@@ -40,15 +42,6 @@ interface PageState {
 type SelectionWindow = Window & { [KEY]?: PageState };
 
 const saved = new WeakMap<HTMLElement, string>();
-
-function isIOS(view: Window): boolean {
-  const { platform, maxTouchPoints } = view.navigator;
-  // iPadOS reports itself as a Mac; touch support gives it away.
-  return (
-    /^(iPhone|iPad)/i.test(platform) ||
-    (/^Mac/i.test(platform) && maxTouchPoints > 1)
-  );
-}
 
 function pageState(view: Window): PageState {
   return ((view as SelectionWindow)[KEY] ??= { state: 'default', saved: '' });
