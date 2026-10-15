@@ -17,6 +17,12 @@ from it keeps the Apache notice (see `dom/press.ts`).
 
 ## Status
 
+Phase 2 closed on 2026-10-15 (owner) on automated evidence: Button's
+conformance in three browsers and both adapters, simulated spoken output, and
+parity with a React Aria button. The screen-reader matrix moved to the last
+gate. What is still unbuilt below waits for the component that needs it, and
+the items marked for a real device or screen reader stay open.
+
 | Area                   | Status                               | Where                                                       |
 | ---------------------- | ------------------------------------ | ----------------------------------------------------------- |
 | 1. Press               | Built, except as noted               | `dom/press.ts`; Button conformance                          |
