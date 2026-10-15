@@ -10,14 +10,20 @@
  */
 
 import { buttonConformance } from './button/button.conformance';
+import { fieldConformance } from './field/field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
 
-export { buttonConformance, toggleButtonConformance };
+export { buttonConformance, fieldConformance, toggleButtonConformance };
 export type { ButtonProps, ButtonState, PressEvent } from './button/types';
+export type { FieldProps, FieldState } from './field/types';
 export type {
   ToggleButtonProps,
   ToggleButtonState,
 } from './toggle-button/types';
 
 /** Every suite, in roadmap order. */
-export const suites = [buttonConformance, toggleButtonConformance];
+export const suites = [
+  buttonConformance,
+  toggleButtonConformance,
+  fieldConformance,
+];
