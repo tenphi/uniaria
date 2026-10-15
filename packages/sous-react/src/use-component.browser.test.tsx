@@ -1,6 +1,6 @@
 import { button } from '@tenphi/sous/button';
 import type { ButtonProps } from '@tenphi/sous/button';
-import { keyboard } from '@tenphi/sous-testing/browser';
+import { keyboard, pointer, releaseInput } from '@tenphi/sous-testing/browser';
 import { StrictMode, useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { flushSync } from 'react-dom';
@@ -27,7 +27,19 @@ function rerender(node: ReactNode): void {
   flushSync(() => root!.render(<StrictMode>{node}</StrictMode>));
 }
 
+/** Renders without StrictMode, to count renders exactly. */
+function renderPlain(node: ReactNode): HTMLElement {
+  if (!root) {
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+  }
+  flushSync(() => root!.render(node));
+  return container!;
+}
+
 afterEach(async () => {
+  await releaseInput();
   root?.unmount();
   root = undefined;
   container?.remove();
@@ -190,6 +202,42 @@ describe('useComponentState', () => {
     expect(element.textContent).toBe('Up');
     // StrictMode renders twice per update.
     expect(renders).toEqual([true, true, false, false]);
+  });
+
+  it('renders once for a prop change the selected state shows', () => {
+    const states: boolean[] = [];
+    function Selecting({ isDisabled }: { readonly isDisabled: boolean }) {
+      const ui = useComponent(button, { isDisabled });
+      states.push(useComponentState(ui, (state) => state.isDisabled));
+      return <button {...ui.parts.root}>Save</button>;
+    }
+    renderPlain(<Selecting isDisabled={false} />);
+    renderPlain(<Selecting isDisabled={true} />);
+    renderPlain(<Selecting isDisabled={false} />);
+    expect(states).toEqual([false, true, false]);
+  });
+
+  it('re-renders for a change the prop sync makes', async () => {
+    const states: { isDisabled: boolean; isHovered: boolean }[] = [];
+    function Selecting({ isDisabled }: { readonly isDisabled: boolean }) {
+      const ui = useComponent(button, { isDisabled });
+      const state = useComponentState(ui, (current) => current);
+      states.push({ isDisabled: state.isDisabled, isHovered: state.isHovered });
+      return <button {...ui.parts.root}>Save</button>;
+    }
+    await pointer.move(
+      renderPlain(<Selecting isDisabled={false} />).querySelector('button')!,
+    );
+    await expect.poll(() => states.at(-1)?.isHovered).toBe(true);
+    states.length = 0;
+
+    // Disabling ends hover during the sync: one render for the prop, one for
+    // the hover it ended.
+    renderPlain(<Selecting isDisabled={true} />);
+    expect(states).toEqual([
+      { isDisabled: true, isHovered: true },
+      { isDisabled: true, isHovered: false },
+    ]);
   });
 
   it('accepts an equality function', async () => {

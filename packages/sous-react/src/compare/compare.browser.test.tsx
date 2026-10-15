@@ -143,4 +143,10 @@ it('matches React Aria step by step, and Sous renders only for props', async () 
     interactions(steps).reduce((sum, step) => sum + step.renders, 0);
   expect(total(shared)).toBeGreaterThan(0);
   expect(total(aria)).toBeGreaterThan(0);
+  expect(total(shared)).toBeLessThanOrEqual(total(aria));
+
+  // The parent's re-render costs Sous one render per button, and reading the
+  // state adds none for the props it already rendered.
+  expect(sous.at(-1)!.renders).toBe(1);
+  expect(shared.at(-1)!.renders).toBeLessThanOrEqual(aria.at(-1)!.renders);
 });

@@ -11,7 +11,10 @@ for internal state". Local rules:
   snapshot with a `ref`, and let the DOM binder from `@tenphi/sous/dom` write
   later changes. `useSyncExternalStore` appears only inside
   `useComponentState`, with the selected value as the snapshot (cached per
-  store version so it stays stable).
+  store version so it stays stable). It ignores the notification from the
+  post-commit `sync()` when it already rendered the value that notification
+  brings: React records the rendered snapshot only in a passive effect, so
+  otherwise every prop change it reads would render twice.
 - `useComponent` will provide its instance through a React context whose
   value never changes (the instance, never state), with the first composed
   component. Children take an explicit `owner` prop first, then this

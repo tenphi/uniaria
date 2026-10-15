@@ -20,8 +20,10 @@ import type { Binder } from '@tenphi/sous/dom';
 import { createBinder, isDevelopment, warn } from '@tenphi/sous/dom';
 import type { SyntheticEvent } from 'react';
 import {
+  useCallback,
   useEffect,
   useId,
+  useInsertionEffect,
   useLayoutEffect,
   useRef,
   useSyncExternalStore,
@@ -53,6 +55,15 @@ interface Internal<D extends AnyDefinition> {
     readonly parts: Record<string, ReactPartProps>;
   };
 }
+
+/**
+ * Instances whose new props `useComponent` is syncing after a commit. React's
+ * `useSyncExternalStore` records the snapshot it rendered only in a passive
+ * effect, so a notification from this layout-effect sync is compared with the
+ * previous snapshot, and a component whose render already showed the new
+ * props would render again with the same value.
+ */
+const syncing = new WeakSet<object>();
 
 // Layout effects attach the binder before paint; on the server they never
 // run, and React 18 would warn about them.
@@ -166,7 +177,12 @@ export function useComponent<D extends AnyDefinition>(
   }, [instance, binder]);
 
   useIsomorphicLayoutEffect(() => {
-    instance.sync();
+    syncing.add(instance);
+    try {
+      instance.sync();
+    } finally {
+      syncing.delete(instance);
+    }
   });
 
   const connected = instance.connect();
@@ -214,5 +230,32 @@ export function useComponentState<D extends AnyDefinition, T>(
     return stable;
   };
 
-  return useSyncExternalStore(instance.subscribe, getSnapshot, getSnapshot);
+  // The committed value and snapshot function. Insertion effects run before
+  // every layout effect, so they are current when `useComponent` syncs.
+  const committed = useRef<{ value: T; getSnapshot: () => T } | null>(null);
+
+  // Skips the notification from the prop sync after a commit when this hook
+  // already rendered the value it would bring (see `syncing`). A change the
+  // sync itself makes, such as hover ending on disable, still re-renders.
+  const subscribe = useCallback(
+    (onChange: () => void) =>
+      instance.subscribe(() => {
+        const last = committed.current;
+        if (
+          syncing.has(instance) &&
+          last &&
+          Object.is(last.value, last.getSnapshot())
+        ) {
+          return;
+        }
+        onChange();
+      }),
+    [instance],
+  );
+
+  const value = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  useInsertionEffect(() => {
+    committed.current = { value, getSnapshot };
+  });
+  return value;
 }
