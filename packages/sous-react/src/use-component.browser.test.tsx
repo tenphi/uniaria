@@ -1,6 +1,7 @@
 import { defineComponent, prop } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
 import type { ButtonProps } from '@tenphi/sous/button';
+import { toggleButton } from '@tenphi/sous/toggle-button';
 import { keyboard, pointer, releaseInput } from '@tenphi/sous-testing/browser';
 import { StrictMode, useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -8,7 +9,7 @@ import { flushSync } from 'react-dom';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { ComponentHandle } from './use-component';
 import { useComponent, useComponentState } from './use-component';
@@ -134,6 +135,26 @@ describe('useComponent', () => {
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
     expect(onRender).toHaveBeenCalledTimes(renders);
+  });
+
+  it('types inline callbacks from the definition', async () => {
+    const seen: boolean[] = [];
+    function Mute() {
+      // Only the definition infers the props type, so the parameter is typed.
+      const ui = useComponent(toggleButton, {
+        onSelectedChange: (isSelected) => {
+          expectTypeOf(isSelected).toEqualTypeOf<boolean>();
+          seen.push(isSelected);
+        },
+      });
+      return <button {...ui.parts.root}>Mute</button>;
+    }
+    render(<Mute />)
+      .querySelector('button')!
+      .focus();
+    await keyboard.press('Enter');
+
+    expect(seen).toEqual([true]);
   });
 });
 

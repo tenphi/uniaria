@@ -173,7 +173,7 @@ function toReactParts<D extends AnyDefinition>(
  */
 export function useComponent<D extends AnyDefinition>(
   definition: D,
-  props: PropsOf<D>,
+  props: NoInfer<PropsOf<D>>,
 ): ComponentHandle<D> {
   const id = useId();
   const ref = useRef<Internal<D> | null>(null);
