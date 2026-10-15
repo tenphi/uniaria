@@ -29,7 +29,7 @@ describe('neutral part props → React props', () => {
     ['pointerenter', 'onPointerEnter'],
     ['focusin', 'onFocus'],
     ['focusout', 'onBlur'],
-    ['input', 'onChange'],
+    ['input', 'onInput'],
     ['dblclick', 'onDoubleClick'],
     ['beforetoggle', 'onBeforeToggle'],
   ])('maps the %s event to %s', (type, prop) => {

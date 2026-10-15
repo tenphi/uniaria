@@ -275,7 +275,7 @@ handler with its event.
   `input`. Use `focusin`/`focusout` for focus entering or leaving a subtree.
 - Handlers read only native events. The React adapter passes
   `event.nativeEvent` and maps names (`focusin` → `onFocus`, `click` →
-  `onClick`, `input` → `onChange`, `class` → `className`, `for` → `htmlFor`,
+  `onClick`, `input` → `onInput`, `class` → `className`, `for` → `htmlFor`,
   `tabindex` → `tabIndex`).
 - Every part carries `data-scope` (component name), `data-part` and its state
   attributes (`data-state`, `data-disabled`, …).

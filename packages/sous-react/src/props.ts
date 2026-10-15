@@ -104,10 +104,12 @@ const EVENTS = new Map(
   ].map((name) => [name.slice(2).toLowerCase(), name]),
 );
 // Focus entering or leaving a subtree: React's onFocus and onBlur bubble and
-// are backed by focusin and focusout. React's onChange is the input event.
+// are backed by focusin and focusout. The input event is React's onInput:
+// its onChange fires on click for a checkbox, before a cancelled click is
+// undone, and skips changes its value tracker missed.
 EVENTS.set('focusin', 'onFocus');
 EVENTS.set('focusout', 'onBlur');
-EVENTS.set('input', 'onChange');
+EVENTS.set('input', 'onInput');
 EVENTS.set('dblclick', 'onDoubleClick');
 
 /** The React prop for a DOM attribute. */

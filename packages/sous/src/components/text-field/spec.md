@@ -75,10 +75,10 @@ it needs no `elementType`: the input part is whichever the consumer renders.
 
 ## Events
 
-| Event         | Detail    | When                                                                                                                                          |
-| ------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `valueChange` | `string`  | The user changed the value (every `input` event), or a form reset requests the default. Never for a value the consumer sets.                  |
-| `focusChange` | `boolean` | The input gained or lost focus. Cube UI Kit's form validates on blur. In React the input's `onFocus`, `onBlur` and `onChange` belong to Sous. |
+| Event         | Detail    | When                                                                                                                                         |
+| ------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valueChange` | `string`  | The user changed the value (every `input` event), or a form reset requests the default. Never for a value the consumer sets.                 |
+| `focusChange` | `boolean` | The input gained or lost focus. Cube UI Kit's form validates on blur. In React the input's `onFocus`, `onBlur` and `onInput` belong to Sous. |
 
 ## Public state
 

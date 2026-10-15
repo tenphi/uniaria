@@ -85,7 +85,7 @@ Two layouts work without any script for the click:
 | Event            | Detail    | When                                                                                                                                                                    |
 | ---------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `selectedChange` | `boolean` | The user toggled the checkbox (the input's `change` event; the detail is its new `checked`), or a form reset requests the default. Never for a value the consumer sets. |
-| `focusChange`    | `boolean` | The input gained or lost focus, as in TextField. In React the input's `onChange`, `onFocus` and `onBlur` belong to Sous.                                                |
+| `focusChange`    | `boolean` | The input gained or lost focus, as in TextField. In React the input's `onInput`, `onClick`, `onFocus` and `onBlur` belong to Sous.                                      |
 
 ## Public state
 
