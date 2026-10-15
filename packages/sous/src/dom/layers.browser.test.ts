@@ -4,6 +4,8 @@ import { userEvent } from 'vitest/browser';
 import { createInstance, defineComponent, event, prop } from '../runtime';
 import { interactOutside } from './interact-outside';
 import { createLayer } from './layers';
+import { createPress } from './press';
+import type { PressEvent } from './press';
 import type { DismissReason } from './layers';
 
 const layer = defineComponent({
@@ -31,6 +33,22 @@ const layer = defineComponent({
   },
   expose: () => ({}),
   connect: () => ({ root: { attrs: {} } }),
+});
+
+const pressable = defineComponent({
+  name: 'pressable',
+  parts: ['root'],
+  props: {},
+  events: { press: event<PressEvent>() },
+  setup(ctx) {
+    return createPress(ctx, {
+      part: 'root',
+      isDisabled: () => false,
+      onPress: (detail) => ctx.emit('press', detail),
+    });
+  },
+  expose: () => ({}),
+  connect: ({ api }) => ({ root: { attrs: {}, on: api.handlers } }),
 });
 
 interface LayerProps {
@@ -157,6 +175,44 @@ describe('createLayer outside press', () => {
     await userEvent.click(byId('out'));
     expect(reasons).toEqual(['outside']);
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  // Owner decision (2026-10-14), after Cube UI Kit: one click outside a
+  // popover both closes it and acts on what it hit.
+  it('lets a pressable outside press in the same click that closes the layer', async () => {
+    render(`<div id="layer">In</div><div id="out" tabindex="0">Out</div>`);
+    const presses: string[] = [];
+    const instance = createInstance(pressable, {
+      props: {
+        onPress: (detail: PressEvent) => presses.push(detail.pointerType),
+      },
+    });
+    running.push(instance);
+    instance.attach('root', byId('out'));
+    instance.start();
+    const on = instance.connect().root.on as Record<string, (e: Event) => void>;
+    for (const type of Object.keys(on)) {
+      byId('out').addEventListener(type, (event) => on[type]!(event));
+    }
+    const { reasons } = open('layer');
+
+    await userEvent.click(byId('out'));
+    expect(reasons).toEqual(['outside']);
+    expect(presses).toEqual(['mouse']);
+  });
+
+  it('lets a click outside open another layer, which that click leaves open', async () => {
+    render(`<div id="first">First</div><div id="second">Second</div>
+      <button id="trigger">Open second</button>`);
+    const first = open('first');
+    let second: ReturnType<typeof open> | undefined;
+    byId('trigger').addEventListener('click', () => {
+      second = open('second');
+    });
+
+    await userEvent.click(byId('trigger'));
+    expect(first.reasons).toEqual(['outside']);
+    expect(second?.reasons).toEqual([]);
   });
 
   it('stays open when not dismissable, or when the target says so', async () => {

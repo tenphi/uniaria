@@ -14,9 +14,10 @@ inline and yield to an inline value the consumer set (press sets
 global is adopted as a constructed stylesheet inside an anonymous `@layer`, so
 any consumer CSS wins, and only while the behavior is active.
 
-Sous is built by AI agents. The owner, **@tenphi**, approves specs, reviews APIs
-at phase gates and runs the manual screen-reader pass. Read this whole file
-before changing anything; it is the binding summary of the design.
+Sous is built by AI agents. The owner, **@tenphi**, approves specs and reviews
+APIs at phase gates. Manual screen-reader testing is deferred until the
+approach proves viable (owner, 2026-10-15): no gate waits on it. Read this
+whole file before changing anything; it is the binding summary of the design.
 
 ## Design source
 
@@ -294,8 +295,14 @@ handler with its event.
   into a portal. The Popover API is Baseline only since January 2025 (widely
   available from July 2027), so popovers detect it and need a fallback,
   designed with the Popover spec.
-- A modal `<dialog>` makes the outside inert natively. Other modal overlays
-  (a modal popover) hide the outside with `dom/` `hideOutside`.
+- One click outside a popover both closes it and acts on what it hit, as in
+  Cube UI Kit (owner decision; React Aria needs a second click). Popovers
+  never make the outside inert or put an underlay over it; they may hide it
+  from assistive technology with `dom/` `hideOutside` (`aria-hidden`). A
+  press on a popover's own trigger closes it without reopening, and
+  `shouldCloseOnInteractOutside` keeps it open for chosen targets. A modal
+  `<dialog>` makes the outside inert natively, so a press outside a dialog
+  only dismisses it.
 - Nested overlays coordinate through the global layer stack. Never call
   `stopPropagation` or `stopImmediatePropagation` in components (ESLint
   enforces it).

@@ -123,13 +123,26 @@ These are decided; follow them rather than the catalogue.
   (§10.8). A container something else removed (a body swap) is replaced, with
   the delay again, on the next message. There is no test-environment shortcut
   (§10.13): tests use fake timers.
-- **Outside presses reach their target.** React Aria stops the outside
-  `pointerdown` and `click` of the top layer at the document (§7.12); Sous
-  never stops propagation, so the element under the pointer still gets them,
-  as with the browser's own popover light dismiss. Nested layers resolve
-  Escape through `defaultPrevented` instead of `stopPropagation` (§7.1).
-  The modal, popover and close-on-scroll compositions (§7.17-24) belong to
-  the Popover component.
+- **One click outside a popover closes it and acts on what it hit** (owner
+  decision, 2026-10-15, after Cube UI Kit). React Aria stops the outside
+  `pointerdown` and `click` of the top layer at the document (§7.12), so the
+  first click only closes the popover and acting takes a second. Sous never
+  stops propagation, so the element under the pointer still gets the press,
+  as with the browser's own popover light dismiss: one click on a button
+  outside runs it and closes the popover, and one click on another
+  popover's trigger opens that popover and closes this one.
+  - Popovers therefore never make the outside inert and put no underlay
+    over it. They may hide it from assistive technology (`hideOutside`
+    without `shouldUseInert`). A modal `<dialog>` still makes the outside
+    inert, so a press outside a dialog only dismisses it.
+  - The Popover component (phase 4) owns the rest of UI Kit's pattern: a
+    press on its own trigger closes it without reopening, and
+    `shouldCloseOnInteractOutside` keeps it open for chosen targets (UI
+    Kit's `data-popover-keep`, such as calendar cells). Its spec settles
+    where focus lands after such a click.
+  - Nested layers resolve Escape through `defaultPrevented` instead of
+    `stopPropagation` (§7.1). The modal, popover and close-on-scroll
+    compositions (§7.17-24) belong to the Popover component.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.
