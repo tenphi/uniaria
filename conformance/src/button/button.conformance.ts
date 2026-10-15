@@ -836,6 +836,27 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         { phase: 2 },
       );
 
+      // The pointer crosses straight from one element to the other. React
+      // reports that leave and enter from one `pointerout`, whose target is
+      // the element left (found by the React Aria comparison, 2026-10-15).
+      scenario(
+        'hover follows the mouse straight between the root and a neighbour',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: [save(), h('button', { id: 'next' }, 'Next')],
+          });
+          const root = mounted.part();
+          const next = mounted.container.querySelector('#next')!;
+
+          for (const target of [root, next, root, next]) {
+            await pointer.move(target);
+            expect(root.hasAttribute('data-hovered')).toBe(target === root);
+            expect(mounted.state().isHovered).toBe(target === root);
+          }
+        },
+        { phase: 2 },
+      );
+
       scenario(
         'pressable roots get touch-action: pan-x pan-y pinch-zoom',
         async ({ mount }) => {
