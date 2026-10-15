@@ -6,6 +6,13 @@ updates:
       interval: weekly
     cooldown:
       default-days: 14
+    # Major versions only by hand, when there is a reason (owner, 2026-10-15):
+    # the packages must keep working with older toolchains, such as SSR on
+    # older React and Node, and `@types/node` follows the oldest Node we
+    # support.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       react:
         patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']

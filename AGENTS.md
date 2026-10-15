@@ -363,6 +363,13 @@ Approved development dependencies for testing: `@guidepup/virtual-screen-reader`
 owner's approval**, including small utility packages, Lit, state libraries
 (nanostores, signals) and Zag.js packages.
 
+Agents review Dependabot's pull requests: land patch and minor updates on
+`main` once CI passes, and fix what they break (run `pnpm dedupe` when a
+workspace package keeps the old version as a peer). Dependabot ignores major
+versions of npm packages (owner, 2026-10-15). Take one by hand only for a
+concrete need, since the packages must keep working with older toolchains, and
+`@types/node` follows the oldest Node in `engines`.
+
 ## Component workflow
 
 One component per task, small commits, in this order:
