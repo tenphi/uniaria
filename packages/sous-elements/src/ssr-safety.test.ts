@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 const entries = {
   '@tenphi/sous-elements': () => import('./index'),
   '@tenphi/sous-elements/button': () => import('./button'),
+  '@tenphi/sous-elements/toggle-button': () => import('./toggle-button'),
 };
 
 describe('SSR safety', () => {
@@ -22,5 +23,7 @@ describe('SSR safety', () => {
   it('registers nothing where there are no custom elements', async () => {
     const { SousButton } = await import('./button');
     expect(SousButton).toBeUndefined();
+    const { SousToggleButton } = await import('./toggle-button');
+    expect(SousToggleButton).toBeUndefined();
   });
 });

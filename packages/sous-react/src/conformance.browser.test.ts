@@ -8,4 +8,4 @@ import { runConformance } from '@tenphi/sous-testing/browser';
 
 import { reactAdapter } from './conformance-adapter';
 
-runConformance(reactAdapter, suites, { phase: 2 });
+runConformance(reactAdapter, suites, { phase: 3 });

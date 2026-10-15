@@ -10,6 +10,8 @@ const entries = {
   '@tenphi/sous/dom': () => import('./dom/index'),
   '@tenphi/sous/collections': () => import('./collections/index'),
   '@tenphi/sous/button': () => import('./components/button/index'),
+  '@tenphi/sous/toggle-button': () =>
+    import('./components/toggle-button/index'),
 };
 
 describe('SSR safety', () => {

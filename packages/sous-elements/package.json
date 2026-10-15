@@ -5,7 +5,9 @@
   "type": "module",
   "sideEffects": [
     "./src/button.ts",
-    "./dist/button.js"
+    "./dist/button.js",
+    "./src/toggle-button.ts",
+    "./dist/toggle-button.js"
   ],
   "exports": {
     ".": {
@@ -17,6 +19,11 @@
       "sous-source": "./src/button.ts",
       "types": "./dist/button.d.ts",
       "default": "./dist/button.js"
+    },
+    "./toggle-button": {
+      "sous-source": "./src/toggle-button.ts",
+      "types": "./dist/toggle-button.d.ts",
+      "default": "./dist/toggle-button.js"
     },
     "./package.json": "./package.json"
   },

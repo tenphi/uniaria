@@ -8,6 +8,7 @@
 import type { AnyDefinition, Instance } from '@tenphi/sous';
 import { callbackName } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
+import { toggleButton } from '@tenphi/sous/toggle-button';
 import type {
   ConformanceAdapter,
   TemplateElement,
@@ -23,7 +24,10 @@ import type { ReactPartProps } from './use-component';
 import { useComponent } from './use-component';
 
 /** Definitions by component name, as conformance suites name them. */
-const definitions: Readonly<Record<string, AnyDefinition>> = { button };
+const definitions: Readonly<Record<string, AnyDefinition>> = {
+  button,
+  'toggle-button': toggleButton,
+};
 
 /** Form values a consumer would pass as defaults in React. */
 const UNCONTROLLED: Readonly<Record<string, string>> = {

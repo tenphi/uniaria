@@ -10,6 +10,7 @@ import type { ConformanceAdapter } from '@tenphi/sous-testing';
 import { renderTemplate } from '@tenphi/sous-testing';
 
 import './button';
+import './toggle-button';
 import type { SousElement } from './define-element';
 
 /**

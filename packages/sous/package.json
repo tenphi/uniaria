@@ -25,6 +25,11 @@
       "types": "./dist/button/index.d.ts",
       "default": "./dist/button/index.js"
     },
+    "./toggle-button": {
+      "sous-source": "./src/components/toggle-button/index.ts",
+      "types": "./dist/toggle-button/index.d.ts",
+      "default": "./dist/toggle-button/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
