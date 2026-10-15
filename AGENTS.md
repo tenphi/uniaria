@@ -334,7 +334,8 @@ handler with its event.
   `data-state`; the consumer owns content, classes and every other attribute.
   A part can be declared element-owned (Select's displayed value): the
   consumer leaves it empty and the element writes its text.
-- Parts are found by a query that stops at nested instances, plus a
+- Parts are found by a query that stops at nested Sous elements of any
+  kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
   host in the capture phase: a bubbling event reaches every part on its
   path, innermost first, as in React; one that doesn't bubble

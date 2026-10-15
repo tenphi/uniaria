@@ -10,9 +10,10 @@
  * - Events: every event and bindable change is dispatched on the host as a
  *   bubbling, non-composed `CustomEvent` with the value in `detail`
  *   (`pressStart` → `pressstart`).
- * - Parts: `data-part` elements inside the host, minus nested hosts of the
- *   same element, re-scanned when the subtree changes. The DOM binder writes
- *   their attributes and delegates their listeners from the host.
+ * - Parts: `data-part` elements inside the host, minus those inside a nested
+ *   Sous element (of any kind) or a nested host of the same tag, re-scanned
+ *   when the subtree changes. The DOM binder writes their attributes and
+ *   delegates their listeners from the host.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
  *   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
  */
@@ -20,7 +21,12 @@
 import type { AnyDefinition, Instance, PropInfo, PropsOf } from '@tenphi/sous';
 import { callbackName, createInstance, domEventName } from '@tenphi/sous';
 import type { Binder } from '@tenphi/sous/dom';
-import { createBinder, observeParts, queryParts } from '@tenphi/sous/dom';
+import {
+  SOUS_HOST,
+  createBinder,
+  observeParts,
+  queryParts,
+} from '@tenphi/sous/dom';
 
 export interface DefineElementOptions {
   /** Name prefix: `<prefix>-<definition name>`. Default: `sous`. */
@@ -96,6 +102,9 @@ export function defineElement<D extends AnyDefinition>(
   }
 
   class Element extends HTMLElement {
+    /** Hosts around this element leave its parts alone. */
+    static readonly [SOUS_HOST] = true;
+
     static get observedAttributes(): string[] {
       return [...byAttribute.keys()];
     }

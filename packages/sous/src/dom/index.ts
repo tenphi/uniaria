@@ -50,7 +50,7 @@ export { interactOutside } from './interact-outside';
 export type { InteractOutsideHandlers } from './interact-outside';
 export { createLayer } from './layers';
 export type { DismissReason, LayerOptions } from './layers';
-export { observeParts, queryParts } from './parts';
+export { SOUS_HOST, observeParts, queryParts } from './parts';
 export { createPress, isVirtualClick } from './press';
 export { createScrollLock, lockScroll } from './scroll-lock';
 export type { ScrollLockOptions } from './scroll-lock';

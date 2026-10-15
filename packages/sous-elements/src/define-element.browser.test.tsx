@@ -212,6 +212,34 @@ describe('defineElement', () => {
     expect(outer.instance.element('trigger')).not.toBe(innerTrigger);
   });
 
+  it('leaves the parts inside a nested Sous element of another kind to it', () => {
+    const wrapper = defineComponent({
+      name: 'test-wrapper',
+      parts: ['trigger'],
+      props: {},
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ trigger: { attrs: {} } }),
+    });
+    defineElement(wrapper);
+    const container = mount(`
+      <sous-test-disclosure>
+        <sous-test-wrapper>
+          <button data-part="trigger">Inner</button>
+        </sous-test-wrapper>
+        <sous-test-wrapper data-part="panel"></sous-test-wrapper>
+      </sous-test-disclosure>`);
+    const host = container.querySelector<Disclosure>('sous-test-disclosure')!;
+    const [inner, panel] = host.querySelectorAll('sous-test-wrapper');
+
+    expect(host.instance.element('trigger')).toBeNull();
+    expect(inner!.querySelector('button')!.getAttribute('data-scope')).toBe(
+      'test-wrapper',
+    );
+    // A nested Sous element can still be one of the outer host's parts.
+    expect(host.instance.element('panel')).toBe(panel);
+  });
+
   it('finds parts added after it connected', async () => {
     const container = mount(
       '<sous-test-disclosure><button data-part="trigger">Details</button></sous-test-disclosure>',
