@@ -1,6 +1,6 @@
 # TextField spec
 
-Status: draft <!-- draft | approved by @tenphi on YYYY-MM-DD -->
+Status: approved by @tenphi on 2026-10-15
 
 ## Summary
 
@@ -37,7 +37,7 @@ Not part of TextField:
   PasswordInput keep their own buttons and keys around a TextField.
 - **Auto-sizing a textarea.** Cube UI Kit's TextArea `autoSize` measures an
   off-screen mirror; CSS `field-sizing: content` is not Baseline yet. It can
-  come later as a TextField option (Open questions 1).
+  come later as a TextField option (Resolved questions 2).
 - **Presentation.** Prefix, suffix, icons, the validation and loading
   indicators and sizes are consumer markup inside the root.
 
@@ -45,7 +45,7 @@ Not part of TextField:
 
 | Part        | Element               | Attributes Sous owns                                                                                                                                                  | Notes                                                                                                                                                                                                               |
 | ----------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`    | state attributes                                                                                                                                                      | Optional wrapper, where a design system draws the box around the input, its prefix and suffix. No role. A press on it outside any control focuses the input (Open questions 3).                                     |
+| root        | any; usually `div`    | state attributes                                                                                                                                                      | Optional wrapper, where a design system draws the box around the input, its prefix and suffix. No role. A press on it outside any control focuses the input (Resolved questions 4).                                 |
 | label       | `label` by default    | as Field: `id`, `for`, state attributes                                                                                                                               |                                                                                                                                                                                                                     |
 | input       | `input` or `textarea` | as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `readonly`, the `value` property, state attributes | The consumer owns `name`, `type`, `placeholder`, `autocomplete`, `inputmode`, `maxlength`, `minlength`, `pattern`, `autofocus`, `spellcheck`, `enterkeyhint`, `form`, `rows`, `tabindex` and the `value` attribute. |
 | description | any                   | as Field                                                                                                                                                              |                                                                                                                                                                                                                     |
@@ -115,8 +115,8 @@ and React never controls the input.
   - A value the consumer never accepts is put back when the input loses
     focus. This is Cube UI Kit's buffered value (`isBuffered`, its default),
     which keeps keystrokes and the caret when a form store echoes late. React
-    and React Aria put it back right after the keystroke instead (Open
-    questions 2).
+    and React Aria put it back right after the keystroke instead (Resolved
+    questions 3).
 - **IME composition.** `valueChange` reports composition text, as React Aria,
   Lion and Cube UI Kit do. TextField never writes the value while composing,
   which would break the IME; a write that arrives then waits for
@@ -129,7 +129,7 @@ and React never controls the input.
   native reset and resets its own fields.
 - **Before JavaScript.** The element adopts the input's current `value` as
   `defaultValue` on upgrade: the markup's value, or what the user typed
-  before the script loaded (Open questions 4).
+  before the script loaded (Resolved questions 5).
 
 ## Keyboard
 
@@ -154,7 +154,7 @@ propagates (a dialog around it closes).
 
 TextField moves focus only for a press on the root outside the input and any
 other control (a prefix icon, the box's padding): the press focuses the input,
-since Cube UI Kit's box already shows a text cursor there (Open questions 3).
+since Cube UI Kit's box already shows a text cursor there (Resolved questions 4).
 A click on the label focuses the input natively. Hovering and focusing report
 on every part, so the box can show the focus ring.
 
@@ -218,8 +218,8 @@ toggle, clear button and keys until Sous has them.
 - `value`, `defaultValue` and `onChange(value)` map to `value`,
   `defaultValue` and `onValueChange`. Casting `null` and non-strings stays in
   UI Kit.
-- `isBuffered` (default `true`) is TextField's controlled behavior; see Open
-  questions 2 for `isBuffered={false}`.
+- `isBuffered` (default `true`) is TextField's controlled behavior; see Resolved
+  questions 3 for `isBuffered={false}`.
 - `isDisabled`, `isReadOnly`, `isRequired`, `isInvalid` (after UI Kit
   resolves `validationState`), `label`, `description` and `errorMessage` map
   as in Field's spec. `id` maps to `inputId`.
@@ -254,25 +254,24 @@ Decided by @tenphi on 2026-10-15.
    renders them once as defaults (`defaultValue`, `defaultChecked`). This
    changes the runtime contract (part props).
 
+2. **TextArea folds into TextField**, as in React Aria: the input part can be
+   a `<textarea>`, and the first scope's TextArea is TextField. Auto-sizing
+   comes later as a TextField option, when Cube UI Kit's TextArea moves.
+   NumberInput becomes NumberField.
+3. **Controlled typing is buffered only**, as Cube UI Kit's default: the
+   typed text stays while the consumer answers, late echoes are recognised, a
+   transformed or outside value wins at once, and a refused value is put back
+   on blur. There is no prop for putting it back after each keystroke;
+   filtering keystrokes belongs to `beforeinput` (NumberField). Cube UI Kit's
+   `isBuffered={false}` keeps the typed text until blur too.
+4. **A press on the root focuses the input**, outside the input and any other
+   control.
+5. **Elements adopt a live value into a default.** `adopt` can read a part's
+   DOM property and seed a bindable's `default<Key>`: `<sous-text-field>`
+   reads the input's `value` property into `defaultValue` on upgrade, so the
+   markup's value, or text typed before upgrade, isn't wiped. This changes
+   the custom-element contract.
+
 ## Open questions
 
-1. **TextArea folds into TextField**, as in React Aria: the input part can be
-   a `<textarea>`, and the first scope's TextArea is TextField. Auto-sizing
-   comes later as a TextField option, when Cube UI Kit's TextArea moves. With
-   it, NumberInput becomes NumberField. Approve?
-2. **Controlled typing is buffered**, as Cube UI Kit's default: the typed
-   text stays while the consumer answers, late echoes are recognised, a
-   transformed or outside value wins at once, and a refused value is put back
-   on blur. React and React Aria put a refused value back right after the
-   keystroke, which loses keystrokes when the answer comes late. Proposal:
-   buffered only; filtering keystrokes belongs to `beforeinput`
-   (NumberField). Cube UI Kit's `isBuffered={false}` would then keep the
-   typed text until blur too. Or add `shouldRevertImmediately` for it?
-3. **A press on the root focuses the input**, outside the input and any other
-   control. Cube UI Kit gives the box a text cursor but no handler, so a
-   click on its padding does nothing today. Add it?
-4. **Elements adopt a live value into a default.** Adoption today reads an
-   attribute or the tag into a plain prop. TextField needs it to read the
-   input's `value` property and seed `defaultValue`, so the markup's value,
-   or text typed before upgrade, isn't wiped. This changes the custom-element
-   contract (`adopt`). Approve?
+None.

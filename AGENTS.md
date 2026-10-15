@@ -357,7 +357,7 @@ reused. The approved runtime dependencies are:
 
 | Package                     | Used for                                                 |
 | --------------------------- | -------------------------------------------------------- |
-| `@internationalized/number` | Locale-aware number parsing and formatting (NumberInput) |
+| `@internationalized/number` | Locale-aware number parsing and formatting (NumberField) |
 | `@internationalized/date`   | Calendars and date math (later date components)          |
 | `@floating-ui/dom`          | Positioning fallback, behind the `dom/` wrapper only     |
 | `@tanstack/virtual-core`    | Virtualization, if it fits (see Collections)             |
@@ -413,10 +413,12 @@ Naming: folder and subpath in kebab-case (`checkbox-group`,
 (`checkboxGroup`); `name: 'checkbox-group'`; element `<sous-checkbox-group>`.
 The cuisine theme stays in the brand only — APIs get descriptive names.
 
-First scope, in roadmap order: Button, ToggleButton, Field, TextInput,
-TextArea, Checkbox, CheckboxGroup, Switch, RadioGroup → Popover, NumberInput →
-Listbox, Select, ComboBox. Button also covers navigation (link mode with
-`href`); there is no separate Link component.
+First scope, in roadmap order: Button, ToggleButton, Field, TextField,
+Checkbox, CheckboxGroup, Switch, RadioGroup → Popover, NumberField → Listbox,
+Select, ComboBox. Button also covers navigation (link mode with `href`);
+there is no separate Link component. Field plus a text control is
+`<Name>Field` (TextField, NumberField); TextField covers `<textarea>` too, so
+there is no separate TextArea.
 
 ## Conformance
 
