@@ -1,6 +1,6 @@
 # ToggleButton spec
 
-Status: draft <!-- draft | approved by @tenphi on YYYY-MM-DD -->
+Status: approved by @tenphi on 2026-10-15
 
 ## Summary
 
@@ -15,7 +15,7 @@ underneath by default. Every press toggles the state and reports
   (`references/aria-practices/content/patterns/button/button-pattern.html`)
 - **Builds on:** Button, composed with `ctx.use(button, props)` (decision 9).
   ToggleButton is the first component to use `ctx.use()`, so the runtime gains
-  it with this component (see Open questions). Press, hover and focus-visible
+  it with this component (see Resolved questions). Press, hover and focus-visible
   come from Button unchanged.
 - **Owner:** none. A future ToggleButtonGroup would own selection through
   `ctx.owner()` (decision 11); it is not in the first scope.
@@ -198,24 +198,25 @@ site wants `aria-selected` or `aria-current`.
 - `<Button isSelected={x} onPress={() => setX(!x)}>` becomes a ToggleButton
   with `isSelected={x}` and `onSelectedChange={setX}`.
 - `isSelected` with `role="tab"`, `role="option"` or `to` is not a toggle; see
-  Open questions.
+  Resolved questions.
 
 ## Deviations from the WAI-ARIA pattern
 
 None. The pattern's toggle example sets `aria-pressed` on keydown; Sous
 toggles on keyup, as Button activates (see Button's spec).
 
+## Resolved questions
+
+Decided by @tenphi on 2026-10-15.
+
+1. **`ctx.use()` joins the runtime now.** ToggleButton composes Button with
+   `ctx.use(button, props)` (decision 9), so there is one Button
+   implementation. Select and ComboBox will use the same mechanism.
+2. **Cube UI Kit's other uses of `isSelected`** are not toggles. A link to
+   the current page gets `aria-current` through a later Button prop, when a
+   consumer needs it. Tabs and options wait for Tabs and Listbox. Until then
+   UI Kit keeps writing those attributes itself.
+
 ## Open questions
 
-1. **`ctx.use()` in the runtime.** ToggleButton is Button plus selection.
-   Composing it with `ctx.use(button, props)` (decision 9) keeps one Button
-   implementation, and Select and ComboBox will need the same mechanism.
-   Approving this spec would approve adding `ctx.use()` to the runtime now, a
-   runtime contract change. The alternative is to build ToggleButton from the
-   same `dom/` primitives as Button and add `ctx.use()` with Select.
-2. **Cube UI Kit's other uses of `isSelected`.** UI Kit sets it on links (a
-   current navigation item) and on buttons acting as tabs or options.
-   ToggleButton covers neither. Proposal: a link gets `aria-current` through
-   a later Button prop when a consumer needs it, and tabs and options wait
-   for Tabs and Listbox. Until then UI Kit keeps passing those attributes
-   itself.
+None.
