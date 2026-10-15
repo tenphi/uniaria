@@ -363,12 +363,16 @@ Approved development dependencies for testing: `@guidepup/virtual-screen-reader`
 owner's approval**, including small utility packages, Lit, state libraries
 (nanostores, signals) and Zag.js packages.
 
-Agents review Dependabot's pull requests: land patch and minor updates on
-`main` once CI passes, and fix what they break (run `pnpm dedupe` when a
-workspace package keeps the old version as a peer). Dependabot ignores major
-versions of npm packages (owner, 2026-10-15). Take one by hand only for a
-concrete need, since the packages must keep working with older toolchains, and
-`@types/node` follows the oldest Node in `engines`.
+Agents review Dependabot's pull requests: land updates on `main` once CI
+passes, and fix what they break (run `pnpm dedupe` when a workspace package
+keeps the old version as a peer). Dependabot skips major versions of the
+packages that set what we support (owner, 2026-10-15): `@types/node`, which
+follows the oldest Node in `engines`; React and its types (sous-react's peer
+range); TypeScript (consumers' declarations, typescript-eslint support); and
+Vitest (sous-testing's peer range). Raise those by hand only for a concrete
+need, since the packages must keep working with older toolchains, SSR on older
+React and Node included. Other major versions come as pull requests: take them
+when CI passes after the fixes they need.
 
 ## Component workflow
 

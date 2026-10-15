@@ -6,12 +6,27 @@ updates:
       interval: weekly
     cooldown:
       default-days: 14
-    # Major versions only by hand, when there is a reason (owner, 2026-10-15):
-    # the packages must keep working with older toolchains, such as SSR on
-    # older React and Node, and `@types/node` follows the oldest Node we
-    # support.
+    # Major versions of the packages that set what we support come only by
+    # hand (owner, 2026-10-15): `@types/node` follows the oldest Node in
+    # `engines`, React stays in sous-react's peer range, TypeScript in what
+    # consumers and typescript-eslint support, and Vitest in sous-testing's
+    # peer range. Other major versions still come as pull requests.
     ignore:
-      - dependency-name: '*'
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitest/*'
         update-types: ['version-update:semver-major']
     groups:
       react:
