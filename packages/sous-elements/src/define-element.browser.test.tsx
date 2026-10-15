@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import './button';
 import './field';
 import './text-field';
+import './checkbox';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -446,5 +447,55 @@ describe('<sous-text-field>', () => {
     expect(host.defaultValue).toBe('Jane');
     expect(input.value).toBe('Jane');
     expect(input.readOnly).toBe(true);
+  });
+});
+
+describe('<sous-checkbox>', () => {
+  it('takes the markup checked state as its default and reads the label tag', () => {
+    const container = mount(`
+      <sous-checkbox readonly>
+        <label data-part="root">
+          <input data-part="input" type="checkbox" checked />
+          <span data-part="label">Accept terms</span>
+        </label>
+      </sous-checkbox>`);
+    const host = container.querySelector('sous-checkbox')!;
+    const input = host.querySelector('input')!;
+    const label = host.querySelector('span')!;
+    expect(host.instance.getState()).toMatchObject({
+      isSelected: true,
+      isReadOnly: true,
+    });
+    expect(host.defaultSelected).toBe(true);
+    expect(input.checked).toBe(true);
+    expect(input.getAttribute('aria-readonly')).toBe('true');
+    // A span label inside the label root: linked, with no `for`.
+    expect(input.getAttribute('aria-labelledby')).toBe(label.id);
+    expect(label.hasAttribute('for')).toBe(false);
+  });
+
+  it('keeps a click made before upgrade', () => {
+    const container = mount(`
+      <div>
+        <input data-part="input" type="checkbox" />
+        <label data-part="label">News</label>
+      </div>`);
+    const markup = container.firstElementChild!;
+    (markup.querySelector('input') as HTMLInputElement).click();
+    const host = document.createElement('sous-checkbox');
+    host.append(markup);
+    container.append(host);
+    expect(host.instance.getState().isSelected).toBe(true);
+    expect(host.querySelector('input')!.checked).toBe(true);
+  });
+
+  it('takes indeterminate as an attribute', () => {
+    const container = mount(`
+      <sous-checkbox indeterminate>
+        <input data-part="input" type="checkbox" />
+      </sous-checkbox>`);
+    const host = container.querySelector('sous-checkbox')!;
+    expect(host.isIndeterminate).toBe(true);
+    expect(host.querySelector('input')!.indeterminate).toBe(true);
   });
 });

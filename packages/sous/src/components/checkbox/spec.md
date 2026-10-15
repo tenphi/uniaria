@@ -82,10 +82,10 @@ Two layouts work without any script for the click:
 
 ## Events
 
-| Event            | Detail    | When                                                                                                                                                                    |
-| ---------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `selectedChange` | `boolean` | The user toggled the checkbox (the input's `change` event; the detail is its new `checked`), or a form reset requests the default. Never for a value the consumer sets. |
-| `focusChange`    | `boolean` | The input gained or lost focus, as in TextField. In React the input's `onInput`, `onClick`, `onFocus` and `onBlur` belong to Sous.                                      |
+| Event            | Detail    | When                                                                                                                                                                                          |
+| ---------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectedChange` | `boolean` | The user toggled the checkbox (the input's `input` event, right before `change`; the detail is its new `checked`), or a form reset requests the default. Never for a value the consumer sets. |
+| `focusChange`    | `boolean` | The input gained or lost focus, as in TextField. In React the input's `onInput`, `onClick`, `onFocus` and `onBlur` belong to Sous.                                                            |
 
 ## Public state
 
@@ -113,7 +113,7 @@ shows the state and React never controls the input. Sous never writes
 `aria-checked` on the native input: browsers ignore it there (Chromium's
 accessibility tree reads only the properties), and ARIA in HTML disallows it.
 
-- **Uncontrolled.** Each `change` event stores the input's `checked` and
+- **Uncontrolled.** Each `input` event stores the input's `checked` and
   reports `selectedChange`.
 - **Controlled.** The click toggles the input natively and `input` and
   `change` fire as usual; Checkbox reports `selectedChange`. A toggle the

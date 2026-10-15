@@ -11,7 +11,9 @@
     "./src/field.ts",
     "./dist/field.js",
     "./src/text-field.ts",
-    "./dist/text-field.js"
+    "./dist/text-field.js",
+    "./src/checkbox.ts",
+    "./dist/checkbox.js"
   ],
   "exports": {
     ".": {
@@ -38,6 +40,11 @@
       "sous-source": "./src/text-field.ts",
       "types": "./dist/text-field.d.ts",
       "default": "./dist/text-field.js"
+    },
+    "./checkbox": {
+      "sous-source": "./src/checkbox.ts",
+      "types": "./dist/checkbox.d.ts",
+      "default": "./dist/checkbox.js"
     },
     "./package.json": "./package.json"
   },

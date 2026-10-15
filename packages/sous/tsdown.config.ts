@@ -11,6 +11,7 @@ export default defineConfig({
     'toggle-button/index': 'src/components/toggle-button/index.ts',
     'field/index': 'src/components/field/index.ts',
     'text-field/index': 'src/components/text-field/index.ts',
+    'checkbox/index': 'src/components/checkbox/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

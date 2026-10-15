@@ -1,4 +1,5 @@
 import { button } from '@tenphi/sous/button';
+import { checkbox } from '@tenphi/sous/checkbox';
 import { field } from '@tenphi/sous/field';
 import { textField } from '@tenphi/sous/text-field';
 import { renderToString } from 'react-dom/server';
@@ -72,5 +73,30 @@ describe('TextField on the server', () => {
     expect(html).toContain('value="Jane"');
     expect(html).toContain('for="name"');
     expect(html).toContain('id="name"');
+  });
+});
+
+function Terms() {
+  const ui = useComponent(checkbox, {
+    defaultSelected: true,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...ui.parts.root}>
+      <input {...ui.parts.input} name="terms" />
+      <span {...ui.parts.indicator} />
+      <span {...ui.parts.label}>Accept terms</span>
+    </label>
+  );
+}
+
+describe('Checkbox on the server', () => {
+  it('renders a checkbox in its starting state', () => {
+    const html = renderToString(<Terms />);
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('checked=""');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('data-selected=""');
+    expect(html).not.toContain('aria-checked');
   });
 });

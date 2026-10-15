@@ -13,6 +13,7 @@ import './button';
 import './toggle-button';
 import './field';
 import './text-field';
+import './checkbox';
 import type { SousElement } from './define-element';
 
 /**

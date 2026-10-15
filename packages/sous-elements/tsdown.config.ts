@@ -9,6 +9,7 @@ export default defineConfig({
     'toggle-button': 'src/toggle-button.ts',
     field: 'src/field.ts',
     'text-field': 'src/text-field.ts',
+    checkbox: 'src/checkbox.ts',
   },
   format: 'esm',
   platform: 'neutral',

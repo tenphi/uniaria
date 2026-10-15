@@ -40,6 +40,11 @@
       "types": "./dist/text-field/index.d.ts",
       "default": "./dist/text-field/index.js"
     },
+    "./checkbox": {
+      "sous-source": "./src/components/checkbox/index.ts",
+      "types": "./dist/checkbox/index.d.ts",
+      "default": "./dist/checkbox/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
