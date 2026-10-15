@@ -12,6 +12,7 @@ import { renderTemplate } from '@tenphi/sous-testing';
 import './button';
 import './toggle-button';
 import './field';
+import './text-field';
 import type { SousElement } from './define-element';
 
 /**

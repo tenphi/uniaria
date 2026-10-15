@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import './button';
 import './field';
+import './text-field';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -426,5 +427,24 @@ describe('<sous-field>', () => {
       expect.stringContaining('without a control part'),
     );
     warn.mockRestore();
+  });
+});
+
+describe('<sous-text-field>', () => {
+  it('takes the markup value as its default and the readonly attribute', () => {
+    const container = mount(`
+      <sous-text-field readonly>
+        <label data-part="label">Name</label>
+        <input data-part="input" value="Jane" />
+      </sous-text-field>`);
+    const host = container.querySelector('sous-text-field')!;
+    const input = host.querySelector('input')!;
+    expect(host.instance.getState()).toMatchObject({
+      value: 'Jane',
+      isReadOnly: true,
+    });
+    expect(host.defaultValue).toBe('Jane');
+    expect(input.value).toBe('Jane');
+    expect(input.readOnly).toBe(true);
   });
 });

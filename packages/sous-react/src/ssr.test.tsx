@@ -1,5 +1,6 @@
 import { button } from '@tenphi/sous/button';
 import { field } from '@tenphi/sous/field';
+import { textField } from '@tenphi/sous/text-field';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -52,5 +53,24 @@ describe('Field on the server', () => {
     // Only rendered parts are referenced, which is known after commit.
     expect(html).not.toContain('aria-labelledby');
     expect(html).not.toContain('aria-describedby');
+  });
+});
+
+function Name() {
+  const ui = useComponent(textField, { defaultValue: 'Jane', inputId: 'name' });
+  return (
+    <div {...ui.parts.root}>
+      <label {...ui.parts.label}>Name</label>
+      <input {...ui.parts.input} />
+    </div>
+  );
+}
+
+describe('TextField on the server', () => {
+  it('renders the starting value and the label for', () => {
+    const html = renderToString(<Name />);
+    expect(html).toContain('value="Jane"');
+    expect(html).toContain('for="name"');
+    expect(html).toContain('id="name"');
   });
 });

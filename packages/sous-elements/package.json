@@ -9,7 +9,9 @@
     "./src/toggle-button.ts",
     "./dist/toggle-button.js",
     "./src/field.ts",
-    "./dist/field.js"
+    "./dist/field.js",
+    "./src/text-field.ts",
+    "./dist/text-field.js"
   ],
   "exports": {
     ".": {
@@ -31,6 +33,11 @@
       "sous-source": "./src/field.ts",
       "types": "./dist/field.d.ts",
       "default": "./dist/field.js"
+    },
+    "./text-field": {
+      "sous-source": "./src/text-field.ts",
+      "types": "./dist/text-field.d.ts",
+      "default": "./dist/text-field.js"
     },
     "./package.json": "./package.json"
   },
