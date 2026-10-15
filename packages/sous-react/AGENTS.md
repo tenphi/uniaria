@@ -32,3 +32,9 @@ for internal state". Local rules:
   its `phase` as the roadmap advances, and register each new definition in
   the adapter's `definitions` map.
 - `react` stays a peer dependency (`^18 || ^19`).
+- `src/compare/` holds the comparison with React Aria: Button without
+  shared state, Button reading all its state, a button from React Aria's
+  hooks and a plain one. `compare.browser.test.tsx` requires the same state
+  attributes and presses as React Aria at every step of one real-input
+  script, and no Sous render for interactions. `bench/` times them in a
+  production build. `react-aria` is used nowhere else.

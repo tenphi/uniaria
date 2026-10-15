@@ -357,7 +357,9 @@ reused. The approved runtime dependencies are:
 | `@tanstack/virtual-core`    | Virtualization, if it fits (see Collections)             |
 
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
-`@guidepup/guidepup`, `@guidepup/playwright`. **Any other dependency needs the
+`@guidepup/guidepup`, `@guidepup/playwright`, and `react-aria` in
+`@tenphi/sous-react` for the comparison with React Aria only (owner request,
+2026-10-15). **Any other dependency needs the
 owner's approval**, including small utility packages, Lit, state libraries
 (nanostores, signals) and Zag.js packages.
 
