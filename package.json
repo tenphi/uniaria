@@ -10,6 +10,7 @@
     "test:browser": "vitest run --project browser",
     "test:setup": "playwright install chromium firefox webkit",
     "test:watch": "vitest",
+    "bench": "pnpm --filter @tenphi/sous-react bench",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

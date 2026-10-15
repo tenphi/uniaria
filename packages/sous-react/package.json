@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p bench/tsconfig.json",
+    "bench": "node bench/run.ts"
   },
   "repository": {
     "type": "git",

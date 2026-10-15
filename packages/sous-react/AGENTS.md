@@ -40,4 +40,6 @@ for internal state". Local rules:
   hooks and a plain one. `compare.browser.test.tsx` requires the same state
   attributes and presses as React Aria at every step of one real-input
   script, and no Sous render for interactions. `bench/` times them in a
-  production build. `react-aria` is used nowhere else.
+  production build: `pnpm bench` rewrites `bench/results.md`, so commit it
+  only when the run was on a quiet machine. `react-aria` is used nowhere
+  else.
