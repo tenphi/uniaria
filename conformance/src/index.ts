@@ -10,17 +10,20 @@
  */
 
 import { buttonConformance } from './button/button.conformance';
+import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { fieldConformance } from './field/field.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
 
 export {
   buttonConformance,
+  checkboxConformance,
   fieldConformance,
   textFieldConformance,
   toggleButtonConformance,
 };
 export type { ButtonProps, ButtonState, PressEvent } from './button/types';
+export type { CheckboxProps, CheckboxState } from './checkbox/types';
 export type { FieldProps, FieldState } from './field/types';
 export type { TextFieldProps, TextFieldState } from './text-field/types';
 export type {
@@ -34,4 +37,5 @@ export const suites = [
   toggleButtonConformance,
   fieldConformance,
   textFieldConformance,
+  checkboxConformance,
 ];
