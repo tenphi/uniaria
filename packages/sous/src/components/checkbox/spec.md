@@ -1,6 +1,6 @@
 # Checkbox spec
 
-Status: draft, awaiting owner review
+Status: approved by @tenphi on 2026-10-15
 
 ## Summary
 
@@ -118,7 +118,7 @@ accessibility tree reads only the properties), and ARIA in HTML disallows it.
 - **Controlled.** The click toggles the input natively and `input` and
   `change` fire as usual; Checkbox reports `selectedChange`. A toggle the
   consumer hasn't accepted once that event's work is done is put back, as
-  React does for a controlled checkbox (Open questions 2).
+  React does for a controlled checkbox (Resolved questions 2).
 - **Indeterminate.** `isIndeterminate` sets the `indeterminate` property,
   which has no attribute, so it appears once the binder attaches (after
   hydration in React). It is presentational, as in React Aria and Cube UI
@@ -193,17 +193,17 @@ Confirmed with `@guidepup/virtual-screen-reader` on a label "Accept terms"
 and a native checkbox. The `for`/`id`, wrapping-`label` and
 `aria-labelledby` forms read the same.
 
-| State                    | Spoken phrase                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| not selected             | `checkbox, Accept terms, not checked`                                         |
-| selected                 | `checkbox, Accept terms, checked`                                             |
-| indeterminate            | Chromium exposes `mixed`; the virtual reader can't read it (Open questions 1) |
-| with a description       | `checkbox, Accept terms, You must accept to continue, not checked`            |
-| read-only                | `checkbox, Accept terms, not checked, read only`                              |
-| required                 | `checkbox, Accept terms, not checked, required`                               |
-| invalid, the error shown | `checkbox, Accept terms, You must accept to continue, not checked, invalid`   |
-| invalid and required     | `checkbox, Accept terms, not checked, invalid, required`                      |
-| disabled                 | `checkbox, Accept terms, not checked, disabled` (not focusable)               |
+| State                    | Spoken phrase                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| not selected             | `checkbox, Accept terms, not checked`                                             |
+| selected                 | `checkbox, Accept terms, checked`                                                 |
+| indeterminate            | Chromium exposes `mixed`; the virtual reader can't read it (Resolved questions 1) |
+| with a description       | `checkbox, Accept terms, You must accept to continue, not checked`                |
+| read-only                | `checkbox, Accept terms, not checked, read only`                                  |
+| required                 | `checkbox, Accept terms, not checked, required`                                   |
+| invalid, the error shown | `checkbox, Accept terms, You must accept to continue, not checked, invalid`       |
+| invalid and required     | `checkbox, Accept terms, not checked, invalid, required`                          |
+| disabled                 | `checkbox, Accept terms, not checked, disabled` (not focusable)                   |
 
 Focus reads the phrase once; a wrapper root adds nothing. Reading by line,
 the label text is a stop of its own after the checkbox. The virtual reader
@@ -211,7 +211,7 @@ logs nothing on a toggle, while screen readers announce the new state of a
 native checkbox themselves, so Checkbox announces nothing.
 
 The virtual reader takes the checked state only from the `checked`
-attribute, not the property browsers read (Open questions 1): the phrases
+attribute, not the property browsers read (Resolved questions 1): the phrases
 above were confirmed with the attribute.
 
 ## Adapter surface
@@ -295,34 +295,32 @@ None. The pattern's `role="checkbox"` and `aria-checked` are the native
 input's role and state. Enter does nothing on the checkbox, as in the
 pattern.
 
-## Open questions
+## Resolved questions
 
-1. **The virtual screen reader can't see a toggle.** It takes a native
-   checkbox's state only from the `checked` attribute, which is the default,
-   while browsers and screen readers read the `checked` and `indeterminate`
-   properties (probed in Chromium's accessibility tree). So after a toggle,
-   or when an element is made selected by a property, it reads the old
-   state, and it never reads indeterminate.
-   - **A (recommended): leave the attribute alone,** as React Aria, Cube UI
-     Kit, Lion and Spectrum Web Components do. Scenarios check the state
-     through the `checked` and `indeterminate` properties, and `spoken()`
-     covers the name, the description, the other states, and the checked
-     state only where the markup carries the attribute.
-   - **B: reflect `checked` to the attribute,** as Zag does. `spoken()` then
-     follows every toggle, but the attribute stops meaning the default: a
-     native form reset restores nothing (Checkbox restores it itself, as
-     above), and code that compares `checked` with `defaultChecked` to find
-     edits sees none.
+Decided by @tenphi on 2026-10-15.
 
-   Either way indeterminate is checked through the property: `aria-checked`
-   stays off the native input.
-
+1. **The `checked` attribute stays the default.** The virtual screen reader
+   takes a native checkbox's state only from the `checked` attribute, while
+   browsers and screen readers read the `checked` and `indeterminate`
+   properties (probed in Chromium's accessibility tree), so after a toggle it
+   reads the old state, and it never reads indeterminate. Checkbox leaves the
+   attribute alone, as React Aria, Cube UI Kit, Lion and Spectrum Web
+   Components do; Zag reflects it, which would make a native form reset
+   restore nothing and hide edits from code comparing `checked` with
+   `defaultChecked`. Scenarios check the state through the `checked` and
+   `indeterminate` properties, and `spoken()` covers the name, the
+   description, the other states, and the checked state only where the
+   markup carries the attribute. `aria-checked` stays off the native input.
 2. **A refused toggle goes back right after the event, not on blur.**
-   TextField keeps refused typing until blur, Cube UI Kit's buffer. A
+   TextField keeps refused typing until blur, Cube UI Kit's buffer, but a
    checkbox has no caret or keystrokes to protect, and WebKit doesn't focus a
    clicked checkbox, so a refused toggle could wait for a blur that never
-   comes. Recommended: React's rule, which Cube UI Kit's checkbox has today.
-   The toggle shows, the consumer is told, and once the `change` event's
-   work is done (its microtasks, where React applies a state update) the
-   checkbox shows `isSelected` again. A store that answers later than that
-   flickers, as in React.
+   comes. React's rule, which Cube UI Kit's checkbox has today: the toggle
+   shows, the consumer is told, and once the `change` event's work is done
+   (its microtasks, where React applies a state update) the checkbox shows
+   `isSelected` again. A store that answers later than that flickers, as in
+   React.
+
+## Open questions
+
+None.
