@@ -79,6 +79,12 @@ export function runConformance(
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
+        // Live regions outside the containers (the announcer's) keep their
+        // messages for seconds, and the next scenario's spoken() reads the
+        // whole document.
+        for (const region of document.querySelectorAll('[aria-live]')) {
+          region.replaceChildren();
+        }
       });
 
       const context: ScenarioContext<unknown, unknown> = {

@@ -294,6 +294,26 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
       },
     );
 
+    group('live regions between scenarios', () => {
+      scenario('one scenario leaves a message behind', async () => {
+        const region = document.createElement('div');
+        region.id = 'leftover-region';
+        region.setAttribute('aria-live', 'polite');
+        document.body.append(region);
+        region.append('Left over');
+      });
+
+      scenario('the next one starts with the region empty', async () => {
+        const region = document.getElementById('leftover-region');
+        try {
+          expect(region).not.toBeNull();
+          expect(region!.childNodes).toHaveLength(0);
+        } finally {
+          region?.remove();
+        }
+      });
+    });
+
     scenario(
       'skips scenarios from a later phase',
       async () => {
