@@ -6,6 +6,8 @@
  * in `bench/`; this file checks behavior and render counts in every browser.
  *
  * The neighbours get a `tabindex` so Tab stays in the test frame in WebKit.
+ * Each run starts on an empty page with the pointer parked in a corner:
+ * WebKit reports hover for a button that mounts under a still pointer.
  */
 
 import { keyboard, pointer, releaseInput } from '@tenphi/sous-testing/browser';
@@ -35,11 +37,25 @@ interface Step {
 
 const roots: Root[] = [];
 
-afterEach(async () => {
-  await releaseInput();
+function cleanup(): void {
   for (const root of roots.splice(0)) root.unmount();
   document.body.replaceChildren();
+}
+
+afterEach(async () => {
+  await releaseInput();
+  cleanup();
 });
+
+/** Moves the pointer to the bottom-right corner, away from every button. */
+async function parkPointer(): Promise<void> {
+  const corner = document.createElement('div');
+  corner.style.cssText =
+    'position: fixed; right: 0; bottom: 0; width: 8px; height: 8px';
+  document.body.append(corner);
+  await pointer.move(corner);
+  corner.remove();
+}
 
 /** Two frames: React renders hover updates in a task after the event. */
 const settle = () =>
@@ -48,6 +64,8 @@ const settle = () =>
   );
 
 async function run(implementation: Implementation): Promise<Step[]> {
+  cleanup();
+  await parkPointer();
   const Button = IMPLEMENTATIONS[implementation];
   const container = document.createElement('div');
   document.body.append(container);
