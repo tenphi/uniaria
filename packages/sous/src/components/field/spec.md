@@ -109,6 +109,24 @@ Field has no events.
   reader does), so the error leaves `aria-describedby` whenever Field hides
   it.
 
+## Announcing the error
+
+Decided by the owner on 2026-10-15. Cube UI Kit gives its message
+`role="alert"`, so a new error is read out at once. Field keeps that behavior
+but announces through the live announcer (`dom/announcer.ts`): an alert that
+appears by losing `hidden` is announced unreliably. React Aria announces
+nothing, and Lion makes the error a live region.
+
+- When the error is shown, Field announces its text assertively, as
+  `role="alert"` would.
+- While the error stays shown, a change to its text is announced too, as an
+  alert's would be. The consumer owns that text, so Field watches the error
+  element for changes.
+- An error already shown when the field starts isn't announced: nothing
+  changed, and it is read when the control gets focus.
+- Nothing is announced while the field is disabled (the error is hidden), or
+  when the error part isn't rendered or is empty.
+
 ## Keyboard
 
 Field handles no keys. The control keeps its own.
@@ -251,12 +269,13 @@ example:
    `control` part. `ctx.owner()` would arrive with CheckboxGroup and
    RadioGroup, which do need separate instances. Approve this change to
    decision 11?
-2. **Announcing errors.** Cube UI Kit gives its message `role="alert"`, so a
-   new error is announced at once. React Aria announces nothing (the error is
-   read when the control gets focus), Lion makes the error a live region
-   (polite while focused, assertive after blur), and no library uses
-   `role="alert"` on a message that is shown and hidden, because an alert
-   that appears by losing `hidden` is announced unreliably. Proposal: follow
-   UI Kit's behavior through Sous's live announcer, which is reliable: when
-   the error is shown, announce its text assertively. Or announce nothing,
-   as React Aria does?
+
+   Composition is in the definition, so it holds in both adapters: the
+   conformance scenarios render one template through both. `<sous-text-input>`
+   hosts its own label, description and error, and `<sous-field>` is for
+   native and third-party controls. A `<sous-field>` around a Sous input
+   would have both elements claim the same `label`, `description` and
+   `error` parts, because an element now stops looking for parts only at a
+   nested element of its own tag. So this includes a custom-element contract
+   change: an element stops at any nested Sous element, and `<sous-field>`
+   warns in development when it holds a Sous input instead of a control.
