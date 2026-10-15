@@ -122,8 +122,11 @@ and React never controls the input.
   which would break the IME; a write that arrives then waits for
   `compositionend`.
 - **Form reset.** On the form's `reset` event (skipped when
-  `defaultPrevented`, as React Aria and Zag do) an uncontrolled field returns
-  to `defaultValue`, and a controlled one reports `valueChange` with it. The
+  `defaultPrevented`, as React Aria and Zag do) the field goes back to its
+  default: `defaultValue`, or without one the value it mounted with, as in
+  React Aria. An uncontrolled field takes it and reports `valueChange`; a
+  controlled one reports `valueChange` and keeps its value until the consumer
+  accepts. The
   native reset runs after the event and puts back the `value` attribute, so
   TextField writes its value again afterwards. Cube UI Kit's Form cancels the
   native reset and resets its own fields.
