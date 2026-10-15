@@ -31,7 +31,7 @@ import type {
   ScenarioContext,
   ScenarioGroup,
 } from './scenario';
-import { spokenPhrases } from './spoken';
+import { listenLive, spokenPhrases, stopListening } from './spoken';
 import type { TemplateNode } from './template';
 
 export interface RunOptions {
@@ -71,6 +71,7 @@ export function runConformance(
 
       afterEach(async () => {
         await releaseInput();
+        await stopListening();
         for (const { mount, container } of mounted.splice(0)) {
           await mount.unmount();
           container.remove();
@@ -85,6 +86,7 @@ export function runConformance(
         keyboard,
         touch,
         spoken: () => spokenPhrases(),
+        listen: () => listenLive(),
         async mount(mountOptions: MountOptions<unknown>) {
           const container = document.createElement('div');
           document.body.appendChild(container);

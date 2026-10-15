@@ -453,8 +453,8 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
 - **Events** are camelCase in scenarios (`pressStart`); the DOM event is
   lowercase (`pressstart`) and the React prop is `onPressStart`.
 - **Scenarios** get `mount`, real `pointer` and `keyboard` input through
-  Playwright (they can hold a button or key), and `spoken()` for the virtual
-  screen reader. `mounted.part(name)` finds
+  Playwright (they can hold a button or key), `spoken()` for the virtual
+  screen reader, and `listen()` to hear what live regions announce. `mounted.part(name)` finds
   `[data-scope][data-part]` and fails loudly when either is missing.
 - **Phases.** A scenario declares the roadmap phase whose features it needs
   (`{ phase: 2 }`); an adapter run declares the phase it has reached

@@ -76,6 +76,13 @@ export interface ScenarioContext<Props, State> {
    * phrase, from `document` to `end of document`.
    */
   spoken(): Promise<string[]>;
+  /**
+   * Starts hearing live regions with the virtual screen reader. The returned
+   * function gives what they have announced since, in order, each phrase
+   * prefixed with its politeness: `assertive: Saved`. Listening lasts until
+   * the scenario ends, and `spoken()` can't run meanwhile.
+   */
+  listen(): Promise<() => Promise<string[]>>;
 }
 
 export type ScenarioRun<Props, State> = (

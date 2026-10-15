@@ -275,6 +275,26 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
     );
 
     scenario(
+      'hears what live regions announce after listening starts',
+      async ({ mount, listen }) => {
+        await mount({ template: h('button', { part: 'root' }, 'Save') });
+        const region = document.createElement('div');
+        region.setAttribute('aria-live', 'assertive');
+        region.append('Before listening');
+        document.body.append(region);
+        try {
+          const heard = await listen();
+          const message = document.createElement('div');
+          message.textContent = 'Saved';
+          region.append(message);
+          await expect.poll(heard).toEqual(['assertive: Saved']);
+        } finally {
+          region.remove();
+        }
+      },
+    );
+
+    scenario(
       'skips scenarios from a later phase',
       async () => {
         throw new Error('A phase 2 scenario ran in a phase 1 run.');
