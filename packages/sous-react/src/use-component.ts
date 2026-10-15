@@ -45,11 +45,22 @@ export interface ComponentHandle<D extends AnyDefinition> {
   readonly parts: Readonly<Record<PartOf<D>, ReactPartProps>>;
 }
 
+/**
+ * Live DOM properties React renders once as defaults, so it never controls
+ * the element; the binder sets them after that.
+ */
+const DEFAULT_PROPS: Readonly<Record<string, string>> = {
+  value: 'defaultValue',
+  checked: 'defaultChecked',
+};
+
 interface Internal<D extends AnyDefinition> {
   readonly instance: Instance<D>;
   readonly binder: Binder;
   readonly handlers: Map<string, (event: SyntheticEvent) => void>;
   readonly refs: Map<string, (element: Element | null) => void>;
+  /** Default props from the first render, kept stable after it. */
+  readonly defaults: Map<string, Readonly<Record<string, unknown>>>;
   rendered?: {
     readonly connected: unknown;
     readonly parts: Record<string, ReactPartProps>;
@@ -97,10 +108,23 @@ function toReactParts<D extends AnyDefinition>(
   internal: Internal<D>,
   connected: Readonly<Record<string, PartProps>>,
 ): Record<string, ReactPartProps> {
-  const { instance, binder, handlers, refs } = internal;
+  const { instance, binder, handlers, refs, defaults } = internal;
   const parts: Record<string, ReactPartProps> = {};
   for (const [part, props] of Object.entries(connected)) {
     const result: Record<string, unknown> = {};
+    // From the first render only: a later default would reset the value
+    // attribute, which a form reset goes back to.
+    let initial = defaults.get(part);
+    if (!initial) {
+      const first: Record<string, unknown> = {};
+      for (const [name, value] of Object.entries(props.properties ?? {})) {
+        const prop = DEFAULT_PROPS[name];
+        if (prop && value !== undefined) first[prop] = value;
+      }
+      initial = first;
+      defaults.set(part, initial);
+    }
+    Object.assign(result, initial);
     for (const [name, value] of Object.entries(props.attrs)) {
       if (value === undefined) continue;
       const prop = reactPropName(name);
@@ -160,6 +184,7 @@ export function useComponent<D extends AnyDefinition>(
       binder: createBinder(instance),
       handlers: new Map(),
       refs: new Map(),
+      defaults: new Map(),
     };
   } else {
     ref.current.instance.setProps(props);

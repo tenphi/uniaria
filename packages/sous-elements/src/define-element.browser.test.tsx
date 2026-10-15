@@ -271,6 +271,41 @@ describe('defineElement', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
   });
 
+  it('adopts a live property into a bindable default before upgrade', () => {
+    const live = defineComponent({
+      name: 'test-live',
+      parts: ['input'],
+      props: {
+        value: bindable('', { adopt: { part: 'input', property: 'value' } }),
+      },
+      setup: () => ({}),
+      expose: ({ props }) => ({
+        value: props.value.get(),
+        isControlled: props.value.isControlled(),
+      }),
+      connect: ({ props }) => ({
+        input: { attrs: {}, properties: { value: props.value.get() } },
+      }),
+    });
+    const container = mount(
+      '<sous-test-live><input data-part="input" value="jane" /></sous-test-live>',
+    );
+    const input = container.querySelector('input')!;
+    // Typed before the element is defined.
+    input.value = 'jane doe';
+
+    defineElement(live);
+
+    const host =
+      container.querySelector<SousElement<typeof live>>('sous-test-live')!;
+    expect(host.instance.getState()).toEqual({
+      value: 'jane doe',
+      isControlled: false,
+    });
+    expect(host.defaultValue).toBe('jane doe');
+    expect(input.value).toBe('jane doe');
+  });
+
   it('refuses props that would shadow element properties', () => {
     const shadowing = defineComponent({
       name: 'test-shadowing',

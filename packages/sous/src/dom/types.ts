@@ -16,6 +16,9 @@ export interface DomPartProps {
   readonly attrs: Readonly<Record<string, string | undefined>>;
   readonly on?: DomHandlers;
   readonly style?: Readonly<Record<`--${string}`, string | undefined>>;
+  readonly properties?: Readonly<
+    Record<string, string | number | boolean | undefined>
+  >;
 }
 
 /**

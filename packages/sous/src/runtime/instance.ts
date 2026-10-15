@@ -356,11 +356,12 @@ export function createInstance<D extends AnyDefinition>(
       const raw = definition.connect(view) as Record<string, PartProps>;
       const parts: Record<string, PartProps> = {};
       for (const part of definition.parts) {
-        const { attrs, on, style } = raw[part]!;
+        const { attrs, on, style, properties } = raw[part]!;
         parts[part] = {
           attrs: { ...attrs, 'data-scope': definition.name, 'data-part': part },
           ...(on ? { on: batched(on) } : {}),
           ...(style ? { style } : {}),
+          ...(properties ? { properties } : {}),
         };
       }
       connected = { changes, propsVersion, parts };

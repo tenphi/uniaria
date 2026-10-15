@@ -27,12 +27,15 @@ export type PropType = 'boolean' | 'string' | 'number' | 'json';
 
 /**
  * Where a custom element reads a prop the consumer did not set: the tag name
- * of a part (Button's `elementType`), or an attribute the consumer wrote on
- * it before the element upgraded (Button's `href`).
+ * of a part (Button's `elementType`), an attribute the consumer wrote on it
+ * before the element upgraded (Button's `href`), or a live DOM property
+ * (TextField's input `value`, which may hold text typed before upgrade). A
+ * bindable adopts into its `default<Key>`, so it stays uncontrolled.
  */
 export type PropAdoption =
   | { readonly part: string; readonly tag: true }
-  | { readonly part: string; readonly attribute: string };
+  | { readonly part: string; readonly attribute: string }
+  | { readonly part: string; readonly property: string };
 
 export interface PropOptions {
   /**

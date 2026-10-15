@@ -127,6 +127,47 @@ describe('createBinder', () => {
     instance.stop();
   });
 
+  it('sets live properties only when they differ, leaving undefined alone', () => {
+    const live = defineComponent({
+      name: 'live',
+      parts: ['input'],
+      props: { text: prop<string | undefined>(undefined) },
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: ({ props }) => ({
+        input: { attrs: {}, properties: { value: props.text() } },
+      }),
+    });
+    const { root: input } = setup('<input data-part="root" />');
+    const instance = createInstance(live, { props: { text: 'abc' } });
+    const binder = createBinder(instance);
+    binder.attach('input', input);
+    instance.start();
+    binder.start();
+    const element = input as HTMLInputElement;
+    expect(element.value).toBe('abc');
+    expect(element.hasAttribute('value')).toBe(false);
+
+    // Equal: no write, so the caret stays where the user put it.
+    element.focus();
+    element.setSelectionRange(1, 1);
+    instance.setProps({ text: 'abc' });
+    instance.sync();
+    binder.apply();
+    expect(element.selectionStart).toBe(1);
+
+    instance.setProps({ text: 'xyz' });
+    instance.sync();
+    expect(element.value).toBe('xyz');
+
+    // Undefined leaves what the user typed.
+    instance.setProps({});
+    instance.sync();
+    element.value = 'typed';
+    binder.apply();
+    expect(element.value).toBe('typed');
+  });
+
   it('stops writing after stop() and after a part detaches', () => {
     const { root } = setup();
     const instance = createInstance(toy);

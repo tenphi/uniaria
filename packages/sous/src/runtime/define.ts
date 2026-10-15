@@ -37,6 +37,16 @@ export interface PartProps {
   readonly on?: Readonly<Record<string, PartHandler | undefined>>;
   /** CSS custom properties only. */
   readonly style?: Readonly<Record<`--${string}`, string | undefined>>;
+  /**
+   * Live DOM properties no attribute holds once the user acts: an input's
+   * `value`, a checkbox's `checked` and `indeterminate`. The binder sets each
+   * when it differs from the element; `undefined` leaves it alone. React
+   * renders `value` and `checked` once, as `defaultValue` and
+   * `defaultChecked`, so it never controls the element.
+   */
+  readonly properties?: Readonly<
+    Record<string, string | number | boolean | undefined>
+  >;
 }
 
 /** Host objects the component may need, supplied by the adapter. */

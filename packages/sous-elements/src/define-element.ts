@@ -35,9 +35,21 @@ export interface DefineElementOptions {
   readonly name?: string;
 }
 
-/** The element's prop properties, typed from the definition's schema. */
+/** `on` + a capital: a callback prop, which the element dispatches instead. */
+type IsCallback<Key> = Key extends `on${infer First}${string}`
+  ? First extends Uppercase<First>
+    ? true
+    : false
+  : false;
+
+/**
+ * The element's prop properties, typed from the definition's schema: every
+ * prop, and `default<Key>` for each bindable.
+ */
 export type ElementProperties<D extends AnyDefinition> = {
-  -readonly [K in keyof D['props'] & keyof PropsOf<D>]: PropsOf<D>[K];
+  -readonly [
+    K in keyof PropsOf<D> as IsCallback<K> extends true ? never : K
+  ]: PropsOf<D>[K];
 };
 
 export type SousElement<D extends AnyDefinition> = HTMLElement &
@@ -215,15 +227,23 @@ export function defineElement<D extends AnyDefinition>(
       }
     }
 
-    /** Reads props the consumer left unset from a part (decision 8). */
+    /**
+     * Reads props the consumer left unset from a part (decision 8). A
+     * bindable adopts into its default, so it stays uncontrolled.
+     */
     #adopt(part: string, element: HTMLElement): void {
       for (const info of infos) {
-        if (info.adopt?.part !== part || this.#explicit.has(info.key)) continue;
+        const { adopt } = info;
+        if (adopt?.part !== part || this.#explicit.has(info.key)) continue;
+        const property = info.kind === 'bindable' ? info.defaultKey! : info.key;
+        if (this.#explicit.has(property)) continue;
         const value =
-          'tag' in info.adopt
+          'tag' in adopt
             ? element.localName
-            : (element.getAttribute(info.adopt.attribute) ?? undefined);
-        this.#set(info.key, value, false);
+            : 'property' in adopt
+              ? (element as unknown as Record<string, unknown>)[adopt.property]
+              : (element.getAttribute(adopt.attribute) ?? undefined);
+        this.#set(property, value, false);
       }
     }
   }

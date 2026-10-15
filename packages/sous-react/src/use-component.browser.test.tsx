@@ -1,3 +1,4 @@
+import { defineComponent, prop } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
 import type { ButtonProps } from '@tenphi/sous/button';
 import { keyboard, pointer, releaseInput } from '@tenphi/sous-testing/browser';
@@ -291,5 +292,44 @@ describe('server rendering', () => {
     element.focus();
     await keyboard.press('Enter');
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+});
+
+const live = defineComponent({
+  name: 'live',
+  parts: ['input'],
+  props: { text: prop('') },
+  setup: () => ({}),
+  expose: () => ({}),
+  connect: ({ props }) => ({
+    input: { attrs: {}, properties: { value: props.text() } },
+  }),
+});
+
+function Live({ text }: { readonly text: string }) {
+  const ui = useComponent(live, { text });
+  return <input {...ui.parts.input} />;
+}
+
+describe('live DOM properties', () => {
+  it('renders a value once as defaultValue, and the binder sets later ones', () => {
+    const error = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const container = render(<Live text="first" />);
+    const input = container.querySelector('input')!;
+    expect(input.value).toBe('first');
+    expect(input.getAttribute('value')).toBe('first');
+
+    rerender(<Live text="second" />);
+    expect(input.value).toBe('second');
+    // React never controls the input: the default stays the first value.
+    expect(input.getAttribute('value')).toBe('first');
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('puts the starting value in server HTML', () => {
+    expect(renderToString(<Live text="jane" />)).toContain('value="jane"');
   });
 });

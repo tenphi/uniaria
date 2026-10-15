@@ -11,7 +11,9 @@
  * The binder owns every attribute `connect()` has ever returned for a part:
  * `undefined` removes it. It compares with the element itself rather than
  * with what it wrote last, so a framework writing the same attributes from a
- * render never leaves the two out of step.
+ * render never leaves the two out of step. Live DOM properties (an input's
+ * `value`) are set only when they differ from the element, so an input's
+ * caret stays put while the two agree; `undefined` leaves one alone.
  *
  * Custom elements also pass their host: the binder then delegates each
  * part's listeners from it (capture phase, so events that don't bubble, like
@@ -117,6 +119,11 @@ export function createBinder<D extends AnyDefinition>(
           style.setProperty(name, value);
         }
       }
+    }
+    for (const [name, value] of Object.entries(props.properties ?? {})) {
+      if (value === undefined) continue;
+      const target = element as unknown as Record<string, unknown>;
+      if (target[name] !== value) target[name] = value;
     }
     if (props.on) delegate(Object.keys(props.on));
   };

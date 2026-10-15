@@ -162,8 +162,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 { event? })` for stateful ones, and `event<Detail>()` under `events` for
   what the component reports. Options: `attribute` (the element attribute;
   `false` for a property only), `type` (attribute conversion, inferred from
-  the default) and `adopt` (an element reads an unset prop from a part's tag
-  or attribute, like Button's `elementType` and `href`).
+  the default) and `adopt` (an element reads an unset prop from a part's tag,
+  attribute or live DOM property, like Button's `elementType` and `href` and
+  TextField's input `value`; a bindable adopts into its `default<Key>`).
 - Event names are camelCase (`pressStart`, `openChange`): the DOM event is
   lowercase (`pressstart`) and the callback prop is `onPressStart`. A
   bindable's change event defaults to `<name>Change`, where the name drops an
@@ -261,6 +262,7 @@ type PartProps = {
   attrs: Record<string, string | undefined>; // ARIA values as strings; undefined removes
   on?: Partial<Record<keyof HTMLElementEventMap, (event: Event) => void>>; // DOM event names
   style?: Record<`--${string}`, string>; // CSS custom properties only
+  properties?: Record<string, string | number | boolean | undefined>; // live DOM properties
 };
 ```
 
@@ -277,6 +279,12 @@ handler with its event.
   `tabindex` → `tabIndex`).
 - Every part carries `data-scope` (component name), `data-part` and its state
   attributes (`data-state`, `data-disabled`, …).
+- `properties` are live DOM properties no attribute holds once the user acts
+  (an input's `value`, a checkbox's `checked` and `indeterminate`). The binder
+  sets each only when it differs from the element; `undefined` leaves it
+  alone. React renders `value` and `checked` once, from the first render, as
+  `defaultValue` and `defaultChecked`, so React never controls the element
+  and server HTML shows the starting value.
 
 ### DOM, lifecycle and SSR
 
