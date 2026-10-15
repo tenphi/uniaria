@@ -1,6 +1,6 @@
 # Field spec
 
-Status: draft <!-- draft | approved by @tenphi on YYYY-MM-DD -->
+Status: approved by @tenphi on 2026-10-15
 
 ## Summary
 
@@ -22,7 +22,7 @@ engine), so Field takes `isInvalid` as a prop.
   (`references/aria-practices/content/practices/names-and-descriptions/names-and-descriptions-practice.html`).
 - **Builds on:** the runtime only. Sous inputs build on Field with
   `ctx.use(field, props, { parts: { control: 'input' } })`.
-- **Owner:** none (see Open questions 1).
+- **Owner:** none (see Resolved questions 1).
 - **Custom element:** yes. `<sous-field>` hosts consumer markup with the
   parts around any control, including a native one.
 
@@ -111,7 +111,7 @@ Field has no events.
 
 ## Announcing the error
 
-Decided by the owner on 2026-10-15. Cube UI Kit gives its message
+Resolved question 2. Cube UI Kit gives its message
 `role="alert"`, so a new error is read out at once. Field keeps that behavior
 but announces through the live announcer (`dom/announcer.ts`): an alert that
 appears by losing `hidden` is announced unreliably. React Aria announces
@@ -257,25 +257,30 @@ example:
   (see Summary). Like that example, Field removes `aria-invalid` when the
   value is valid instead of setting `"false"`.
 
+## Resolved questions
+
+Decided by @tenphi on 2026-10-15.
+
+1. **Field is composed, not linked.** This changes decision 11, which named
+   "a field and its control" as separate instances that find each other with
+   `ctx.owner()`. Sous inputs compose Field with `ctx.use()` instead, one
+   instance, the way React Aria's `useTextField` calls `useField` and Cube UI
+   Kit's inputs take their label as props. Every id is known in one
+   `connect()`, so server HTML has the label's `for` and every `id`.
+   `ctx.owner()` arrives with CheckboxGroup and RadioGroup, which do need
+   separate instances.
+
+   Composition is in the definition, so it holds in both adapters, and the
+   conformance scenarios render one template through both.
+   `<sous-text-input>` hosts its own label, description and error;
+   `<sous-field>` is for native and third-party controls. With it comes a
+   custom-element contract change: an element stops looking for parts at any
+   nested Sous element, not only at one of its own tag, and `<sous-field>`
+   warns in development when it holds a Sous input instead of a control.
+
+2. **A new error is announced** through the live announcer, keeping Cube UI
+   Kit's `role="alert"` behavior (see Announcing the error).
+
 ## Open questions
 
-1. **Field is composed, not linked.** Decision 11 names "a field and its
-   control" as separate instances that find each other with `ctx.owner()`.
-   This spec composes Field into each input with `ctx.use()` instead, one
-   instance, the way React Aria's `useTextField` calls `useField` and Cube UI
-   Kit's inputs take their label as props. Every id is then known in one
-   `connect()`, so server HTML has the label's `for` and every `id`, and Field
-   needs no owner lookup. Standalone, Field wraps any control through its
-   `control` part. `ctx.owner()` would arrive with CheckboxGroup and
-   RadioGroup, which do need separate instances. Approve this change to
-   decision 11?
-
-   Composition is in the definition, so it holds in both adapters: the
-   conformance scenarios render one template through both. `<sous-text-input>`
-   hosts its own label, description and error, and `<sous-field>` is for
-   native and third-party controls. A `<sous-field>` around a Sous input
-   would have both elements claim the same `label`, `description` and
-   `error` parts, because an element now stops looking for parts only at a
-   nested element of its own tag. So this includes a custom-element contract
-   change: an element stops at any nested Sous element, and `<sous-field>`
-   warns in development when it holds a Sous input instead of a control.
+None.
