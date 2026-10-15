@@ -42,7 +42,8 @@ Not part of Field:
 - **`aria-errormessage`.** VoiceOver and NVDA don't support it, so React Aria,
   Lion and Spectrum Web Components all link errors with `aria-describedby`.
   The virtual screen reader only counts error messages
-  (`1 error message`) and never reads them.
+  (`1 error message`) and never reads them. The APG's one error example
+  uses it (see Deviations).
 
 ## Anatomy
 
@@ -158,6 +159,12 @@ valid email".
 | checkbox control "Accept terms", error "You must accept" | `checkbox, Accept terms, You must accept, not checked, invalid, required`  |
 | `role="radiogroup"` control, `span` label "Plan"         | `radiogroup, Plan, invalid, required`                                      |
 
+A `role="group"` control announces neither `invalid` nor `required`: ARIA
+supports `aria-invalid` and `aria-required` on `radiogroup` but not on
+`group`, and the virtual screen reader reads only `group, Shipping`. There the
+error text in `aria-describedby` is all a screen reader user gets.
+CheckboxGroup's spec decides whether that is enough.
+
 ## Adapter surface
 
 ```tsx
@@ -217,9 +224,20 @@ Cube UI Kit's inputs take `label`, `description`, `errorMessage`,
 
 ## Deviations from the WAI-ARIA pattern
 
-None; there is no field pattern. Field follows the names-and-descriptions
-practice: a visible native `label` with `for`, and `aria-describedby` for
-descriptions.
+There is no field pattern, and the APG gives no guidance on errors: its
+coverage report lists none for `aria-invalid`, `aria-errormessage` or
+`aria-required`
+(`references/aria-practices/content/about/coverage-and-quality/prop-coverage.csv`).
+Field follows the names-and-descriptions practice: a visible native `label`
+with `for`, and `aria-describedby` for descriptions. It differs from one APG
+example:
+
+- **The error goes in `aria-describedby`, not `aria-errormessage`.** The
+  quantity spin button example
+  (`references/aria-practices/content/patterns/spinbutton/examples/quantity-spinbutton.html`)
+  links its errors with `aria-errormessage`, which screen readers don't read
+  (see Summary). Like that example, Field removes `aria-invalid` when the
+  value is valid instead of setting `"false"`.
 
 ## Open questions
 
