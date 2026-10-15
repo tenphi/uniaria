@@ -473,3 +473,147 @@ describe('createInstance', () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 });
+
+/** Composes the disclosure, as a component built on another would. */
+const accordionItem = defineComponent({
+  name: 'accordion-item',
+  parts: ['heading', 'trigger', 'body'],
+  props: {
+    isExpanded: bindable(false),
+    isDisabled: prop(false),
+  },
+  events: { toggle: event<{ isOpen: boolean }>() },
+  setup(ctx) {
+    const inner = ctx.use(
+      disclosure,
+      () => ({
+        isOpen: ctx.props.isExpanded.get(),
+        isDisabled: ctx.props.isDisabled(),
+        onOpenChange: (isOpen) => ctx.props.isExpanded.set(isOpen),
+        onToggle: (detail) => ctx.emit('toggle', detail),
+      }),
+      { parts: { panel: 'body' } },
+    );
+    return { inner };
+  },
+  expose({ api }) {
+    return { ...api.inner.state(), isItem: true };
+  },
+  connect({ ids, api }) {
+    const { trigger, panel } = api.inner.connect();
+    return { heading: { attrs: { id: ids.heading } }, trigger, body: panel };
+  },
+});
+
+describe('ctx.use', () => {
+  const clickItem = (
+    instance: ReturnType<typeof createInstance<typeof accordionItem>>,
+  ) => instance.connect().trigger.on!.click!(undefined as never);
+
+  it('composes state, parts and ids, mapping renamed parts', () => {
+    const instance = createInstance(accordionItem, { id: 'item' });
+    expect(instance.getState()).toEqual({
+      isOpen: false,
+      isDisabled: false,
+      toggles: 0,
+      isItem: true,
+    });
+    const { trigger, body } = instance.connect();
+    expect(trigger.attrs['aria-controls']).toBe('item-body');
+    expect(trigger.attrs['data-scope']).toBe('accordion-item');
+    expect(body.attrs).toMatchObject({ id: 'item-body', hidden: '' });
+  });
+
+  it('reads props from the composing component on every access', () => {
+    const instance = createInstance(accordionItem);
+    instance.setProps({ isDisabled: true });
+    clickItem(instance);
+    expect(instance.getState().toggles).toBe(0);
+    instance.setProps({ isDisabled: false });
+    clickItem(instance);
+    expect(instance.getState()).toMatchObject({ isOpen: true, toggles: 1 });
+  });
+
+  it('reports through the callbacks it was given, controlled or not', () => {
+    const onToggle = vi.fn();
+    const onExpandedChange = vi.fn();
+    const instance = createInstance(accordionItem, {
+      props: { onToggle, onExpandedChange },
+    });
+    clickItem(instance);
+    expect(onExpandedChange).toHaveBeenCalledWith(true);
+    expect(onToggle).toHaveBeenCalledWith({ isOpen: true });
+    expect(instance.getState().isOpen).toBe(true);
+
+    instance.setProps({ isExpanded: false, onExpandedChange });
+    clickItem(instance);
+    expect(onExpandedChange).toHaveBeenLastCalledWith(true);
+    expect(instance.getState().isOpen).toBe(false);
+  });
+
+  it('shares the store, so composed changes notify and refresh parts', () => {
+    const instance = createInstance(accordionItem);
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    const before = instance.connect();
+    clickItem(instance);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(instance.connect()).not.toBe(before);
+    expect(instance.connect().body.attrs.hidden).toBeUndefined();
+  });
+
+  it('runs composed watchers and effects with the instance lifecycle', () => {
+    const instance = createInstance(accordionItem);
+    const log = instance.api.inner.api.log;
+    instance.start();
+    instance.setProps({ isDisabled: true });
+    instance.sync();
+    instance.stop();
+    expect(log).toEqual(['start', 'disabled false → true', 'stop']);
+  });
+
+  it('looks up composed parts on the elements they render on', () => {
+    const seen: unknown[] = [];
+    const probe = defineComponent({
+      name: 'probe',
+      parts: ['panel'],
+      props: {},
+      setup(ctx) {
+        return { element: () => ctx.element('panel'), ids: ctx.ids };
+      },
+      expose: () => ({}),
+      connect: () => ({ panel: { attrs: {} } }),
+    });
+    const host = defineComponent({
+      name: 'host',
+      parts: ['body'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(probe, () => ({}), { parts: { panel: 'body' } });
+      },
+      expose: () => ({}),
+      connect: () => ({ body: { attrs: {} } }),
+    });
+    const instance = createInstance(host, { id: 'h' });
+    const element = {};
+    instance.attach('body', element);
+    seen.push(instance.api.api.element(), instance.api.api.ids.panel);
+    expect(seen).toEqual([element, 'h-body']);
+  });
+
+  it('refuses a composed part with nothing to render on', () => {
+    const host = defineComponent({
+      name: 'host',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(disclosure, () => ({}));
+      },
+      expose: () => ({}),
+      connect: () => ({ trigger: { attrs: {} } }),
+    });
+    expect(() => createInstance(host)).toThrow(
+      'host composes disclosure, whose "panel" part has no "panel" part to render on.',
+    );
+  });
+});

@@ -141,6 +141,34 @@ export interface SetupContext<
   element(part: Part): unknown;
   /** Groups changes so the store flushes once. */
   batch<T>(fn: () => T): T;
+  /**
+   * Composes another definition into this instance (decision 9): its
+   * `setup()` runs here, on this instance's store and lifecycle, and reads
+   * its props from `props()` on every access, so pass this component's props
+   * and callbacks through. Its parts are this component's parts of the same
+   * name, unless `options.parts` maps them. Call it during `setup()`, and
+   * fold what it returns into `expose()` and `connect()`.
+   */
+  use<D extends AnyDefinition>(
+    definition: D,
+    props: () => NoInfer<PropsOf<D>>,
+    options?: ComposeOptions<NoInfer<PartOf<D>>, Part>,
+  ): Composed<D>;
+}
+
+export interface ComposeOptions<Inner extends string, Outer extends string> {
+  /** This component's part for each of the composed one's; same name by default. */
+  readonly parts?: Readonly<Partial<Record<Inner, Outer>>>;
+}
+
+/** A definition composed with `ctx.use()`. */
+export interface Composed<D extends AnyDefinition> {
+  /** What its `setup()` returned. */
+  readonly api: ApiOf<D>;
+  /** Its `expose()` now. */
+  state(): StateOf<D>;
+  /** Its `connect()` now, keyed by its own part names, without data-scope. */
+  connect(): ConnectedParts<PartOf<D>>;
 }
 
 /** What `expose()` and `connect()` read. */

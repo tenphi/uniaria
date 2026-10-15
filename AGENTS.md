@@ -173,7 +173,12 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   (`sous-elements` also has one registering entry per component).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
   is Listbox + Popover + trigger and ComboBox is Listbox + Popover + input, so
-  there is exactly one Listbox implementation. Separate instances that work
+  there is exactly one Listbox implementation. ToggleButton is Button plus
+  selection. The composed definition runs on the same instance (store,
+  lifecycle, elements), reads its props from the `props` function on every
+  access (pass callbacks through to receive its events), and renders on the
+  composing component's parts of the same name, or as `{ parts }` maps them.
+  `expose()` and `connect()` fold in its `state()` and `connect()`. Separate instances that work
   together (a field and its control, a radio group and its radios) link
   through `ctx.owner(def)` instead (see Composition between instances).
 - `setup(ctx)` runs once per instance and returns actions and readers;

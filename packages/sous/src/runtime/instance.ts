@@ -122,101 +122,146 @@ export function createInstance<D extends AnyDefinition>(
     if (typeof cleanup === 'function') cleanups.push(cleanup);
   };
 
-  const readers: Record<string, (() => unknown) | Bindable<unknown>> = {};
-  for (const info of definition.schema.props) {
-    const { key, defaultValue } = info;
-    if (info.kind === 'prop') {
-      readers[key] = () => props[key] ?? defaultValue;
-      continue;
-    }
-    // Like a form control's value attribute, the default applies until the
-    // first uncontrolled change ("dirty"), so a default that arrives late (an
-    // element's attribute after construction) still seeds the value.
-    const defaultKey = info.defaultKey!;
-    let isDirty = false;
-    let inner: unknown;
-    const onChange = callbackName(info.changeEvent!);
-    const isControlled = () => props[key] !== undefined;
-    const get = () => {
-      if (isControlled()) return props[key];
-      if (isDirty) return inner;
-      return props[defaultKey] ?? defaultValue;
-    };
-    readers[key] = {
-      get,
-      isControlled,
-      set(value) {
-        if (Object.is(value, get())) return;
-        store.batch(() => {
-          if (!isControlled()) {
-            inner = value;
-            isDirty = true;
-            changed();
-          }
-          (props[onChange] as Callback)?.(value);
-        });
+  const state = <T>(initial: T): Cell<T> => {
+    let value = initial;
+    return {
+      get: () => value,
+      set(next) {
+        if (Object.is(next, value)) return;
+        value = next;
+        changed();
       },
     };
-  }
+  };
 
-  // The readers match the schema by construction; the generic types can't
-  // see that, so they are cast once here.
-  const ctx: SetupContext<string, PropsSchema, EventsSchema> = {
-    props: readers as never,
-    ids,
-    env: options.env ?? {},
-    state<T>(initial: T): Cell<T> {
-      let value = initial;
-      return {
-        get: () => value,
-        set(next) {
-          if (Object.is(next, value)) return;
-          value = next;
-          changed();
+  const memo: SetupContext<string, PropsSchema, EventsSchema>['memo'] = (
+    deps,
+    compute,
+  ) => {
+    let last: readonly unknown[] | undefined;
+    let value: unknown;
+    return () => {
+      const next = deps();
+      const hasChanged =
+        last === undefined ||
+        next.length !== last.length ||
+        next.some((dep, index) => !Object.is(dep, last![index]));
+      if (hasChanged) {
+        last = next;
+        value = compute(...next);
+      }
+      return value as never;
+    };
+  };
+
+  /**
+   * Runs one definition's `setup()` against this instance: the component
+   * itself, or one it composes with `ctx.use()`. `readProps` returns its
+   * props, and `partOf` names this instance's part for each of its parts.
+   */
+  const scope = (
+    scoped: AnyDefinition,
+    readProps: () => Readonly<Record<string, unknown>>,
+    partOf: (part: string) => string,
+  ): { api: unknown; view: ViewContext<string, PropsSchema, unknown> } => {
+    const readers: Record<string, (() => unknown) | Bindable<unknown>> = {};
+    for (const info of scoped.schema.props) {
+      const { key, defaultValue } = info;
+      if (info.kind === 'prop') {
+        readers[key] = () => readProps()[key] ?? defaultValue;
+        continue;
+      }
+      // Like a form control's value attribute, the default applies until the
+      // first uncontrolled change ("dirty"), so a default that arrives late
+      // (an element's attribute after construction) still seeds the value.
+      const defaultKey = info.defaultKey!;
+      let isDirty = false;
+      let inner: unknown;
+      const onChange = callbackName(info.changeEvent!);
+      const isControlled = () => readProps()[key] !== undefined;
+      const get = () => {
+        if (isControlled()) return readProps()[key];
+        if (isDirty) return inner;
+        return readProps()[defaultKey] ?? defaultValue;
+      };
+      readers[key] = {
+        get,
+        isControlled,
+        set(value) {
+          if (Object.is(value, get())) return;
+          store.batch(() => {
+            if (!isControlled()) {
+              inner = value;
+              isDirty = true;
+              changed();
+            }
+            (readProps()[onChange] as Callback)?.(value);
+          });
         },
       };
-    },
-    memo(deps, compute) {
-      let last: readonly unknown[] | undefined;
-      let value: unknown;
-      return () => {
-        const next = deps();
-        const hasChanged =
-          last === undefined ||
-          next.length !== last.length ||
-          next.some((dep, index) => !Object.is(dep, last![index]));
-        if (hasChanged) {
-          last = next;
-          value = compute(...next);
+    }
+
+    const scopedIds: Record<string, string> = {};
+    for (const part of scoped.parts) scopedIds[part] = ids[partOf(part)]!;
+
+    // The readers match the schema by construction; the generic types can't
+    // see that, so they are cast once here.
+    const ctx: SetupContext<string, PropsSchema, EventsSchema> = {
+      props: readers as never,
+      ids: scopedIds,
+      env: options.env ?? {},
+      state,
+      memo,
+      effect(effect) {
+        effects.push(effect);
+        if (isStarted) store.batch(() => runEffect(effect));
+      },
+      watch(read, callback) {
+        const watcher: Watcher = {
+          read,
+          callback: callback as Watcher['callback'],
+          value: isStarted ? read() : undefined,
+        };
+        watchers.push(watcher);
+      },
+      emit(name, detail) {
+        (readProps()[callbackName(name)] as Callback)?.(detail);
+      },
+      element: (part) => elements.get(partOf(part)) ?? null,
+      batch: store.batch,
+      use(child, childProps, composeOptions) {
+        const map: Readonly<Record<string, string | undefined>> =
+          composeOptions?.parts ?? {};
+        for (const part of child.parts) {
+          const own = map[part] ?? part;
+          if (!scoped.parts.includes(own)) {
+            throw new Error(
+              `[sous] ${scoped.name} composes ${child.name}, whose "${part}" part has no "${own}" part to render on.`,
+            );
+          }
         }
-        return value as never;
-      };
-    },
-    effect(effect) {
-      effects.push(effect);
-      if (isStarted) store.batch(() => runEffect(effect));
-    },
-    watch(read, callback) {
-      const watcher: Watcher = {
-        read,
-        callback: callback as Watcher['callback'],
-        value: isStarted ? read() : undefined,
-      };
-      watchers.push(watcher);
-    },
-    emit(name, detail) {
-      (props[callbackName(name)] as Callback)?.(detail);
-    },
-    element: (part) => elements.get(part) ?? null,
-    batch: store.batch,
+        const composed = scope(
+          child,
+          childProps as () => Readonly<Record<string, unknown>>,
+          (part) => partOf(map[part] ?? part),
+        );
+        return {
+          api: composed.api,
+          state: () => child.expose(composed.view),
+          connect: () => child.connect(composed.view),
+        } as never;
+      },
+    };
+
+    const api = scoped.setup(ctx);
+    return { api, view: { props: readers as never, ids: scopedIds, api } };
   };
 
-  const api: unknown = definition.setup(ctx);
-  const view: ViewContext<string, PropsSchema, unknown> = {
-    props: readers as never,
-    ids,
-    api,
-  };
+  const { api, view } = scope(
+    definition,
+    () => props,
+    (part) => part,
+  );
 
   // Subscribed before any adapter, so watchers settle state before the
   // binder and selectors read it.

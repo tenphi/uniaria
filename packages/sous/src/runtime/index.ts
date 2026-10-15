@@ -36,6 +36,8 @@ export type {
   Bindable,
   Cell,
   ComponentConfig,
+  ComposeOptions,
+  Composed,
   ConnectedParts,
   Definition,
   Env,
