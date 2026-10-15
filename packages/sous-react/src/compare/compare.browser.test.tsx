@@ -98,6 +98,10 @@ async function run(implementation: Implementation): Promise<Step[]> {
   await record('mouse down');
   await pointer.up();
   await record('mouse up');
+  await pointer.move(container.querySelector('#after')!);
+  await record('mouse moves to the next button');
+  await pointer.move(target);
+  await record('mouse moves back');
   await pointer.moveOutside(target);
   await record('mouse leaves');
 

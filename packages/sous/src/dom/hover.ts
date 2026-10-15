@@ -23,6 +23,8 @@
  *   the instance stops.
  * - Checks containment rather than the exact target: React hands over the
  *   native `pointerover` and `pointerout` behind its enter and leave events.
+ *   When the pointer moves between two React elements, React builds both
+ *   from the one `pointerout`, so the entered node is its `relatedTarget`.
  * - While hovered, a document `pointerover` that lands outside the part ends
  *   hover too: a part that is removed or shrinks under a still pointer gets
  *   no `pointerleave`.
@@ -44,6 +46,13 @@ export interface Hover {
   readonly handlers: DomHandlers;
 }
 
+/** The node the pointer entered (see the module notes on React). */
+function enteredNode(event: PointerEvent): Node | null {
+  return (
+    event.type === 'pointerout' ? event.relatedTarget : event.target
+  ) as Node | null;
+}
+
 export function createHover(
   ctx: InteractionContext,
   options: HoverOptions,
@@ -60,7 +69,7 @@ export function createHover(
   const start = (event: PointerEvent) => {
     const element = partElement(ctx, options.part);
     if (
-      !element?.contains(event.target as Node | null) ||
+      !element?.contains(enteredNode(event)) ||
       event.pointerType === 'touch' ||
       isHovered.get() ||
       options.isDisabled()
