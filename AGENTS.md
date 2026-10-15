@@ -382,6 +382,16 @@ One component per task, small commits, in this order:
    `packages/sous/src/components/<name>/spec.md` and fill it in. Commit the
    spec on its own and ask the owner to review it. Do not go further until
    the owner sets its status to `approved`.
+
+   Complex components (overlays and collections: Popover, Listbox, Select,
+   ComboBox) start from Cube UI Kit, not React Aria (owner, 2026-10-15). UI
+   Kit replaced React Aria patterns that hurt its users: its ComboBox is its
+   own implementation, and one click outside a popover acts. Read the
+   component's source, tests and docs in `references/cube-ui-kit`, and list
+   in the spec every place it differs from React Aria or the APG, with the
+   reason. The owner decides each one. React Aria stays the reference for
+   browser and assistive-technology edge cases.
+
 2. **Conformance scenarios.** Written from the approved spec in
    `conformance/src/<name>/`, in commits of their own, including
    spoken-output checks with the virtual screen reader.
@@ -521,7 +531,7 @@ its latest default branch and discards local changes, so never edit them.
 
 | Folder                    | Repository                                                                                      | License                   | Look at                                                                                                                                                                                                                                                                                                          |
 | ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cube-ui-kit`             | [cube-js/cube-ui-kit](https://github.com/cube-js/cube-ui-kit)                                   | MIT                       | The owner's React design system and Sous's first consumer. `src/components/` (fields, overlays, collections) shows the APIs Sous has to serve.                                                                                                                                                                   |
+| `cube-ui-kit`             | [cube-js/cube-ui-kit](https://github.com/cube-js/cube-ui-kit)                                   | MIT                       | The owner's React design system and Sous's first consumer. `src/components/` (fields, overlays, collections) shows the APIs Sous has to serve, and the behavior complex components start from (Component workflow).                                                                                              |
 | `react-spectrum`          | [adobe/react-spectrum](https://github.com/adobe/react-spectrum)                                 | Apache 2.0                | `packages/react-aria/src/<area>` (interactions, focus, button, overlays, selection, listbox, combobox, numberfield), `packages/react-stately/src/<area>` and `packages/react-aria/test`: interaction edge cases, mobile screen readers, and their tests. `packages/@react-aria/*` are only re-export shells now. |
 | `zag`                     | [chakra-ui/zag](https://github.com/chakra-ui/zag)                                               | MIT                       | `packages/machines/*` for framework-agnostic component logic, `packages/core` and `packages/store` for runtime ideas, `packages/frameworks/*` for adapters.                                                                                                                                                      |
 | `virtual`                 | [TanStack/virtual](https://github.com/TanStack/virtual)                                         | MIT                       | `packages/virtual-core`, the virtualization candidate (see Collections).                                                                                                                                                                                                                                         |
