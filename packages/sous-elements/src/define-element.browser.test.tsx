@@ -1,10 +1,12 @@
 import { bindable, defineComponent, prop } from '@tenphi/sous';
+import { field } from '@tenphi/sous/field';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import './button';
+import './field';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -334,5 +336,60 @@ describe('<sous-button>', () => {
     expect(button.getAttribute('data-scope')).toBe('button');
     expect(button.getAttribute('type')).toBe('button');
     root.unmount();
+  });
+});
+
+describe('<sous-field>', () => {
+  it("adopts the control's id and the label's tag", () => {
+    const container = mount(`
+      <sous-field>
+        <span data-part="label">Plan</span>
+        <div data-part="control" id="plan" role="radiogroup"></div>
+      </sous-field>`);
+    const host =
+      container.querySelector<SousElement<typeof field>>('sous-field')!;
+    const label = host.querySelector('[data-part="label"]')!;
+    const control = host.querySelector('[data-part="control"]')!;
+    expect(host.controlId).toBe('plan');
+    expect(host.labelElementType).toBe('span');
+    expect(control.id).toBe('plan');
+    expect(label.hasAttribute('for')).toBe(false);
+    expect(control.getAttribute('aria-labelledby')).toBe(label.id);
+  });
+
+  it('leaves a Sous input inside it alone and warns', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const textInput = defineComponent({
+      name: 'test-text-input',
+      parts: ['root', 'label', 'input', 'description', 'error'],
+      props: {},
+      setup: (ctx) => ({
+        field: ctx.use(field, () => ({}), { parts: { control: 'input' } }),
+      }),
+      expose: () => ({}),
+      connect: ({ api }) => {
+        const { control, ...parts } = api.field.connect();
+        return { ...parts, input: control };
+      },
+    });
+    defineElement(textInput);
+    const container = mount(`
+      <sous-field>
+        <label data-part="label">Email</label>
+        <sous-test-text-input>
+          <label data-part="label">Work email</label>
+          <input data-part="input" />
+        </sous-test-text-input>
+      </sous-field>`);
+    const [outer, inner] = container.querySelectorAll('label');
+    const input = container.querySelector('input')!;
+
+    expect(input.getAttribute('aria-labelledby')).toBe(inner!.id);
+    expect(outer!.getAttribute('for')).not.toBe(input.id);
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('without a control part'),
+    );
+    warn.mockRestore();
   });
 });

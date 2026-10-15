@@ -7,6 +7,7 @@ export default defineConfig({
     index: 'src/index.ts',
     button: 'src/button.ts',
     'toggle-button': 'src/toggle-button.ts',
+    field: 'src/field.ts',
   },
   format: 'esm',
   platform: 'neutral',

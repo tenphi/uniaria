@@ -12,6 +12,7 @@ const entries = {
   '@tenphi/sous/button': () => import('./components/button/index'),
   '@tenphi/sous/toggle-button': () =>
     import('./components/toggle-button/index'),
+  '@tenphi/sous/field': () => import('./components/field/index'),
 };
 
 describe('SSR safety', () => {

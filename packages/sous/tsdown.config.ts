@@ -9,6 +9,7 @@ export default defineConfig({
     'collections/index': 'src/collections/index.ts',
     'button/index': 'src/components/button/index.ts',
     'toggle-button/index': 'src/components/toggle-button/index.ts',
+    'field/index': 'src/components/field/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

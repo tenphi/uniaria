@@ -8,6 +8,7 @@
 import type { AnyDefinition, Instance } from '@tenphi/sous';
 import { callbackName } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
+import { field } from '@tenphi/sous/field';
 import { toggleButton } from '@tenphi/sous/toggle-button';
 import type {
   ConformanceAdapter,
@@ -27,6 +28,7 @@ import { useComponent } from './use-component';
 const definitions: Readonly<Record<string, AnyDefinition>> = {
   button,
   'toggle-button': toggleButton,
+  field,
 };
 
 /** Form values a consumer would pass as defaults in React. */

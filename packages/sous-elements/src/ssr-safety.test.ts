@@ -9,6 +9,7 @@ const entries = {
   '@tenphi/sous-elements': () => import('./index'),
   '@tenphi/sous-elements/button': () => import('./button'),
   '@tenphi/sous-elements/toggle-button': () => import('./toggle-button'),
+  '@tenphi/sous-elements/field': () => import('./field'),
 };
 
 describe('SSR safety', () => {
@@ -25,5 +26,7 @@ describe('SSR safety', () => {
     expect(SousButton).toBeUndefined();
     const { SousToggleButton } = await import('./toggle-button');
     expect(SousToggleButton).toBeUndefined();
+    const { SousField } = await import('./field');
+    expect(SousField).toBeUndefined();
   });
 });
