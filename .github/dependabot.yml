@@ -8,8 +8,8 @@ updates:
       default-days: 14
     # Major versions of the packages that set what we support come only by
     # hand (owner, 2026-10-15): `@types/node` follows the oldest Node in
-    # `engines`, React stays in sous-react's peer range, TypeScript in what
-    # consumers and typescript-eslint support, and Vitest in sous-testing's
+    # `engines`, React stays in @uniaria/react's peer range, TypeScript in what
+    # consumers and typescript-eslint support, and Vitest in @uniaria/testing's
     # peer range. Other major versions still come as pull requests.
     ignore:
       - dependency-name: '@types/node'

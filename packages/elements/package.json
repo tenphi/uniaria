@@ -1,0 +1,137 @@
+{
+  "name": "@uniaria/elements",
+  "version": "0.0.0",
+  "description": "Light-DOM custom elements for UniAria: defineElement turns any UniAria component definition into a custom element",
+  "type": "module",
+  "sideEffects": [
+    "./src/button.ts",
+    "./dist/button.js",
+    "./src/toggle-button.ts",
+    "./dist/toggle-button.js",
+    "./src/field.ts",
+    "./dist/field.js",
+    "./src/text-field.ts",
+    "./dist/text-field.js",
+    "./src/checkbox.ts",
+    "./dist/checkbox.js",
+    "./src/checkbox-group.ts",
+    "./dist/checkbox-group.js",
+    "./src/switch.ts",
+    "./dist/switch.js",
+    "./src/radio.ts",
+    "./dist/radio.js",
+    "./src/radio-group.ts",
+    "./dist/radio-group.js",
+    "./src/dialog.ts",
+    "./dist/dialog.js",
+    "./src/popover.ts",
+    "./dist/popover.js"
+  ],
+  "exports": {
+    ".": {
+      "uniaria-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./button": {
+      "uniaria-source": "./src/button.ts",
+      "types": "./dist/button.d.ts",
+      "default": "./dist/button.js"
+    },
+    "./toggle-button": {
+      "uniaria-source": "./src/toggle-button.ts",
+      "types": "./dist/toggle-button.d.ts",
+      "default": "./dist/toggle-button.js"
+    },
+    "./field": {
+      "uniaria-source": "./src/field.ts",
+      "types": "./dist/field.d.ts",
+      "default": "./dist/field.js"
+    },
+    "./text-field": {
+      "uniaria-source": "./src/text-field.ts",
+      "types": "./dist/text-field.d.ts",
+      "default": "./dist/text-field.js"
+    },
+    "./checkbox": {
+      "uniaria-source": "./src/checkbox.ts",
+      "types": "./dist/checkbox.d.ts",
+      "default": "./dist/checkbox.js"
+    },
+    "./checkbox-group": {
+      "uniaria-source": "./src/checkbox-group.ts",
+      "types": "./dist/checkbox-group.d.ts",
+      "default": "./dist/checkbox-group.js"
+    },
+    "./dialog": {
+      "uniaria-source": "./src/dialog.ts",
+      "types": "./dist/dialog.d.ts",
+      "default": "./dist/dialog.js"
+    },
+    "./popover": {
+      "uniaria-source": "./src/popover.ts",
+      "types": "./dist/popover.d.ts",
+      "default": "./dist/popover.js"
+    },
+    "./radio": {
+      "uniaria-source": "./src/radio.ts",
+      "types": "./dist/radio.d.ts",
+      "default": "./dist/radio.js"
+    },
+    "./radio-group": {
+      "uniaria-source": "./src/radio-group.ts",
+      "types": "./dist/radio-group.d.ts",
+      "default": "./dist/radio-group.js"
+    },
+    "./switch": {
+      "uniaria-source": "./src/switch.ts",
+      "types": "./dist/switch.d.ts",
+      "default": "./dist/switch.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/uniaria.git",
+    "directory": "packages/elements"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "custom-elements",
+    "web-components",
+    "accessibility",
+    "a11y",
+    "aria"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/tenphi/uniaria/issues"
+  },
+  "homepage": "https://github.com/tenphi/uniaria#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@uniaria/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@uniaria/conformance": "workspace:*",
+    "@uniaria/testing": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

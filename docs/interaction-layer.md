@@ -1,8 +1,8 @@
 # Interaction layer: behaviours and status
 
-What `packages/sous/src/dom/` has to do, area by area, and how far Sous has
+What `packages/core/src/dom/` has to do, area by area, and how far UniAria has
 got. The catalogue below was compiled from React Aria's source and tests, the
-reference the design doc picks for interaction depth. Sous reimplements the
+reference the design doc picks for interaction depth. UniAria reimplements the
 behaviour; it does not copy React Aria's API. Use the catalogue to:
 
 - find the behaviour, edge cases and browser bugs before building an area;
@@ -59,7 +59,7 @@ calling `handleKey(event, search)` with a `findByText` search from the
 focused key over the item keys; focusing the returned key without selecting
 it (§11.13) and calling `preventDefault` when `isHandled`; ignoring keydowns
 whose target sits outside the collection element (§11.11) or in a text input
-inside an item (§11.12: React Aria's row stops their propagation, Sous checks
+inside an item (§11.12: React Aria's row stops their propagation, UniAria checks
 the target instead); making sure an earlier Space handler, such as an item's
 press, leaves Space alone while `isSearching(event.timeStamp)` (§11.7); and
 not calling `handleKey` at all when typeahead is turned off (§11.14).
@@ -67,7 +67,7 @@ not calling `handleKey` at all when typeahead is turned off (§11.14).
 Hide outside (`hideOutside`, `keepVisible`), still to build: shadow DOM
 (§9.20). Containment and the observer stop at shadow boundaries, so a target
 inside a shadow root gets its host hidden. It keeps the live announcer
-(`[data-sous-live-announcer]`) exposed but has no top-layer marker yet
+(`[data-uni-live-announcer]`) exposed but has no top-layer marker yet
 (§9.9-10; see Open questions). §9.16 and §9.21 still need a real screen
 reader.
 
@@ -78,7 +78,7 @@ iPhone and an iPad. Non-iOS focus override (§8.14, React Aria's
 `UNSTABLE_overrideFocus`) and the Android `interactive-widget` check
 (§8.16) are not built.
 
-## Where Sous differs
+## Where UniAria differs
 
 These are decided; follow them rather than the catalogue.
 
@@ -99,7 +99,7 @@ These are decided; follow them rather than the catalogue.
   part has an inline value of its own. React Aria injects a stylesheet and an
   attribute (§1 model), which needs a CSP nonce.
 - **Modality** is one tracker per window under
-  `Symbol.for('@tenphi/sous/modality/v1')`, created on first use and never
+  `Symbol.for('@uniaria/modality/v1')`, created on first use and never
   torn down (§3.17 tears down on `beforeunload`). It still wraps
   `HTMLElement.prototype.focus`, as React Aria does (§3.7). The iOS emulated
   mouse window for hover lives in the same tracker.
@@ -122,8 +122,8 @@ These are decided; follow them rather than the catalogue.
   with `politeness`, `timeout` and `document` options,
   `clearAnnouncer(politeness?, document?)` and `destroyAnnouncer(document?)`.
   One container per document (React Aria has one for the global document),
-  stored on its window under `Symbol.for('@tenphi/sous/announcer/v1')` and
-  marked `data-sous-live-announcer`. Messages sent during the 100 ms Safari
+  stored on its window under `Symbol.for('@uniaria/announcer/v1')` and
+  marked `data-uni-live-announcer`. Messages sent during the 100 ms Safari
   delay wait and go in together, in order (§10.3); `clearAnnouncer` drops
   waiting messages too. Empty messages are ignored rather than kept forever
   (§10.8). A container something else removed (a body swap) is replaced, with
@@ -132,7 +132,7 @@ These are decided; follow them rather than the catalogue.
 - **An open modal dialog hosts the announcer** (Dialog spec, Resolved
   questions 7). A modal `<dialog>` makes the page outside it inert, and
   Chromium then drops the container from the accessibility tree (probed:
-  ignored as `activeModalDialog`), which `data-sous-live-announcer` can't
+  ignored as `activeModalDialog`), which `data-uni-live-announcer` can't
   prevent. `hostAnnouncer(element)` moves the container to the end of the
   element until the returned function releases it; hosts stack, the topmost
   one still in the document has it, and the container goes back to the start
@@ -149,7 +149,7 @@ These are decided; follow them rather than the catalogue.
 - **One click outside a popover closes it and acts on what it hit** (owner
   decision, 2026-10-15, after Cube UI Kit). React Aria stops the outside
   `pointerdown` and `click` of the top layer at the document (§7.12), so the
-  first click only closes the popover and acting takes a second. Sous never
+  first click only closes the popover and acting takes a second. UniAria never
   stops propagation, so the element under the pointer still gets the press,
   as with the browser's own popover light dismiss: one click on a button
   outside runs it and closes the popover, and one click on another
@@ -169,7 +169,7 @@ These are decided; follow them rather than the catalogue.
 - **A press closes every layer it is outside of** (Popover spec, Resolved
   questions 9), top down, as the native popover and UI Kit's menus do; React
   Aria closes only the top one (§7.11, 7.13). The stack is one listener set
-  per window under `Symbol.for('@tenphi/sous/layers/v1')`. At `pointerdown`
+  per window under `Symbol.for('@uniaria/layers/v1')`. At `pointerdown`
   it works out which layers the press will close and the `click` closes
   them, so a layer can ask `isClosingPress()` in between: a modal popover's
   focus containment lets pointer focus go where the press puts it (Resolved
@@ -187,7 +187,7 @@ These are decided; follow them rather than the catalogue.
   (`useOverlayPosition`). `createPosition(ctx, options)` places a floating
   part against an anchor while active and reports the side it landed on.
   Placements are React Aria's strings, resolved to physical sides first.
-  - Where CSS anchor positioning works, Sous writes inline `position-anchor`
+  - Where CSS anchor positioning works, UniAria writes inline `position-anchor`
     (a name unique in the window, added to the anchor's own `anchor-name`
     list), `position-area`, `position-try-fallbacks` and margins for the
     offset, cross offset and container padding, and reads the side back from
@@ -202,12 +202,12 @@ These are decided; follow them rather than the catalogue.
     Firefox 155).
   - Both paths write `--trigger-width`, `--available-width` and
     `--available-height` (on the larger side when it may flip, so a
-    `max-height` never stops a flip) and place the arrow part. Sous writes
+    `max-height` never stops a flip) and place the arrow part. UniAria writes
     `inset` and `margin` as longhands and puts back every inline style it
     replaced when it stops.
 - **Feature detection and its development switch** (`dom/support.ts`).
   `supportsPopover` and `supportsAnchorPositioning` read a window property
-  under `Symbol.for('@tenphi/sous/fallbacks/v1')`: `{ popover: false }` or
+  under `Symbol.for('@uniaria/fallbacks/v1')`: `{ popover: false }` or
   `{ anchorPositioning: false }` forces the fallback in a browser that has
   the feature, so tests run both paths. Components read it when they
   start.
@@ -247,7 +247,7 @@ These are decided; follow them rather than the catalogue.
     opens; React Aria mounts portals on open and never meets this. Each
     call records what it hides and lifts, and the newest call with a say
     decides, so calls revert in any order.
-  - State is per window under `Symbol.for('@tenphi/sous/hide-outside/v1')`,
+  - State is per window under `Symbol.for('@uniaria/hide-outside/v1')`,
     with one count per attribute: an `aria-hidden` call and an `inert` call
     each add and remove their own attribute. React Aria shares one count, so
     a nested `inert` call over an `aria-hidden` one leaves the outside
@@ -282,7 +282,7 @@ These are decided; follow them rather than the catalogue.
     600 ms at the latest. React Aria tracks the screen size from focus on,
     debounces resizes outside WebKit and learns whether a device has an
     on-screen keyboard (§8.15, 8.17); on an iPad with a hardware keyboard,
-    Sous scrolls a focused text field 600 ms late.
+    UniAria scrolls a focused text field 600 ms late.
   - Scrolling into view centres the element in the part of each scroll
     parent above the keyboard when it starts above the parent or ends
     below that part. React Aria compares the end with the parent's top
@@ -291,7 +291,7 @@ These are decided; follow them rather than the catalogue.
 ## Open questions for the owner
 
 - **Top-layer marker.** React Aria keeps toasts reachable through
-  `data-react-aria-top-layer` (§5.11, 6.7, 9.9). Sous needs its own marker
+  `data-react-aria-top-layer` (§5.11, 6.7, 9.9). UniAria needs its own marker
   when toasts arrive. `hideOutside` keeps only the live announcer for now.
 
 ## Catalogue conventions
@@ -441,7 +441,7 @@ Markup:
 
 53. With nested pressables, a click on the inner one fires its press events, and the outer receives none. The default stops propagation. This holds for the mouse, pointer, and touch paths. (`:3923`)
 54. If the inner handlers call `continuePropagation()`, the outer also receives `pressstart`, `pressup`, `pressend`, and `press`. (`:3949`)
-55. Events whose target is not a DOM descendant of the pressable (React portal bubbling) are ignored, e.g. pressing inside a dialog opened from a pressable. (`:4019`) For Sous: ignore events whose target is outside the element's DOM subtree.
+55. Events whose target is not a DOM descendant of the pressable (React portal bubbling) are ignored, e.g. pressing inside a dialog opened from a pressable. (`:4019`) For UniAria: ignore events whose target is outside the element's DOM subtree.
 56. Any left `click` or `mousedown` that reaches a pressable has its propagation stopped, even when no press was in progress. (`usePress.ts:491-493, 611`)
 57. PressResponder: press props given to an ancestor responder are merged (not overwritten) into the nearest descendant pressable. The ref is forwarded to it. A warning is logged if no pressable registers. (`test/interactions/PressResponder.test.js:20-85`) Overlays reset this context (`ClearPressResponder`, `src/overlays/Overlay.tsx:86`).
 
@@ -1008,7 +1008,7 @@ Restoring styles:
 - WebKit 243452: overscroll-behavior fails for non-overflowing scrollers (`:173-178`).
 - `touch-action: pan-x` cannot be added automatically to fix horizontal-only scrollers, because it must be set before touchstart (`:175-178`).
 - `<html>` overflow:hidden lets `scrollIntoViewport()` detect a scroll lock (`:110-111`).
-- Two separate prototype patches of `focus` exist: useFocusVisible and scroll lock. Sous must chain them deliberately.
+- Two separate prototype patches of `focus` exist: useFocusVisible and scroll lock. UniAria must chain them deliberately.
 
 ### Global singletons
 
@@ -1142,7 +1142,7 @@ Implementation:
 ### Edge cases
 
 - The Safari delay was found empirically; the code comment notes that waits under 100 ms were inconsistent (`:32-34`).
-- The announcer is implemented without React to avoid version-specific root APIs (`:78-83`). This is irrelevant for Sous, which uses plain DOM anyway.
+- The announcer is implemented without React to avoid version-specific root APIs (`:78-83`). This is irrelevant for UniAria, which uses plain DOM anyway.
 
 ### Global singletons
 

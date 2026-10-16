@@ -16,7 +16,7 @@ any.
 
 ## Anatomy
 
-| Part    | Element  | Attributes Sous owns                           | Notes |
+| Part    | Element  | Attributes UniAria owns                        | Notes |
 | ------- | -------- | ---------------------------------------------- | ----- |
 | root    | `div`    | `data-scope`, `data-part`, `data-disabled`     |       |
 | trigger | `button` | `aria-expanded`, `aria-controls`, `data-state` |       |

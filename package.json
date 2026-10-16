@@ -1,7 +1,7 @@
 {
-  "name": "sous-monorepo",
+  "name": "uniaria-monorepo",
   "private": true,
-  "description": "Sous — framework-agnostic headless UI behavior with React and custom-element adapters",
+  "description": "UniAria — framework-agnostic headless UI behavior with React and custom-element adapters",
   "type": "module",
   "scripts": {
     "build": "pnpm --filter \"./packages/*\" build",
@@ -10,7 +10,7 @@
     "test:browser": "vitest run --project browser",
     "test:setup": "playwright install chromium firefox webkit",
     "test:watch": "vitest",
-    "bench": "pnpm --filter @tenphi/sous-react bench",
+    "bench": "pnpm --filter @uniaria/react bench",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tenphi/sous.git"
+    "url": "git+https://github.com/tenphi/uniaria.git"
   },
   "author": "Andrey Yamanov",
   "license": "MIT",

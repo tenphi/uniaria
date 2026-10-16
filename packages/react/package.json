@@ -1,0 +1,63 @@
+{
+  "name": "@uniaria/react",
+  "version": "0.0.0",
+  "description": "React adapter for UniAria: one generic useComponent hook over any UniAria component definition",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "uniaria-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json && tsc -p bench/tsconfig.json",
+    "bench": "node bench/run.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/uniaria.git",
+    "directory": "packages/react"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "react",
+    "accessibility",
+    "a11y",
+    "aria"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/tenphi/uniaria/issues"
+  },
+  "homepage": "https://github.com/tenphi/uniaria#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@uniaria/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@uniaria/conformance": "workspace:*",
+    "@uniaria/testing": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-aria": "^3.52.1",
+    "react-dom": "^19.3.0"
+  }
+}

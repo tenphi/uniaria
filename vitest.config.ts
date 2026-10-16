@@ -2,7 +2,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { defaultClientConditions, defaultServerConditions } from 'vite';
 import { defaultExclude, defineConfig } from 'vitest/config';
 
-import { sousCommands } from './packages/sous-testing/src/commands';
+import { uniCommands } from './packages/testing/src/commands';
 
 /**
  * Two projects, split by file name:
@@ -12,16 +12,18 @@ import { sousCommands } from './packages/sous-testing/src/commands';
  *   A DOM access here fails loudly with `document is not defined`.
  * - `browser` — `*.browser.test.ts(x)`. Anything that renders, touches the
  *   DOM, moves focus or listens to a screen reader. Runs in real Chromium,
- *   Firefox and WebKit through Playwright. `sousCommands` give tests real
+ *   Firefox and WebKit through Playwright. `uniCommands` give tests real
  *   mouse and keyboard input that can hold a button or key
- *   (`@tenphi/sous-testing/browser`).
+ *   (`@uniaria/testing/browser`).
  *
- * Workspace packages resolve each other's `src/` through the `sous-source`
+ * Workspace packages resolve each other's `src/` through the `uniaria-source`
  * export condition, so tests never need a build first.
  */
 export default defineConfig({
-  resolve: { conditions: ['sous-source', ...defaultClientConditions] },
-  ssr: { resolve: { conditions: ['sous-source', ...defaultServerConditions] } },
+  resolve: { conditions: ['uniaria-source', ...defaultClientConditions] },
+  ssr: {
+    resolve: { conditions: ['uniaria-source', ...defaultServerConditions] },
+  },
   // Reference repos are large and read-only; watching them wastes file handles.
   server: { watch: { ignored: ['**/references/**', '**/specs/**'] } },
   test: {
@@ -51,7 +53,7 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             screenshotFailures: false,
-            commands: sousCommands,
+            commands: uniCommands,
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },

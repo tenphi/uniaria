@@ -1,20 +1,20 @@
-# AGENTS.md — Sous
+# AGENTS.md — UniAria
 
-Sous is a framework-agnostic headless UI library. Component behavior (state,
+UniAria is a framework-agnostic headless UI library. Component behavior (state,
 keyboard, focus, ARIA, dismissal, selection) is written once in plain
 TypeScript; thin adapters bind it to React and to light-DOM custom elements.
 Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
-This is the reason Sous exists.
+This is the reason UniAria exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
-attributes for the design system to target. Sous ships CSS only where a
+attributes for the design system to target. UniAria ships CSS only where a
 behavior can't work without it, and as little as possible. Per-element rules go
 inline and yield to an inline value the consumer set (press sets
 `touch-action: pan-x pan-y pinch-zoom` on pressable parts). A rule that must be
 global is adopted as a constructed stylesheet inside an anonymous `@layer`, so
 any consumer CSS wins, and only while the behavior is active.
 
-Sous is built by AI agents. The owner, **@tenphi**, approves specs and reviews
+UniAria is built by AI agents. The owner, **@tenphi**, approves specs and reviews
 APIs at phase gates. Manual screen-reader testing is deferred until the
 approach proves viable (owner, 2026-10-15): no gate waits on it. Read this
 whole file before changing anything; it is the binding summary of the design.
@@ -29,13 +29,13 @@ whole file before changing anything; it is the binding summary of the design.
 
 ## Packages
 
-| Package                    | Path                     | Contents                                                                                                                             | Published |
-| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| `@tenphi/sous`             | `packages/sous`          | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, …)   | Yes       |
-| `@tenphi/sous-react`       | `packages/sous-react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                             | Yes       |
-| `@tenphi/sous-elements`    | `packages/sous-elements` | Generic `defineElement(definition, options)`; light DOM, `sous-` prefix by default; one registering entry per component (`./button`) | Yes       |
-| `@tenphi/sous-testing`     | `packages/sous-testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                 | Yes       |
-| `@tenphi/sous-conformance` | `conformance`            | Adapter-agnostic scenarios every adapter must pass                                                                                   | No        |
+| Package                | Path                | Contents                                                                                                                            | Published |
+| ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, …)  | Yes       |
+| `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                            | Yes       |
+| `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`) | Yes       |
+| `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                | Yes       |
+| `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                  | No        |
 
 All published packages share one version (Changesets `fixed` group). Each
 package has its own short `AGENTS.md` with local rules.
@@ -43,9 +43,9 @@ package has its own short `AGENTS.md` with local rules.
 ## Project structure
 
 ```
-sous/
+uniaria/
 ├── packages/
-│   ├── sous/
+│   ├── core/
 │   │   ├── src/
 │   │   │   ├── index.ts            Runtime public API (re-exports runtime/)
 │   │   │   ├── runtime/            Store, bindables, defineComponent, machine — DOM-free
@@ -56,9 +56,9 @@ sous/
 │   │   ├── tsconfig.json           Whole package, with DOM lib
 │   │   ├── tsconfig.core.json      runtime/ + collections/ without DOM lib
 │   │   └── tsdown.config.ts
-│   ├── sous-react/
-│   ├── sous-elements/
-│   └── sous-testing/
+│   ├── react/
+│   ├── elements/
+│   └── testing/
 ├── conformance/                    Scenarios; owner approval required (see Conformance)
 ├── docs/component-spec-template.md
 ├── docs/interaction-layer.md       What dom/ must do, from React Aria; status
@@ -105,7 +105,7 @@ sous/
   first release on. Until then there are no changesets and no version bumps.
 - **Package manager:** pnpm 11 workspaces. Node ≥ 22.
 
-Workspace packages resolve each other's `src/` through the `sous-source`
+Workspace packages resolve each other's `src/` through the `uniaria-source`
 export condition (set in `tsconfig.base.json` and `vitest.config.ts`), so
 typechecking and tests never need a build.
 
@@ -117,7 +117,7 @@ owner's approval.
 ### Layers
 
 ```
-sous-react, sous-elements  →  components/  →  dom/  →  runtime/, collections/
+@uniaria/react, @uniaria/elements  →  components/  →  dom/  →  runtime/, collections/
 ```
 
 An arrow means "may import". Nothing imports upward. `runtime/` and
@@ -125,7 +125,7 @@ An arrow means "may import". Nothing imports upward. `runtime/` and
 `document`, `window`, `Event` or element types, as values or as types. The only
 host globals allowed there are listed in `types/host.d.ts`; everything else
 reaches the core through `ctx.env`. Framework imports never appear in
-`@tenphi/sous`. ESLint enforces the import rules.
+`@uniaria/core`. ESLint enforces the import rules.
 
 ### No re-renders for internal state
 
@@ -156,7 +156,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 
 - Every component is one
   `defineComponent({ name, parts, props, events, setup, expose, connect })`
-  definition in `packages/sous/src/components/<name>/`.
+  definition in `packages/core/src/components/<name>/`.
 - The schema is the one source for adapter props, element attributes and
   events: `prop(default, options?)` for plain values, `bindable(default,
 { event? })` for stateful ones, and `event<Detail>()` under `events` for
@@ -169,9 +169,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   lowercase (`pressstart`) and the callback prop is `onPressStart`. A
   bindable's change event defaults to `<name>Change`, where the name drops an
   `is` prefix (`isOpen` → `openChange`, seeded by `defaultOpen`).
-- Adapters are generic over definitions. `sous-react` and `sous-elements`
-  contain no component-specific behavior, only optional thin sugar
-  (`sous-elements` also has one registering entry per component).
+- Adapters are generic over definitions. `@uniaria/react` and
+  `@uniaria/elements` contain no component-specific behavior, only optional thin sugar
+  (`@uniaria/elements` also has one registering entry per component).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
   is Listbox + Popover + trigger and ComboBox is Listbox + Popover + input, so
   there is exactly one Listbox implementation. ToggleButton is Button plus
@@ -213,7 +213,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 - A child instance (a radio, a field's control) resolves its owner (the radio
   group, the field) in this order:
   1. **Explicit link** for parts that sit apart: an id-reference attribute on
-     elements, like HTML's `for` (`<sous-radio group="plan">`), resolved in
+     elements, like HTML's `for` (`<uni-radio group="plan">`), resolved in
      the instance's root node; the instance itself in an `owner` prop in
      React.
   2. **React instance context.** `useComponent` provides its instance through
@@ -295,7 +295,7 @@ handler with its event.
 - Document, window and root node come from `ctx.env`, so components work in
   shadow roots and iframes.
 - Global singletons (layer stack, focus-visible modality) are keyed on
-  `Symbol.for('@tenphi/sous/…')` so duplicate installs share one instance.
+  `Symbol.for('@uniaria/…')` so duplicate installs share one instance.
   The modality tracker wraps `HTMLElement.prototype.focus` once per window,
   as React Aria does, so a script's `focus()` call isn't taken for a screen
   reader moving focus. iOS scroll lock wraps it once per window too, the
@@ -347,7 +347,7 @@ handler with its event.
   `data-state`; the consumer owns content, classes and every other attribute.
   A part can be declared element-owned (Select's displayed value): the
   consumer leaves it empty and the element writes its text.
-- Parts are found by a query that stops at nested Sous elements of any
+- Parts are found by a query that stops at nested UniAria elements of any
   kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
   host in the capture phase: a bubbling event reaches every part on its
@@ -379,7 +379,7 @@ reused. The approved runtime dependencies are:
 
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
 `@guidepup/guidepup`, `@guidepup/playwright`, and `react-aria` in
-`@tenphi/sous-react` for the comparison with React Aria only (owner request,
+`@uniaria/react` for the comparison with React Aria only (owner request,
 2026-10-15). **Any other dependency needs the
 owner's approval**, including small utility packages, Lit, state libraries
 (nanostores, signals) and Zag.js packages.
@@ -388,9 +388,9 @@ Agents review Dependabot's pull requests: land updates on `main` once CI
 passes, and fix what they break (run `pnpm dedupe` when a workspace package
 keeps the old version as a peer). Dependabot skips major versions of the
 packages that set what we support (owner, 2026-10-15): `@types/node`, which
-follows the oldest Node in `engines`; React and its types (sous-react's peer
-range); TypeScript (consumers' declarations, typescript-eslint support); and
-Vitest (sous-testing's peer range). Raise those by hand only for a concrete
+follows the oldest Node in `engines`; React and its types (@uniaria/react's
+peer range); TypeScript (consumers' declarations, typescript-eslint support); and
+Vitest (@uniaria/testing's peer range). Raise those by hand only for a concrete
 need, since the packages must keep working with older toolchains, SSR on older
 React and Node included. Other major versions come as pull requests: take them
 when CI passes after the fixes they need.
@@ -400,7 +400,7 @@ when CI passes after the fixes they need.
 One component per task, small commits, in this order:
 
 1. **Spec.** Copy `docs/component-spec-template.md` to
-   `packages/sous/src/components/<name>/spec.md` and fill it in. Commit the
+   `packages/core/src/components/<name>/spec.md` and fill it in. Commit the
    spec on its own and ask the owner to review it. Do not go further until
    the owner sets its status to `approved`.
 
@@ -416,7 +416,7 @@ One component per task, small commits, in this order:
 2. **Conformance scenarios.** Written from the approved spec in
    `conformance/src/<name>/`, in commits of their own, including
    spoken-output checks with the virtual screen reader.
-3. **Definition.** `packages/sous/src/components/<name>/`, iterated until the
+3. **Definition.** `packages/core/src/components/<name>/`, iterated until the
    scenarios pass in both adapters. Register the subpath in three places:
    `tsdown.config.ts` entry, `package.json` `exports`, and
    `src/ssr-safety.test.ts`.
@@ -424,11 +424,11 @@ One component per task, small commits, in this order:
    needed, docs and a demo per adapter.
 
 Naming: folder and subpath in kebab-case (`checkbox-group`,
-`@tenphi/sous/checkbox-group`); definition export in camelCase
-(`checkboxGroup`); `name: 'checkbox-group'`; element `<sous-checkbox-group>`.
+`@uniaria/core/checkbox-group`); definition export in camelCase
+(`checkboxGroup`); `name: 'checkbox-group'`; element `<uni-checkbox-group>`.
 A reserved word gets a descriptive export instead: `toggleSwitch` for
-`name: 'switch'` (owner, 2026-10-16). The cuisine theme stays in the brand
-only — APIs get descriptive names.
+`name: 'switch'` (owner, 2026-10-16). The brand stays out of APIs: they get
+descriptive names.
 
 First scope, in roadmap order: Button, ToggleButton, Field, TextField,
 Checkbox, CheckboxGroup, Switch, RadioGroup → Dialog, Popover, Tooltip,
@@ -457,8 +457,8 @@ TextArea.
 
 ### The mount contract
 
-Scenarios depend only on `@tenphi/sous-testing`; adapters implement one
-function. Source: `packages/sous-testing/src/conformance/`.
+Scenarios depend only on `@uniaria/testing`; adapters implement one
+function. Source: `packages/testing/src/conformance/`.
 
 - **Suites** are data: `defineConformance<Props, State>('button', ({ scenario,
 group }) => …)` in `conformance/src/<name>/`. They name the component by
@@ -466,13 +466,13 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   implementation does. `Props` and `State` types in the suite come from the
   spec.
 - **Templates** describe the consumer's markup adapter-neutrally:
-  `h('button', { part: 'root', class: 'x' }, 'Save')`. `part` names the Sous
+  `h('button', { part: 'root', class: 'x' }, 'Save')`. `part` names the UniAria
   part; every other key is a consumer-owned attribute.
   `nested('checkbox', { value: 'email' }, …)` puts another component inside:
   React renders it with its own `useComponent()` inside its owner's
-  `OwnerProvider`, custom elements wrap its children in `<sous-checkbox>`.
+  `OwnerProvider`, custom elements wrap its children in `<uni-checkbox>`.
 - **Adapters** implement `mount(request)`: render the template (React spreads
-  part props onto it; custom elements wrap it in `<sous-<name>>`), apply props
+  part props onto it; custom elements wrap it in `<uni-<name>>`), apply props
   the way their consumers do, call `record()` for the component's own events
   (not a nested component's, which bubble through a custom element), and
   return `setProps`, `state` (what `expose()` returns), `renderCount` (React
@@ -565,7 +565,7 @@ its latest default branch and discards local changes, so never edit them.
 
 | Folder                    | Repository                                                                                      | License                   | Look at                                                                                                                                                                                                                                                                                                          |
 | ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cube-ui-kit`             | [cube-js/cube-ui-kit](https://github.com/cube-js/cube-ui-kit)                                   | MIT                       | The owner's React design system and Sous's first consumer. `src/components/` (fields, overlays, collections) shows the APIs Sous has to serve, and the behavior complex components start from (Component workflow).                                                                                              |
+| `cube-ui-kit`             | [cube-js/cube-ui-kit](https://github.com/cube-js/cube-ui-kit)                                   | MIT                       | The owner's React design system and UniAria's first consumer. `src/components/` (fields, overlays, collections) shows the APIs UniAria has to serve, and the behavior complex components start from (Component workflow).                                                                                        |
 | `react-spectrum`          | [adobe/react-spectrum](https://github.com/adobe/react-spectrum)                                 | Apache 2.0                | `packages/react-aria/src/<area>` (interactions, focus, button, overlays, selection, listbox, combobox, numberfield), `packages/react-stately/src/<area>` and `packages/react-aria/test`: interaction edge cases, mobile screen readers, and their tests. `packages/@react-aria/*` are only re-export shells now. |
 | `zag`                     | [chakra-ui/zag](https://github.com/chakra-ui/zag)                                               | MIT                       | `packages/machines/*` for framework-agnostic component logic, `packages/core` and `packages/store` for runtime ideas, `packages/frameworks/*` for adapters.                                                                                                                                                      |
 | `virtual`                 | [TanStack/virtual](https://github.com/TanStack/virtual)                                         | MIT                       | `packages/virtual-core`, the virtualization candidate (see Collections).                                                                                                                                                                                                                                         |
@@ -579,13 +579,13 @@ its latest default branch and discards local changes, so never edit them.
 | `catalyst`                | [github/catalyst](https://github.com/github/catalyst)                                           | MIT                       | `src/`: GitHub's light-DOM elements, which wire children and events with `data-target` and `data-action` instead of shadow DOM.                                                                                                                                                                                  |
 | `auto-complete-element`   | [github/auto-complete-element](https://github.com/github/auto-complete-element)                 | MIT                       | `src/`: a light-DOM element linked to its popup list by id (`for`), the id-reference pattern for parts in another branch.                                                                                                                                                                                        |
 
-- Read them for behavior, edge cases and test ideas, then write Sous code
+- Read them for behavior, edge cases and test ideas, then write UniAria code
   from the approved spec. Never import from `references/`, add it to a
   tsconfig or build config, or copy files wholesale.
 - Code adapted from a reference keeps its license notice in the file header
   (Apache 2.0 for React Spectrum and Spectrum Web Components, BSD for Lit,
   MIT for the others).
-- The clones track default branches, not the versions Sous installs. For the
+- The clones track default branches, not the versions UniAria installs. For the
   exact behavior of a dependency, read it in `node_modules`.
 - To add a repository, add it to `scripts/fetch-references.mjs` and this
   table, with the owner's approval.

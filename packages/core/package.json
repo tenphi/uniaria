@@ -1,0 +1,116 @@
+{
+  "name": "@uniaria/core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic headless UI behavior: the runtime, interactions and component definitions behind the UniAria adapters",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "uniaria-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dom": {
+      "uniaria-source": "./src/dom/index.ts",
+      "types": "./dist/dom/index.d.ts",
+      "default": "./dist/dom/index.js"
+    },
+    "./collections": {
+      "uniaria-source": "./src/collections/index.ts",
+      "types": "./dist/collections/index.d.ts",
+      "default": "./dist/collections/index.js"
+    },
+    "./button": {
+      "uniaria-source": "./src/components/button/index.ts",
+      "types": "./dist/button/index.d.ts",
+      "default": "./dist/button/index.js"
+    },
+    "./toggle-button": {
+      "uniaria-source": "./src/components/toggle-button/index.ts",
+      "types": "./dist/toggle-button/index.d.ts",
+      "default": "./dist/toggle-button/index.js"
+    },
+    "./field": {
+      "uniaria-source": "./src/components/field/index.ts",
+      "types": "./dist/field/index.d.ts",
+      "default": "./dist/field/index.js"
+    },
+    "./text-field": {
+      "uniaria-source": "./src/components/text-field/index.ts",
+      "types": "./dist/text-field/index.d.ts",
+      "default": "./dist/text-field/index.js"
+    },
+    "./checkbox": {
+      "uniaria-source": "./src/components/checkbox/index.ts",
+      "types": "./dist/checkbox/index.d.ts",
+      "default": "./dist/checkbox/index.js"
+    },
+    "./checkbox-group": {
+      "uniaria-source": "./src/components/checkbox-group/index.ts",
+      "types": "./dist/checkbox-group/index.d.ts",
+      "default": "./dist/checkbox-group/index.js"
+    },
+    "./dialog": {
+      "uniaria-source": "./src/components/dialog/index.ts",
+      "types": "./dist/dialog/index.d.ts",
+      "default": "./dist/dialog/index.js"
+    },
+    "./popover": {
+      "uniaria-source": "./src/components/popover/index.ts",
+      "types": "./dist/popover/index.d.ts",
+      "default": "./dist/popover/index.js"
+    },
+    "./radio": {
+      "uniaria-source": "./src/components/radio/index.ts",
+      "types": "./dist/radio/index.d.ts",
+      "default": "./dist/radio/index.js"
+    },
+    "./radio-group": {
+      "uniaria-source": "./src/components/radio-group/index.ts",
+      "types": "./dist/radio-group/index.d.ts",
+      "default": "./dist/radio-group/index.js"
+    },
+    "./switch": {
+      "uniaria-source": "./src/components/switch/index.ts",
+      "types": "./dist/switch/index.d.ts",
+      "default": "./dist/switch/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.core.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/uniaria.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "accessibility",
+    "a11y",
+    "aria",
+    "framework-agnostic",
+    "components"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/tenphi/uniaria/issues"
+  },
+  "homepage": "https://github.com/tenphi/uniaria#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.8.0"
+  }
+}

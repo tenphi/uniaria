@@ -5,7 +5,7 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-/** Framework and adapter imports that never belong in `@tenphi/sous`. */
+/** Framework and adapter imports that never belong in `@uniaria/core`. */
 const FRAMEWORKS = {
   group: [
     'react',
@@ -21,12 +21,12 @@ const FRAMEWORKS = {
     'svelte/*',
     'lit',
     'lit/*',
-    '@tenphi/sous-react',
-    '@tenphi/sous-elements',
-    '@tenphi/sous-testing',
+    '@uniaria/react',
+    '@uniaria/elements',
+    '@uniaria/testing',
   ],
   message:
-    '@tenphi/sous is framework-free. Framework code belongs in an adapter package.',
+    '@uniaria/core is framework-free. Framework code belongs in an adapter package.',
 };
 
 export default defineConfig(
@@ -75,15 +75,15 @@ export default defineConfig(
   // a design decision; change them only with the owner's approval. Later blocks
   // override earlier ones for the files they match, so each repeats FRAMEWORKS.
   {
-    files: ['packages/sous/src/**/*.ts'],
+    files: ['packages/core/src/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [FRAMEWORKS] }],
     },
   },
   {
     files: [
-      'packages/sous/src/runtime/**/*.ts',
-      'packages/sous/src/collections/**/*.ts',
+      'packages/core/src/runtime/**/*.ts',
+      'packages/core/src/collections/**/*.ts',
     ],
     rules: {
       'no-restricted-imports': [
@@ -107,7 +107,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['packages/sous/src/dom/**/*.ts'],
+    files: ['packages/core/src/dom/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -124,7 +124,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['packages/sous/src/components/**/*.ts'],
+    files: ['packages/core/src/components/**/*.ts'],
     ignores: ['**/*.test.ts'],
     rules: {
       'no-restricted-syntax': [

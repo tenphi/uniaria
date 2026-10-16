@@ -1,14 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@4/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "tenphi/sous" }],
+  "changelog": ["@changesets/changelog-github", { "repo": "tenphi/uniaria" }],
   "commit": false,
   "fixed": [
-    [
-      "@tenphi/sous",
-      "@tenphi/sous-react",
-      "@tenphi/sous-elements",
-      "@tenphi/sous-testing"
-    ]
+    ["@uniaria/core", "@uniaria/react", "@uniaria/elements", "@uniaria/testing"]
   ],
   "linked": [],
   "access": "public",

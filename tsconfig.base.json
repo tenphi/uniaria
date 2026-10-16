@@ -7,7 +7,7 @@
     "types": [],
     // Workspace packages resolve each other's `src/` through this export
     // condition, so typechecking and tests never need a build first.
-    "customConditions": ["sous-source"],
+    "customConditions": ["uniaria-source"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
