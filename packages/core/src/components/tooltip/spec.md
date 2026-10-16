@@ -1,6 +1,6 @@
 # Tooltip spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-16
 
 ## Summary
 
@@ -15,7 +15,7 @@ next opens without waiting.
 
 One definition, `tooltip`, holds an optional trigger, an optional anchor, the
 tooltip and an optional arrow. A UniAria component can be the trigger
-instead of the trigger part (Open questions 2).
+instead of the trigger part (Resolved questions 2).
 
 - **WAI-ARIA pattern:** [Tooltip](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/),
   still marked work in progress with no example
@@ -26,9 +26,9 @@ instead of the trigger part (Open questions 2).
 - **Builds on:** `createPosition`, `createPresence`, `supportsPopover` and the
   modality tracker from `dom/`. New in `dom/`: the tooltip registry (warm-up
   and one at a time; Warm-up), the link components use to take a tooltip
-  (Open questions 2), and the CSS-shaped positioning props (Open questions 1).
-  No layer stack and no focus scope (Open questions 6).
-- **Owner:** none. It is an owner for the component it describes (Open
+  (Resolved questions 2), and the CSS-shaped positioning props (Resolved questions 1).
+  No layer stack and no focus scope (Resolved questions 6).
+- **Owner:** none. It is an owner for the component it describes (Resolved
   questions 2).
 - **Custom element:** yes, `<uni-tooltip>`, wrapping the trigger and the
   tooltip, which hosts consumer markup.
@@ -41,18 +41,20 @@ Not part of Tooltip:
 - **Detecting truncated text** (UI Kit's automatic tooltips): the design
   system measures and sets `isDisabled` while the text fits, as UI Kit keeps
   its provider disabled.
-- **Touch** (Open questions 11).
-- **Looks.** UI Kit's `isLight`, width and arrow shape are styles.
+- **Touch** (Resolved questions 11).
+- **Looks.** UniAria provides tokens (Styling tokens), not styles: UI Kit's
+  `isLight`, width, gap and arrow shape are the design system's CSS, which can
+  bind to those tokens.
 - **Hover cards and previews** (React Aria's PreviewTrigger).
 
 ## Anatomy
 
-| Part    | Element                                                                   | Attributes UniAria owns                                                                                          | Notes                                                                                                                                     |
-| ------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| trigger | a focusable element that isn't another component's part; usually `button` | `aria-describedby` (`aria-labelledby` with `relation="label"`) while enabled                                     | Optional. A UniAria component linked to the tooltip takes its place (Open questions 2). Hover, focus and presses on it drive the tooltip. |
-| anchor  | any                                                                       | none                                                                                                             | Optional. The tooltip is placed against it instead of the trigger (UI Kit's `targetRef`).                                                 |
-| root    | any; usually `div`                                                        | `id`, `popover="manual"`, `role="tooltip"`, `data-placement`; state attributes; positioning styles (Positioning) | Hidden while closed. Text only: development warns when it holds a focusable element.                                                      |
-| arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                | Optional, as Popover's.                                                                                                                   |
+| Part    | Element                                                                   | Attributes UniAria owns                                                                                          | Notes                                                                                                                                         |
+| ------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| trigger | a focusable element that isn't another component's part; usually `button` | `aria-describedby` (`aria-labelledby` with `relation="label"`) while enabled                                     | Optional. A UniAria component linked to the tooltip takes its place (Resolved questions 2). Hover, focus and presses on it drive the tooltip. |
+| anchor  | any                                                                       | none                                                                                                             | Optional. The tooltip is placed against it instead of the trigger (UI Kit's `targetRef`).                                                     |
+| root    | any; usually `div`                                                        | `id`, `popover="manual"`, `role="tooltip"`, `data-placement`; state attributes; positioning styles (Positioning) | Hidden while closed. Text only: development warns when it holds a focusable element.                                                          |
+| arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                | Optional, as Popover's.                                                                                                                       |
 
 State attributes on the root and the arrow: `data-open` while open,
 `data-entering` for the first frame after opening, `data-exiting` while
@@ -67,16 +69,16 @@ element, or it is inert or hidden from assistive technology.
 
 ## Props
 
-| Prop                 | Type                       | Default                     | Bindable | Change event | Notes                                                                                                           |
-| -------------------- | -------------------------- | --------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------- |
-| isOpen               | `boolean`                  | `false`                     | yes      | `openChange` |                                                                                                                 |
-| isDisabled           | `boolean`                  | `false`                     | no       | —            | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say.       |
-| delay                | `number`                   | `250`                       | no       | —            | Milliseconds the pointer rests on the trigger before it opens, while no tooltip is warm (Warm-up).              |
-| closeDelay           | `number`                   | `500`                       | no       | —            | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                             |
-| trigger              | `'hover' \| 'focus'`       | `'hover'`                   | no       | —            | `'focus'`: keyboard focus only, as UI Kit and React Aria.                                                       |
-| relation             | `'description' \| 'label'` | `'description'`             | no       | —            | `'label'`: the tooltip names the trigger through `aria-labelledby`, for an icon-only button (Open questions 4). |
-| positionArea         | `PositionArea`             | `'top'`                     | no       | —            | CSS `position-area`: a side, optionally an alignment span (Positioning).                                        |
-| positionTryFallbacks | `string`                   | `'flip-block, flip-inline'` | no       | —            | CSS `position-try-fallbacks` (Positioning).                                                                     |
+| Prop                 | Type                       | Default                     | Bindable | Change event | Notes                                                                                                               |
+| -------------------- | -------------------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------- |
+| isOpen               | `boolean`                  | `false`                     | yes      | `openChange` |                                                                                                                     |
+| isDisabled           | `boolean`                  | `false`                     | no       | —            | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say.           |
+| delay                | `number`                   | `250`                       | no       | —            | Milliseconds the pointer rests on the trigger before it opens, while no tooltip is warm (Warm-up).                  |
+| closeDelay           | `number`                   | `500`                       | no       | —            | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                                 |
+| trigger              | `'hover' \| 'focus'`       | `'hover'`                   | no       | —            | `'focus'`: keyboard focus only, as UI Kit and React Aria.                                                           |
+| relation             | `'description' \| 'label'` | `'description'`             | no       | —            | `'label'`: the tooltip names the trigger through `aria-labelledby`, for an icon-only button (Resolved questions 4). |
+| positionArea         | `PositionArea`             | `'top'`                     | no       | —            | CSS `position-area`: a side, optionally an alignment span (Positioning).                                            |
+| positionTryFallbacks | `string`                   | `'flip-block, flip-inline'` | no       | —            | CSS `position-try-fallbacks` (Positioning).                                                                         |
 
 ## Events
 
@@ -101,24 +103,24 @@ pointer moving on, for a reason to be useful.
 
 The tooltip is open while the pointer is over the trigger or the tooltip, or
 while the trigger has visible keyboard focus: either keeps it open (the APG;
-Open questions 9).
+Resolved questions 9).
 
 - **Hover** (mouse and pen) on the trigger opens it after `delay`, or at once
   while warm. Leaving before then cancels it. Leaving the trigger and the
   tooltip closes it after `closeDelay`; coming back before then keeps it.
 - **Focus** opens it at once, when the focus is visible: the last input was a
-  key, or a screen reader moved focus (Open questions 8). Focus from a pointer
+  key, or a screen reader moved focus (Resolved questions 8). Focus from a pointer
   press doesn't open it, nor focus that a UniAria overlay restores as it
   closes (UI Kit), nor focus coming back when the window regains it. Blur
   closes it at once unless the pointer still holds it.
-- **Escape** closes it from anywhere while it is open (Keyboard; Open
+- **Escape** closes it from anywhere while it is open (Keyboard; Resolved
   questions 5).
 - **A press on the trigger** closes it at once: a pointer down, or any key but
   a lone modifier, Tab or Escape (React Aria; UI Kit always).
 - **After Escape or a press** it stays closed until the pointer leaves the
   trigger and the tooltip and comes back, or focus leaves and comes back.
 - **Scrolling.** It follows the trigger (Positioning), and closes once the
-  trigger has been scrolled out of view, as Popover (Open questions 9).
+  trigger has been scrolled out of view, as Popover (Resolved questions 9).
 - **Another tooltip opening** closes it at once, without its closing phase,
   so two never show together (Warm-up).
 - **Removing the trigger, or setting `isDisabled`,** closes it. A disabled
@@ -136,7 +138,7 @@ Open questions 9).
 - **Closing phase**, as Popover: `data-exiting` until its animations end,
   then `hidePopover()`. Reopening cancels it.
 - **Server rendering.** The root with `popover="manual"`, hidden where the
-  Popover API exists, and the relation on the trigger (Open questions 3).
+  Popover API exists, and the relation on the trigger (Resolved questions 3).
 - **Without the Popover API**, as Popover: in place, `hidden` while closed,
   `position: fixed` while open, and the consumer gives it a `z-index`.
 - **With a modal Dialog**, as Popover: a tooltip outside the dialog's element
@@ -161,12 +163,12 @@ UI Kit:
 
 ## Keyboard
 
-| Key                               | Where                     | Behavior                                                                                                                                                                                                    |
-| --------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tab, Shift+Tab                    | onto the trigger          | Opens it at once (visible focus).                                                                                                                                                                           |
-| Tab, Shift+Tab                    | off the trigger           | Closes it, unless the pointer is over the trigger or the tooltip.                                                                                                                                           |
-| Escape                            | anywhere, while it's open | Closes it and prevents the key's default, so a Popover or Dialog it sits in stays open (they leave a prevented Escape alone). It doesn't stop propagation. Ignored while composing text (Open questions 5). |
-| any other key but a lone modifier | trigger                   | Closes it (a press).                                                                                                                                                                                        |
+| Key                               | Where                     | Behavior                                                                                                                                                                                                        |
+| --------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab                    | onto the trigger          | Opens it at once (visible focus).                                                                                                                                                                               |
+| Tab, Shift+Tab                    | off the trigger           | Closes it, unless the pointer is over the trigger or the tooltip.                                                                                                                                               |
+| Escape                            | anywhere, while it's open | Closes it and prevents the key's default, so a Popover or Dialog it sits in stays open (they leave a prevented Escape alone). It doesn't stop propagation. Ignored while composing text (Resolved questions 5). |
+| any other key but a lone modifier | trigger                   | Closes it (a press).                                                                                                                                                                                            |
 
 ## ARIA and state attributes per state
 
@@ -196,11 +198,11 @@ trigger the whole time.
 
 - **Hover** counts for a mouse and a pen, over the trigger and the tooltip.
   Touch never opens it, and the mouse events iOS emulates after a tap are
-  ignored (the modality tracker), as React Aria (Open questions 11).
+  ignored (the modality tracker), as React Aria (Resolved questions 11).
 - **Hovering the tooltip** keeps it open, so the pointer can reach it (WCAG
   1.4.13 Hoverable; the APG). The root takes pointer events; `closeDelay`
   covers the gap between the trigger and the tooltip, with no safe-area
-  polygon (Open questions 10).
+  polygon (Resolved questions 10).
 - **A pointer down on the trigger** closes it (Opening and closing).
 - **A disabled trigger.** The tooltip ignores the trigger's disabled state:
   a tooltip that says why a button is disabled is the common case. Chromium
@@ -209,7 +211,7 @@ trigger the whole time.
   `input[type=checkbox][disabled]` and a disabled `fieldset`), so hover works.
   A disabled control can't take focus, so keyboard users need it focusable:
   Button, ToggleButton and Radio have `isFocusableWhenDisabled`, and Checkbox
-  and Switch would get it (Open questions 12).
+  and Switch would get it (Resolved questions 12).
 - **A trigger that can't take focus** (a truncated label) gets the tooltip on
   hover only, as UI Kit's automatic tooltips on text.
 
@@ -218,7 +220,7 @@ trigger the whole time.
 The positioning wrapper places the root against the anchor part, else the
 trigger, with CSS anchor positioning where it works and `@floating-ui/dom`
 elsewhere, as Popover. Its props follow CSS Anchor Positioning (owner,
-2026-10-16; Open questions 1):
+2026-10-16; Resolved questions 1):
 
 - **`positionArea`** is a CSS `position-area` value that puts the tooltip on
   one side of the anchor: a side keyword, physical (`top`, `bottom`, `left`,
@@ -239,18 +241,36 @@ elsewhere, as Popover. Its props follow CSS Anchor Positioning (owner,
 - **Gaps are the root's `margin`**, from the consumer's CSS, as in CSS: the
   margin facing the anchor is the gap, the others keep the tooltip off the
   viewport's edges, and a fallback flips them with the area (try tactics swap
-  margins). UI Kit's look is `margin: 12px 12px 8px` with `positionArea: 'top'`
-  (an 8 px gap, 12 px from the edges). The Floating UI path reads the computed
-  margins.
-- **Styles UniAria owns on the root:** `inset`, `position-anchor`,
-  `position-area`, `position-try-fallbacks` and `position-visibility`
-  (`position`, `top` and `left` on the Floating UI path). `margin`,
-  `transform`, `translate`, `scale` and `opacity` are the consumer's.
-- **CSS variables on the root:** `--anchor-width`, `--available-width` and
-  `--available-height`, on both paths. CSS's own `anchor-size()` and
-  percentage sizes against the area work only where anchor positioning does.
+  margins). The Floating UI path reads the computed margins, so margins that
+  depend on state work on both paths.
+- **Styles UniAria writes on the root**, only what placing it needs: `inset`,
+  `position-anchor`, `position-area`, `position-try-fallbacks` and
+  `position-visibility` (`position`, `top` and `left` on the Floating UI
+  path). Everything else is the consumer's.
 - **The arrow**, as Popover's: UniAria writes its offset along the edge, and
   the consumer's CSS puts it on the side `data-placement` names.
+- `positionArea` and `positionTryFallbacks` stay props rather than CSS the
+  consumer writes: browsers without anchor positioning drop those
+  properties, so the Floating UI path couldn't read them.
+
+## Styling tokens
+
+UniAria is not a styling library: the consumer's CSS comes separately and binds
+to these tokens, so it can change with state. UniAria sets no look.
+
+| Token                                                         | On                                 | Meaning                                                                      |
+| ------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| `data-scope="tooltip"`, `data-part`                           | its parts                          | Which part an element is.                                                    |
+| `data-open`, `data-entering`, `data-exiting`                  | root, arrow                        | Open; the first frame after opening; closing until its animations end.       |
+| `data-instant`                                                | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
+| `data-placement`                                              | root, arrow                        | The side it was placed on, after fallbacks.                                  |
+| `--anchor-width`                                              | root                               | The anchor's width, in pixels.                                               |
+| `--available-width`, `--available-height`                     | root                               | The most room it could take, in pixels, on the larger side when it may flip. |
+| `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement` | public state (`useComponentState`) | The same, for a framework's own bindings.                                    |
+
+The variables are written on both positioning paths. CSS's own
+`anchor-size()` and percentage sizes against the area work only where anchor
+positioning does.
 
 ## Expected spoken output
 
@@ -265,11 +285,11 @@ with the tooltip "Saves the file"; the scenarios confirm it in both engines.
 | a focusable disabled trigger, tooltip "No changes to save" | `button, Save, No changes to save, disabled` |
 
 A closed tooltip still describes its trigger: a hidden element that
-`aria-describedby` references is still read (probed; Open questions 3).
+`aria-describedby` references is still read (probed; Resolved questions 3).
 
 ## Adapter surface
 
-With the link recommended in Open questions 2:
+A UniAria component links to the tooltip (Resolved questions 2):
 
 ```tsx
 // React
@@ -317,7 +337,7 @@ its id, as a checkbox names its group.
 | UI Kit                                                                 | UniAria                                                                           |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `TooltipTrigger` + `Tooltip`; `TooltipProvider title`                  | One `tooltip`: a linked component or a trigger part, and a root with the text.    |
-| Button, Checkbox and Radio `tooltip` props                             | The component's link to a tooltip (Open questions 2).                             |
+| Button, Checkbox and Radio `tooltip` props                             | The component's link to a tooltip (Resolved questions 2).                         |
 | `FocusableProvider`, function children, deprecated `activeWrap`        | The link, or the trigger part.                                                    |
 | split trigger props (Checkbox: hover on the label, focus on the input) | The linked component routes hover from its visible part and focus from its input. |
 | `targetRef`                                                            | The anchor part.                                                                  |
@@ -329,24 +349,24 @@ its id, as a checkbox names its group.
 | `shouldFlip` (declared, never passed)                                  | `positionTryFallbacks`.                                                           |
 | `shouldCloseOnPress` (documented, always on)                           | Always on.                                                                        |
 | the arrow, always rendered; `tipStyles`                                | The arrow part.                                                                   |
-| `isMaterial` (hoverable); `pointer-events: none` by default            | Always hoverable (Open questions 10).                                             |
+| `isMaterial` (hoverable); `pointer-events: none` by default            | Always hoverable (Resolved questions 10).                                         |
 | `isLight`, width                                                       | Styles.                                                                           |
-| disabled with an active tooltip turns `aria-disabled` (`keepEvents`)   | `isFocusableWhenDisabled` on the component (Open questions 12).                   |
+| disabled with an active tooltip turns `aria-disabled` (`keepEvents`)   | `isFocusableWhenDisabled` on the component (Resolved questions 12).               |
 | automatic tooltips for truncated text                                  | The design system measures and sets `isDisabled`.                                 |
 | no tooltip on focus restoration (CUB-4839)                             | The same, for focus a UniAria overlay restores.                                   |
-| `aria-describedby` only while open                                     | While enabled (Open questions 3).                                                 |
-| Escape swallowed with `stopPropagation`                                | Prevented, not stopped (Open questions 5).                                        |
-| no close on scroll                                                     | Closes when the trigger leaves view (Open questions 9).                           |
+| `aria-describedby` only while open                                     | While enabled (Resolved questions 3).                                             |
+| Escape swallowed with `stopPropagation`                                | Prevented, not stopped (Resolved questions 5).                                    |
+| no close on scroll                                                     | Closes when the trigger leaves view (Resolved questions 9).                       |
 | `DisplayTransition` and the `open` mod                                 | `data-open`, `data-entering`, `data-exiting`, `data-instant`.                     |
 | a portal into `Root`, `z-index: 100000`                                | The top layer.                                                                    |
 | `qa`                                                                   | The consumer's attributes on the root.                                            |
 
 ## Differences from React Aria, Zag and native behavior
 
-Each row is a choice for the owner; the last column is the recommendation,
-argued in Open questions.
+Each row was a choice for the owner, approved with the resolved questions as
+recommended in the last column.
 
-| #   | Topic                     | Cube UI Kit                                    | React Aria                                         | Zag, Floating UI, SWC, native                                          | Recommended                                               |
+| #   | Topic                     | Cube UI Kit                                    | React Aria                                         | Zag, Floating UI, SWC, native                                          | Decided                                                   |
 | --- | ------------------------- | ---------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------- |
 | 1   | Positioning props         | React Aria's `placement`, `offset`             | `placement`, `offset`, `crossOffset`, `shouldFlip` | Zag, Floating UI: placement strings; native: `position-area`           | CSS's own (Q1)                                            |
 | 2   | Attaching to a component  | The component's `tooltip` prop                 | The component reads `FocusableContext`             | Zag: `mergeProps`; SWC: a `for` id; Lion: a slot                       | The component links to the tooltip (Q2)                   |
@@ -369,7 +389,9 @@ follows what it states (Escape, focus on the trigger, hoverable,
 `aria-describedby`). `relation="label"` is an addition the pattern doesn't
 cover.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-16, each as recommended.
 
 1. **Positioning props shaped like CSS Anchor Positioning** (owner,
    2026-10-16). Proposed (Positioning): `positionArea` and
@@ -377,15 +399,15 @@ cover.
    gap and the distance from the viewport's edges are the root's `margin` in
    the consumer's CSS, flipped with the area as CSS flips it; `--trigger-width`
    becomes `--anchor-width`. The Floating UI path parses the same values and
-   reads the margins. Popover then changes the same way, before Tooltip is
+   reads the margins. Popover changes the same way, before Tooltip is
    built: `placement`, `offset`, `crossOffset`, `containerPadding` and
    `shouldFlip` give way to the two props and `margin`, its spec and
-   scenarios with it (scenarios need your approval). Its default stays
+   scenarios with it (the scenario changes go to the owner). Its default stays
    `bottom`, with `flip-block, flip-inline`. What changes for consumers:
    React Aria's `'bottom start'` is `bottom span-right` (or
    `block-end span-inline-end`, which follows the page's direction), and UI
    Kit's offset 8 and padding 12 become margins in the design system's CSS.
-   Recommended: yes, as proposed.
+   Decided: yes, as proposed.
 2. **Attaching to a trigger another component owns.** A tooltip's trigger is
    usually a Button, a Popover's trigger or a Checkbox. One element can't be
    two components' parts today: both binders write `data-scope`, `data-part`
@@ -421,7 +443,7 @@ cover.
      attribute; no relation in the server HTML; the anchor of a split control
      needs its own reference.
 
-   Recommended: (a). It gets split controls right by construction, writes no
+   Decided: (a). It gets split controls right by construction, writes no
    attribute another component owns, and matches UI Kit.
 
 3. **When the trigger carries the relation.** React Aria, UI Kit, Zag and
@@ -429,34 +451,34 @@ cover.
    SWC 1st-gen keep it. A closed tooltip is still read as the description
    (probed: `button, Save, Saves the file`), so keeping it gives screen
    reader users the text however they reach the trigger, including by
-   browsing, and puts it in the server HTML. Recommended: while the tooltip
+   browsing, and puts it in the server HTML. Decided: while the tooltip
    is enabled; `isDisabled` removes it.
 4. **The tooltip as the name of an icon-only button.** Floating UI, Lion and
    SWC offer it; UI Kit derives `aria-label` from the tooltip only in
    ItemAction and ItemBadge. Otherwise the name repeats as a description
    (React Aria's own example: `aria-label="Edit"` and the tooltip "Edit").
-   Recommended: `relation: 'label'`, which writes `aria-labelledby` instead
+   Decided: `relation: 'label'`, which writes `aria-labelledby` instead
    and keeps `role="tooltip"` (Lion; probed: `button, Edit`).
 5. **Escape.** WCAG 1.4.13 needs the tooltip dismissable without moving the
    pointer or focus, so Escape closes it from anywhere: a document capture
    `keydown` listener while it is open. React Aria, UI Kit and Zag then stop
    propagation, so nothing else on the page sees that Escape; UI Kit's
-   bug list shows what that breaks. Recommended: prevent its default instead
+   bug list shows what that breaks. Decided: prevent its default instead
    (SWC gen2), which Popover's and Dialog's layers already respect, so the
    first Escape closes the tooltip and the second the popover around it.
 6. **Not on the layer stack.** A tooltip on the stack above a modal popover
    would make presses on the popover count as outside presses for it, and
-   take Escape away from the popover. Recommended: tooltips stay off the
+   take Escape away from the popover. Decided: tooltips stay off the
    stack. They handle Escape themselves (question 5); presses on a tooltip
    rendered inside a popover's element are inside it already; and the
    positioning is the same.
 7. **Delays and warm-up.** UI Kit 250 / 500 ms, React Aria 1500 / 500, Zag
-   400 / 150, Lion 300 / 300, SWC 1500 / 300. Recommended: UI Kit's, with
+   400 / 150, Lion 300 / 300, SWC 1500 / 300. Decided: UI Kit's, with
    React Stately's warm-up (the registry, the cooldown of
    `max(500, closeDelay)`) and `data-instant` while warm.
 8. **What focus opens it.** Visible focus only (React Aria, UI Kit, Zag,
    Floating UI); Lion opens on any focus, so a click shows it.
-   Recommended: visible focus, at once; not for focus a UniAria overlay
+   Decided: visible focus, at once; not for focus a UniAria overlay
    restores as it closes (UI Kit, CUB-4839: a popover closing with Escape
    would otherwise pop the tooltip of its trigger), and not for focus coming
    back with the window (Floating UI).
@@ -467,15 +489,14 @@ cover.
    lone modifier key doesn't. (c) Scrolling: it follows the trigger and
    closes when the trigger leaves view, as Popover's resolved question 10.
    React Aria closes on any ancestor scroll; UI Kit neither closes nor
-   follows. Recommended: all three as stated.
+   follows. Decided: all three as stated.
 10. **Hoverable.** WCAG 1.4.13 needs the pointer to reach the tooltip
     without it closing. UI Kit's tooltips ignore the pointer unless
     `isMaterial`; React Aria, Lion, SWC and the APG keep them open while
-    hovered. Recommended: always hoverable, with `closeDelay` covering the
-    gap and no safe-area polygon. A design system that sets
-    `pointer-events: none` opts out.
+    hovered. Decided: always hoverable, with `closeDelay` covering the
+    gap and no safe-area polygon.
 11. **Touch.** Long press (Lion, interest invokers) or nothing (React Aria,
-    UI Kit, Zag, SWC gen2, which sends touch to a popover). Recommended:
+    UI Kit, Zag, SWC gen2, which sends touch to a popover). Decided:
     nothing. A long press competes with the platform's own (text selection,
     context menus), and a description that matters on touch belongs in a
     Popover.
@@ -483,9 +504,13 @@ cover.
     Switch** (from their review). Hover works on natively disabled controls
     in all three engines (probed), so a tooltip shows for the mouse; the
     keyboard needs the control focusable. Button, ToggleButton and Radio have
-    `isFocusableWhenDisabled`. Recommended: add it to Checkbox and Switch, as
+    `isFocusableWhenDisabled`. Decided: add it to Checkbox and Switch, as
     Radio's (`aria-disabled` instead of `disabled`, the toggle cancelled,
     not submitted), with their spec and scenario updates in this work. And
     no automatic switch when a tooltip links (UI Kit's `keepEvents` does it
     for Button and Radio): the design system sets the prop, so a control's
     tab order doesn't change with its tooltip.
+
+## Open questions
+
+None.
