@@ -17,6 +17,7 @@ const entries = {
   '@tenphi/sous/checkbox': () => import('./components/checkbox/index'),
   '@tenphi/sous/checkbox-group': () =>
     import('./components/checkbox-group/index'),
+  '@tenphi/sous/switch': () => import('./components/switch/index'),
 };
 
 describe('SSR safety', () => {

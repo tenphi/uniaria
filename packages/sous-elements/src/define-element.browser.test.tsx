@@ -10,6 +10,7 @@ import './field';
 import './text-field';
 import './checkbox';
 import './checkbox-group';
+import './switch';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -556,5 +557,54 @@ describe('<sous-checkbox-group>', () => {
     expect(box.instance.owner()).toBeDefined();
     container.append(box);
     expect(box.instance.owner()).toBeUndefined();
+  });
+});
+
+describe('<sous-switch>', () => {
+  it('takes the markup checked state as its default and sets its role', () => {
+    const container = mount(`
+      <sous-switch readonly>
+        <label data-part="root">
+          <input data-part="input" type="checkbox" checked />
+          <span data-part="indicator"><span class="thumb"></span></span>
+          <span data-part="label">Wi-Fi</span>
+        </label>
+      </sous-switch>`);
+    const host = container.querySelector('sous-switch')!;
+    const input = host.querySelector('input')!;
+    expect(host.instance.getState()).toMatchObject({
+      isSelected: true,
+      isReadOnly: true,
+    });
+    expect(host.defaultSelected).toBe(true);
+    expect(input.checked).toBe(true);
+    expect(input.getAttribute('role')).toBe('switch');
+    expect(input.getAttribute('aria-readonly')).toBe('true');
+    expect(
+      host
+        .querySelector('[data-part="indicator"]')!
+        .hasAttribute('data-selected'),
+    ).toBe(true);
+  });
+
+  it('never joins a checkbox group around it', () => {
+    const container = mount(`
+      <sous-checkbox-group>
+        <div data-part="root">
+          <sous-switch>
+            <label data-part="root">
+              <input data-part="input" type="checkbox" checked />
+              <span data-part="label">Wi-Fi</span>
+            </label>
+          </sous-switch>
+        </div>
+      </sous-checkbox-group>`);
+    const group = container.querySelector('sous-checkbox-group')!;
+    const host = container.querySelector('sous-switch')!;
+    expect(host.instance.owner()).toBeUndefined();
+    expect(group.instance.getState().value).toEqual([]);
+    host.querySelector('input')!.click();
+    expect(host.instance.getState().isSelected).toBe(false);
+    expect(group.instance.getState().value).toEqual([]);
   });
 });

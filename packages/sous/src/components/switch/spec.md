@@ -217,7 +217,7 @@ Switch backs UI Kit's Switch.
 - **Fixes.** Read-only gets `data-readonly`, which UI Kit lacks, so it can
   be styled. Descriptions and errors become linked and announced (Field).
   UI Kit's docs say Enter toggles and that the switch sets `aria-checked`;
-  the code does neither, and the docs would be corrected.
+  the code does neither (cube-js/cube-ui-kit#1522).
 
 ## Deviations from the WAI-ARIA pattern
 
@@ -241,7 +241,7 @@ Decided by @tenphi on 2026-10-16.
    `aria-hidden` spinner and nothing else, while its story says it disables
    interaction and its docs say the state is announced. UI Kit passes
    `isReadOnly` while loading, which blocks toggles and keeps focus where it
-   is; the mismatch goes to UI Kit as an issue.
+   is. The mismatch is in cube-js/cube-ui-kit#1522.
 4. **The export is `toggleSwitch`.** `switch` is a reserved word, so the
    definition can't be `export const switch` like `checkbox`.
    `toggleSwitch` is the control's common name and reads like

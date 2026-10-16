@@ -15,7 +15,9 @@
     "./src/checkbox.ts",
     "./dist/checkbox.js",
     "./src/checkbox-group.ts",
-    "./dist/checkbox-group.js"
+    "./dist/checkbox-group.js",
+    "./src/switch.ts",
+    "./dist/switch.js"
   ],
   "exports": {
     ".": {
@@ -52,6 +54,11 @@
       "sous-source": "./src/checkbox-group.ts",
       "types": "./dist/checkbox-group.d.ts",
       "default": "./dist/checkbox-group.js"
+    },
+    "./switch": {
+      "sous-source": "./src/switch.ts",
+      "types": "./dist/switch.d.ts",
+      "default": "./dist/switch.js"
     },
     "./package.json": "./package.json"
   },

@@ -1,6 +1,7 @@
 import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
 import { field } from '@tenphi/sous/field';
+import { toggleSwitch } from '@tenphi/sous/switch';
 import { textField } from '@tenphi/sous/text-field';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -97,6 +98,31 @@ describe('Checkbox on the server', () => {
     expect(html).toContain('checked=""');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('data-selected=""');
+    expect(html).not.toContain('aria-checked');
+  });
+});
+
+function Wifi() {
+  const ui = useComponent(toggleSwitch, {
+    defaultSelected: true,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...ui.parts.root}>
+      <input {...ui.parts.input} name="wifi" />
+      <span {...ui.parts.indicator} />
+      <span {...ui.parts.label}>Wi-Fi</span>
+    </label>
+  );
+}
+
+describe('Switch on the server', () => {
+  it('renders a switch in its starting state', () => {
+    const html = renderToString(<Wifi />);
+    expect(html).toMatch(/<input[^>]*role="switch"/);
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('checked=""');
+    expect(html).toContain('data-scope="switch"');
     expect(html).not.toContain('aria-checked');
   });
 });

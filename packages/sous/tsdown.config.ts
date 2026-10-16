@@ -13,6 +13,7 @@ export default defineConfig({
     'text-field/index': 'src/components/text-field/index.ts',
     'checkbox/index': 'src/components/checkbox/index.ts',
     'checkbox-group/index': 'src/components/checkbox-group/index.ts',
+    'switch/index': 'src/components/switch/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

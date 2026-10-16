@@ -13,6 +13,7 @@ const entries = {
   '@tenphi/sous-elements/text-field': () => import('./text-field'),
   '@tenphi/sous-elements/checkbox': () => import('./checkbox'),
   '@tenphi/sous-elements/checkbox-group': () => import('./checkbox-group'),
+  '@tenphi/sous-elements/switch': () => import('./switch'),
 };
 
 describe('SSR safety', () => {
@@ -37,5 +38,7 @@ describe('SSR safety', () => {
     expect(SousCheckbox).toBeUndefined();
     const { SousCheckboxGroup } = await import('./checkbox-group');
     expect(SousCheckboxGroup).toBeUndefined();
+    const { SousSwitch } = await import('./switch');
+    expect(SousSwitch).toBeUndefined();
   });
 });

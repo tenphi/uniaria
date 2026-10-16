@@ -11,6 +11,7 @@ export default defineConfig({
     'text-field': 'src/text-field.ts',
     checkbox: 'src/checkbox.ts',
     'checkbox-group': 'src/checkbox-group.ts',
+    switch: 'src/switch.ts',
   },
   format: 'esm',
   platform: 'neutral',
