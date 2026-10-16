@@ -21,9 +21,11 @@
  * so it sees focus on descendants that are parts of their own in both
  * adapters. Browsers fire no `focusout` when the focused element is
  * removed, so while focused within, a document `focusin` outside the part
- * ends it too.
+ * ends it too. Focus within is visible, as `createFocus`'s is, when the
+ * last focus inside came by keyboard or assistive technology.
  */
 
+import { isFocusVisibleKey, modalityTrackerFor } from './modality';
 import type { InteractionContext } from './types';
 import { partEffect } from './types';
 
@@ -35,6 +37,8 @@ export interface FocusWithinOptions {
 
 export interface FocusWithin {
   isFocusWithin(): boolean;
+  /** Focus within came by keyboard or assistive technology. */
+  isFocusVisible(): boolean;
 }
 
 export function createFocusWithin(
@@ -42,23 +46,42 @@ export function createFocusWithin(
   options: FocusWithinOptions,
 ): FocusWithin {
   const isFocusWithin = ctx.state(false);
+  const isFocusVisible = ctx.state(false);
 
   partEffect(ctx, options.part, (element) => {
     const document = element.ownerDocument;
+    const tracker = modalityTrackerFor(element);
+    let unsubscribe: (() => void) | undefined;
+    const begin = () => {
+      isFocusWithin.set(true);
+      isFocusVisible.set(tracker?.isFocusVisible() ?? true);
+      document.addEventListener('focusin', onDocumentFocusIn, true);
+      unsubscribe ??= tracker?.subscribe((modality, event) => {
+        if (!isFocusWithin.get() || !isFocusVisibleKey(event)) return;
+        ctx.batch(() => isFocusVisible.set(modality !== 'pointer'));
+      });
+    };
     const end = () => {
       document.removeEventListener('focusin', onDocumentFocusIn, true);
+      unsubscribe?.();
+      unsubscribe = undefined;
       isFocusWithin.set(false);
+      isFocusVisible.set(false);
     };
     // Focus landed outside without a focusout (the focused node was removed).
     const onDocumentFocusIn = (event: FocusEvent) => {
       if (!element.contains(event.target as Node)) ctx.batch(end);
     };
     const onFocusIn = (event: FocusEvent) => {
+      if (options.isDisabled?.()) return;
       // An earlier handler may already have moved focus on.
-      if (options.isDisabled?.() || isFocusWithin.get()) return;
       if (event.target !== document.activeElement) return;
-      ctx.batch(() => isFocusWithin.set(true));
-      document.addEventListener('focusin', onDocumentFocusIn, true);
+      // Focus moving inside keeps focus within, and may change how it came.
+      if (isFocusWithin.get()) {
+        ctx.batch(() => isFocusVisible.set(tracker?.isFocusVisible() ?? true));
+        return;
+      }
+      ctx.batch(begin);
     };
     const onFocusOut = (event: FocusEvent) => {
       if (!isFocusWithin.get()) return;
@@ -68,8 +91,7 @@ export function createFocusWithin(
     element.addEventListener('focusin', onFocusIn);
     element.addEventListener('focusout', onFocusOut);
     if (!options.isDisabled?.() && element.contains(document.activeElement)) {
-      isFocusWithin.set(true);
-      document.addEventListener('focusin', onDocumentFocusIn, true);
+      begin();
     }
     return () => {
       element.removeEventListener('focusin', onFocusIn);
@@ -80,9 +102,15 @@ export function createFocusWithin(
 
   if (options.isDisabled) {
     ctx.watch(options.isDisabled, (isDisabled) => {
-      if (isDisabled) isFocusWithin.set(false);
+      if (isDisabled) {
+        isFocusWithin.set(false);
+        isFocusVisible.set(false);
+      }
     });
   }
 
-  return { isFocusWithin: () => isFocusWithin.get() };
+  return {
+    isFocusWithin: () => isFocusWithin.get(),
+    isFocusVisible: () => isFocusVisible.get(),
+  };
 }

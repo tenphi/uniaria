@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 
 import { createInstance, defineComponent, prop } from '../runtime';
 import { createFocusWithin } from './focus-within';
@@ -13,7 +14,10 @@ const group = defineComponent({
       isDisabled: ctx.props.isDisabled,
     });
   },
-  expose: ({ api }) => ({ isFocusWithin: api.isFocusWithin() }),
+  expose: ({ api }) => ({
+    isFocusWithin: api.isFocusWithin(),
+    isFocusVisible: api.isFocusVisible(),
+  }),
   connect: () => ({ root: { attrs: {} } }),
 });
 
@@ -43,6 +47,24 @@ afterEach(() => {
 });
 
 describe('createFocusWithin', () => {
+  it('is visible after keyboard input inside, not after a click', async () => {
+    const { byId, instance } = mount();
+    const state = () => instance.getState();
+
+    await userEvent.click(byId('one'));
+    expect(state()).toEqual({ isFocusWithin: true, isFocusVisible: false });
+
+    await userEvent.keyboard('{ArrowDown}');
+    expect(state()).toEqual({ isFocusWithin: true, isFocusVisible: true });
+
+    // Focus moving inside takes the modality it came by.
+    await userEvent.click(byId('two'));
+    expect(state()).toEqual({ isFocusWithin: true, isFocusVisible: false });
+
+    byId('outside').focus();
+    expect(state()).toEqual({ isFocusWithin: false, isFocusVisible: false });
+  });
+
   it('holds while focus moves inside, and ends when it leaves', () => {
     const { root, byId, instance, isFocusWithin } = mount();
     const changes: boolean[] = [];
