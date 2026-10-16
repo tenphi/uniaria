@@ -31,7 +31,7 @@ import {
   supportsPopover,
   warn,
 } from '../../dom';
-import type { DomPartProps, Placement } from '../../dom';
+import type { DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { button } from '../button/button';
@@ -135,11 +135,8 @@ export const popover = defineComponent({
     >(undefined, { attribute: false }),
     isDisabled: prop(false),
     shouldRestoreFocus: prop(true),
-    placement: prop<Placement>('bottom'),
-    offset: prop(8),
-    crossOffset: prop(0),
-    containerPadding: prop(12),
-    shouldFlip: prop(true),
+    positionArea: prop<PositionArea>('bottom'),
+    positionTryFallbacks: prop('flip-block, flip-inline'),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
   },
@@ -336,11 +333,8 @@ export const popover = defineComponent({
       arrowPart: 'arrow',
       isActive: isShown,
       anchor: anchorElement,
-      placement: props.placement,
-      offset: props.offset,
-      crossOffset: props.crossOffset,
-      containerPadding: props.containerPadding,
-      shouldFlip: props.shouldFlip,
+      positionArea: props.positionArea,
+      positionTryFallbacks: props.positionTryFallbacks,
     });
 
     // Closes once the anchor has been scrolled out of view (Resolved

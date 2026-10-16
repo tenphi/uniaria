@@ -9,7 +9,7 @@ import type { popover } from './popover';
 
 export { popover } from './popover';
 export type { PopoverDismissEvent, PopoverDismissReason } from './popover';
-export type { Placement, PlacementSide } from '../../dom';
+export type { PlacementSide, PositionArea } from '../../dom';
 
 export type PopoverProps = PropsOf<typeof popover>;
 export type PopoverState = StateOf<typeof popover>;

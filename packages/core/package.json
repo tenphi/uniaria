@@ -109,8 +109,5 @@
   "homepage": "https://github.com/tenphi/uniaria#readme",
   "engines": {
     "node": ">=22"
-  },
-  "dependencies": {
-    "@floating-ui/dom": "^1.8.0"
   }
 }

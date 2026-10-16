@@ -7,10 +7,10 @@
  * the shared input-modality tracker, focus-within, focus scopes, the
  * focusable/tabbable rules, the live announcer, outside interaction, the
  * dismissable layer stack, hiding everything outside a modal, scroll lock
- * (iOS strategy pending), presence (enter and exit phases), positioning (CSS
- * anchor positioning with the Floating UI fallback behind one wrapper) and
- * feature detection with the development switch for fallbacks. Planned:
- * owner lookup.
+ * (iOS strategy pending), presence (enter and exit phases), positioning (one
+ * wrapper, by script or by the consumer's CSS anchor positioning), page-wide
+ * settings (`configure`) and feature detection with the development switch
+ * for fallbacks. Planned: owner lookup.
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -60,10 +60,12 @@ export { createLayer, isTopLayer } from './layers';
 export type { DismissReason, Layer, LayerOptions } from './layers';
 export { provideOwner, requestOwner } from './owner';
 export { createPosition } from './position';
+export { configure, getSettings } from './settings';
+export type { Positioning, Settings } from './settings';
 export type {
-  Placement,
   PlacementSide,
   Position,
+  PositionArea,
   PositionOptions,
 } from './position';
 export { UNI_HOST, observeParts, queryParts } from './parts';

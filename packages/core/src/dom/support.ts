@@ -3,9 +3,11 @@
  * (AGENTS.md: newer than Baseline widely available means detection and a
  * fallback), and the development switch that forces a fallback in browsers
  * that have the feature, so tests can run both paths (Popover spec, Resolved
- * questions 2 and 3): a window property under
+ * questions 2): a window property under
  * `Symbol.for('@uniaria/fallbacks/v1')`, `{ popover: false }` or
  * `{ anchorPositioning: false }`. Components read it when they start.
+ * Positioning doesn't detect: the page picks its mode (`./settings.ts`), and
+ * CSS mode only warns without anchor positioning.
  */
 
 const FALLBACKS = Symbol.for('@uniaria/fallbacks/v1');

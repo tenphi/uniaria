@@ -1,11 +1,14 @@
 /**
  * `@uniaria/elements/popover` — registers `<uni-popover>` on import. It
  * wraps the trigger and the popover. `non-modal` keeps the page exposed;
- * `dismissable="false"`, `restore-focus="false"` and `flip="false"` turn off
- * what is on by default. `shouldCloseOnInteractOutside` is a property only.
+ * `dismissable="false"` and `restore-focus="false"` turn off what is on by
+ * default; `position-area` and `position-try-fallbacks` take CSS values
+ * and place it in script mode, the default (`configure` in
+ * `@uniaria/core/dom`; in CSS mode the page's CSS places it).
+ * `shouldCloseOnInteractOutside` is a property only.
  *
  * ```html
- * <uni-popover placement="bottom start">
+ * <uni-popover position-area="bottom span-right">
  *   <button data-part="trigger">Size</button>
  *   <div data-part="root">
  *     <div data-part="arrow"></div>

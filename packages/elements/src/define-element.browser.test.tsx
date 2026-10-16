@@ -927,20 +927,17 @@ describe('<uni-popover>', () => {
 
   it('reads its attributes, "false" turning off what is on by default', async () => {
     const container = mount(`
-      <uni-popover non-modal dismissable="false" flip="false" restore-focus="false"
-        placement="top start" offset="4" cross-offset="2" container-padding="0">
+      <uni-popover non-modal dismissable="false" restore-focus="false"
+        position-area="top span-right" position-try-fallbacks="none">
         ${POPOVER}
       </uni-popover>`);
     const host = hostIn(container);
     expect(host).toMatchObject({
       isNonModal: true,
       isDismissable: false,
-      shouldFlip: false,
       shouldRestoreFocus: false,
-      placement: 'top start',
-      offset: 4,
-      crossOffset: 2,
-      containerPadding: 0,
+      positionArea: 'top span-right',
+      positionTryFallbacks: 'none',
     });
     // A property only: a function can't be an attribute.
     host.setAttribute('should-close-on-interact-outside', '');
