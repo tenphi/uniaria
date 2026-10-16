@@ -1,12 +1,12 @@
 # Dialog spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-16
 
 ## Summary
 
 A modal dialog: a window over the page that takes focus, keeps it, and
 leaves the rest of the page inert until it closes. Sous opens the native
-`<dialog>` element with `showModal()` (Open questions 1), which puts it in
+`<dialog>` element with `showModal()` (Resolved questions 1), which puts it in
 the top layer, makes everything outside inert in the browser and in the
 accessibility tree, and draws its `::backdrop`. Sous adds what the browser
 leaves out or does differently in each engine: the open state, Escape and
@@ -23,8 +23,8 @@ description, and a close button.
 - **Builds on:** Button (`ctx.use`, twice: the trigger and the close
   button); `createLayer`, `createFocusScope`, `createScrollLock` and the
   modality tracker from `dom/`. New in `dom/`: a backdrop press check, a
-  closing phase that waits for animations (Open questions 5), and the live
-  announcer's place while a modal is open (Open questions 7).
+  closing phase that waits for animations (Resolved questions 5), and the live
+  announcer's place while a modal is open (Resolved questions 7).
 - **Owner:** none.
 - **Custom element:** yes, `<sous-dialog>`, wrapping the trigger and the
   `<dialog>`, which hosts consumer markup.
@@ -47,7 +47,7 @@ Not part of Dialog:
 
 | Part        | Element                | Attributes Sous owns                                                                                                              | Notes                                                                                                                                                    |
 | ----------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| trigger     | `button`               | Button's (`type`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`); `data-open` | Optional. A press opens the dialog. No `aria-haspopup`, `aria-expanded` or `aria-controls` (Open questions 8).                                           |
+| trigger     | `button`               | Button's (`type`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`); `data-open` | Optional. A press opens the dialog. No `aria-haspopup`, `aria-expanded` or `aria-controls` (Resolved questions 8).                                       |
 | root        | `dialog`               | `id`, `role` (only `alertdialog`), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`; state attributes                       | Opened with `showModal()`. Sous never writes the `open` attribute, which would open it non-modally. Its `::backdrop` is the underlay.                    |
 | title       | any; usually a heading | `id`; state attributes                                                                                                            | Names the dialog through `aria-labelledby`.                                                                                                              |
 | description | any                    | `id`; state attributes                                                                                                            | Optional; required for an `alertdialog` by the APG. Linked through `aria-describedby` while rendered. Leave it out for long or structured content (APG). |
@@ -59,8 +59,7 @@ dialog has no name (no title, `labelledBy` or `aria-label`), when an
 `alertdialog` has no description, and when the root isn't a `<dialog>`.
 
 State attributes on every part: `data-open` while open, `data-entering` for
-the first frame after opening, `data-exiting` while closing (Open
-questions 5).
+the first frame after opening, `data-exiting` while closing (Resolved questions 5).
 
 Render the `<dialog>` always; it is hidden while closed. A design system that
 wants to skip rendering heavy content while closed renders the content (not
@@ -68,23 +67,23 @@ the dialog) from `isOpen || isExiting`.
 
 ## Props
 
-| Prop                      | Type                        | Default    | Bindable | Change event | Notes                                                                                                                                   |
-| ------------------------- | --------------------------- | ---------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| isOpen                    | `boolean`                   | `false`    | yes      | `openChange` |                                                                                                                                         |
-| isDismissable             | `boolean`                   | `true`     | no       | —            | Escape and a press on the backdrop close it. `false` turns both off; the close part and the consumer still close it (Open questions 3). |
-| isKeyboardDismissDisabled | `boolean`                   | `false`    | no       | —            | Escape alone doesn't close it.                                                                                                          |
-| role                      | `'dialog' \| 'alertdialog'` | `'dialog'` | no       | —            | The element adopts the root's `role` attribute instead of taking one (a `role` on the host would give the host that role).              |
-| isDisabled                | `boolean`                   | `false`    | no       | —            | The trigger can't open it (Button's `isDisabled` on the trigger).                                                                       |
-| shouldRestoreFocus        | `boolean`                   | `true`     | no       | —            | Focus goes back on close (Focus).                                                                                                       |
-| labelledBy                | `string \| undefined`       | —          | no       | —            | More ids for `aria-labelledby`.                                                                                                         |
-| describedBy               | `string \| undefined`       | —          | no       | —            | More ids for `aria-describedby`.                                                                                                        |
+| Prop                      | Type                        | Default    | Bindable | Change event | Notes                                                                                                                                       |
+| ------------------------- | --------------------------- | ---------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| isOpen                    | `boolean`                   | `false`    | yes      | `openChange` |                                                                                                                                             |
+| isDismissable             | `boolean`                   | `true`     | no       | —            | Escape and a press on the backdrop close it. `false` turns both off; the close part and the consumer still close it (Resolved questions 3). |
+| isKeyboardDismissDisabled | `boolean`                   | `false`    | no       | —            | Escape alone doesn't close it.                                                                                                              |
+| role                      | `'dialog' \| 'alertdialog'` | `'dialog'` | no       | —            | The element adopts the root's `role` attribute instead of taking one (a `role` on the host would give the host that role).                  |
+| isDisabled                | `boolean`                   | `false`    | no       | —            | The trigger can't open it (Button's `isDisabled` on the trigger).                                                                           |
+| shouldRestoreFocus        | `boolean`                   | `true`     | no       | —            | Focus goes back on close (Focus).                                                                                                           |
+| labelledBy                | `string \| undefined`       | —          | no       | —            | More ids for `aria-labelledby`.                                                                                                             |
+| describedBy               | `string \| undefined`       | —          | no       | —            | More ids for `aria-describedby`.                                                                                                            |
 
 ## Events
 
-| Event        | Detail                    | When                                                                                                                                                                                                                                                            |
-| ------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openChange` | `boolean`                 | The trigger, a dismissal, the close part or a dialog form asks to open or close it. Never for a value the consumer sets.                                                                                                                                        |
-| `dismiss`    | `{ reason, returnValue }` | Before `openChange(false)`, for each close the user asked for. `reason`: `'escape'`, `'outside'`, `'close'`, `'submit'`, or `'browser'` when the browser closed it itself. `returnValue`: the submitter's `value` for `'submit'`, else `''` (Open questions 9). |
+| Event        | Detail                    | When                                                                                                                                                                                                                                                                |
+| ------------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openChange` | `boolean`                 | The trigger, a dismissal, the close part or a dialog form asks to open or close it. Never for a value the consumer sets.                                                                                                                                            |
+| `dismiss`    | `{ reason, returnValue }` | Before `openChange(false)`, for each close the user asked for. `reason`: `'escape'`, `'outside'`, `'close'`, `'submit'`, or `'browser'` when the browser closed it itself. `returnValue`: the submitter's `value` for `'submit'`, else `''` (Resolved questions 9). |
 
 ## Public state
 
@@ -103,7 +102,7 @@ the dialog) from `isOpen || isExiting`.
 - **Closing.** When `isOpen` turns false, the dialog enters its closing
   phase: `data-exiting`, still modal, Escape and backdrop presses ignored.
   When its animations end, Sous calls `close()`, releases the scroll lock and
-  restores focus (Open questions 5).
+  restores focus (Resolved questions 5).
 - **Controlled.** A dismissal, the close part or a dialog form only reports
   `dismiss` and `openChange(false)`; the dialog stays open until the
   consumer sets `isOpen` to `false`. When the browser closed it on its own
@@ -158,7 +157,7 @@ ignored; probed), as React Aria and UI Kit also leave it off.
 
 ## Focus
 
-- **On open** (Open questions 2), in order:
+- **On open** (Resolved questions 2), in order:
   1. the first element in the dialog with `autofocus` or `data-autofocus`;
   2. the dialog itself (`tabindex="-1"`), so a screen reader reads its name
      and description first and no action is focused by surprise.
@@ -171,8 +170,7 @@ ignored; probed), as React Aria and UI Kit also leave it off.
 - **While open.** Focus stays in the dialog: Tab wraps (Keyboard), and the
   page is inert. A press on the backdrop moves focus to the dialog element
   (native; probed), which keeps it inside.
-- **On close**, after the closing phase, when `shouldRestoreFocus` (Open
-  questions 6):
+- **On close**, after the closing phase, when `shouldRestoreFocus` (Resolved questions 6):
   1. nothing, when focus has already moved to a connected element outside
      the dialog and the trigger (the consumer handed it off, as UI Kit
      allows);
@@ -198,7 +196,7 @@ ignored; probed), as React Aria and UI Kit also leave it off.
   part.
 - **`<form method="dialog">`.** Natively its submission closes the dialog
   with the submitter's `value` as `returnValue` (probed). Sous turns it into
-  a close request instead (Open questions 9): after the consumer's own
+  a close request instead (Resolved questions 9): after the consumer's own
   `submit` handlers have run and haven't prevented it, Sous prevents the
   native close and reports `dismiss` with reason `'submit'` and the
   submitter's value, then closes through the closing phase. Validation that
@@ -266,8 +264,7 @@ closed.
 
 Element attributes: `default-open`, `disabled`, `keyboard-dismiss-disabled`,
 `labelled-by`, `described-by`; `isDismissable` and `shouldRestoreFocus`
-default to true, which a boolean attribute can't turn off (Open
-questions 4). Properties: `isOpen` (controlled), `defaultOpen`, and the
+default to true, which a boolean attribute can't turn off (Resolved questions 4). Properties: `isOpen` (controlled), `defaultOpen`, and the
 others by prop name. Events: `openchange`, `dismiss`. The trigger and the
 dialog must both be inside `<sous-dialog>`; a page that opens it from
 elsewhere sets `isOpen` or calls `instance.api.open()`.
@@ -291,31 +288,33 @@ elsewhere sets `isOpen` or calls `instance.api.open()`.
 
 ## Differences from React Aria, the APG and native behavior
 
-Each row is a choice for the owner; the recommendation is in the last column.
+Each row was a choice for the owner, approved with the resolved questions as recommended in the last column.
 
-| #   | Topic                       | Cube UI Kit                                                     | React Aria                                                 | APG, Zag, native                                                           | Recommended                                                                 |
-| --- | --------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 1   | Element                     | `<section>` in a portal over an underlay `div`                  | `<section>` in a portal                                    | Zag: a `div`; native: `<dialog>`                                           | Native `<dialog>` (Open questions 1)                                        |
-| 2   | The page behind             | Not hidden: no `inert`, `aria-hidden` or `aria-modal`           | `ariaHideOutside` with `inert`                             | APG: inert or hidden; native modal makes it inert                          | Native inertness, which UI Kit lacks                                        |
-| 3   | `isDismissable` default     | `true`                                                          | `false`                                                    | Zag: `true`, `false` for `alertdialog`                                     | `true`, as UI Kit (Open questions 3)                                        |
-| 4   | Escape when not dismissable | Doesn't close                                                   | Closes (only `isKeyboardDismissDisabled` stops it)         | Zag: separate `closeOnEscape`                                              | Doesn't close, as UI Kit                                                    |
-| 5   | Initial focus               | `[data-autofocus]`, a submit or primary button, else the dialog | An autofocused child, else the dialog                      | APG and native: the first focusable; Zag: the same, else the dialog        | `autofocus`/`data-autofocus`, else the dialog (Open questions 2)            |
-| 6   | Tab containment             | From the end of the enter transition                            | The whole time, off while exiting                          | APG: wrap; native: leaves to the browser                                   | Wrap the whole time it is shown                                             |
-| 7   | Focus restore               | The trigger, as soon as it closes, unless focus was handed off  | The previously focused element, on unmount, with fallbacks | Native: the previously focused element (WebKit: often the body)            | The trigger, after the exit animation, unless handed off (Open questions 6) |
-| 8   | Trigger ARIA                | None for modal types                                            | `aria-expanded`, `aria-controls` while open                | APG examples: none; Zag: `aria-haspopup`, `aria-expanded`, `aria-controls` | None (Open questions 8)                                                     |
-| 9   | Description                 | Never linked                                                    | Linked automatically for `alertdialog` only                | APG: required for `alertdialog`, optional otherwise                        | Linked whenever the part is rendered                                        |
-| 10  | Scroll lock                 | From the end of the enter transition                            | While open                                                 | Native: none                                                               | While shown                                                                 |
-| 11  | While closing               | Still interactive; guards keep it from catching Escape          | —                                                          | —                                                                          | Still modal; ignores Escape and backdrop presses                            |
-| 12  | `aria-modal`                | Not set                                                         | Not set (a Safari bug in iframes)                          | APG and Zag set it                                                         | Not set: native modal already is                                            |
+| #   | Topic                       | Cube UI Kit                                                     | React Aria                                                 | APG, Zag, native                                                           | Decided                                                                         |
+| --- | --------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | Element                     | `<section>` in a portal over an underlay `div`                  | `<section>` in a portal                                    | Zag: a `div`; native: `<dialog>`                                           | Native `<dialog>` (Resolved questions 1)                                        |
+| 2   | The page behind             | Not hidden: no `inert`, `aria-hidden` or `aria-modal`           | `ariaHideOutside` with `inert`                             | APG: inert or hidden; native modal makes it inert                          | Native inertness, which UI Kit lacks                                            |
+| 3   | `isDismissable` default     | `true`                                                          | `false`                                                    | Zag: `true`, `false` for `alertdialog`                                     | `true`, as UI Kit (Resolved questions 3)                                        |
+| 4   | Escape when not dismissable | Doesn't close                                                   | Closes (only `isKeyboardDismissDisabled` stops it)         | Zag: separate `closeOnEscape`                                              | Doesn't close, as UI Kit                                                        |
+| 5   | Initial focus               | `[data-autofocus]`, a submit or primary button, else the dialog | An autofocused child, else the dialog                      | APG and native: the first focusable; Zag: the same, else the dialog        | `autofocus`/`data-autofocus`, else the dialog (Resolved questions 2)            |
+| 6   | Tab containment             | From the end of the enter transition                            | The whole time, off while exiting                          | APG: wrap; native: leaves to the browser                                   | Wrap the whole time it is shown                                                 |
+| 7   | Focus restore               | The trigger, as soon as it closes, unless focus was handed off  | The previously focused element, on unmount, with fallbacks | Native: the previously focused element (WebKit: often the body)            | The trigger, after the exit animation, unless handed off (Resolved questions 6) |
+| 8   | Trigger ARIA                | None for modal types                                            | `aria-expanded`, `aria-controls` while open                | APG examples: none; Zag: `aria-haspopup`, `aria-expanded`, `aria-controls` | None (Resolved questions 8)                                                     |
+| 9   | Description                 | Never linked                                                    | Linked automatically for `alertdialog` only                | APG: required for `alertdialog`, optional otherwise                        | Linked whenever the part is rendered                                            |
+| 10  | Scroll lock                 | From the end of the enter transition                            | While open                                                 | Native: none                                                               | While shown                                                                     |
+| 11  | While closing               | Still interactive; guards keep it from catching Escape          | —                                                          | —                                                                          | Still modal; ignores Escape and backdrop presses                                |
+| 12  | `aria-modal`                | Not set                                                         | Not set (a Safari bug in iframes)                          | APG and Zag set it                                                         | Not set: native modal already is                                                |
 
 ## Deviations from the WAI-ARIA pattern
 
 - **Initial focus** goes to the dialog itself unless an element is marked
-  (Open questions 2). The APG prefers the first focusable element, and
+  (Resolved questions 2). The APG prefers the first focusable element, and
   allows a static element at the top for long content.
 - **No `aria-modal`**: the native modal dialog provides the semantics.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-16, each as recommended.
 
 1. **The native `<dialog>` with `showModal()`.** It gives the top layer (no
    portals, which AGENTS.md rules out), real inertness of the page in the
@@ -323,25 +322,25 @@ Each row is a choice for the owner; the recommendation is in the last column.
    Baseline widely available since 2024-09 (`web-features`). Sous fills the
    gaps measured above: scroll lock, backdrop presses, Tab wrapping, initial
    focus, focus restore. UI Kit, React Aria and Zag all use a `div` or
-   `section`. Recommended: yes.
+   `section`. Decided: yes.
 2. **Initial focus**: an element marked `autofocus` or `data-autofocus`,
    else the dialog itself (React Aria; UI Kit's fallback). UI Kit's own
    priority for a submit or primary button becomes a `data-autofocus` its
    Dialog puts on that button. The alternative is native and APG: the first
    focusable element, which in a form is the first field and in a
-   confirmation may be a destructive button. Recommended: marked, else the
+   confirmation may be a destructive button. Decided: marked, else the
    dialog.
 3. **Dismissal props as UI Kit**: `isDismissable` defaults to `true` and
    gates both Escape and the backdrop; `isKeyboardDismissDisabled` turns
    off Escape alone; the close part, a dialog form and the consumer always
    close it (UI Kit #1418). React Aria defaults `isDismissable` to `false`
-   and gates only the outside press with it. Recommended: as UI Kit.
+   and gates only the outside press with it. Decided: as UI Kit.
 4. **Booleans that default to `true` on the element** (`isDismissable`,
    `shouldRestoreFocus`): a boolean attribute can only turn a prop on. Either
    (a) the runtime reads `"false"` as false for these props, as HTML's
    `draggable="false"` and `spellcheck="false"` do (a custom-element contract
    change), or (b) they are properties only, or (c) the props flip
-   (`isNonDismissable`), against UI Kit's names. Recommended: (a).
+   (`isNonDismissable`), against UI Kit's names. Decided: (a).
 5. **A closing phase for exit animations.** When it closes, the dialog
    stays modal with `data-exiting` until the animations running on it and
    its subtree (including `::backdrop`) finish, read through
@@ -350,11 +349,11 @@ Each row is a choice for the owner; the recommendation is in the last column.
    the first frame (or CSS `@starting-style`). Cross-browser exit animation
    can't be pure CSS: `overlay` and `display` transitions aren't Baseline.
    UI Kit uses a fixed 350 ms instead of reading the animations. This is a
-   new `dom/` primitive that Popover and Tooltip reuse. Recommended: yes.
+   new `dom/` primitive that Popover and Tooltip reuse. Decided: yes.
 6. **Focus restore order** (Focus): the trigger part first, as UI Kit,
    since WebKit's native restore lands on the body after a click; after the
    closing phase, since the page is inert until `close()` (UI Kit restores
-   at once because its page never was). Recommended: as listed.
+   at once because its page never was). Decided: as listed.
 7. **The live announcer while a modal is open.** The announcer's regions
    live in the page, which the open modal makes inert: Chromium's
    accessibility tree marks everything outside the dialog ignored (probed),
@@ -364,21 +363,25 @@ Each row is a choice for the owner; the recommendation is in the last column.
    modal dialog is open, the announcer writes to a region inside the top
    one, and moves back when it closes. This touches `dom/`'s announcer and
    answers part of the open top-layer question in
-   `docs/interaction-layer.md`. Recommended: yes.
+   `docs/interaction-layer.md`. Decided: yes.
 8. **No trigger ARIA.** UI Kit's modal triggers, React Spectrum's and the
    APG examples carry no `aria-haspopup`, `aria-expanded` or
    `aria-controls`. An open modal makes the trigger inert, so `aria-expanded`
    would only ever be heard as "collapsed"; React Aria leaves
    `aria-haspopup` off because screen readers read most values as "menu".
-   Recommended: none.
+   Decided: none.
 9. **The `dismiss` event and dialog forms.** `dismiss` carries the reason,
    as UI Kit's `onDismiss(action)` does, and a `<form method="dialog">`
    submission becomes a close request with the submitter's value, so it
    gets the closing phase and a controlled dialog can refuse it. The
    alternative is to let the browser close it and only report it.
-   Recommended: as described.
+   Decided: as described.
 10. **One definition with trigger and close parts**, rather than separate
     DialogTrigger and Dialog definitions as in UI Kit and React Aria. Both
     parts are optional, so a dialog without a trigger is UI Kit's
     DialogContainer. On the element, the trigger must sit inside
-    `<sous-dialog>`. Recommended: one definition.
+    `<sous-dialog>`. Decided: one definition.
+
+## Open questions
+
+None.
