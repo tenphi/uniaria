@@ -6,7 +6,9 @@
  * - Props: one property per prop, plus `default<Key>` for bindables. Plain
  *   props also have a kebab-case attribute; a bindable's attribute is
  *   `default-<key>` (uncontrolled), and setting its property makes it
- *   controlled. The last write wins.
+ *   controlled. The last write wins. A boolean attribute is true when
+ *   present, except `"false"` on a prop that defaults to true
+ *   (`dismissable="false"`).
  * - Events: every event and bindable change is dispatched on the host as a
  *   bubbling, non-composed `CustomEvent` with the value in `detail`
  *   (`pressStart` → `pressstart`).
@@ -79,7 +81,9 @@ function convert(info: PropInfo, value: string | null): unknown {
   if (value === null) return undefined;
   switch (info.type) {
     case 'boolean':
-      return true;
+      // Present means true, as in HTML; `"false"` turns off a prop that is
+      // on by default, which presence alone never could.
+      return info.defaultValue !== true || value !== 'false';
     case 'number':
       return Number(value);
     case 'json':

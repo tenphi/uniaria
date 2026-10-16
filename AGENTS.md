@@ -354,7 +354,9 @@ handler with its event.
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.
   Attributes drop the `is` and `should` prefixes (`disabled`,
-  `prevent-focus-on-press`); properties keep the prop names.
+  `prevent-focus-on-press`); properties keep the prop names. A boolean
+  attribute is true when present, except `"false"` on a prop that defaults
+  to true (`dismissable="false"`).
 - Properties set before upgrade are re-applied on upgrade. Registration is
   skipped when the name is already defined.
 - A host never sits between `<table>` and `<tr>`, inside `<ul>` or inside

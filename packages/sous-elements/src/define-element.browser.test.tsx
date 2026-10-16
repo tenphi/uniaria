@@ -23,6 +23,7 @@ const disclosure = defineComponent({
   props: {
     isOpen: bindable(false),
     isDisabled: prop(false),
+    isDismissable: prop(true),
     delay: prop(0),
     label: prop<string | undefined>(undefined),
     options: prop<{ isModal: boolean } | undefined>(undefined, {
@@ -41,6 +42,7 @@ const disclosure = defineComponent({
   expose: ({ props }) => ({
     isOpen: props.isOpen.get(),
     isDisabled: props.isDisabled(),
+    isDismissable: props.isDismissable(),
     delay: props.delay(),
     label: props.label(),
     options: props.options(),
@@ -121,6 +123,25 @@ describe('defineElement', () => {
     host.removeAttribute('disabled');
     expect(host.instance.getState().isDisabled).toBe(false);
     expect(host.isDisabled).toBe(false);
+  });
+
+  // Dialog spec, Resolved questions 4: presence alone can't turn off a prop
+  // that is on by default.
+  it('reads "false" as false only for a boolean that defaults to true', () => {
+    const container = mount(
+      `<sous-test-disclosure disabled="false">${MARKUP}</sous-test-disclosure>`,
+    );
+    const { host } = disclosureIn(container);
+    const state = () => host.instance.getState();
+    expect(state()).toMatchObject({ isDisabled: true, isDismissable: true });
+
+    host.setAttribute('dismissable', 'false');
+    expect(state().isDismissable).toBe(false);
+    host.setAttribute('dismissable', '');
+    expect(state().isDismissable).toBe(true);
+    host.setAttribute('dismissable', 'false');
+    host.removeAttribute('dismissable');
+    expect(state().isDismissable).toBe(true);
   });
 
   describe('bindables', () => {
