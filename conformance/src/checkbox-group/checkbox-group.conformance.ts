@@ -1,6 +1,6 @@
 /**
  * CheckboxGroup conformance, from the spec approved by @tenphi on 2026-10-15
- * (`packages/sous/src/components/checkbox-group/spec.md`): Field composed on
+ * (`packages/core/src/components/checkbox-group/spec.md`): Field composed on
  * a `role="group"` root, the `string[]` value its checkboxes read and change
  * through their owner link, the group's modes, required and invalid states
  * on every checkbox, form reset, focus within, public state, render counts
@@ -10,12 +10,12 @@
  * phase 3.
  */
 
-import { defineConformance, h, nested } from '@tenphi/sous-testing';
+import { defineConformance, h, nested } from '@uniaria/testing';
 import type {
   Mounted,
   TemplateComponent,
   TemplateElement,
-} from '@tenphi/sous-testing';
+} from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { CheckboxGroupProps, CheckboxGroupState } from './types';

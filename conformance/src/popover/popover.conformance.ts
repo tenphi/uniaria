@@ -1,6 +1,6 @@
 /**
  * Popover conformance, from the spec approved by @tenphi on 2026-10-16
- * (`packages/sous/src/components/popover/spec.md`): a manual popover in the
+ * (`packages/core/src/components/popover/spec.md`): a manual popover in the
  * top layer opened by its trigger, its anatomy, name and trigger ARIA,
  * initial focus, Escape, presses on the trigger, outside and on the close
  * part, a controlled popover refusing to close, Tab in modal and non-modal
@@ -10,10 +10,10 @@
  * popover, the fallback without the Popover API, public state, render counts
  * and spoken output. Phase 4.
  *
- * Both fallbacks are forced through Sous's development switch, a window
- * property under `Symbol.for('@tenphi/sous/fallbacks/v1')`:
+ * Both fallbacks are forced through UniAria's development switch, a window
+ * property under `Symbol.for('@uniaria/fallbacks/v1')`:
  * `{ anchorPositioning: false }` positions with Floating UI, and
- * `{ popover: false }` behaves as a browser without the Popover API. Sous
+ * `{ popover: false }` behaves as a browser without the Popover API. UniAria
  * reads it when a popover starts.
  *
  * Not here: removing an open popover from the page (a template can't remove
@@ -22,8 +22,8 @@
  * development warnings; the element tests cover them.
  */
 
-import { defineConformance, h, nested } from '@tenphi/sous-testing';
-import type { Mounted, TemplateNode } from '@tenphi/sous-testing';
+import { defineConformance, h, nested } from '@uniaria/testing';
+import type { Mounted, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { PopoverDismissEvent, PopoverProps, PopoverState } from './types';
@@ -39,8 +39,8 @@ const EVENTS = ['openChange', 'dismiss'];
 /** An exit animation long enough to see the closing phase. */
 const EXIT = 400;
 
-/** Sous's development switch for its fallbacks (spec, Resolved questions 2 and 3). */
-const FALLBACKS = Symbol.for('@tenphi/sous/fallbacks/v1');
+/** UniAria's development switch for its fallbacks (spec, Resolved questions 2 and 3). */
+const FALLBACKS = Symbol.for('@uniaria/fallbacks/v1');
 
 /** Each positioning path the scenarios run on, and the switch that forces it. */
 const PATHS: readonly (readonly [string, object | undefined])[] = [
@@ -138,8 +138,8 @@ function exitAnimation(selector: string): TemplateNode {
   return h(
     'style',
     null,
-    `@keyframes sous-conformance-fade { to { opacity: 0 } }
-     ${selector} { animation: sous-conformance-fade ${EXIT}ms linear forwards }`,
+    `@keyframes uni-conformance-fade { to { opacity: 0 } }
+     ${selector} { animation: uni-conformance-fade ${EXIT}ms linear forwards }`,
   );
 }
 
@@ -243,7 +243,7 @@ function expectNear(actual: number, expected: number, what: string): void {
   ).toBeLessThanOrEqual(1);
 }
 
-/** Runs `run` once per positioning path, with Sous's switch set for it. */
+/** Runs `run` once per positioning path, with UniAria's switch set for it. */
 async function onEachPath(run: (path: string) => Promise<void>) {
   for (const [path, fallbacks] of PATHS) {
     if (fallbacks) Reflect.set(window, FALLBACKS, fallbacks);

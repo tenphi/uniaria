@@ -1,6 +1,6 @@
 /**
  * Button's props, public state and press event, as the approved spec
- * (`packages/sous/src/components/button/spec.md`) defines them. The suite is
+ * (`packages/core/src/components/button/spec.md`) defines them. The suite is
  * typed against these, not against the definition, so it exists before the
  * implementation does.
  */

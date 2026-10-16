@@ -1,6 +1,6 @@
 /**
  * ToggleButton's props and public state, as the approved spec
- * (`packages/sous/src/components/toggle-button/spec.md`) defines them. Press
+ * (`packages/core/src/components/toggle-button/spec.md`) defines them. Press
  * events are Button's.
  */
 

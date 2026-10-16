@@ -1,6 +1,6 @@
 /**
  * Switch's props and public state, as the approved spec
- * (`packages/sous/src/components/switch/spec.md`) defines them.
+ * (`packages/core/src/components/switch/spec.md`) defines them.
  */
 
 export interface SwitchProps {

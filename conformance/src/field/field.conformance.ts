@@ -1,18 +1,14 @@
 /**
  * Field conformance, from the spec approved by @tenphi on 2026-10-15
- * (`packages/sous/src/components/field/spec.md`): the parts and the
- * attributes Sous owns, linking the label, the description and the error to
+ * (`packages/core/src/components/field/spec.md`): the parts and the
+ * attributes UniAria owns, linking the label, the description and the error to
  * the control (only parts that are rendered, never a hidden error), the
  * invalid, required and disabled states, public state, announcing a new
  * error, and spoken output. Everything here is phase 3.
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type {
-  Mounted,
-  TemplateElement,
-  TemplateNode,
-} from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateElement, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { FieldProps, FieldState } from './types';

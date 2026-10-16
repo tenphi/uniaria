@@ -1,6 +1,6 @@
 /**
  * Dialog conformance, from the spec approved by @tenphi on 2026-10-16
- * (`packages/sous/src/components/dialog/spec.md`): a native `<dialog>` opened
+ * (`packages/core/src/components/dialog/spec.md`): a native `<dialog>` opened
  * with `showModal()` by its trigger, its anatomy and ARIA, initial focus,
  * Escape, backdrop presses and the close part, a controlled dialog refusing
  * to close, Tab wrapping, focus restore, scroll lock, inertness, the closing
@@ -14,12 +14,8 @@
  * own tests cover it).
  */
 
-import { defineConformance, h, nested } from '@tenphi/sous-testing';
-import type {
-  Mounted,
-  TemplateElement,
-  TemplateNode,
-} from '@tenphi/sous-testing';
+import { defineConformance, h, nested } from '@uniaria/testing';
+import type { Mounted, TemplateElement, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { DialogDismissEvent, DialogProps, DialogState } from './types';
@@ -96,8 +92,8 @@ function exitAnimation(selector: string): TemplateElement {
   return h(
     'style',
     null,
-    `@keyframes sous-conformance-fade { to { opacity: 0 } }
-     ${selector} { animation: sous-conformance-fade ${EXIT}ms linear forwards }`,
+    `@keyframes uni-conformance-fade { to { opacity: 0 } }
+     ${selector} { animation: uni-conformance-fade ${EXIT}ms linear forwards }`,
   );
 }
 
@@ -402,7 +398,7 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
       );
 
       scenario(
-        'neither Sous nor the browser closes it when it is not dismissable',
+        'neither UniAria nor the browser closes it when it is not dismissable',
         async ({ mount, pointer, keyboard }) => {
           const mounted = await mount({
             template: confirm(),

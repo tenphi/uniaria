@@ -1,6 +1,6 @@
 /**
  * Checkbox's props and public state, as the approved spec
- * (`packages/sous/src/components/checkbox/spec.md`) defines them.
+ * (`packages/core/src/components/checkbox/spec.md`) defines them.
  */
 
 export interface CheckboxProps {

@@ -10,7 +10,7 @@ adapter is judged by, so it has the strictest rules in the repo:
 - Never edit a scenario to make an implementation pass. If a scenario looks
   wrong, stop and explain why to the owner.
 - Scenarios are adapter-agnostic: they mount through the contract in
-  `@tenphi/sous-testing` (root AGENTS.md → The mount contract) and assert on
+  `@uniaria/testing` (root AGENTS.md → The mount contract) and assert on
   the DOM, keyboard behavior, focus movement, events, public state, render
   counts and spoken output (virtual screen reader). Never import a
   definition or an adapter here.

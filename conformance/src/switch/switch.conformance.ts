@@ -1,6 +1,6 @@
 /**
  * Switch conformance, from the spec approved by @tenphi on 2026-10-16
- * (`packages/sous/src/components/switch/spec.md`): Checkbox's core on a
+ * (`packages/core/src/components/switch/spec.md`): Checkbox's core on a
  * native checkbox with `role="switch"`, without the indeterminate state:
  * the selected state (uncontrolled, controlled, form reset), disabled and
  * read-only, hover and focus on every part, public state, render counts and
@@ -13,8 +13,8 @@
  * where the markup carries the attribute.
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type { Mounted, TemplateElement } from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateElement } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { SwitchProps, SwitchState } from './types';

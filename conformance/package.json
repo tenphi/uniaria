@@ -1,8 +1,8 @@
 {
-  "name": "@tenphi/sous-conformance",
+  "name": "@uniaria/conformance",
   "version": "0.0.0",
   "private": true,
-  "description": "Conformance scenarios every Sous adapter must pass. Changes need the owner's approval.",
+  "description": "Conformance scenarios every UniAria adapter must pass. Changes need the owner's approval.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@tenphi/sous": "workspace:*",
-    "@tenphi/sous-testing": "workspace:*"
+    "@uniaria/core": "workspace:*",
+    "@uniaria/testing": "workspace:*"
   }
 }

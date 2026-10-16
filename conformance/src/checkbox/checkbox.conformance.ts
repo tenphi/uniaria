@@ -1,6 +1,6 @@
 /**
  * Checkbox conformance, from the spec approved by @tenphi on 2026-10-15
- * (`packages/sous/src/components/checkbox/spec.md`): Field composed on a
+ * (`packages/core/src/components/checkbox/spec.md`): Field composed on a
  * native checkbox, the selected state (uncontrolled, controlled, form reset),
  * indeterminate, disabled and read-only, hover and focus on every part,
  * public state, render counts and spoken output. Field's own linking is
@@ -12,8 +12,8 @@
  * checked state only where the markup carries the attribute.
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type { Mounted, TemplateElement } from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateElement } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { CheckboxProps, CheckboxState } from './types';

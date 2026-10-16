@@ -1,18 +1,14 @@
 /**
  * TextField conformance, from the spec approved by @tenphi on 2026-10-15
- * (`packages/sous/src/components/text-field/spec.md`): Field composed on a
+ * (`packages/core/src/components/text-field/spec.md`): Field composed on a
  * native input or textarea, the value (uncontrolled, controlled and
  * buffered, form reset), disabled and read-only, hover and focus on every
  * part, the root press, public state, render counts and spoken output.
  * Field's own linking is Field's suite. Everything here is phase 3.
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type {
-  Mounted,
-  TemplateElement,
-  TemplateNode,
-} from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateElement, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { TextFieldProps, TextFieldState } from './types';

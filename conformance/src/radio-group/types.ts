@@ -1,6 +1,6 @@
 /**
  * RadioGroup's props and public state, as the approved spec
- * (`packages/sous/src/components/radio-group/spec.md`) defines them.
+ * (`packages/core/src/components/radio-group/spec.md`) defines them.
  */
 
 export interface RadioGroupProps {

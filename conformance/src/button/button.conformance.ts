@@ -1,6 +1,6 @@
 /**
  * Button conformance, from the spec approved by @tenphi on 2026-10-14
- * (`packages/sous/src/components/button/spec.md`). Phase 1 covers attributes,
+ * (`packages/core/src/components/button/spec.md`). Phase 1 covers attributes,
  * keyboard, mouse, disabled modes, link mode, public state, render counts and
  * spoken output. Phase 2 adds what the interaction layer brings: hover,
  * focus-visible, screen-reader (virtual) clicks, `touch-action` and touch:
@@ -12,8 +12,8 @@
  * from the gate 3 API review (@tenphi, 2026-10-16).
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type { Mounted, TemplateAttrs } from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateAttrs } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { ButtonProps, ButtonState, PressEvent } from './types';
@@ -64,7 +64,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
   ({ scenario, group }) => {
     group('anatomy', () => {
       scenario(
-        'renders a native button with the attributes Sous owns',
+        'renders a native button with the attributes UniAria owns',
         async ({ mount }) => {
           const root = (await mount({ template: save() })).part();
           expect(root.tagName).toBe('BUTTON');
@@ -652,10 +652,10 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, keyboard }) => {
           const mounted = await mount({
             template: docs(),
-            props: { href: '#sous-docs' },
+            props: { href: '#uni-docs' },
             events: ['press'],
           });
-          // Records whether Sous prevented the link's click, then stops the
+          // Records whether UniAria prevented the link's click, then stops the
           // navigation itself so the test page stays put.
           const click = watchDefault('click', true);
           mounted.part().focus();
@@ -676,7 +676,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         async ({ mount, pointer }) => {
           const mounted = await mount({
             template: docs(),
-            props: { href: '#sous-docs' },
+            props: { href: '#uni-docs' },
             events: ['press'],
           });
           const click = watchDefault('click', true);

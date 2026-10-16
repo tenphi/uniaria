@@ -1,6 +1,6 @@
 /**
  * TextField's props and public state, as the approved spec
- * (`packages/sous/src/components/text-field/spec.md`) defines them.
+ * (`packages/core/src/components/text-field/spec.md`) defines them.
  */
 
 export interface TextFieldProps {

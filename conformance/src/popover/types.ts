@@ -1,6 +1,6 @@
 /**
  * Popover's props, public state and `dismiss` detail, as the approved spec
- * (`packages/sous/src/components/popover/spec.md`) defines them.
+ * (`packages/core/src/components/popover/spec.md`) defines them.
  */
 
 /** React Aria's placement strings: a side, optionally an alignment. */

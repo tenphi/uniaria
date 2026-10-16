@@ -1,6 +1,6 @@
 /**
  * ToggleButton conformance, from the spec approved by @tenphi on 2026-10-15
- * (`packages/sous/src/components/toggle-button/spec.md`). ToggleButton is
+ * (`packages/core/src/components/toggle-button/spec.md`). ToggleButton is
  * Button plus `isSelected`, so this suite covers what the selection adds:
  * `aria-pressed` and `data-selected`, toggling from every input, the event
  * order, controlled and uncontrolled use, disabled modes, render counts and
@@ -9,8 +9,8 @@
  * phase 3.
  */
 
-import { defineConformance, h } from '@tenphi/sous-testing';
-import type { Mounted, TemplateAttrs } from '@tenphi/sous-testing';
+import { defineConformance, h } from '@uniaria/testing';
+import type { Mounted, TemplateAttrs } from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { PressEvent } from '../button/types';
@@ -46,7 +46,7 @@ export const toggleButtonConformance = defineConformance<
 >('toggle-button', ({ scenario, group }) => {
   group('anatomy', () => {
     scenario(
-      'renders a native button that is off, with the attributes Sous owns',
+      'renders a native button that is off, with the attributes UniAria owns',
       async ({ mount }) => {
         const mounted = await mount({ template: bold() });
         const root = mounted.part();

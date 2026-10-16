@@ -1,6 +1,6 @@
 /**
  * CheckboxGroup's props and public state, as the approved spec
- * (`packages/sous/src/components/checkbox-group/spec.md`) defines them.
+ * (`packages/core/src/components/checkbox-group/spec.md`) defines them.
  */
 
 export interface CheckboxGroupProps {

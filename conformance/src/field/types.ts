@@ -1,6 +1,6 @@
 /**
  * Field's props and public state, as the approved spec
- * (`packages/sous/src/components/field/spec.md`) defines them. Field has no
+ * (`packages/core/src/components/field/spec.md`) defines them. Field has no
  * events.
  */
 

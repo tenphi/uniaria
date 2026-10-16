@@ -1,7 +1,7 @@
 /**
  * Conformance scenarios: one module per component, written from its approved
  * spec before the implementation exists. Each scenario is adapter-agnostic —
- * it mounts through the contract in `@tenphi/sous-testing` and asserts on the
+ * it mounts through the contract in `@uniaria/testing` and asserts on the
  * DOM, keyboard behavior, focus, events, state and spoken output. Every
  * adapter runs every suite:
  * `runConformance(adapter, suites, { phase })`.

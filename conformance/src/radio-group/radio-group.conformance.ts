@@ -1,6 +1,6 @@
 /**
  * RadioGroup conformance, from the spec approved by @tenphi on 2026-10-16
- * (`packages/sous/src/components/radio-group/spec.md`): Field composed on a
+ * (`packages/core/src/components/radio-group/spec.md`): Field composed on a
  * `role="radiogroup"` root, the value its radios read and change through
  * their owner link, the `name` they share, the arrow keys and Tab, the
  * group's modes and states, form reset, focus within, public state, render
@@ -11,13 +11,13 @@
  * property, and spoken output covers it only where the markup carries it.
  */
 
-import { defineConformance, h, nested } from '@tenphi/sous-testing';
+import { defineConformance, h, nested } from '@uniaria/testing';
 import type {
   Mounted,
   TemplateComponent,
   TemplateElement,
   TemplateNode,
-} from '@tenphi/sous-testing';
+} from '@uniaria/testing';
 import { expect } from 'vitest';
 
 import type { RadioGroupProps, RadioGroupState } from './types';
