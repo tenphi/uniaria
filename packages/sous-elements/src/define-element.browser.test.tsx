@@ -655,8 +655,18 @@ describe('<sous-radio-group>', () => {
       isSelected: true,
       isFocused: false,
       isDisabled: false,
+      isReadOnly: false,
+      isInvalid: false,
     });
     expect(free!.instance.getState().isSelected).toBe(false);
+    // Read-only and invalid are the group's.
+    const group = container.querySelector('sous-radio-group')!;
+    group.setAttribute('readonly', '');
+    group.setAttribute('invalid', '');
+    expect(free!.instance.getState()).toMatchObject({
+      isReadOnly: true,
+      isInvalid: true,
+    });
 
     const focus: unknown[] = [];
     free!.addEventListener('focuschange', (event) =>

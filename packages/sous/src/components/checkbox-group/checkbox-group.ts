@@ -21,6 +21,9 @@ export const checkboxGroup = defineComponent({
   parts: ['root', 'label', 'description', 'error'],
   props: {
     value: bindable<readonly string[]>([], { attribute: false }),
+    // Written to every checkbox while set; unlike RadioGroup, none is
+    // generated, since checkboxes don't need a shared name.
+    name: prop<string | undefined>(undefined, { type: 'string' }),
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
@@ -118,6 +121,8 @@ export const checkboxGroup = defineComponent({
     return {
       field: labelling,
       isFocusWithin: focusWithin.isFocusWithin,
+      isFocusVisible: focusWithin.isFocusVisible,
+      name: props.name,
       value,
       isSelected: (item: string) => value().includes(item),
       setSelected,
@@ -140,6 +145,7 @@ export const checkboxGroup = defineComponent({
       isInvalid: props.isInvalid(),
       isErrorShown: api.field.state().isErrorShown,
       isFocusWithin: api.isFocusWithin(),
+      isFocusVisible: api.isFocusVisible(),
     };
   },
   connect({ props, api }) {
@@ -149,6 +155,7 @@ export const checkboxGroup = defineComponent({
     const state = {
       'data-readonly': flag(props.isReadOnly()),
       'data-focus-within': flag(api.isFocusWithin()),
+      'data-focus-visible': flag(api.isFocusVisible()),
     };
     const withState = (part: PartProps): PartProps => ({
       ...part,

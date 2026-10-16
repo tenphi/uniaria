@@ -117,7 +117,7 @@ export const checkbox = defineComponent({
     partEffect(ctx, 'input', joinChecked);
     ctx.watch(() => group()?.instance, joinChecked);
 
-    return toggle;
+    return { ...toggle, groupName: () => group()?.api.name() };
   },
   expose({ props, api }) {
     return { ...toggleState(api), isIndeterminate: props.isIndeterminate() };
@@ -125,10 +125,14 @@ export const checkbox = defineComponent({
   connect({ props, api }) {
     const isIndeterminate = props.isIndeterminate();
     const value = props.value();
+    const name = api.groupName();
     return connectToggle(api, {
       state: { 'data-indeterminate': flag(isIndeterminate) },
-      // Only when set: otherwise the consumer may write it.
-      input: value === undefined ? {} : { value },
+      // Only when set: otherwise the consumer may write them.
+      input: {
+        ...(value === undefined ? {} : { value }),
+        ...(name === undefined ? {} : { name }),
+      },
       properties: { indeterminate: isIndeterminate },
     });
   },

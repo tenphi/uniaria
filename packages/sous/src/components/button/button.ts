@@ -52,6 +52,7 @@ export const button = defineComponent({
     pressStart: event<PressEvent>(),
     pressEnd: event<PressEvent>(),
     press: event<PressEvent>(),
+    focusChange: event<boolean>(),
   },
   setup(ctx) {
     const press = createPress(ctx, {
@@ -67,6 +68,9 @@ export const button = defineComponent({
       isDisabled: ctx.props.isDisabled,
     });
     const focus = createFocus(ctx, 'root');
+    ctx.watch(focus.isFocused, (isFocused) => {
+      ctx.emit('focusChange', isFocused);
+    });
     // The element adapter reads the tag; React can only check it.
     partEffect(ctx, 'root', (root) => {
       const expected = ctx.props.elementType();

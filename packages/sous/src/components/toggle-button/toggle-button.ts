@@ -27,6 +27,7 @@ export const toggleButton = defineComponent({
     pressStart: event<PressEvent>(),
     pressEnd: event<PressEvent>(),
     press: event<PressEvent>(),
+    focusChange: event<boolean>(),
   },
   setup(ctx) {
     const { props } = ctx;
@@ -38,6 +39,7 @@ export const toggleButton = defineComponent({
       shouldPreventFocusOnPress: props.shouldPreventFocusOnPress(),
       onPressStart: (detail) => ctx.emit('pressStart', detail),
       onPressEnd: (detail) => ctx.emit('pressEnd', detail),
+      onFocusChange: (isFocused) => ctx.emit('focusChange', isFocused),
       // Toggle first, so `press` handlers see the new value (React Aria's
       // order: `selectedChange`, then `press`).
       onPress: (detail) => {

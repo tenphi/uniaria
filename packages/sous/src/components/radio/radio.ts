@@ -187,6 +187,8 @@ export const radio = defineComponent({
       isFocusVisible: api.isFocusVisible(),
       isHovered: api.isHovered(),
       isDisabled: api.isDisabled(),
+      isReadOnly: api.isReadOnly(),
+      isInvalid: api.isInvalid(),
     };
   },
   connect({ props, api }) {
