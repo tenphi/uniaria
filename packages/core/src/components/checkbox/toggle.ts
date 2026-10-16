@@ -2,8 +2,8 @@
  * The core Checkbox and Switch share (`./spec.md`, `../switch/spec.md`): Field
  * composed on a native `<input type="checkbox">`, plus the selected state
  * (uncontrolled, or controlled with a refused toggle put back after the
- * event), read-only mode that cancels every toggle, form reset, and hover
- * and focus state on every part. The browser keeps doing the toggling.
+ * event), read-only mode that cancels every toggle, a disabled control that
+ * stays focusable, form reset, and hover and focus state on every part. The browser keeps doing the toggling.
  * Checkbox adds its indeterminate state and its group on top; Switch, its
  * role.
  */
@@ -35,6 +35,7 @@ type TogglePart =
 interface ToggleSchema extends PropsSchema {
   readonly isSelected: BindableSpec<boolean>;
   readonly isDisabled: PropSpec<boolean>;
+  readonly isFocusableWhenDisabled: PropSpec<boolean>;
   readonly isReadOnly: PropSpec<boolean>;
   readonly isRequired: PropSpec<boolean>;
   readonly isInvalid: PropSpec<boolean>;
@@ -76,6 +77,8 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const isInvalid = options.isInvalid ?? props.isInvalid;
   const isRequired = options.isRequired ?? props.isRequired;
   const describedBy = options.describedBy ?? props.describedBy;
+  // Focusable while disabled: never toggles, and never submitted.
+  const isInert = () => isDisabled() && props.isFocusableWhenDisabled();
 
   const labelling = ctx.use(
     field,
@@ -144,11 +147,12 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     props.isSelected.set(input.checked);
   };
 
-  // Read-only: the browser puts back `checked` and `indeterminate` after a
-  // cancelled click, and fires no `input` or `change`.
+  // Read-only and a focusable disabled control: the browser puts back
+  // `checked` and `indeterminate` after a cancelled click, and fires no
+  // `input` or `change`.
   const onClick = (clickEvent: MouseEvent) => {
     if (clickEvent.target !== partElement(ctx, 'input')) return;
-    if (isReadOnly()) clickEvent.preventDefault();
+    if (isReadOnly() || isInert()) clickEvent.preventDefault();
   };
 
   // Form reset goes back to the state the input mounted with, its
@@ -173,9 +177,26 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
       clearTimeout(timer);
       timer = setTimeout(writeAgain);
     };
+    // A focusable disabled control isn't submitted, as a natively disabled
+    // one isn't: its entry comes out of the form's data, others of the same
+    // name stay.
+    const onFormData = (formDataEvent: FormDataEvent) => {
+      const input = element as HTMLInputElement;
+      if (!isInert() || !input.checked || !input.name) return;
+      const { formData } = formDataEvent;
+      const values = formData.getAll(input.name);
+      const index = values.indexOf(input.value);
+      if (index === -1) return;
+      formData.delete(input.name);
+      values.forEach((value, at) => {
+        if (at !== index) formData.append(input.name, value);
+      });
+    };
     form.addEventListener('reset', onReset);
+    form.addEventListener('formdata', onFormData);
     return () => {
       form.removeEventListener('reset', onReset);
+      form.removeEventListener('formdata', onFormData);
       clearTimeout(timer);
     };
   });
@@ -184,6 +205,7 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     field: labelling,
     isSelected,
     isDisabled,
+    isInert,
     isReadOnly,
     isInvalid,
     isRequired,
@@ -253,7 +275,8 @@ export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
       ...state,
       type: 'checkbox',
       ...extras.input,
-      disabled: flag(toggle.isDisabled()),
+      disabled: flag(toggle.isDisabled() && !toggle.isInert()),
+      'aria-disabled': toggle.isInert() ? 'true' : undefined,
       // Not `readonly`: HTML ignores it on a checkbox, and it takes the
       // input out of constraint validation.
       'aria-readonly': isReadOnly ? 'true' : undefined,

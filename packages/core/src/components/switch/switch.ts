@@ -17,6 +17,9 @@ export const toggleSwitch = defineComponent({
       adopt: { part: 'input', property: 'checked' },
     }),
     isDisabled: prop(false),
+    // As Radio's: `aria-disabled` instead of `disabled`, so a tooltip can
+    // explain it (Tooltip spec, Resolved questions 12).
+    isFocusableWhenDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
     isInvalid: prop(false),
