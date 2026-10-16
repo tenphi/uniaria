@@ -325,9 +325,16 @@ handler with its event.
   modal dialog, and closing a layer closes the layers opened from inside it.
   Never call `stopPropagation` or `stopImmediatePropagation` in components
   (ESLint enforces it).
-- Positioning uses CSS anchor positioning where the browser supports it, with
-  `@floating-ui/dom` as the fallback behind one wrapper in `dom/`. The fallback
-  is removed once anchor positioning is Baseline widely available.
+- Positioning goes through one wrapper in `dom/` whose options are CSS
+  Anchor Positioning's own (`positionArea`, `positionTryFallbacks`; gaps are
+  the consumer's margins), in one of two modes the page picks with
+  `configure({ positioning })` (`dom/settings.ts`; owner, 2026-10-16), not
+  by detection. Script mode, the default, places the part in every browser
+  by CSS's rules, in-house (replacing `@floating-ui/dom`). CSS mode, opt-in,
+  leaves placing it to the consumer's anchor positioning: UniAria links the
+  part to its anchor and reads back the side. The default changes to CSS mode
+  once anchor positioning is Baseline widely available. Scenarios that place
+  a part run in both modes.
 
 ### Collections
 
@@ -377,7 +384,6 @@ reused. The approved runtime dependencies are:
 | --------------------------- | -------------------------------------------------------- |
 | `@internationalized/number` | Locale-aware number parsing and formatting (NumberField) |
 | `@internationalized/date`   | Calendars and date math (later date components)          |
-| `@floating-ui/dom`          | Positioning fallback, behind the `dom/` wrapper only     |
 | `@tanstack/virtual-core`    | Virtualization, if it fits (see Collections)             |
 
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
@@ -517,7 +523,9 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   the DOM has them (`shiftKey`, the `disabled` attribute).
 - Use only web platform features that are Baseline widely available. A newer
   feature is allowed only behind feature detection, with a fallback that
-  keeps the behavior working. Check with the `web-features` development
+  keeps the behavior working, or behind a page-wide setting the consumer
+  opts into (`dom/settings.ts`, such as CSS mode for positioning; owner,
+  2026-10-16). Check with the `web-features` development
   dependency:
   `node -e "import('web-features').then(({features: f}) => console.log(f['<id>'].status))"`.
   `baseline: 'high'` is widely available; `low` and `false` need the
@@ -572,7 +580,7 @@ its latest default branch and discards local changes, so never edit them.
 | `react-spectrum`          | [adobe/react-spectrum](https://github.com/adobe/react-spectrum)                                 | Apache 2.0                | `packages/react-aria/src/<area>` (interactions, focus, button, overlays, selection, listbox, combobox, numberfield), `packages/react-stately/src/<area>` and `packages/react-aria/test`: interaction edge cases, mobile screen readers, and their tests. `packages/@react-aria/*` are only re-export shells now. |
 | `zag`                     | [chakra-ui/zag](https://github.com/chakra-ui/zag)                                               | MIT                       | `packages/machines/*` for framework-agnostic component logic, `packages/core` and `packages/store` for runtime ideas, `packages/frameworks/*` for adapters.                                                                                                                                                      |
 | `virtual`                 | [TanStack/virtual](https://github.com/TanStack/virtual)                                         | MIT                       | `packages/virtual-core`, the virtualization candidate (see Collections).                                                                                                                                                                                                                                         |
-| `floating-ui`             | [floating-ui/floating-ui](https://github.com/floating-ui/floating-ui)                           | MIT                       | `packages/dom`, the positioning fallback.                                                                                                                                                                                                                                                                        |
+| `floating-ui`             | [floating-ui/floating-ui](https://github.com/floating-ui/floating-ui)                           | MIT                       | `packages/react`: `useHover`, `safePolygon`, `useFocus`, `useDismiss` for overlay interactions.                                                                                                                                                                                                                  |
 | `aria-practices`          | [w3c/aria-practices](https://github.com/w3c/aria-practices)                                     | W3C Software and Document | `content/patterns/<pattern>/`: the APG pattern text and its working examples, which each spec follows.                                                                                                                                                                                                           |
 | `virtual-screen-reader`   | [guidepup/virtual-screen-reader](https://github.com/guidepup/virtual-screen-reader)             | MIT                       | `src/`, to understand the spoken output that pull-request tests assert.                                                                                                                                                                                                                                          |
 | `community-protocols`     | [webcomponents-cg/community-protocols](https://github.com/webcomponents-cg/community-protocols) | None stated               | `proposals/context.md`: the Context Community Protocol, where a child finds its nearest provider through a DOM event, including providers that connect later.                                                                                                                                                    |

@@ -8,8 +8,8 @@ A popover: a dialog anchored to the element that opens it, over the page but
 not blocking it. Cube UI Kit's `DialogTrigger type="popover"` is the model
 (its Picker, DatePicker, ColorPicker and FilterPicker panels). UniAria shows the
 popover in the top layer with the Popover API in manual mode (`popover="manual"`,
-`showPopover({ source })`, Resolved questions 1), places it next to its trigger with
-CSS anchor positioning or the fallback (Resolved questions 3), and adds what the
+`showPopover({ source })`, Resolved questions 1), places it next to its trigger by
+script or by the consumer's CSS anchor positioning (Resolved questions 3), and adds what the
 browser leaves out or does its own way: the open state, Escape and outside
 dismissal through the layer stack, focus on open and close, and a closing
 phase for exit animations, all reused from Dialog.
@@ -71,22 +71,19 @@ trigger in the DOM when you can: older browsers order Tab by the DOM (Focus).
 
 ## Props
 
-| Prop                         | Type                                          | Default    | Bindable | Change event | Notes                                                                                                                                                     |
-| ---------------------------- | --------------------------------------------- | ---------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| isOpen                       | `boolean`                                     | `false`    | yes      | `openChange` |                                                                                                                                                           |
-| isNonModal                   | `boolean`                                     | `false`    | no       | —            | Tab leaves the popover, the page stays exposed to assistive technology, and focus leaving closes it (Resolved questions 4).                               |
-| isDismissable                | `boolean`                                     | `true`     | no       | —            | Escape, a press outside and (non-modal) focus leaving close it. `false` turns all three off; the trigger, the close part and the consumer still close it. |
-| isKeyboardDismissDisabled    | `boolean`                                     | `false`    | no       | —            | Escape alone doesn't close it.                                                                                                                            |
-| shouldCloseOnInteractOutside | `((target: Element) => boolean) \| undefined` | —          | no       | —            | Returns `false` to keep the popover open for a press on `target` (UI Kit's `data-popover-keep`). Property only on the element.                            |
-| isDisabled                   | `boolean`                                     | `false`    | no       | —            | The trigger can't open it.                                                                                                                                |
-| shouldRestoreFocus           | `boolean`                                     | `true`     | no       | —            | Focus goes back on close (Focus).                                                                                                                         |
-| placement                    | `Placement`                                   | `'bottom'` | no       | —            | React Aria's strings: a side (`top`, `bottom`, `left`, `right`, `start`, `end`), optionally an alignment (`'bottom start'`, `'end top'`).                 |
-| offset                       | `number`                                      | `8`        | no       | —            | Pixels between the anchor and the popover.                                                                                                                |
-| crossOffset                  | `number`                                      | `0`        | no       | —            | Pixels along the anchor's edge.                                                                                                                           |
-| containerPadding             | `number`                                      | `12`       | no       | —            | The least distance from the viewport's edges.                                                                                                             |
-| shouldFlip                   | `boolean`                                     | `true`     | no       | —            | Moves to the opposite side when the preferred one has no room.                                                                                            |
-| labelledBy                   | `string \| undefined`                         | —          | no       | —            | More ids for `aria-labelledby`.                                                                                                                           |
-| describedBy                  | `string \| undefined`                         | —          | no       | —            | More ids for `aria-describedby`.                                                                                                                          |
+| Prop                         | Type                                          | Default                     | Bindable | Change event | Notes                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------- | --------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| isOpen                       | `boolean`                                     | `false`                     | yes      | `openChange` |                                                                                                                                                           |
+| isNonModal                   | `boolean`                                     | `false`                     | no       | —            | Tab leaves the popover, the page stays exposed to assistive technology, and focus leaving closes it (Resolved questions 4).                               |
+| isDismissable                | `boolean`                                     | `true`                      | no       | —            | Escape, a press outside and (non-modal) focus leaving close it. `false` turns all three off; the trigger, the close part and the consumer still close it. |
+| isKeyboardDismissDisabled    | `boolean`                                     | `false`                     | no       | —            | Escape alone doesn't close it.                                                                                                                            |
+| shouldCloseOnInteractOutside | `((target: Element) => boolean) \| undefined` | —                           | no       | —            | Returns `false` to keep the popover open for a press on `target` (UI Kit's `data-popover-keep`). Property only on the element.                            |
+| isDisabled                   | `boolean`                                     | `false`                     | no       | —            | The trigger can't open it.                                                                                                                                |
+| shouldRestoreFocus           | `boolean`                                     | `true`                      | no       | —            | Focus goes back on close (Focus).                                                                                                                         |
+| positionArea                 | `PositionArea`                                | `'bottom'`                  | no       | —            | CSS `position-area`: a side, optionally an alignment span. Script mode only (Positioning).                                                                |
+| positionTryFallbacks         | `string`                                      | `'flip-block, flip-inline'` | no       | —            | CSS `position-try-fallbacks`. Script mode only (Positioning).                                                                                             |
+| labelledBy                   | `string \| undefined`                         | —                           | no       | —            | More ids for `aria-labelledby`.                                                                                                                           |
+| describedBy                  | `string \| undefined`                         | —                           | no       | —            | More ids for `aria-describedby`.                                                                                                                          |
 
 ## Events
 
@@ -97,12 +94,12 @@ trigger in the DOM when you can: older browsers order Tab by the DOM (Focus).
 
 ## Public state
 
-| Field      | Type                                                  | Meaning                                                                      |
-| ---------- | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| isOpen     | `boolean`                                             | The current value.                                                           |
-| isEntering | `boolean`                                             | The first frame after opening, for enter animations.                         |
-| isExiting  | `boolean`                                             | Closed, but still shown until its exit animations end.                       |
-| placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after flipping; `undefined` while it isn't shown. |
+| Field      | Type                                                  | Meaning                                                                       |
+| ---------- | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| isOpen     | `boolean`                                             | The current value.                                                            |
+| isEntering | `boolean`                                             | The first frame after opening, for enter animations.                          |
+| isExiting  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
+| placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
 ## Opening and closing
 
@@ -209,31 +206,88 @@ tree shows the popover as a non-modal dialog and gives a `source` no implicit
 ## Positioning
 
 The positioning wrapper in `dom/` (Resolved questions 3) places the root against
-the anchor part, else the trigger.
+the anchor part, else the trigger, in one of two modes the page picks once,
+with `configure({ positioning })` from `@uniaria/core/dom` (owner,
+2026-10-16). Both follow CSS Anchor Positioning (owner, 2026-10-16, with the
+Tooltip spec's Resolved questions 1).
 
-- **Where anchor positioning works** (its core properties are Baseline only
-  since 2026-01; probed in Chromium and WebKit): UniAria writes inline
-  `position-anchor` (or the implicit anchor from `source`), `position-area` with `self-` keywords (plain logical
-  keywords ignore `dir="rtl"` on a top-layer element, probed),
-  `position-try-fallbacks` when `shouldFlip`, and margins for `offset`,
-  `crossOffset` and `containerPadding`. The browser keeps it placed while the
-  page scrolls and resizes. UniAria reads the side it picked from the computed
-  `position-area` to set `data-placement`.
-- **Elsewhere**, `@floating-ui/dom` computes the same placement and writes
-  `top` and `left`, loaded only by browsers without anchor positioning. Its
-  flips are made sticky, as the browser's are (a flipped popover stays flipped
-  until that side runs out of room).
-- **Styles UniAria owns on the root:** `inset`, `margin` and the `position-*`
-  properties. `transform`, `translate`, `scale` and `opacity` stay free for
-  animations.
-- **CSS variables on the root:** `--trigger-width` (for `min-width`),
-  `--available-width` and `--available-height` (for `max-width` and
-  `max-height`; nothing caps the size unless the consumer uses them). They
-  resolve on the root only, so use them there, not on its children.
+**Script mode** (`'script'`, the default) places it from the props, in every
+browser:
+
+- **`positionArea`** is a CSS `position-area` value on one side of the
+  anchor, optionally with the other axis's `center` or a `span-*` keyword:
+  `bottom` centres it below, `bottom span-right` puts it below with the left
+  edges aligned. Plain logical keywords follow the page's writing mode (the
+  top layer's containing block), `self-` ones the popover's own (probed).
+  Corners and areas over the anchor aren't supported: the arrow needs a side.
+- **`positionTryFallbacks`** is a CSS `position-try-fallbacks` value: `none`,
+  or a list of try tactics (`flip-block`, `flip-inline`, `flip-start`, and
+  combinations) and `position-area` values. The default,
+  `flip-block, flip-inline`, tries the opposite side on either axis.
+- **Gaps are the root's `margin`**, from the consumer's CSS: the margin facing
+  the anchor is the gap, the others keep the popover off the viewport's
+  edges, and a fallback flips them with the area (try tactics swap margins;
+  probed).
+- **UniAria places it**, `position: fixed` with `top` and `left`, by the
+  rules Chromium and WebKit follow (probed; the OddBird polyfill was the
+  reference): an option fits when the popover's margin box fits the area it
+  names, the last option that fit stays while it fits, and the margin box is
+  shifted into the viewport. It checks every frame while open. It writes
+  `position` and the `inset` longhands on the root. `@floating-ui/dom` did
+  this until 2026-10-16 (Resolved questions 3).
+
+**CSS mode** (`'css'`, opt-in) leaves placing it to the consumer's CSS
+anchor positioning, and the two props are ignored:
+
+```ts
+import { configure } from '@uniaria/core/dom';
+
+configure({ positioning: 'css' });
+```
+
+```css
+.popover {
+  inset: auto; /* a popover's own is 0 */
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block;
+  margin: 8px 0;
+}
+```
+
+- **UniAria links it to its anchor**: inline `position-anchor`, with a name
+  unique in the window added to the anchor's own `anchor-name` list.
+- **It reads the side back** from the computed `position-area`, which names
+  the fallback the browser applied, else from where the popover is (a
+  consumer placing it with `anchor()` insets), for `data-placement`. It
+  checks every frame while open.
+- **The rest is the browser's and the consumer's**: what CSS allows, how an
+  engine shifts an oversized popover (Firefox 155 doesn't; probed), and a
+  browser without anchor positioning, which UniAria warns about in
+  development.
+
+**In both modes**, UniAria writes the variables (Styling tokens) and places
+the arrow, and puts back every inline style it replaced when the popover
+closes. Everything else on the root is the consumer's.
+
 - **The arrow** (Resolved questions 11): UniAria measures and writes its offset along
   the popover's edge; the consumer's CSS puts it on the side `data-placement`
   names. CSS anchor positioning can't place it (probed).
 - **Scrolling** (Resolved questions 10).
+
+## Styling tokens
+
+| Token                                                                                          | On                                 | Meaning                                                                |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| `data-scope="popover"`, `data-part`                                                            | its parts                          | Which part an element is.                                              |
+| `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first frame after opening; closing until its animations end. |
+| `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                            |
+| Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                             |
+| `--anchor-width`                                                                               | root                               | The anchor's width, in pixels (for `min-width`).                       |
+| `--available-width`, `--available-height`                                                      | root                               | The most room it could take, in pixels, in any of its options.         |
+| `isOpen`, `isEntering`, `isExiting`, `placement`                                               | public state (`useComponentState`) | The same, for a framework's own bindings.                              |
+
+The variables resolve on the root only, so use them there, not on its
+children. Nothing caps the size unless the consumer uses them.
 
 ## Expected spoken output
 
@@ -255,7 +309,10 @@ modal popover's page is hidden by walking it.
 
 ```tsx
 // React
-const size = useComponent(popover, { placement: 'bottom start', onOpenChange });
+const size = useComponent(popover, {
+  positionArea: 'bottom span-right',
+  onOpenChange,
+});
 return (
   <>
     <button {...size.parts.trigger}>Size</button>
@@ -272,7 +329,7 @@ return (
 
 ```html
 <!-- Custom element -->
-<uni-popover placement="bottom start">
+<uni-popover position-area="bottom span-right">
   <button data-part="trigger">Size</button>
   <div data-part="root">
     <div data-part="arrow"></div>
@@ -283,34 +340,34 @@ return (
 ```
 
 Element attributes: `default-open`, `non-modal`, `keyboard-dismiss-disabled`,
-`dismissable="false"`, `disabled`, `restore-focus="false"`, `placement`,
-`offset`, `cross-offset`, `container-padding`, `flip="false"`, `labelled-by`,
+`dismissable="false"`, `disabled`, `restore-focus="false"`, `position-area`,
+`position-try-fallbacks`, `labelled-by`,
 `described-by`. Properties: those by prop name, `isOpen` (controlled) and
 `shouldCloseOnInteractOutside`. Events: `openchange`, `dismiss`. The trigger
 and the root must both be inside `<uni-popover>`.
 
 ## Mapping from Cube UI Kit
 
-| UI Kit                                                                       | UniAria                                                                                             |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `DialogTrigger type="popover"` + `Dialog`                                    | One `popover` with a trigger part.                                                                  |
-| `targetRef`                                                                  | The anchor part.                                                                                    |
-| `placement`, `offset`, `crossOffset`, `containerPadding`, `shouldFlip`       | The same props and defaults (UI Kit's `offset={0}` turns into 8 through a `\|\|`; UniAria keeps 0). |
-| `shouldUpdatePosition`                                                       | Always.                                                                                             |
-| `isDismissable`, `isKeyboardDismissDisabled`, `shouldCloseOnInteractOutside` | The same. `isDismissable` gates the press outside before it happens, not in `onClose`.              |
-| `data-popover-keep`                                                          | `shouldCloseOnInteractOutside` returning `false`; a design system can check the same attribute.     |
-| `onDismiss(action)`                                                          | `dismiss` with a `reason`.                                                                          |
-| `shouldRestoreFocus`                                                         | The same.                                                                                           |
-| `--overlay-min-width` set from the trigger's width                           | `--trigger-width`, kept current.                                                                    |
-| `maxHeight` written by React Aria                                            | `--available-height`.                                                                               |
-| `data-placement`                                                             | `data-placement` and `placement`.                                                                   |
-| `hideArrow`, `arrowProps` (never rendered)                                   | The arrow part.                                                                                     |
-| the `open`, `enter`, `entered` and `exit` mods; 350 ms exit                  | `data-open`, `data-entering`, `data-exiting`; exit waits for the animations.                        |
-| peers closing each other (`usePopoverSync`)                                  | A press on another trigger is outside, so it closes this one. Opening one by script doesn't.        |
-| a Button pressed inside closes the popover                                   | Resolved questions 12.                                                                              |
-| closing on scroll; `keepOpenOnScroll`                                        | Resolved questions 10.                                                                              |
-| the hidden DismissButton                                                     | A close part, visually hidden if it shouldn't show.                                                 |
-| `type`, `mobileType`, `mobileViewport`                                       | Styles; a design system renders a Dialog instead on small screens.                                  |
+| UI Kit                                                                       | UniAria                                                                                                                                            |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DialogTrigger type="popover"` + `Dialog`                                    | One `popover` with a trigger part.                                                                                                                 |
+| `targetRef`                                                                  | The anchor part.                                                                                                                                   |
+| `placement`, `offset`, `crossOffset`, `containerPadding`, `shouldFlip`       | `positionArea`, `positionTryFallbacks` and the root's `margin` (Positioning; UI Kit's offset 8 and padding 12 become the design system's margins). |
+| `shouldUpdatePosition`                                                       | Always.                                                                                                                                            |
+| `isDismissable`, `isKeyboardDismissDisabled`, `shouldCloseOnInteractOutside` | The same. `isDismissable` gates the press outside before it happens, not in `onClose`.                                                             |
+| `data-popover-keep`                                                          | `shouldCloseOnInteractOutside` returning `false`; a design system can check the same attribute.                                                    |
+| `onDismiss(action)`                                                          | `dismiss` with a `reason`.                                                                                                                         |
+| `shouldRestoreFocus`                                                         | The same.                                                                                                                                          |
+| `--overlay-min-width` set from the trigger's width                           | `--anchor-width`, kept current.                                                                                                                    |
+| `maxHeight` written by React Aria                                            | `--available-height`.                                                                                                                              |
+| `data-placement`                                                             | `data-placement` and `placement`.                                                                                                                  |
+| `hideArrow`, `arrowProps` (never rendered)                                   | The arrow part.                                                                                                                                    |
+| the `open`, `enter`, `entered` and `exit` mods; 350 ms exit                  | `data-open`, `data-entering`, `data-exiting`; exit waits for the animations.                                                                       |
+| peers closing each other (`usePopoverSync`)                                  | A press on another trigger is outside, so it closes this one. Opening one by script doesn't.                                                       |
+| a Button pressed inside closes the popover                                   | Resolved questions 12.                                                                                                                             |
+| closing on scroll; `keepOpenOnScroll`                                        | Resolved questions 10.                                                                                                                             |
+| the hidden DismissButton                                                     | A close part, visually hidden if it shouldn't show.                                                                                                |
+| `type`, `mobileType`, `mobileViewport`                                       | Styles; a design system renders a Dialog instead on small screens.                                                                                 |
 
 ## Differences from React Aria, Zag and native behavior
 
@@ -325,7 +382,7 @@ recommended in the last column.
 | 4   | Initial focus        | Priority buttons, else the dialog           | The dialog                                | Zag: first tabbable; native: `autofocus` only                             | Marked element, else the popover (as Dialog)               |
 | 5   | Focus after outside  | Trigger, unless focus moved outside         | Trigger when focus was lost               | Zag: as React Aria; native: stays on the body                             | Trigger unless the press focused something (Q5)            |
 | 6   | Trigger ARIA         | `aria-expanded`; `aria-controls` while open | The same; no `aria-haspopup` for dialogs  | Zag: + `aria-haspopup="dialog"`, `aria-controls` always; native: expanded | As UI Kit (Q6)                                             |
-| 7   | Positioning          | React Aria's JS                             | JS, recomputed on resize, never on scroll | Zag: Floating UI; native: CSS anchor                                      | CSS anchor, Floating UI fallback (Q3)                      |
+| 7   | Positioning          | React Aria's JS                             | JS, recomputed on resize, never on scroll | Zag: Floating UI; native: CSS anchor                                      | Script, or the consumer's CSS anchor (Q3)                  |
 | 8   | Scroll               | Closes when a trigger ancestor scrolls      | Modal: locked; non-modal: closes          | Zag: follows                                                              | Follows; closes when the trigger scrolls out of view (Q10) |
 | 9   | Nested outside press | Closes the top one; menus close the chain   | Closes the top one                        | Native: every popover the press is outside of                             | Every popover the press is outside of (Q9)                 |
 | 10  | Arrow                | Props, never rendered                       | `OverlayArrow`                            | Zag: arrow part                                                           | Arrow part (Q11)                                           |
@@ -353,8 +410,8 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    cost: nested popovers are UniAria's job (question 9). Decided: manual.
 2. **Without the Popover API** (Chrome before 114, Firefox before 125, Safari
    before 17; Baseline 2025-01): AGENTS.md requires a fallback. Decided: the
-   popover opens in place, `hidden` while closed and `position: fixed` with
-   Floating UI while open; the consumer gives it a `z-index`; a transformed,
+   popover opens in place, `hidden` while closed and `position: fixed` while
+   open, placed by the positioning wrapper; the consumer gives it a `z-index`; a transformed,
    filtered or `contain`ed ancestor clips and offsets it (documented, as
    Spectrum Web Components does). Server HTML shows it until UniAria starts in
    those browsers. The alternative was no fallback, which needed an exception
@@ -369,6 +426,17 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    positioning, so (a) needs a development switch that forces the fallback,
    and the scenarios run on both paths. The design doc already chose (a); the
    dependency is new to the repo. Decided: (a), and add the dependency.
+   Amended 2026-10-16 (owner, with the Tooltip spec's Resolved questions 1):
+   the wrapper's props became CSS's own, and the fallback is UniAria's,
+   following the browsers' rules; CSS's area, margin and fallback rules don't
+   map onto Floating UI's placements, so `@floating-ui/dom` is gone.
+   Amended again 2026-10-16 (owner): no detection for positioning. A
+   detected fallback has to match the consumer's CSS, and anchor positioning
+   lets that be almost anything, so the page picks a mode instead
+   (Positioning): script, the default, in every browser; or CSS, opt-in,
+   placed by the consumer's own anchor positioning. The scenarios run in
+   both. The default changes to CSS once anchor positioning is Baseline
+   widely available.
 4. **Modal by default.** UI Kit wraps Tab inside a popover but leaves the page
    exposed to screen readers; React Aria makes the page inert, locks scroll and
    adds an underlay; Zag and the native popover are non-modal. Decided: a
@@ -400,7 +468,9 @@ Decided by @tenphi on 2026-10-16, each as recommended.
 8. **One definition with trigger, anchor, arrow, title, description and close
    parts**, as Dialog, and React Aria's `Placement` strings and UI Kit's
    defaults (`'bottom'`, offset 8, container padding 12, flip on). Decided:
-   yes.
+   yes. Amended 2026-10-16: `positionArea` (`'bottom'`) and
+   `positionTryFallbacks` (`'flip-block, flip-inline'`) replaced the placement
+   props, and the gaps are the consumer's margins (Positioning).
 9. **Nested popovers.** A popover opened from inside another stacks above it,
    and Escape closes the top one. Two choices touch the layer stack in `dom/`:
    - A press outside both: React Aria closes only the top one (a second click
@@ -412,8 +482,8 @@ Decided by @tenphi on 2026-10-16, each as recommended.
      `'parent'`, as the native popover and Zag do; React Aria and UI Kit get it
      by unmounting. A manual popover inside a hidden one would otherwise stay
      open, invisible. Decided: yes.
-10. **Scrolling.** With anchor positioning the popover follows its trigger
-    without script; with Floating UI UniAria recomputes on scroll. (a) Follow the
+10. **Scrolling.** In CSS mode the browser keeps the popover by its trigger;
+    in script mode UniAria recomputes as it scrolls. (a) Follow the
     trigger, and close with reason `'scroll'` (without restoring focus, which
     would scroll the page back) when the trigger is scrolled out of view,
     found with an IntersectionObserver. (b) Close when any scroll container of
@@ -423,7 +493,7 @@ Decided by @tenphi on 2026-10-16, each as recommended.
 11. **The arrow part now.** UI Kit documents `hideArrow` but never renders one;
     Tooltip, next, needs it, and so does the wrapper. Decided: an optional
     arrow part in Popover now, positioned along the edge by UniAria in both
-    paths.
+    modes.
 12. **UI Kit's "a Button pressed inside closes its popover."** Every UI Kit
     Button inside a popover closes it after its handler runs, unless marked
     `data-popover-keep` or a popover trigger. That is a rule of UI Kit's

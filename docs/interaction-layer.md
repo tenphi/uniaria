@@ -183,34 +183,44 @@ These are decided; follow them rather than the catalogue.
     layer that is still open closes no one.
   - `shouldCloseOnBlur(next)` gets the element focus moved to, so a
     non-modal popover stays open when focus goes to its trigger.
-- **Positioning** (`dom/position.ts`, Popover spec, Resolved questions 3 and 11) is not in the catalogue: React Aria computes positions in script
-  (`useOverlayPosition`). `createPosition(ctx, options)` places a floating
-  part against an anchor while active and reports the side it landed on.
-  Placements are React Aria's strings, resolved to physical sides first.
-  - Where CSS anchor positioning works, UniAria writes inline `position-anchor`
-    (a name unique in the window, added to the anchor's own `anchor-name`
-    list), `position-area`, `position-try-fallbacks` and margins for the
-    offset, cross offset and container padding, and reads the side back from
-    the computed `position-area`. The browser keeps the part placed as the
-    page scrolls.
-  - Elsewhere `@floating-ui/dom` (the one runtime dependency, owner
-    decision, 2026-10-16) computes the same placement. It is imported on
-    demand by the browsers that need it, and its flips are sticky, as the
-    browser's are, until the placement asks for another side. It also
-    places a part whose direction differs from the page's in every browser:
-    Firefox misplaces such a part with anchor positioning (probed in
-    Firefox 155).
-  - Both paths write `--trigger-width`, `--available-width` and
-    `--available-height` (on the larger side when it may flip, so a
-    `max-height` never stops a flip) and place the arrow part. UniAria writes
-    `inset` and `margin` as longhands and puts back every inline style it
-    replaced when it stops.
+- **Positioning** (`dom/position.ts`, Popover spec, Resolved questions 3 and
+  11; Tooltip spec, Resolved questions 1) is not in the catalogue: React Aria
+  computes positions in script (`useOverlayPosition`). `createPosition(ctx,
+options)` places a floating part against an anchor while active and
+  reports the side it landed on, in the mode the page-wide `positioning`
+  setting names (`dom/settings.ts`, `configure()` and `getSettings()` under
+  `Symbol.for('@uniaria/settings/v1')` on `globalThis`; owner, 2026-10-16).
+  Its options are CSS's own (owner, 2026-10-16): a `position-area` on one
+  side of the anchor, optionally with an alignment span, and a
+  `position-try-fallbacks` list. Gaps are the part's margins, from the
+  consumer's CSS.
+  - Script mode (the default) places the part itself, in every browser, by
+    the browsers' rules (probed in Chromium 153 and WebKit 26.6; the OddBird
+    polyfill was the reference): an option fits when its margin box fits the
+    area it names; the last option that fit stays while it fits; try tactics
+    swap margins; the margin box is shifted into the viewport. It checks
+    every frame while active. `@floating-ui/dom` did this until 2026-10-16;
+    CSS's area rules don't map onto its placements.
+  - CSS mode (opt-in) leaves placing the part to the consumer's CSS. UniAria
+    writes inline `position-anchor` (a name unique in the window, added to
+    the anchor's own `anchor-name` list) and, every frame while active, reads
+    the side back from the computed `position-area`, else from where the
+    part is. Engine differences are the consumer's: Firefox 155 doesn't shift
+    an oversized part into the viewport, and misplaces a part whose direction
+    differs from the page's (probed). A browser without anchor positioning
+    gets a development warning.
+  - Both modes write `--anchor-width`, `--available-width` and
+    `--available-height` (the most room in any option, so a `max-height`
+    never stops a fallback; in CSS mode, from the applied option and the
+    options it could have come from) and place the arrow part. UniAria writes
+    `inset` as longhands and puts back every inline style it replaced when it
+    stops.
 - **Feature detection and its development switch** (`dom/support.ts`).
   `supportsPopover` and `supportsAnchorPositioning` read a window property
-  under `Symbol.for('@uniaria/fallbacks/v1')`: `{ popover: false }` or
-  `{ anchorPositioning: false }` forces the fallback in a browser that has
-  the feature, so tests run both paths. Components read it when they
-  start.
+  under `Symbol.for('@uniaria/fallbacks/v1')`: `{ popover: false }` forces
+  the fallback in a browser that has the Popover API, so tests run both
+  paths; `{ anchorPositioning: false }` tests CSS mode's warning. Components
+  read it when they start.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.

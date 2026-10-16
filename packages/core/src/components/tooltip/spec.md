@@ -218,9 +218,11 @@ trigger the whole time.
 ## Positioning
 
 The positioning wrapper places the root against the anchor part, else the
-trigger, with CSS anchor positioning where it works and `@floating-ui/dom`
-elsewhere, as Popover. Its props follow CSS Anchor Positioning (owner,
-2026-10-16; Resolved questions 1):
+trigger, as Popover's, in the mode the page picks (Popover spec, Positioning):
+script mode, the default, places it from the props in every browser; CSS
+mode, opt-in with `configure({ positioning: 'css' })`, leaves it to the
+consumer's CSS anchor positioning and ignores the props. The props follow
+CSS Anchor Positioning (owner, 2026-10-16; Resolved questions 1):
 
 - **`positionArea`** is a CSS `position-area` value that puts the tooltip on
   one side of the anchor: a side keyword, physical (`top`, `bottom`, `left`,
@@ -230,28 +232,26 @@ elsewhere, as Popover. Its props follow CSS Anchor Positioning (owner,
   `top span-right` puts it above with the left edges aligned. Keywords mean
   what they mean in CSS: plain logical ones follow the page's writing mode
   (the top layer's containing block), `self-` ones the tooltip's own. Corners
-  and areas over the anchor aren't supported: the arrow needs a side. Where
-  anchor positioning works, UniAria writes the value as it is.
+  and areas over the anchor aren't supported: the arrow needs a side.
 - **`positionTryFallbacks`** is a CSS `position-try-fallbacks` value: `none`,
   or a list of try tactics (`flip-block`, `flip-inline`, `flip-start`, and
   combinations) and `position-area` values of the same form. The default,
   `flip-block, flip-inline`, tries the opposite side on either axis. The
-  browser keeps the last fallback that fit, and the Floating UI path does the
-  same.
+  last option that fit stays while it fits, as the browsers keep it.
 - **Gaps are the root's `margin`**, from the consumer's CSS, as in CSS: the
   margin facing the anchor is the gap, the others keep the tooltip off the
   viewport's edges, and a fallback flips them with the area (try tactics swap
-  margins). The Floating UI path reads the computed margins, so margins that
-  depend on state work on both paths.
-- **Styles UniAria writes on the root**, only what placing it needs: `inset`,
-  `position-anchor`, `position-area`, `position-try-fallbacks` and
-  `position-visibility` (`position`, `top` and `left` on the Floating UI
-  path). Everything else is the consumer's.
+  margins). Script mode reads the computed margins, so margins that depend
+  on state work in both modes.
+- **Styles UniAria writes on the root**, only what placing it needs:
+  `position` and the `inset` longhands in script mode, `position-anchor` in
+  CSS mode (with a name added to the anchor's `anchor-name`), and the
+  variables in both. Everything else is the consumer's.
 - **The arrow**, as Popover's: UniAria writes its offset along the edge, and
   the consumer's CSS puts it on the side `data-placement` names.
-- `positionArea` and `positionTryFallbacks` stay props rather than CSS the
-  consumer writes: browsers without anchor positioning drop those
-  properties, so the Floating UI path couldn't read them.
+- **In CSS mode** the tooltip's CSS gives it `inset: auto` (a popover's own
+  is 0), its `position-area` and its fallbacks, as Popover's. UniAria reads
+  the side the browser applied back from the computed `position-area`.
 
 ## Styling tokens
 
@@ -268,9 +268,8 @@ to these tokens, so it can change with state. UniAria sets no look.
 | `--available-width`, `--available-height`                     | root                               | The most room it could take, in pixels, on the larger side when it may flip. |
 | `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement` | public state (`useComponentState`) | The same, for a framework's own bindings.                                    |
 
-The variables are written on both positioning paths. CSS's own
-`anchor-size()` and percentage sizes against the area work only where anchor
-positioning does.
+The variables are written in both modes. CSS's own `anchor-size()` and
+percentage sizes against the area work only in CSS mode.
 
 ## Expected spoken output
 
@@ -407,7 +406,10 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    React Aria's `'bottom start'` is `bottom span-right` (or
    `block-end span-inline-end`, which follows the page's direction), and UI
    Kit's offset 8 and padding 12 become margins in the design system's CSS.
-   Decided: yes, as proposed.
+   Decided: yes, as proposed. Amended 2026-10-16 (owner): `@floating-ui/dom`
+   gave way to UniAria's own placement, and detection to two modes the page
+   picks, script (the default, from these props) and CSS (the consumer's
+   anchor positioning); see the Popover spec's Resolved questions 3.
 2. **Attaching to a trigger another component owns.** A tooltip's trigger is
    usually a Button, a Popover's trigger or a Checkbox. One element can't be
    two components' parts today: both binders write `data-scope`, `data-part`
