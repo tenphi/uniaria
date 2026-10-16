@@ -30,8 +30,10 @@ Not part of Checkbox:
   `role="switch"` on the same native input, no indeterminate state. React
   Aria and Cube UI Kit have separate components, and the APG a separate
   pattern. It gets a short spec of its own.
-- **Groups.** CheckboxGroup: the `string[]` value, the group label, and
-  group-wide disabled, required and invalid states.
+- **Groups.** CheckboxGroup (`../checkbox-group/spec.md`): the `string[]`
+  value, the group label, and group-wide disabled, read-only, required and
+  invalid states. A checkbox finds its group through `ctx.owner()` and
+  takes them from it; that spec's "A checkbox in a group" has the rules.
 - **A disabled `<fieldset>`** disables the input natively, but `isDisabled`
   and `data-disabled` don't follow it. Zag watches for it; Sous can when a
   form or group needs it.
@@ -42,14 +44,14 @@ Not part of Checkbox:
 
 ## Anatomy
 
-| Part        | Element                                                          | Attributes Sous owns                                                                                                                                                                                                  | Notes                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; a `label` makes its whole area toggle the checkbox natively | state attributes                                                                                                                                                                                                      | Optional. No role.                                                                                                                                                               |
-| input       | `input`                                                          | `type="checkbox"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `aria-readonly`, the `checked` and `indeterminate` properties, state attributes | The consumer owns `name`, `value`, `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root (Cube UI Kit's overlay). |
-| indicator   | any; usually `span`                                              | `aria-hidden="true"`, state attributes                                                                                                                                                                                | Optional. The box drawn in place of the input, holding the check or the dash.                                                                                                    |
-| label       | `label` by default; any element through `labelElementType`       | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                           | Names the checkbox. Inside a `label` root it must be another element, a `span`: labels can't nest.                                                                               |
-| description | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, where a click on it would toggle the checkbox.                                                                                                           |
-| error       | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, as the description.                                                                                                                                      |
+| Part        | Element                                                          | Attributes Sous owns                                                                                                                                                                                                  | Notes                                                                                                                                                                                                             |
+| ----------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; a `label` makes its whole area toggle the checkbox natively | state attributes                                                                                                                                                                                                      | Optional. No role.                                                                                                                                                                                                |
+| input       | `input`                                                          | `type="checkbox"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `aria-readonly`, the `checked` and `indeterminate` properties, state attributes | The consumer owns `name`, `value` (unless the `value` prop is set), `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root (Cube UI Kit's overlay). |
+| indicator   | any; usually `span`                                              | `aria-hidden="true"`, state attributes                                                                                                                                                                                | Optional. The box drawn in place of the input, holding the check or the dash.                                                                                                                                     |
+| label       | `label` by default; any element through `labelElementType`       | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                           | Names the checkbox. Inside a `label` root it must be another element, a `span`: labels can't nest.                                                                                                                |
+| description | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, where a click on it would toggle the checkbox.                                                                                                                                            |
+| error       | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, as the description.                                                                                                                                                                       |
 
 State attributes go on every part, so the box, the label and the messages can
 be styled without reading state: `data-selected`, `data-indeterminate`,
@@ -79,6 +81,7 @@ Two layouts work without any script for the click:
 | labelElementType | `string`              | `'label'` | no       | —                | Field's. Pass `'span'` for a label part inside a `label` root. The element reads the label's tag.                          |
 | labelledBy       | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                   |
 | describedBy      | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                   |
+| value            | `string \| undefined` | —         | no       | —                | The key in a CheckboxGroup's value; required in a group. Written to the input's `value` when set, so a form submits it.    |
 
 ## Events
 
@@ -250,7 +253,9 @@ return (
 ```
 
 Element attributes: `default-selected`, `indeterminate`, `disabled`,
-`readonly`, `required`, `invalid`, `labelled-by`, `described-by`.
+`readonly`, `required`, `invalid`, `value`, `group` (the id of its
+`<sous-checkbox-group>`, when not inside it), `labelled-by`,
+`described-by`.
 Properties: `isSelected` (controlled), `defaultSelected`, `isIndeterminate`.
 Events: `selectedchange`, `focuschange`. The element adopts the input's
 `checked` property and `id`, and the label's tag.
@@ -273,8 +278,9 @@ for CheckboxGroup. Tree's checkboxes and TableView's select-all
   `label` root). A field `label` alone maps to the label part too. With
   both, the field label is the label part and the inline text joins the name
   through `labelledBy`, so the name reads "Notifications Send me emails".
-- `value`, `name`, `form`, `autoFocus` and `excludeFromTabOrder`
-  (`tabindex="-1"`) are the consumer's attributes on the input.
+- `value` maps to the `value` prop. `name`, `form`, `autoFocus` and
+  `excludeFromTabOrder` (`tabindex="-1"`) are the consumer's attributes on
+  the input.
 - `HiddenInput`'s overlay styles, the `data-element="Input"` box (the
   indicator part), `qa` on the input, `tooltip`, `labelPosition` and the
   necessity mark stay in UI Kit.
@@ -286,8 +292,8 @@ for CheckboxGroup. Tree's checkboxes and TableView's select-all
   and an error shows without the field wrapper. `data-hovered` works on a
   standalone checkbox, where UI Kit never sets `hovered`. A string `label`
   no longer replaces the inline text in the name through `aria-label`. A
-  form value can't overwrite the native `value` attribute, since the
-  consumer owns it.
+  form value can't overwrite the native `value` attribute, since Sous
+  writes it from the `value` prop.
 
 ## Deviations from the WAI-ARIA pattern
 

@@ -45,6 +45,11 @@
       "types": "./dist/checkbox/index.d.ts",
       "default": "./dist/checkbox/index.js"
     },
+    "./checkbox-group": {
+      "sous-source": "./src/components/checkbox-group/index.ts",
+      "types": "./dist/checkbox-group/index.d.ts",
+      "default": "./dist/checkbox-group/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

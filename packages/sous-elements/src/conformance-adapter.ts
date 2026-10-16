@@ -14,6 +14,7 @@ import './toggle-button';
 import './field';
 import './text-field';
 import './checkbox';
+import './checkbox-group';
 import type { SousElement } from './define-element';
 
 /**

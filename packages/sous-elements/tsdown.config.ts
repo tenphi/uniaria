@@ -10,6 +10,7 @@ export default defineConfig({
     field: 'src/field.ts',
     'text-field': 'src/text-field.ts',
     checkbox: 'src/checkbox.ts',
+    'checkbox-group': 'src/checkbox-group.ts',
   },
   format: 'esm',
   platform: 'neutral',

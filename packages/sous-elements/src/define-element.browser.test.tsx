@@ -9,6 +9,7 @@ import './button';
 import './field';
 import './text-field';
 import './checkbox';
+import './checkbox-group';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -497,5 +498,63 @@ describe('<sous-checkbox>', () => {
     const host = container.querySelector('sous-checkbox')!;
     expect(host.isIndeterminate).toBe(true);
     expect(host.querySelector('input')!.indeterminate).toBe(true);
+  });
+});
+
+describe('<sous-checkbox-group>', () => {
+  const option = (value: string, extra = '') => `
+    <sous-checkbox value="${value}" ${extra}>
+      <label data-part="root">
+        <input data-part="input" type="checkbox" ${value === 'sms' ? 'checked' : ''} />
+        <span data-part="label">${value}</span>
+      </label>
+    </sous-checkbox>`;
+
+  it('takes the checkboxes checked in the markup as its default', () => {
+    const container = mount(`
+      <sous-checkbox-group>
+        <div data-part="root">
+          <span data-part="label">Notify</span>
+          ${option('email')}${option('sms')}
+        </div>
+      </sous-checkbox-group>`);
+    const group = container.querySelector('sous-checkbox-group')!;
+    const [email, sms] = Array.from(container.querySelectorAll('input'));
+    expect(group.instance.getState().value).toEqual(['sms']);
+    expect(email!.value).toBe('email');
+    expect(sms!.checked).toBe(true);
+
+    const changes: unknown[] = [];
+    group.addEventListener('valuechange', (event) =>
+      changes.push((event as CustomEvent).detail),
+    );
+    email!.click();
+    expect(changes).toEqual([['sms', 'email']]);
+    expect(group.instance.getState().value).toEqual(['sms', 'email']);
+  });
+
+  it('links a checkbox by id, to a group that comes later', () => {
+    const container = mount(option('email', 'group="notify"'));
+    const box = container.querySelector('sous-checkbox')!;
+    expect(box.instance.owner()).toBeUndefined();
+
+    const group = document.createElement('sous-checkbox-group');
+    group.id = 'notify';
+    group.defaultValue = ['email'];
+    group.innerHTML = '<div data-part="root"></div>';
+    container.append(group);
+    expect(box.instance.owner()).toBe(group.instance);
+    expect(box.querySelector('input')!.checked).toBe(true);
+  });
+
+  it('leaves the group when moved out of it', () => {
+    const container = mount(`
+      <sous-checkbox-group>
+        <div data-part="root">${option('email')}</div>
+      </sous-checkbox-group>`);
+    const box = container.querySelector('sous-checkbox')!;
+    expect(box.instance.owner()).toBeDefined();
+    container.append(box);
+    expect(box.instance.owner()).toBeUndefined();
   });
 });

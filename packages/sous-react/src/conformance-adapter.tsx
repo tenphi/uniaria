@@ -9,6 +9,7 @@ import type { AnyDefinition, Instance } from '@tenphi/sous';
 import { callbackName } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
+import { checkboxGroup } from '@tenphi/sous/checkbox-group';
 import { field } from '@tenphi/sous/field';
 import { textField } from '@tenphi/sous/text-field';
 import { toggleButton } from '@tenphi/sous/toggle-button';
@@ -36,6 +37,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   field,
   'text-field': textField,
   checkbox,
+  'checkbox-group': checkboxGroup,
 };
 
 /** Form values a consumer would pass as defaults in React. */

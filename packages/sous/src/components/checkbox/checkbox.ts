@@ -4,18 +4,24 @@
  * controlled with a refused toggle put back after the event), presentational
  * indeterminate, read-only mode that cancels every toggle, form reset, and
  * hover and focus state on every part. The browser keeps doing the toggling.
+ * In a CheckboxGroup (`../checkbox-group/spec.md`), found through
+ * `ctx.owner()`, the group holds the selected state and adds its modes,
+ * required and invalid states and error.
  */
 
 import {
   createFocus,
   createHover,
+  isDevelopment,
   mergeHandlers,
   partEffect,
   partElement,
+  warn,
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
+import { checkboxGroup } from '../checkbox-group/checkbox-group';
 import { field } from '../field/field';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -23,7 +29,10 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 export const checkbox = defineComponent({
   name: 'checkbox',
   parts: ['root', 'input', 'indicator', 'label', 'description', 'error'],
+  owner: { definition: checkboxGroup, attribute: 'group' },
   props: {
+    // The key in a group's value, written to the input's `value`.
+    value: prop<string | undefined>(undefined, { type: 'string' }),
     // The element adopts the input's checked state: the markup's `checked`,
     // or a click before upgrade.
     isSelected: bindable(false, {
@@ -52,29 +61,67 @@ export const checkbox = defineComponent({
   },
   setup(ctx) {
     const { props } = ctx;
+    // The group, when this checkbox is in one with a value to put in it.
+    const group = () => {
+      const owner = ctx.owner(checkboxGroup);
+      return owner && props.value() !== undefined ? owner : undefined;
+    };
+    const isSelected = () => {
+      const owner = group();
+      return owner
+        ? owner.api.isSelected(props.value()!)
+        : props.isSelected.get();
+    };
+    const isDisabled = () =>
+      props.isDisabled() || (group()?.state().isDisabled ?? false);
+    const isReadOnly = () =>
+      props.isReadOnly() || (group()?.state().isReadOnly ?? false);
+    const isInvalid = () =>
+      props.isInvalid() || (group()?.state().isInvalid ?? false);
+    const isRequired = () =>
+      props.isRequired() || (group()?.api.isItemRequired() ?? false);
+
     const labelling = ctx.use(
       field,
       () => ({
-        isInvalid: props.isInvalid(),
-        isRequired: props.isRequired(),
-        isDisabled: props.isDisabled(),
+        isInvalid: isInvalid(),
+        isRequired: isRequired(),
+        isDisabled: isDisabled(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
         labelledBy: props.labelledBy(),
-        describedBy: props.describedBy(),
+        // The group's error explains an invalid checkbox wherever focus is.
+        describedBy:
+          [props.describedBy(), group()?.api.errorId()]
+            .filter(Boolean)
+            .join(' ') || undefined,
       }),
       { parts: { control: 'input' } },
     );
+
+    if (isDevelopment()) {
+      ctx.watch(
+        () => ctx.owner(checkboxGroup)?.instance,
+        (owner) => {
+          if (!owner) return;
+          if (props.value() === undefined) {
+            warn(
+              'checkbox: a checkbox in a group needs a value, the key it adds ' +
+                "to the group's value.",
+            );
+          } else if (props.isSelected.isControlled()) {
+            warn(
+              'checkbox: isSelected is unused in a group, whose value holds ' +
+                'the selected checkboxes. Set the value on the group.',
+            );
+          }
+        },
+      );
+    }
     // The root is where a label root takes clicks; the input counts too, for
     // a checkbox without a root.
-    const rootHover = createHover(ctx, {
-      part: 'root',
-      isDisabled: props.isDisabled,
-    });
-    const inputHover = createHover(ctx, {
-      part: 'input',
-      isDisabled: props.isDisabled,
-    });
+    const rootHover = createHover(ctx, { part: 'root', isDisabled });
+    const inputHover = createHover(ctx, { part: 'input', isDisabled });
     const focus = createFocus(ctx, 'input');
 
     ctx.watch(focus.isFocused, (isFocused) => {
@@ -113,6 +160,13 @@ export const checkbox = defineComponent({
     const onInput = (inputEvent: Event) => {
       const input = inputEvent.target as HTMLInputElement;
       if (input !== partElement(ctx, 'input')) return;
+      const owner = group();
+      if (owner) {
+        // A controlled group follows the same rule as a controlled checkbox.
+        settleAfterChange(input);
+        owner.api.setSelected(props.value()!, input.checked);
+        return;
+      }
       if (props.isSelected.isControlled()) settleAfterChange(input);
       props.isSelected.set(input.checked);
     };
@@ -121,8 +175,20 @@ export const checkbox = defineComponent({
     // cancelled click, and fires no `input` or `change`.
     const onClick = (clickEvent: MouseEvent) => {
       if (clickEvent.target !== partElement(ctx, 'input')) return;
-      if (props.isReadOnly()) clickEvent.preventDefault();
+      if (isReadOnly()) clickEvent.preventDefault();
     };
+
+    // A checkbox checked when it joins a group (the element's markup, or a
+    // click before upgrade) adds its value to the group's default.
+    const joinChecked = () => {
+      const input = partElement(ctx, 'input') as HTMLInputElement | null;
+      const owner = group();
+      if (input?.checked && owner && !owner.api.isSelected(props.value()!)) {
+        owner.api.adopt(props.value()!);
+      }
+    };
+    partEffect(ctx, 'input', joinChecked);
+    ctx.watch(() => group()?.instance, joinChecked);
 
     // Form reset goes back to the state the checkbox mounted with, its
     // defaultSelected when uncontrolled, as TextField's does.
@@ -134,10 +200,13 @@ export const checkbox = defineComponent({
       let timer: ReturnType<typeof setTimeout> | undefined;
       const onReset = (resetEvent: Event) => {
         if (resetEvent.defaultPrevented) return;
-        ctx.batch(() => {
-          isRefusing = false;
-          props.isSelected.set(initial!);
-        });
+        // In a group, the group resets; the state is written again below.
+        if (!group()) {
+          ctx.batch(() => {
+            isRefusing = false;
+            props.isSelected.set(initial!);
+          });
+        }
         // The native reset runs after this event and sets `checked` from the
         // attribute, so the state is written again after it.
         clearTimeout(timer);
@@ -152,6 +221,11 @@ export const checkbox = defineComponent({
 
     return {
       field: labelling,
+      isSelected,
+      isDisabled,
+      isReadOnly,
+      isInvalid,
+      isRequired,
       isHovered: () => rootHover.isHovered() || inputHover.isHovered(),
       isFocused: focus.isFocused,
       isFocusVisible: focus.isFocusVisible,
@@ -164,23 +238,24 @@ export const checkbox = defineComponent({
   },
   expose({ props, api }) {
     return {
-      isSelected: props.isSelected.get(),
+      isSelected: api.isSelected(),
       isIndeterminate: props.isIndeterminate(),
       isFocused: api.isFocused(),
       isFocusVisible: api.isFocusVisible(),
       isHovered: api.isHovered(),
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
-      isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
+      isDisabled: api.isDisabled(),
+      isReadOnly: api.isReadOnly(),
+      isRequired: api.isRequired(),
+      isInvalid: api.isInvalid(),
       isErrorShown: api.field.state().isErrorShown,
     };
   },
   connect({ props, api }) {
     const { control, ...parts } = api.field.connect();
-    const isSelected = props.isSelected.get();
+    const isSelected = api.isSelected();
     const isIndeterminate = props.isIndeterminate();
-    const isReadOnly = props.isReadOnly();
+    const isReadOnly = api.isReadOnly();
+    const value = props.value();
     // Every part, so the box, the label and the messages can be styled.
     const state = {
       'data-selected': flag(isSelected),
@@ -203,7 +278,9 @@ export const checkbox = defineComponent({
         ...control.attrs,
         ...state,
         type: 'checkbox',
-        disabled: flag(props.isDisabled()),
+        // Only when set: otherwise the consumer may write it.
+        ...(value === undefined ? {} : { value }),
+        disabled: flag(api.isDisabled()),
         // Not `readonly`: HTML ignores it on a checkbox, and it takes the
         // checkbox out of constraint validation.
         'aria-readonly': isReadOnly ? 'true' : undefined,
