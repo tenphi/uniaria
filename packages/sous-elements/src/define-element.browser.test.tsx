@@ -1050,7 +1050,8 @@ describe('<sous-popover>', () => {
     await userEvent.keyboard('{Escape}');
     expect(events).toEqual([true, { reason: 'escape' }, false]);
     expect(modal.matches(':modal')).toBe(true);
-    expect(document.activeElement).toBe(trigger);
+    // Restored once the closing phase ends.
+    await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
