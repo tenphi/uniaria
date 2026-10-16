@@ -43,14 +43,14 @@ Not part of Switch:
 
 ## Anatomy
 
-| Part        | Element                                                        | Attributes UniAria owns                                                                                                                                                                                          | Notes                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; a `label` makes its whole area toggle the switch natively | state attributes                                                                                                                                                                                                 | Optional. No role.                                                                                                                                       |
-| input       | `input`                                                        | `type="checkbox"`, `role="switch"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `aria-readonly`, the `checked` property, state attributes | The consumer owns `name`, `value`, `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root. |
-| indicator   | any; usually `span`                                            | `aria-hidden="true"`, state attributes                                                                                                                                                                           | Optional. The track drawn in place of the input; the thumb is consumer markup inside it (Resolved questions 1).                                          |
-| label       | `label` by default; any element through `labelElementType`     | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                      | Names the switch. Inside a `label` root it must be a `span`.                                                                                             |
-| description | any                                                            | as Field                                                                                                                                                                                                         | Outside a `label` root.                                                                                                                                  |
-| error       | any                                                            | as Field                                                                                                                                                                                                         | Outside a `label` root.                                                                                                                                  |
+| Part        | Element                                                        | Attributes UniAria owns                                                                                                                                                                                                               | Notes                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; a `label` makes its whole area toggle the switch natively | state attributes                                                                                                                                                                                                                      | Optional. No role.                                                                                                                                       |
+| input       | `input`                                                        | `type="checkbox"`, `role="switch"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled` (or `aria-disabled`), `aria-readonly`, the `checked` property, state attributes | The consumer owns `name`, `value`, `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root. |
+| indicator   | any; usually `span`                                            | `aria-hidden="true"`, state attributes                                                                                                                                                                                                | Optional. The track drawn in place of the input; the thumb is consumer markup inside it (Resolved questions 1).                                          |
+| label       | `label` by default; any element through `labelElementType`     | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                                           | Names the switch. Inside a `label` root it must be a `span`.                                                                                             |
+| description | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` root.                                                                                                                                  |
+| error       | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` root.                                                                                                                                  |
 
 State attributes go on every part: `data-selected`, `data-hovered`,
 `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`,
@@ -61,17 +61,18 @@ root, or a `div` root with a `label` part) work the same way.
 
 As Checkbox, without `isIndeterminate` and `value`:
 
-| Prop             | Type                  | Default   | Bindable | Change event     | Notes                                                                          |
-| ---------------- | --------------------- | --------- | -------- | ---------------- | ------------------------------------------------------------------------------ |
-| isSelected       | `boolean`             | `false`   | yes      | `selectedChange` | On or off: the input's `checked` property, with Checkbox's rules.              |
-| isDisabled       | `boolean`             | `false`   | no       | —                | Native `disabled`, plus Field's `isDisabled`.                                  |
-| isReadOnly       | `boolean`             | `false`   | no       | —                | `aria-readonly="true"`, and every toggle is cancelled. Attribute `readonly`.   |
-| isRequired       | `boolean`             | `false`   | no       | —                | Field's: `aria-required` (Resolved questions 2).                               |
-| isInvalid        | `boolean`             | `false`   | no       | —                | Field's: `aria-invalid`, shows and announces the error (Resolved questions 2). |
-| inputId          | `string \| undefined` | generated | no       | —                | Field's `controlId`. The element adopts the input's `id`.                      |
-| labelElementType | `string`              | `'label'` | no       | —                | Field's. The element reads the label's tag.                                    |
-| labelledBy       | `string \| undefined` | —         | no       | —                | Field's.                                                                       |
-| describedBy      | `string \| undefined` | —         | no       | —                | Field's.                                                                       |
+| Prop                    | Type                  | Default   | Bindable | Change event     | Notes                                                                                                     |
+| ----------------------- | --------------------- | --------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| isSelected              | `boolean`             | `false`   | yes      | `selectedChange` | On or off: the input's `checked` property, with Checkbox's rules.                                         |
+| isDisabled              | `boolean`             | `false`   | no       | —                | Native `disabled`, plus Field's `isDisabled`.                                                             |
+| isFocusableWhenDisabled | `boolean`             | `false`   | no       | —                | As Checkbox's: `aria-disabled` instead of `disabled`, so a tooltip can explain it (Resolved questions 5). |
+| isReadOnly              | `boolean`             | `false`   | no       | —                | `aria-readonly="true"`, and every toggle is cancelled. Attribute `readonly`.                              |
+| isRequired              | `boolean`             | `false`   | no       | —                | Field's: `aria-required` (Resolved questions 2).                                                          |
+| isInvalid               | `boolean`             | `false`   | no       | —                | Field's: `aria-invalid`, shows and announces the error (Resolved questions 2).                            |
+| inputId                 | `string \| undefined` | generated | no       | —                | Field's `controlId`. The element adopts the input's `id`.                                                 |
+| labelElementType        | `string`              | `'label'` | no       | —                | Field's. The element reads the label's tag.                                                               |
+| labelledBy              | `string \| undefined` | —         | no       | —                | Field's.                                                                                                  |
+| describedBy             | `string \| undefined` | —         | no       | —                | Field's.                                                                                                  |
 
 `value` stays the consumer's attribute on the input, since no group needs
 it at render time.
@@ -95,7 +96,9 @@ Checkbox's rules, unchanged: the state is the `checked` property, written
 only when it differs and rendered once by React as `defaultChecked`; never
 `aria-checked`, which ARIA in HTML disallows on the native input and
 Chromium ignores. A controlled toggle the consumer hasn't accepted goes
-back right after the event. Read-only cancels the click. Form reset returns
+back right after the event. Read-only cancels the click, and so does a
+disabled switch with `isFocusableWhenDisabled`, which is left out of its
+form's data as a natively disabled one is. Form reset returns
 to the mount state and writes it again after the native reset. The element
 adopts the input's `checked` property on upgrade.
 
@@ -109,7 +112,7 @@ property gets that.
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Space | Toggles, natively. Nothing when read-only.                                                                                                                                                             |
 | Enter | Nothing on the switch: it submits its form natively, as in React Aria (tested there), Cube UI Kit's code and Spectrum Web Components. The APG marks Enter optional, and its checkbox example has none. |
-| Tab   | Moves focus natively; a disabled switch is skipped.                                                                                                                                                    |
+| Tab   | Moves focus natively; a disabled switch is skipped, unless `isFocusableWhenDisabled`.                                                                                                                  |
 
 ## ARIA and state attributes per state
 
@@ -121,7 +124,7 @@ property gets that.
 |                   | every part | + `data-selected`                                                                                               |
 | hovered           | every part | + `data-hovered`                                                                                                |
 | focused           | every part | + `data-focused`; + `data-focus-visible` after keyboard or virtual focus                                        |
-| disabled          | input      | + `disabled`                                                                                                    |
+| disabled          | input      | + `disabled`; `aria-disabled="true"` instead with `isFocusableWhenDisabled`                                     |
 |                   | every part | + `data-disabled`; the error hidden (Field)                                                                     |
 | read-only         | input      | + `aria-readonly="true"`                                                                                        |
 |                   | every part | + `data-readonly`                                                                                               |
@@ -151,6 +154,7 @@ native checkbox with `role="switch"`.
 | invalid, the error shown | `switch, Wi-Fi, Turn on to sync, not checked, invalid` |
 | invalid and required     | `switch, Wi-Fi, not checked, invalid, required`        |
 | disabled                 | `switch, Wi-Fi, not checked, disabled` (not focusable) |
+| focusable and disabled   | `switch, Wi-Fi, not checked, disabled`                 |
 
 The virtual reader says "checked" and "not checked" for every role; VoiceOver,
 JAWS and current NVDA say "on" and "off" for a switch (from their
@@ -191,7 +195,8 @@ return (
 The definition is exported from `@uniaria/core/switch` as `toggleSwitch`
 (Resolved questions 4); its name, `data-scope` and element stay `switch`.
 
-Element attributes: `default-selected`, `disabled`, `readonly`, `required`,
+Element attributes: `default-selected`, `disabled`,
+`focusable-when-disabled`, `readonly`, `required`,
 `invalid`, `labelled-by`, `described-by`. Properties: `isSelected`
 (controlled), `defaultSelected`. Events: `selectedchange`, `focuschange`.
 The element adopts the input's `checked` property and `id`, and the label's
@@ -246,6 +251,10 @@ Decided by @tenphi on 2026-10-16.
    definition can't be `export const switch` like `checkbox`.
    `toggleSwitch` is the control's common name and reads like
    `toggleButton`. Its name, `data-scope` and element stay `switch`.
+5. **`isFocusableWhenDisabled`** (Tooltip spec, Resolved questions 12,
+   decided by @tenphi on 2026-10-16): as Checkbox's, so a tooltip can
+   explain a disabled switch to the keyboard. No automatic switch when a
+   tooltip links: the design system sets it.
 
 ## Open questions
 

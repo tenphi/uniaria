@@ -44,14 +44,14 @@ Not part of Checkbox:
 
 ## Anatomy
 
-| Part        | Element                                                          | Attributes UniAria owns                                                                                                                                                                                               | Notes                                                                                                                                                                                                             |
-| ----------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; a `label` makes its whole area toggle the checkbox natively | state attributes                                                                                                                                                                                                      | Optional. No role.                                                                                                                                                                                                |
-| input       | `input`                                                          | `type="checkbox"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `aria-readonly`, the `checked` and `indeterminate` properties, state attributes | The consumer owns `name`, `value` (unless the `value` prop is set), `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root (Cube UI Kit's overlay). |
-| indicator   | any; usually `span`                                              | `aria-hidden="true"`, state attributes                                                                                                                                                                                | Optional. The box drawn in place of the input, holding the check or the dash.                                                                                                                                     |
-| label       | `label` by default; any element through `labelElementType`       | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                           | Names the checkbox. Inside a `label` root it must be another element, a `span`: labels can't nest.                                                                                                                |
-| description | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, where a click on it would toggle the checkbox.                                                                                                                                            |
-| error       | any                                                              | as Field                                                                                                                                                                                                              | Outside a `label` root, as the description.                                                                                                                                                                       |
+| Part        | Element                                                          | Attributes UniAria owns                                                                                                                                                                                                                    | Notes                                                                                                                                                                                                             |
+| ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; a `label` makes its whole area toggle the checkbox natively | state attributes                                                                                                                                                                                                                           | Optional. No role.                                                                                                                                                                                                |
+| input       | `input`                                                          | `type="checkbox"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled` (or `aria-disabled`), `aria-readonly`, the `checked` and `indeterminate` properties, state attributes | The consumer owns `name`, `value` (unless the `value` prop is set), `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root (Cube UI Kit's overlay). |
+| indicator   | any; usually `span`                                              | `aria-hidden="true"`, state attributes                                                                                                                                                                                                     | Optional. The box drawn in place of the input, holding the check or the dash.                                                                                                                                     |
+| label       | `label` by default; any element through `labelElementType`       | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                                                | Names the checkbox. Inside a `label` root it must be another element, a `span`: labels can't nest.                                                                                                                |
+| description | any                                                              | as Field                                                                                                                                                                                                                                   | Outside a `label` root, where a click on it would toggle the checkbox.                                                                                                                                            |
+| error       | any                                                              | as Field                                                                                                                                                                                                                                   | Outside a `label` root, as the description.                                                                                                                                                                       |
 
 State attributes go on every part, so the box, the label and the messages can
 be styled without reading state: `data-selected`, `data-indeterminate`,
@@ -69,19 +69,20 @@ Two layouts work without any script for the click:
 
 ## Props
 
-| Prop             | Type                  | Default   | Bindable | Change event     | Notes                                                                                                                      |
-| ---------------- | --------------------- | --------- | -------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| isSelected       | `boolean`             | `false`   | yes      | `selectedChange` | The input's `checked` property. See Selection. The name follows React Aria, Cube UI Kit and ToggleButton.                  |
-| isIndeterminate  | `boolean`             | `false`   | no       | —                | The input's `indeterminate` property. Presentational, as in React Aria and Cube UI Kit: see Selection.                     |
-| isDisabled       | `boolean`             | `false`   | no       | —                | Native `disabled` on the input, plus Field's `isDisabled` (marks every part, hides the error).                             |
-| isReadOnly       | `boolean`             | `false`   | no       | —                | `aria-readonly="true"`, and every toggle is cancelled. Not the `readonly` attribute (see Selection). Attribute `readonly`. |
-| isRequired       | `boolean`             | `false`   | no       | —                | Field's: `aria-required`, never native `required`.                                                                         |
-| isInvalid        | `boolean`             | `false`   | no       | —                | Field's: `aria-invalid`, shows and announces the error.                                                                    |
-| inputId          | `string \| undefined` | generated | no       | —                | Field's `controlId`. The element adopts the input's `id`.                                                                  |
-| labelElementType | `string`              | `'label'` | no       | —                | Field's. Pass `'span'` for a label part inside a `label` root. The element reads the label's tag.                          |
-| labelledBy       | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                   |
-| describedBy      | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                   |
-| value            | `string \| undefined` | —         | no       | —                | The key in a CheckboxGroup's value; required in a group. Written to the input's `value` when set, so a form submits it.    |
+| Prop                    | Type                  | Default   | Bindable | Change event     | Notes                                                                                                                                  |
+| ----------------------- | --------------------- | --------- | -------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| isSelected              | `boolean`             | `false`   | yes      | `selectedChange` | The input's `checked` property. See Selection. The name follows React Aria, Cube UI Kit and ToggleButton.                              |
+| isIndeterminate         | `boolean`             | `false`   | no       | —                | The input's `indeterminate` property. Presentational, as in React Aria and Cube UI Kit: see Selection.                                 |
+| isDisabled              | `boolean`             | `false`   | no       | —                | Native `disabled` on the input, plus Field's `isDisabled` (marks every part, hides the error).                                         |
+| isFocusableWhenDisabled | `boolean`             | `false`   | no       | —                | As Radio's: `aria-disabled` instead of `disabled`, so a tooltip can explain it; never toggles, never submitted (Resolved questions 3). |
+| isReadOnly              | `boolean`             | `false`   | no       | —                | `aria-readonly="true"`, and every toggle is cancelled. Not the `readonly` attribute (see Selection). Attribute `readonly`.             |
+| isRequired              | `boolean`             | `false`   | no       | —                | Field's: `aria-required`, never native `required`.                                                                                     |
+| isInvalid               | `boolean`             | `false`   | no       | —                | Field's: `aria-invalid`, shows and announces the error.                                                                                |
+| inputId                 | `string \| undefined` | generated | no       | —                | Field's `controlId`. The element adopts the input's `id`.                                                                              |
+| labelElementType        | `string`              | `'label'` | no       | —                | Field's. Pass `'span'` for a label part inside a `label` root. The element reads the label's tag.                                      |
+| labelledBy              | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                               |
+| describedBy             | `string \| undefined` | —         | no       | —                | Field's.                                                                                                                               |
+| value                   | `string \| undefined` | —         | no       | —                | The key in a CheckboxGroup's value; required in a group. Written to the input's `value` when set, so a form submits it.                |
 
 ## Events
 
@@ -137,7 +138,10 @@ accessibility tree reads only the properties), and ARIA in HTML disallows it.
   lets the toggle happen and reverts it. The `readonly` attribute is not
   used: HTML ignores it on a checkbox, and Chromium and WebKit then drop the
   checkbox from constraint validation (`willValidate` is false).
-- **Disabled.** Native `disabled`: not focusable, never toggles.
+- **Disabled.** Native `disabled`: not focusable, never toggles. With
+  `isFocusableWhenDisabled`, `aria-disabled` instead: focusable, every
+  toggle cancelled as read-only's, and its entry left out of the form's
+  data (a `formdata` listener), as a natively disabled checkbox's is.
 - **Form reset.** As TextField: on the form's `reset` event (skipped when
   `defaultPrevented`) the checkbox goes back to the state it mounted with,
   `defaultSelected` when uncontrolled. The native reset then sets `checked`
@@ -153,7 +157,7 @@ accessibility tree reads only the properties), and ARIA in HTML disallows it.
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Space | Toggles, natively. Nothing when read-only.                                                                                                                                         |
 | Enter | Nothing on the checkbox: it submits its form natively, as in React Aria and Cube UI Kit (whose docs say Enter toggles; the code doesn't). The APG checkbox pattern has Space only. |
-| Tab   | Moves focus natively; a disabled checkbox is skipped.                                                                                                                              |
+| Tab   | Moves focus natively; a disabled checkbox is skipped, unless `isFocusableWhenDisabled`.                                                                                            |
 
 Checkbox handles no keys itself.
 
@@ -169,7 +173,7 @@ Checkbox handles no keys itself.
 |                   | every part | + `data-indeterminate`                                                                         |
 | hovered           | every part | + `data-hovered`                                                                               |
 | focused           | every part | + `data-focused`; + `data-focus-visible` after keyboard or virtual focus                       |
-| disabled          | input      | + `disabled`                                                                                   |
+| disabled          | input      | + `disabled`; `aria-disabled="true"` instead with `isFocusableWhenDisabled`                    |
 |                   | every part | + `data-disabled`; the error hidden (Field)                                                    |
 | read-only         | input      | + `aria-readonly="true"`                                                                       |
 |                   | every part | + `data-readonly`                                                                              |
@@ -207,6 +211,7 @@ and a native checkbox. The `for`/`id`, wrapping-`label` and
 | invalid, the error shown | `checkbox, Accept terms, You must accept to continue, not checked, invalid`       |
 | invalid and required     | `checkbox, Accept terms, not checked, invalid, required`                          |
 | disabled                 | `checkbox, Accept terms, not checked, disabled` (not focusable)                   |
+| focusable and disabled   | `checkbox, Accept terms, not checked, disabled`                                   |
 
 Focus reads the phrase once; a wrapper root adds nothing. Reading by line,
 the label text is a stop of its own after the checkbox. The virtual reader
@@ -253,7 +258,7 @@ return (
 ```
 
 Element attributes: `default-selected`, `indeterminate`, `disabled`,
-`readonly`, `required`, `invalid`, `value`, `group` (the id of its
+`focusable-when-disabled`, `readonly`, `required`, `invalid`, `value`, `group` (the id of its
 `<uni-checkbox-group>`, when not inside it), `labelled-by`,
 `described-by`.
 Properties: `isSelected` (controlled), `defaultSelected`, `isIndeterminate`.
@@ -326,6 +331,10 @@ Decided by @tenphi on 2026-10-15.
    (its microtasks, where React applies a state update) the checkbox shows
    `isSelected` again. A store that answers later than that flickers, as in
    React.
+3. **`isFocusableWhenDisabled`** (Tooltip spec, Resolved questions 12,
+   decided by @tenphi on 2026-10-16): as Radio's, so a tooltip can explain
+   a disabled checkbox to the keyboard. No automatic switch when a tooltip
+   links: the design system sets it.
 
 ## Open questions
 
