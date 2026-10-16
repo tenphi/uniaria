@@ -70,6 +70,7 @@ root is always `type="button"`.
 | `pressend`       | `onPressEnd`       | As in Button.                                                                              |
 | `selectedchange` | `onSelectedChange` | A press asks to toggle. The detail is the requested value, `!isSelected`.                  |
 | `press`          | `onPress`          | As in Button, after `selectedchange`. Handlers that read state see the value just toggled. |
+| `focuschange`    | `onFocusChange`    | As in Button.                                                                              |
 
 Order on activation: `pressstart`, `pressend`, `selectedchange`, `press`, the
 order React Aria uses (it toggles, then calls `onPress`). A cancelled press
@@ -216,6 +217,7 @@ Decided by @tenphi on 2026-10-15.
    the current page gets `aria-current` through a later Button prop, when a
    consumer needs it. Tabs and options wait for Tabs and Listbox. Until then
    UI Kit keeps writing those attributes itself.
+3. **`focusChange`**, as Button's, from the gate 3 API review, approved by @tenphi on 2026-10-16.
 
 ## Open questions
 

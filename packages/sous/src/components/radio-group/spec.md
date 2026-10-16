@@ -116,7 +116,8 @@ a group it isn't inside, as a checkbox's do.
 RadioGroup: `value`, `isDisabled`, `isReadOnly`, `isRequired`, `isInvalid`,
 `isErrorShown`, `isFocusWithin`, `isFocusVisible`. Radio: `isSelected`,
 `isFocused`, `isFocusVisible`, `isHovered`, `isDisabled` (its own or the
-group's).
+group's), and the group's `isReadOnly` and `isInvalid` (Resolved questions
+8).
 
 ## Selection
 
@@ -336,6 +337,8 @@ Decided by @tenphi on 2026-10-16, as recommended.
    vertically" to what screen readers say on every group. All four arrows
    work in either orientation; it only changes which arrows swap in
    right-to-left.
+8. **Radio reports `isReadOnly` and `isInvalid`**, from the gate 3 API review, approved by @tenphi on 2026-10-16:
+   its parts already carry both from the group, and Checkbox reports them.
 
 ## Open questions
 

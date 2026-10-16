@@ -51,11 +51,12 @@ No element-owned parts.
 
 ### Events
 
-| Event        | React prop     | When                                                                                 |
-| ------------ | -------------- | ------------------------------------------------------------------------------------ |
-| `pressstart` | `onPressStart` | A press begins: pointer down, Enter or Space down, or a virtual click.               |
-| `pressend`   | `onPressEnd`   | A press ends, with or without activation (release, leave, cancel, key up elsewhere). |
-| `press`      | `onPress`      | Activation: released over the root, key released on the root, or a virtual click.    |
+| Event         | React prop      | When                                                                                 |
+| ------------- | --------------- | ------------------------------------------------------------------------------------ |
+| `pressstart`  | `onPressStart`  | A press begins: pointer down, Enter or Space down, or a virtual click.               |
+| `pressend`    | `onPressEnd`    | A press ends, with or without activation (release, leave, cancel, key up elsewhere). |
+| `press`       | `onPress`       | Activation: released over the root, key released on the root, or a virtual click.    |
+| `focuschange` | `onFocusChange` | The root gained (`true`) or lost (`false`) focus.                                    |
 
 Order on activation: `pressstart`, `pressend`, `press`. A cancelled press
 fires `pressstart`, then `pressend` and no `press`. There is no
@@ -216,16 +217,16 @@ Phrases follow `@guidepup/virtual-screen-reader`'s format
 
 ```tsx
 // React
-const button = useButton({
-  onPress: save,
+const save = useComponent(button, {
+  onPress: submit,
   isDisabled: isSaving,
   isFocusableWhenDisabled: true,
 });
-const isPressed = useButtonState(button, (s) => s.isPressed); // only if the render needs it
-return <button {...button.parts.root}>Save</button>;
+const isPressed = useComponentState(save, (s) => s.isPressed); // only if the render needs it
+return <button {...save.parts.root}>Save</button>;
 
 // Link mode: same component, same look, link semantics
-const docs = useButton({ href: '/docs' });
+const docs = useComponent(button, { href: '/docs' });
 return <a {...docs.parts.root}>Docs</a>; // or the router's link component
 ```
 
@@ -286,6 +287,9 @@ Decided by @tenphi on 2026-10-14.
    states, `should…` for behavior, as in Cube UI Kit. The props were renamed
    from `disabled`, `focusableWhenDisabled`, `excludeFromTabOrder` and
    `preventFocusOnPress`; element attributes keep the HTML-style names.
+7. **`focusChange`**, from the gate 3 API review, approved by @tenphi on 2026-10-16: Button
+   fires it as every other focusable Sous component does, and as React
+   Aria's `onFocusChange` does.
 
 ## Open questions
 

@@ -48,20 +48,22 @@ Not part of CheckboxGroup:
 The checkboxes are `<sous-checkbox>` elements or `useComponent(checkbox)`
 components inside the root, or linked from elsewhere (Owner link). State
 attributes go on every part: `data-disabled`, `data-readonly`,
-`data-invalid`, `data-required` and `data-focus-within`.
+`data-invalid`, `data-required`, `data-focus-within` and
+`data-focus-visible` (focus within came by keyboard).
 
 ## Props
 
-| Prop             | Type                  | Default  | Bindable | Change event  | Notes                                                                                      |
-| ---------------- | --------------------- | -------- | -------- | ------------- | ------------------------------------------------------------------------------------------ |
-| value            | `string[]`            | `[]`     | yes      | `valueChange` | The `value` of each selected checkbox. A newly selected value goes last, as in React Aria. |
-| isDisabled       | `boolean`             | `false`  | no       | —             | Disables every checkbox natively; `aria-disabled="true"` on the root.                      |
-| isReadOnly       | `boolean`             | `false`  | no       | —             | Every checkbox becomes read-only.                                                          |
-| isRequired       | `boolean`             | `false`  | no       | —             | See Required and invalid.                                                                  |
-| isInvalid        | `boolean`             | `false`  | no       | —             | Shows and announces the group's error; see Required and invalid.                           |
-| labelElementType | `string`              | `'span'` | no       | —             | Field's. The element reads the label's tag.                                                |
-| labelledBy       | `string \| undefined` | —        | no       | —             | Field's.                                                                                   |
-| describedBy      | `string \| undefined` | —        | no       | —             | Field's.                                                                                   |
+| Prop             | Type                  | Default  | Bindable | Change event  | Notes                                                                                                                                                              |
+| ---------------- | --------------------- | -------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| value            | `string[]`            | `[]`     | yes      | `valueChange` | The `value` of each selected checkbox. A newly selected value goes last, as in React Aria.                                                                         |
+| name             | `string \| undefined` | —        | no       | —             | Written to every checkbox's `name` while set, so a form submits each selected value under it. No generated name: checkboxes don't need one (Resolved questions 5). |
+| isDisabled       | `boolean`             | `false`  | no       | —             | Disables every checkbox natively; `aria-disabled="true"` on the root.                                                                                              |
+| isReadOnly       | `boolean`             | `false`  | no       | —             | Every checkbox becomes read-only.                                                                                                                                  |
+| isRequired       | `boolean`             | `false`  | no       | —             | See Required and invalid.                                                                                                                                          |
+| isInvalid        | `boolean`             | `false`  | no       | —             | Shows and announces the group's error; see Required and invalid.                                                                                                   |
+| labelElementType | `string`              | `'span'` | no       | —             | Field's. The element reads the label's tag.                                                                                                                        |
+| labelledBy       | `string \| undefined` | —        | no       | —             | Field's.                                                                                                                                                           |
+| describedBy      | `string \| undefined` | —        | no       | —             | Field's.                                                                                                                                                           |
 
 Checkbox gains one prop for groups (Resolved questions 2):
 
@@ -78,15 +80,16 @@ Checkbox gains one prop for groups (Resolved questions 2):
 
 ## Public state
 
-| Field         | Type       | Meaning                              |
-| ------------- | ---------- | ------------------------------------ |
-| value         | `string[]` | The current value.                   |
-| isDisabled    | `boolean`  | The prop.                            |
-| isReadOnly    | `boolean`  | The prop.                            |
-| isRequired    | `boolean`  | The prop.                            |
-| isInvalid     | `boolean`  | The prop.                            |
-| isErrorShown  | `boolean`  | Field's: invalid and not disabled.   |
-| isFocusWithin | `boolean`  | Focus is on a checkbox in the group. |
+| Field          | Type       | Meaning                              |
+| -------------- | ---------- | ------------------------------------ |
+| value          | `string[]` | The current value.                   |
+| isDisabled     | `boolean`  | The prop.                            |
+| isReadOnly     | `boolean`  | The prop.                            |
+| isRequired     | `boolean`  | The prop.                            |
+| isInvalid      | `boolean`  | The prop.                            |
+| isErrorShown   | `boolean`  | Field's: invalid and not disabled.   |
+| isFocusWithin  | `boolean`  | Focus is on a checkbox in the group. |
+| isFocusVisible | `boolean`  | Focus within came by keyboard.       |
 
 ## A checkbox in a group
 
@@ -101,6 +104,7 @@ A checkbox with an owner group takes from it:
   default instead.) Each toggle of a controlled group follows Checkbox's rule: the
   browser's toggle shows, and goes back after the event unless the
   consumer accepts the new value.
+- **Name.** The group's `name`, while set.
 - **Disabled and read-only.** The group's, or its own.
 - **Required and invalid.** See below.
 - **Description.** Its `aria-describedby` gains the group's error while it is
@@ -176,12 +180,13 @@ natively.
 | required        | every part | + `data-required`                                                          |
 | invalid         | every part | + `data-invalid`                                                           |
 |                 | checkboxes | `aria-invalid="true"`, the group's error in `aria-describedby` while shown |
-| focus within    | every part | + `data-focus-within`                                                      |
+| focus within    | every part | + `data-focus-within`, + `data-focus-visible` after keyboard focus         |
 
 ## Focus
 
 CheckboxGroup moves no focus. Focus within reports on every part, so the
-group can show a ring around all of its checkboxes.
+group can show a ring around all of its checkboxes, and
+`data-focus-visible` limits that ring to keyboard focus, as on RadioGroup.
 
 ## Pointer and touch
 
@@ -205,6 +210,7 @@ described by "Pick at least one", with checkboxes "Email" and "SMS".
 ```tsx
 // React
 const group = useComponent(checkboxGroup, {
+  name: 'notifications',
   defaultValue: ['email'],
   onValueChange,
 });
@@ -224,7 +230,7 @@ function Option({ value, children }) {
   const option = useComponent(checkbox, { value, labelElementType: 'span' });
   return (
     <label {...option.parts.root}>
-      <input {...option.parts.input} name="notifications" />
+      <input {...option.parts.input} />
       <span {...option.parts.label}>{children}</span>
     </label>
   );
@@ -233,12 +239,12 @@ function Option({ value, children }) {
 
 ```html
 <!-- Custom element -->
-<sous-checkbox-group required>
+<sous-checkbox-group name="notifications" required>
   <div data-part="root">
     <span data-part="label">Notifications</span>
     <sous-checkbox value="email">
       <label data-part="root">
-        <input data-part="input" type="checkbox" name="notifications" checked />
+        <input data-part="input" type="checkbox" checked />
         <span data-part="label">Email</span>
       </label>
     </sous-checkbox>
@@ -247,7 +253,7 @@ function Option({ value, children }) {
 </sous-checkbox-group>
 ```
 
-Element attributes: `disabled`, `readonly`, `required`, `invalid`,
+Element attributes: `name`, `disabled`, `readonly`, `required`, `invalid`,
 `labelled-by`, `described-by`. Properties: `value` (controlled),
 `defaultValue`. Events: `valuechange`, `focuschange`. The group's default is
 the `value` of each checkbox whose input is checked when they link, so
@@ -312,6 +318,10 @@ Decided by @tenphi on 2026-10-15.
    group's name and description when focus enters it, so only the error
    goes on each checkbox: it explains an invalid checkbox wherever focus
    lands.
+5. **`name` and focus-visible**, from the gate 3 API review, approved by @tenphi on 2026-10-16. The
+   group writes its `name` to every checkbox, as RadioGroup does and as
+   React Aria's CheckboxGroup does, but generates none. Focus within
+   reports `isFocusVisible`, as RadioGroup's does.
 
 ## Open questions
 
