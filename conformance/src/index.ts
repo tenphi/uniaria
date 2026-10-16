@@ -12,6 +12,7 @@
 import { buttonConformance } from './button/button.conformance';
 import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { checkboxGroupConformance } from './checkbox-group/checkbox-group.conformance';
+import { dialogConformance } from './dialog/dialog.conformance';
 import { fieldConformance } from './field/field.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { switchConformance } from './switch/switch.conformance';
@@ -22,6 +23,7 @@ export {
   buttonConformance,
   checkboxConformance,
   checkboxGroupConformance,
+  dialogConformance,
   fieldConformance,
   radioGroupConformance,
   switchConformance,
@@ -34,6 +36,11 @@ export type {
   CheckboxGroupProps,
   CheckboxGroupState,
 } from './checkbox-group/types';
+export type {
+  DialogDismissEvent,
+  DialogProps,
+  DialogState,
+} from './dialog/types';
 export type { FieldProps, FieldState } from './field/types';
 export type { RadioGroupProps, RadioGroupState } from './radio-group/types';
 export type { SwitchProps, SwitchState } from './switch/types';
@@ -53,4 +60,5 @@ export const suites = [
   checkboxGroupConformance,
   switchConformance,
   radioGroupConformance,
+  dialogConformance,
 ];
