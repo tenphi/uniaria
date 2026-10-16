@@ -13,6 +13,7 @@ import { buttonConformance } from './button/button.conformance';
 import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { checkboxGroupConformance } from './checkbox-group/checkbox-group.conformance';
 import { fieldConformance } from './field/field.conformance';
+import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { switchConformance } from './switch/switch.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
@@ -22,6 +23,7 @@ export {
   checkboxConformance,
   checkboxGroupConformance,
   fieldConformance,
+  radioGroupConformance,
   switchConformance,
   textFieldConformance,
   toggleButtonConformance,
@@ -33,6 +35,7 @@ export type {
   CheckboxGroupState,
 } from './checkbox-group/types';
 export type { FieldProps, FieldState } from './field/types';
+export type { RadioGroupProps, RadioGroupState } from './radio-group/types';
 export type { SwitchProps, SwitchState } from './switch/types';
 export type { TextFieldProps, TextFieldState } from './text-field/types';
 export type {
@@ -49,4 +52,5 @@ export const suites = [
   checkboxConformance,
   checkboxGroupConformance,
   switchConformance,
+  radioGroupConformance,
 ];
