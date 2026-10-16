@@ -68,6 +68,16 @@ Where focus goes on open, close, selection and dismissal; what restores it.
 
 Press behavior, press-and-hold, outside interaction, hover.
 
+## Styling tokens
+
+What the consumer's CSS can bind to: state attributes, CSS variables and
+public state, with the parts they are on. UniAria provides tokens, never a
+look; styles it writes only where a behavior needs them, listed here too.
+
+| Token       | On         | Meaning |
+| ----------- | ---------- | ------- |
+| `data-open` | every part |         |
+
 ## Expected spoken output
 
 What the virtual screen reader should announce for the main flows (these

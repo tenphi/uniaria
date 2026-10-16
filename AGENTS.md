@@ -7,12 +7,15 @@ Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason UniAria exists.
 Styling is out of scope: every part exposes `data-scope`, `data-part` and state
-attributes for the design system to target. UniAria ships CSS only where a
-behavior can't work without it, and as little as possible. Per-element rules go
-inline and yield to an inline value the consumer set (press sets
-`touch-action: pan-x pan-y pinch-zoom` on pressable parts). A rule that must be
-global is adopted as a constructed stylesheet inside an anonymous `@layer`, so
-any consumer CSS wins, and only while the behavior is active.
+attributes for the design system to target. UniAria is not a styling library:
+the consumer's CSS comes separately and binds to the tokens UniAria provides
+(state attributes, CSS variables, public state), so it can change with state.
+Specs list those tokens, never a look (owner, 2026-10-16). UniAria ships CSS
+only where a behavior can't work without it, and as little as possible.
+Per-element rules go inline and yield to an inline value the consumer set
+(press sets `touch-action: pan-x pan-y pinch-zoom` on pressable parts). A rule
+that must be global is adopted as a constructed stylesheet inside an anonymous
+`@layer`, so any consumer CSS wins, and only while the behavior is active.
 
 UniAria is built by AI agents. The owner, **@tenphi**, approves specs and reviews
 APIs at phase gates. Manual screen-reader testing is deferred until the
