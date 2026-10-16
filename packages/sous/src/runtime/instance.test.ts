@@ -601,6 +601,38 @@ describe('ctx.use', () => {
     expect(seen).toEqual([element, 'h-body']);
   });
 
+  it('leaves out a composed part mapped to null', () => {
+    const probe = defineComponent({
+      name: 'probe',
+      parts: ['panel', 'note'],
+      props: {},
+      setup(ctx) {
+        return { element: () => ctx.element('note'), ids: ctx.ids };
+      },
+      expose: () => ({}),
+      connect: () => ({ panel: { attrs: {} }, note: { attrs: {} } }),
+    });
+    const host = defineComponent({
+      name: 'host',
+      parts: ['body'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(probe, () => ({}), {
+          parts: { panel: 'body', note: null },
+        });
+      },
+      expose: () => ({}),
+      connect: () => ({ body: { attrs: {} } }),
+    });
+    const instance = createInstance(host, { id: 'h' });
+    instance.attach('body', {});
+    expect(instance.api.api.element()).toBeNull();
+    expect(instance.api.api.ids).toEqual({
+      panel: 'h-body',
+      note: 'h-probe-note',
+    });
+  });
+
   it('refuses a composed part with nothing to render on', () => {
     const host = defineComponent({
       name: 'host',

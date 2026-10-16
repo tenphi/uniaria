@@ -177,8 +177,12 @@ export interface SetupContext<
 }
 
 export interface ComposeOptions<Inner extends string, Outer extends string> {
-  /** This component's part for each of the composed one's; same name by default. */
-  readonly parts?: Readonly<Partial<Record<Inner, Outer>>>;
+  /**
+   * This component's part for each of the composed one's; same name by
+   * default. `null` leaves a part out: nothing renders it, and the composed
+   * definition sees no element for it.
+   */
+  readonly parts?: Readonly<Partial<Record<Inner, Outer | null>>>;
 }
 
 /** A definition composed with `ctx.use()`. */

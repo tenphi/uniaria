@@ -193,12 +193,13 @@ export function createInstance<D extends AnyDefinition>(
   /**
    * Runs one definition's `setup()` against this instance: the component
    * itself, or one it composes with `ctx.use()`. `readProps` returns its
-   * props, and `partOf` names this instance's part for each of its parts.
+   * props, and `partOf` names this instance's part for each of its parts,
+   * or `null` for a part left out.
    */
   const scope = (
     scoped: AnyDefinition,
     readProps: () => Readonly<Record<string, unknown>>,
-    partOf: (part: string) => string,
+    partOf: (part: string) => string | null,
   ): { api: unknown; view: ViewContext<string, PropsSchema, unknown> } => {
     const readers: Record<string, (() => unknown) | Bindable<unknown>> = {};
     for (const info of scoped.schema.props) {
@@ -238,7 +239,12 @@ export function createInstance<D extends AnyDefinition>(
     }
 
     const scopedIds: Record<string, string> = {};
-    for (const part of scoped.parts) scopedIds[part] = ids[partOf(part)]!;
+    for (const part of scoped.parts) {
+      const own = partOf(part);
+      // A part left out still gets an id of its own, which nothing renders.
+      scopedIds[part] =
+        own === null ? `${id}-${scoped.name}-${part}` : ids[own]!;
+    }
 
     // The readers match the schema by construction; the generic types can't
     // see that, so they are cast once here.
@@ -263,7 +269,10 @@ export function createInstance<D extends AnyDefinition>(
       emit(name, detail) {
         (readProps()[callbackName(name)] as Callback)?.(detail);
       },
-      element: (part) => elements.get(partOf(part)) ?? null,
+      element: (part) => {
+        const own = partOf(part);
+        return own === null ? null : (elements.get(own) ?? null);
+      },
       batch: store.batch,
       owner(ownerDefinition) {
         const owner = currentOwner();
@@ -272,11 +281,11 @@ export function createInstance<D extends AnyDefinition>(
           : undefined;
       },
       use(child, childProps, composeOptions) {
-        const map: Readonly<Record<string, string | undefined>> =
+        const map: Readonly<Record<string, string | null | undefined>> =
           composeOptions?.parts ?? {};
         for (const part of child.parts) {
-          const own = map[part] ?? part;
-          if (!scoped.parts.includes(own)) {
+          const own = map[part] === null ? null : (map[part] ?? part);
+          if (own !== null && !scoped.parts.includes(own)) {
             throw new Error(
               `[sous] ${scoped.name} composes ${child.name}, whose "${part}" part has no "${own}" part to render on.`,
             );
@@ -285,7 +294,10 @@ export function createInstance<D extends AnyDefinition>(
         const composed = scope(
           child,
           childProps as () => Readonly<Record<string, unknown>>,
-          (part) => partOf(map[part] ?? part),
+          (part) => {
+            const own = map[part];
+            return own === null ? null : partOf(own ?? part);
+          },
         );
         return {
           api: composed.api,
