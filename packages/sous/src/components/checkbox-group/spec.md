@@ -1,6 +1,6 @@
 # CheckboxGroup spec
 
-Status: draft, awaiting owner review
+Status: approved by @tenphi on 2026-10-15
 
 ## Summary
 
@@ -17,7 +17,7 @@ invalid states.
   `aria-describedby` for its description
   (`references/aria-practices/content/patterns/checkbox/checkbox-pattern.html`).
 - **Builds on:** Field (`ctx.use`), `createFocusWithin` from `dom/`, Checkbox, and
-  `ctx.owner()`, which the runtime and both adapters gain for it (Open
+  `ctx.owner()`, which the runtime and both adapters gain for it (Resolved
   questions 1). RadioGroup will use the same link.
 - **Owner:** CheckboxGroup is the owner; its checkboxes are owned.
 - **Custom element:** yes, `<sous-checkbox-group>`, hosting consumer markup
@@ -63,7 +63,7 @@ attributes go on every part: `data-disabled`, `data-readonly`,
 | labelledBy       | `string \| undefined` | —        | no       | —             | Field's.                                                                                   |
 | describedBy      | `string \| undefined` | —        | no       | —             | Field's.                                                                                   |
 
-Checkbox gains one prop for groups (Open questions 2):
+Checkbox gains one prop for groups (Resolved questions 2):
 
 | Prop  | Type                  | Default | Notes                                                                                                                         |
 | ----- | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -95,14 +95,16 @@ A checkbox with an owner group takes from it:
 - **Selected.** `isSelected` is whether the group's value holds its `value`;
   a toggle adds or removes it through the group, which reports
   `valueChange`. Its own `isSelected`, `defaultSelected` and form reset are
-  unused (a development warning names them), as in React Aria and Cube UI
-  Kit. Each toggle of a controlled group follows Checkbox's rule: the
+  unused, as in React Aria and Cube UI Kit; a development warning names a
+  controlled `isSelected` and a missing `value`. (`defaultSelected` gets no
+  warning: an element's markup `checked` sets it, and joins the group's
+  default instead.) Each toggle of a controlled group follows Checkbox's rule: the
   browser's toggle shows, and goes back after the event unless the
   consumer accepts the new value.
 - **Disabled and read-only.** The group's, or its own.
 - **Required and invalid.** See below.
 - **Description.** Its `aria-describedby` gains the group's error while it is
-  shown (Open questions 4).
+  shown (Resolved questions 4).
 - **Indeterminate** stays its own.
 
 The group's value only ever holds values the consumer puts there or a
@@ -117,7 +119,7 @@ but not required, and `aria-required` isn't allowed on `role="group"`). So,
 as React Aria and Cube UI Kit do:
 
 - **Required** puts `aria-required="true"` on every checkbox while the
-  group's value is empty, and takes it off once one is selected (Open
+  group's value is empty, and takes it off once one is selected (Resolved
   questions 3).
 - **Invalid** puts `aria-invalid="true"` on every checkbox and links the
   group's error to each, so focusing any of them reads why.
@@ -139,10 +141,13 @@ How a checkbox finds its group, from decision 11:
    prop, for a checkbox rendered apart (another root, a portal outside
    React). Elements: `<sous-checkbox group="notifications">`, the id of
    the group's host, resolved in the checkbox's root node.
-2. **React context.** `useComponent(checkboxGroup)` provides its instance
-   through a React context that holds only the stable instance, so a
-   checkbox rendered inside it is linked from its first render: the server
-   HTML already has `checked` for a selected value.
+2. **React context.** `<OwnerProvider owner={group}>` around the
+   checkboxes provides the group's instance through a React context that
+   holds only the stable instance, so a checkbox rendered inside it is
+   linked from its first render: the server HTML already has `checked` for
+   a selected value. A hook can't provide a context itself, so the consumer
+   renders the provider; without it, step 3 links the checkbox after
+   mount.
 3. **Nearest DOM ancestor.** On connect, the checkbox dispatches a
    bubbling request event (the Context Community Protocol's shape), and the
    nearest group answers; a group that connects later announces itself and
@@ -206,14 +211,16 @@ const group = useComponent(checkboxGroup, {
 return (
   <div {...group.parts.root}>
     <span {...group.parts.label}>Notifications</span>
-    <Option value="email">Email</Option>
-    <Option value="sms">SMS</Option>
+    <OwnerProvider owner={group}>
+      <Option value="email">Email</Option>
+      <Option value="sms">SMS</Option>
+    </OwnerProvider>
     <p {...group.parts.error}>Pick at least one</p>
   </div>
 );
 
 function Option({ value, children }) {
-  // Linked to the group above through React context.
+  // Linked to the group above through OwnerProvider.
   const option = useComponent(checkbox, { value, labelElementType: 'span' });
   return (
     <label {...option.parts.root}>
@@ -270,33 +277,42 @@ CheckboxGroup backs `Checkbox.Group`.
 
 None.
 
-## Open questions
+## Resolved questions
 
-1. **`ctx.owner()` in the runtime and adapters.** Decision 11 described it;
-   this is its first user, and it changes the runtime and both adapters'
-   contracts. Proposed shape:
-   - A definition that can be owned names its owner:
-     `defineComponent({ …, owner: checkboxGroup })`. Its props gain `owner`
-     (an instance, React's explicit link), and its element gains the
-     `group` attribute (the explicit link by id).
-   - `ctx.owner()` in `setup()` returns `undefined` or the group's `api` and
-     `state()`; reading it subscribes, and resolving it flushes.
-   - `useComponent` provides every instance through one React context keyed
-     by definition; `dom/` holds the request event and the late
-     announcement, which both adapters use.
+Decided by @tenphi on 2026-10-15.
+
+1. **`ctx.owner()` in the runtime and adapters.** This is decision 11's
+   first user:
+   - A definition that can be owned names its owner and the element
+     attribute for the explicit link:
+     `defineComponent({ …, owner: { definition: checkboxGroup, attribute: 'group' } })`.
+     Its props gain `owner` (an instance, React's explicit link), and its
+     element gains the `group` attribute (the explicit link by id).
+   - `ctx.owner(checkboxGroup)` in `setup()` returns `undefined` or the
+     group's `instance`, `api` and `state()`; reading it subscribes the
+     child to the group's store.
+   - `dom/` holds the request event and the late announcement
+     (`provideOwner`, `requestOwner`), which both adapters use.
+   - React: the approved shape had `useComponent` provide every instance
+     through one context, but a hook can't render a provider. The consumer
+     renders `<OwnerProvider owner={group}>` around the checkboxes instead
+     (Owner link). Without one, the DOM request links the checkbox after
+     mount, so only the server HTML differs.
 2. **Checkbox gains a `value` prop that Sous writes to the input.** The
    checkbox needs its key at render time, before any DOM exists, so the
-   server HTML of a group shows which are checked. Checkbox's spec gave the
-   consumer the `value` attribute; with this prop Sous writes it when set,
-   and the consumer leaves it.
+   server HTML of a group shows which are checked. Sous writes the input's
+   `value` when the prop is set, and the consumer leaves it.
 3. **Required on every checkbox while nothing is selected**, as React Aria
    and Cube UI Kit do. Screen readers then say "required" on each checkbox,
-   which can sound like each one must be checked. The alternative is no
-   required state for screen readers at all, with the group's label or
-   description saying it ("Pick at least one"). Recommended: React Aria's,
-   since nothing else is read.
+   which can sound like each one must be checked, but nothing else is read:
+   `aria-required` on a group is neither allowed nor read.
 4. **The group's error on every checkbox, its description only on the
    group.** React Aria adds both to each checkbox's `aria-describedby`, so
    the description is read again on every checkbox. Screen readers read the
-   group's name and description when focus enters it, so recommended: only
-   the error, which explains an invalid checkbox wherever focus lands.
+   group's name and description when focus enters it, so only the error
+   goes on each checkbox: it explains an invalid checkbox wherever focus
+   lands.
+
+## Open questions
+
+None.
