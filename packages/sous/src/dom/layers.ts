@@ -80,6 +80,13 @@ function isEscape(event: KeyboardEvent): boolean {
   );
 }
 
+/** Whether `element` is the topmost open layer in its window. */
+export function isTopLayer(element: HTMLElement): boolean {
+  const view = element.ownerDocument.defaultView;
+  const stack = view ? stackFor(view) : [];
+  return stack[stack.length - 1]?.element === element;
+}
+
 /** Puts a part on the layer stack while `isOpen()` holds. */
 export function createLayer(
   ctx: InteractionContext,

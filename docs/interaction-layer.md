@@ -129,6 +129,23 @@ These are decided; follow them rather than the catalogue.
   (§10.8). A container something else removed (a body swap) is replaced, with
   the delay again, on the next message. There is no test-environment shortcut
   (§10.13): tests use fake timers.
+- **An open modal dialog hosts the announcer** (Dialog spec, Resolved
+  questions 7). A modal `<dialog>` makes the page outside it inert, and
+  Chromium then drops the container from the accessibility tree (probed:
+  ignored as `activeModalDialog`), which `data-sous-live-announcer` can't
+  prevent. `hostAnnouncer(element)` moves the container to the end of the
+  element until the returned function releases it; hosts stack, the topmost
+  one still in the document has it, and the container goes back to the start
+  of `<body>` after the last. A move waits the 100 ms Safari delay again.
+- **Presence** (`dom/presence.ts`, Dialog spec, Resolved questions 5).
+  `createPresence(ctx, { part, isOpen })` reports `isShown`, `isEntering` and
+  `isExiting`. Opening shows at once and is entering for two frames, so a
+  transition starts from the entering styles. Closing stays shown while the
+  finite, running animations of the part and its subtree finish
+  (`getAnimations({ subtree: true })`, which includes `::backdrop` in
+  Chromium and WebKit), read a frame after the exiting attribute is written;
+  reopening cancels the exit. React Aria reads `getAnimations()` without the
+  subtree.
 - **One click outside a popover closes it and acts on what it hit** (owner
   decision, 2026-10-15, after Cube UI Kit). React Aria stops the outside
   `pointerdown` and `click` of the top layer at the document (§7.12), so the

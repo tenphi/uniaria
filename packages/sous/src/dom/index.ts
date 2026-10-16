@@ -6,14 +6,20 @@
  * Built: the binder, part discovery, press, focus and focus-visible, hover,
  * the shared input-modality tracker, focus-within, focus scopes, the
  * focusable/tabbable rules, the live announcer, outside interaction, the
- * dismissable layer stack, hiding everything outside a modal and scroll lock
- * (iOS strategy pending). Planned: owner lookup, and positioning (CSS anchor
- * positioning with the Floating UI fallback behind one wrapper).
+ * dismissable layer stack, hiding everything outside a modal, scroll lock
+ * (iOS strategy pending) and presence (enter and exit phases). Planned:
+ * owner lookup, and positioning (CSS anchor positioning with the Floating UI
+ * fallback behind one wrapper).
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
 
-export { announce, clearAnnouncer, destroyAnnouncer } from './announcer';
+export {
+  announce,
+  clearAnnouncer,
+  destroyAnnouncer,
+  hostAnnouncer,
+} from './announcer';
 export type {
   AnnounceOptions,
   AnnouncerMessage,
@@ -48,10 +54,12 @@ export {
 export type { Modality, ModalityEvent, ModalityTracker } from './modality';
 export { interactOutside } from './interact-outside';
 export type { InteractOutsideHandlers } from './interact-outside';
-export { createLayer } from './layers';
+export { createLayer, isTopLayer } from './layers';
 export type { DismissReason, LayerOptions } from './layers';
 export { provideOwner, requestOwner } from './owner';
 export { SOUS_HOST, observeParts, queryParts } from './parts';
+export { createPresence } from './presence';
+export type { Presence, PresenceOptions } from './presence';
 export { createPress, isVirtualClick } from './press';
 export { createScrollLock, lockScroll } from './scroll-lock';
 export type { ScrollLockOptions } from './scroll-lock';

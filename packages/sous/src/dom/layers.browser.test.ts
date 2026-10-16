@@ -3,7 +3,7 @@ import { userEvent } from 'vitest/browser';
 
 import { createInstance, defineComponent, event, prop } from '../runtime';
 import { interactOutside } from './interact-outside';
-import { createLayer } from './layers';
+import { createLayer, isTopLayer } from './layers';
 import { createPress } from './press';
 import type { PressEvent } from './press';
 import type { DismissReason } from './layers';
@@ -248,6 +248,20 @@ describe('createLayer outside press', () => {
   });
 });
 
+describe('isTopLayer', () => {
+  it('is true only for the topmost open layer', () => {
+    render(`<div id="first">First</div><div id="second">Second</div>`);
+    expect(isTopLayer(byId('first'))).toBe(false);
+    open('first');
+    expect(isTopLayer(byId('first'))).toBe(true);
+    const second = open('second');
+    expect(isTopLayer(byId('first'))).toBe(false);
+    expect(isTopLayer(byId('second'))).toBe(true);
+    second.set({ isOpen: false });
+    expect(isTopLayer(byId('first'))).toBe(true);
+  });
+});
+
 describe('interactOutside', () => {
   const pointer = (target: Element, type: string, button = 0) =>
     target.dispatchEvent(
@@ -268,6 +282,51 @@ describe('interactOutside', () => {
     pointer(byId('out'), 'pointerdown');
     pointer(byId('out'), 'click');
     expect(onInteract).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  // A modal dialog's backdrop is the dialog: its clicks target it.
+  it("counts a press on a modal dialog's backdrop, not on its padding", async () => {
+    render(`<dialog id="dialog" style="padding: 40px; width: 200px">
+      <button id="in">In</button></dialog>`);
+    const dialog = byId('dialog') as HTMLDialogElement;
+    dialog.showModal();
+    const onInteract = vi.fn();
+    const stop = interactOutside(dialog, { onInteract });
+
+    await userEvent.click(dialog, { position: { x: 5, y: 5 } });
+    expect(onInteract).not.toHaveBeenCalled();
+    // One press beyond each side.
+    const { width, height } = dialog.getBoundingClientRect();
+    for (const [x, y] of [
+      [-20, height / 2],
+      [width + 20, height / 2],
+      [width / 2, -20],
+      [width / 2, height + 20],
+    ] as const) {
+      await userEvent.click(dialog, { position: { x, y } });
+    }
+    expect(onInteract).toHaveBeenCalledTimes(4);
+    expect(onInteract.mock.calls[0]![0].target).toBe(dialog);
+    stop();
+    dialog.close();
+  });
+
+  // A pseudo-element's press targets its element, wherever it is drawn.
+  it("counts a press on an element's own pseudo-element as inside", async () => {
+    render(`<div id="inside">In</div>`);
+    const style = document.createElement('style');
+    style.textContent = `#inside { position: relative; width: 100px }
+      #inside::after { content: ''; position: absolute; top: 100%; left: 0;
+        width: 100px; height: 40px }`;
+    document.body.append(style);
+    const onInteract = vi.fn();
+    const stop = interactOutside(byId('inside'), { onInteract });
+    const { height } = byId('inside').getBoundingClientRect();
+    await userEvent.click(byId('inside'), {
+      position: { x: 50, y: height + 20 },
+    });
+    expect(onInteract).not.toHaveBeenCalled();
     stop();
   });
 

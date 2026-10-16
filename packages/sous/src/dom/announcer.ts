@@ -34,6 +34,12 @@
  *   copy of Sous on a page shares one container. A container something else
  *   removed (a test, a framework that swaps `<body>`) is replaced on the next
  *   message.
+ * - A modal `<dialog>` makes the rest of the page inert, and Chromium drops
+ *   inert live regions from the accessibility tree (probed: ignored as
+ *   `activeModalDialog`). So an open modal hosts the container
+ *   (`hostAnnouncer`), the topmost one still in the document, and the
+ *   container goes back to `<body>` when the last closes. A move waits the
+ *   same 100 ms as a new container.
  */
 
 export type Politeness = 'assertive' | 'polite';
@@ -56,8 +62,9 @@ export interface AnnounceOptions {
   readonly document?: Document;
 }
 
-/** The window property; part of the contract between copies of Sous. */
+/** The window properties; part of the contract between copies of Sous. */
 const KEY = Symbol.for('@tenphi/sous/announcer/v1');
+const HOSTS = Symbol.for('@tenphi/sous/announcer-hosts/v1');
 
 const DEFAULT_TIMEOUT = 7000;
 
@@ -95,6 +102,8 @@ interface Announcer {
   clear(politeness?: Politeness): void;
   destroy(): void;
   isAttached(): boolean;
+  /** Moves the container to the topmost host in the document, or `<body>`. */
+  place(): void;
 }
 
 interface Announcement {
@@ -103,7 +112,11 @@ interface Announcement {
   readonly timeout: number;
 }
 
-type AnnouncerWindow = Window & { [KEY]?: Announcer };
+type AnnouncerWindow = Window & {
+  [KEY]?: Announcer;
+  /** The elements hosting the container, the last on top. */
+  [HOSTS]?: Element[];
+};
 
 /**
  * Reads `message` to screen-reader users. Does nothing without a document
@@ -151,6 +164,26 @@ export function destroyAnnouncer(document?: Document): void {
   delete view[KEY];
 }
 
+/**
+ * Moves the container into `element`, a modal dialog the rest of the page is
+ * inert under, until the returned function releases it. Hosts stack: the
+ * topmost one still in the document has it.
+ */
+export function hostAnnouncer(element: Element): () => void {
+  const view = element.ownerDocument.defaultView as AnnouncerWindow | null;
+  if (!view) return () => undefined;
+  const hosts = (view[HOSTS] ??= []);
+  hosts.push(element);
+  view[KEY]?.place();
+  let isHosting = true;
+  return () => {
+    if (!isHosting) return;
+    isHosting = false;
+    hosts.splice(hosts.indexOf(element), 1);
+    view[KEY]?.place();
+  };
+}
+
 /** Read inside the functions only, so the module imports on the server. */
 function windowOf(document: Document | undefined): AnnouncerWindow | null {
   const target = document ?? globalThis.document;
@@ -167,7 +200,6 @@ function createAnnouncer(view: Window): Announcer {
     polite: createLog(document, 'polite'),
   };
   container.append(logs.assertive, logs.polite);
-  document.body.prepend(container);
 
   // The removal timer of each message node in a region.
   const timers = new Map<Element, number>();
@@ -191,12 +223,31 @@ function createAnnouncer(view: Window): Announcer {
     timers.set(node, timer);
   };
 
-  const settleTimer = view.setTimeout(() => {
-    isSettled = true;
-    const settled = queue;
-    queue = [];
-    settled.forEach(insert);
-  }, SETTLE_DELAY);
+  let settleTimer = 0;
+  const settle = () => {
+    isSettled = false;
+    view.clearTimeout(settleTimer);
+    settleTimer = view.setTimeout(() => {
+      isSettled = true;
+      const settled = queue;
+      queue = [];
+      settled.forEach(insert);
+    }, SETTLE_DELAY);
+  };
+
+  const place = () => {
+    const hosts = (view as AnnouncerWindow)[HOSTS] ?? [];
+    let host: Element | undefined;
+    for (let index = hosts.length - 1; index >= 0 && !host; index--) {
+      if (hosts[index]!.isConnected) host = hosts[index];
+    }
+    if (container.parentNode === (host ?? document.body)) return;
+    if (host) host.append(container);
+    else document.body.prepend(container);
+    // Inserted again: Safari needs the same wait as for a new one.
+    settle();
+  };
+  place();
 
   const clearLog = (politeness: Politeness) => {
     for (const node of logs[politeness].children) {
@@ -227,6 +278,7 @@ function createAnnouncer(view: Window): Announcer {
       container.remove();
     },
     isAttached: () => container.isConnected,
+    place,
   };
 }
 

@@ -26,6 +26,10 @@
  *
  * Unlike React Aria, nothing is stopped: the outside element still gets its
  * events, as with the browser's own popover light dismiss.
+ *
+ * A press on a modal `<dialog>`'s `::backdrop` targets the dialog itself
+ * (probed in Chromium and WebKit), so a point outside the dialog's border
+ * box counts as outside it.
  */
 
 export interface InteractOutsideHandlers {
@@ -35,10 +39,24 @@ export interface InteractOutsideHandlers {
   onInteract?(event: MouseEvent): void;
 }
 
+function isOnBackdrop(element: Element, event: Event): boolean {
+  if (event.target !== element || element.localName !== 'dialog') return false;
+  const { clientX, clientY } = event as MouseEvent;
+  const box = element.getBoundingClientRect();
+  return (
+    clientX < box.left ||
+    clientX > box.right ||
+    clientY < box.top ||
+    clientY > box.bottom
+  );
+}
+
 function isOutside(element: Element, event: Event): boolean {
   const target = event.target as Node | null;
   if (!target?.isConnected) return false;
-  return !event.composedPath().includes(element);
+  return (
+    !event.composedPath().includes(element) || isOnBackdrop(element, event)
+  );
 }
 
 /** Listens for presses outside `element`; returns the function that stops. */

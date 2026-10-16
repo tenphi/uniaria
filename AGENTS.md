@@ -337,7 +337,9 @@ handler with its event.
 - No shadow DOM, no Lit. `defineElement` creates element classes inside the
   call, never at module scope.
 - The element never creates, moves or removes nodes it did not create.
-  Anything it must create (a live region) goes outside the consumer's tree.
+  Anything it must create (a live region) goes outside the consumer's tree;
+  the one exception is the live announcer, which an open modal dialog hosts
+  because the page outside it is inert.
 - Attribute ownership is per part: the element owns ARIA state and
   `data-state`; the consumer owns content, classes and every other attribute.
   A part can be declared element-owned (Select's displayed value): the

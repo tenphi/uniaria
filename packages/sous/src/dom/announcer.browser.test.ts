@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type * as AnnouncerModule from './announcer';
 import type { Politeness } from './announcer';
-import { announce, clearAnnouncer, destroyAnnouncer } from './announcer';
+import {
+  announce,
+  clearAnnouncer,
+  destroyAnnouncer,
+  hostAnnouncer,
+} from './announcer';
 
 /**
  * A second instance of the module, as when a page bundles two copies of
@@ -14,6 +19,7 @@ const copy = (await import(
 )) as typeof AnnouncerModule;
 
 const KEY = Symbol.for('@tenphi/sous/announcer/v1');
+const HOSTS = Symbol.for('@tenphi/sous/announcer-hosts/v1');
 
 function container(doc = document) {
   return doc.querySelector<HTMLElement>('[data-sous-live-announcer]');
@@ -36,6 +42,8 @@ beforeEach(() => {
 
 afterEach(() => {
   destroyAnnouncer();
+  // Hosts a test left hosting.
+  delete (window as unknown as Record<symbol, unknown>)[HOSTS];
   document.body.replaceChildren();
   vi.useRealTimers();
 });
@@ -203,6 +211,96 @@ describe('destroyAnnouncer', () => {
     announce('Kept');
     vi.advanceTimersByTime(100);
     expect(messages('assertive')).toEqual(['Kept']);
+  });
+});
+
+describe('hostAnnouncer', () => {
+  function dialog(id: string): HTMLDialogElement {
+    const element = document.createElement('dialog');
+    element.id = id;
+    element.append(document.createElement('button'));
+    document.body.append(element);
+    element.showModal();
+    return element;
+  }
+
+  it('moves the container into the host, and back to the start of <body>', () => {
+    announce('Before');
+    vi.advanceTimersByTime(100);
+    const first = dialog('first');
+    const release = hostAnnouncer(first);
+    expect(container()!.parentElement).toBe(first);
+    expect(first.lastElementChild).toBe(container());
+
+    release();
+    expect(document.body.firstElementChild).toBe(container());
+    // Releasing again changes nothing.
+    hostAnnouncer(first);
+    release();
+    expect(container()!.parentElement).toBe(first);
+  });
+
+  it('creates the container in the host when hosted first', () => {
+    const first = dialog('first');
+    const release = hostAnnouncer(first);
+    expect(container()).toBeNull();
+    announce('Inside');
+    expect(container()!.parentElement).toBe(first);
+    vi.advanceTimersByTime(100);
+    expect(messages('assertive')).toEqual(['Inside']);
+    release();
+  });
+
+  it('waits 100 ms after a move, for Safari', () => {
+    announce('Before');
+    vi.advanceTimersByTime(100);
+    const release = hostAnnouncer(dialog('first'));
+    announce('Moved');
+    vi.advanceTimersByTime(99);
+    expect(messages('assertive')).toEqual(['Before']);
+    vi.advanceTimersByTime(1);
+    expect(messages('assertive')).toEqual(['Before', 'Moved']);
+
+    release();
+    announce('Back');
+    vi.advanceTimersByTime(99);
+    expect(messages('assertive')).toEqual(['Before', 'Moved']);
+    vi.advanceTimersByTime(1);
+    expect(messages('assertive')).toEqual(['Before', 'Moved', 'Back']);
+  });
+
+  it('stays in the topmost host still in the document', () => {
+    announce('Before');
+    const first = dialog('first');
+    const second = dialog('second');
+    const releaseFirst = hostAnnouncer(first);
+    const releaseSecond = hostAnnouncer(second);
+    expect(container()!.parentElement).toBe(second);
+
+    vi.advanceTimersByTime(100);
+
+    // Released out of order: the top keeps it, without a new wait.
+    releaseFirst();
+    expect(container()!.parentElement).toBe(second);
+    announce('Still');
+    expect(messages('assertive')).toEqual(['Before', 'Still']);
+    hostAnnouncer(first);
+    expect(container()!.parentElement).toBe(first);
+
+    second.remove();
+    releaseSecond();
+    expect(container()!.parentElement).toBe(first);
+  });
+
+  it('skips a host removed without releasing it', () => {
+    const first = dialog('first');
+    hostAnnouncer(first);
+    const second = dialog('second');
+    hostAnnouncer(second);
+    second.remove();
+    // The container went with its host: the next message replaces it.
+    announce('Again');
+    expect(container()!.parentElement).toBe(first);
   });
 });
 
