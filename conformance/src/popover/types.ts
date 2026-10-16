@@ -3,30 +3,23 @@
  * (`packages/core/src/components/popover/spec.md`) defines them.
  */
 
-/** React Aria's placement strings: a side, optionally an alignment. */
-export type PopoverPlacement =
-  | 'bottom'
-  | 'bottom left'
-  | 'bottom right'
-  | 'bottom start'
-  | 'bottom end'
-  | 'top'
-  | 'top left'
-  | 'top right'
-  | 'top start'
-  | 'top end'
-  | 'left'
-  | 'left top'
-  | 'left bottom'
-  | 'start'
-  | 'start top'
-  | 'start bottom'
-  | 'right'
-  | 'right top'
-  | 'right bottom'
-  | 'end'
-  | 'end top'
-  | 'end bottom';
+type Area<Side extends string, Span extends string> =
+  Side | `${Side} ${'center' | 'span-all' | Span}`;
+
+/** A CSS `position-area` on one side of the anchor (spec, Positioning). */
+export type PopoverPositionArea =
+  | Area<'top' | 'bottom', 'span-left' | 'span-right'>
+  | Area<'left' | 'right', 'span-top' | 'span-bottom'>
+  | Area<'block-start' | 'block-end', 'span-inline-start' | 'span-inline-end'>
+  | Area<'inline-start' | 'inline-end', 'span-block-start' | 'span-block-end'>
+  | Area<
+      'self-block-start' | 'self-block-end',
+      'span-self-inline-start' | 'span-self-inline-end'
+    >
+  | Area<
+      'self-inline-start' | 'self-inline-end',
+      'span-self-block-start' | 'span-self-block-end'
+    >;
 
 export interface PopoverProps {
   isOpen: boolean;
@@ -37,11 +30,8 @@ export interface PopoverProps {
   shouldCloseOnInteractOutside: ((target: Element) => boolean) | undefined;
   isDisabled: boolean;
   shouldRestoreFocus: boolean;
-  placement: PopoverPlacement;
-  offset: number;
-  crossOffset: number;
-  containerPadding: number;
-  shouldFlip: boolean;
+  positionArea: PopoverPositionArea;
+  positionTryFallbacks: string;
   labelledBy: string | undefined;
   describedBy: string | undefined;
 }

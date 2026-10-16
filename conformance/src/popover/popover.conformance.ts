@@ -5,16 +5,16 @@
  * initial focus, Escape, presses on the trigger, outside and on the close
  * part, a controlled popover refusing to close, Tab in modal and non-modal
  * popovers, focus restore, hiding the page from assistive technology, the
- * closing phase, placement on both positioning paths (CSS anchor positioning
- * and Floating UI), scrolling, nested popovers, a Dialog opened from a
- * popover, the fallback without the Popover API, public state, render counts
- * and spoken output. Phase 4.
+ * closing phase, placement in both positioning modes (script, from the
+ * props, and CSS, from the consumer's anchor positioning), scrolling, nested
+ * popovers, a Dialog opened from a popover, the fallback without the Popover
+ * API, public state, render counts and spoken output. Phase 4.
  *
- * Both fallbacks are forced through UniAria's development switch, a window
- * property under `Symbol.for('@uniaria/fallbacks/v1')`:
- * `{ anchorPositioning: false }` positions with Floating UI, and
- * `{ popover: false }` behaves as a browser without the Popover API. UniAria
- * reads it when a popover starts.
+ * The mode is UniAria's page-wide `positioning` setting, under
+ * `Symbol.for('@uniaria/settings/v1')` on `globalThis`. The fallback without
+ * the Popover API is forced through UniAria's development switch, a window
+ * property under `Symbol.for('@uniaria/fallbacks/v1')`: `{ popover: false }`
+ * behaves as a browser without it. UniAria reads both when a popover starts.
  *
  * Not here: removing an open popover from the page (a template can't remove
  * a part), a popover inside a modal Dialog, the `'parent'` reason a nested
@@ -26,7 +26,12 @@ import { defineConformance, h, nested } from '@uniaria/testing';
 import type { Mounted, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
-import type { PopoverDismissEvent, PopoverProps, PopoverState } from './types';
+import type {
+  PopoverDismissEvent,
+  PopoverPositionArea,
+  PopoverProps,
+  PopoverState,
+} from './types';
 
 type MountedPopover = Mounted<PopoverProps, PopoverState>;
 
@@ -39,21 +44,22 @@ const EVENTS = ['openChange', 'dismiss'];
 /** An exit animation long enough to see the closing phase. */
 const EXIT = 400;
 
-/** UniAria's development switch for its fallbacks (spec, Resolved questions 2 and 3). */
+/** UniAria's development switch for its fallbacks (spec, Resolved questions 2). */
 const FALLBACKS = Symbol.for('@uniaria/fallbacks/v1');
 
-/** Each positioning path the scenarios run on, and the switch that forces it. */
-const PATHS: readonly (readonly [string, object | undefined])[] = [
-  ['anchor positioning', undefined],
-  ['Floating UI', { anchorPositioning: false }],
-];
+/** UniAria's page-wide settings: `positioning` picks the mode (spec, Positioning). */
+const SETTINGS = Symbol.for('@uniaria/settings/v1');
+
+type Placing = Partial<
+  Pick<PopoverProps, 'positionArea' | 'positionTryFallbacks'>
+>;
 
 /**
  * Fixed places for the page around the popover, so it never covers what a
  * scenario presses: the trigger at (150, 30), 80×30; the popover 160px wide
- * below it; `#page` (not focusable) and `#before` above-left; `#other` (a
- * button) and `#after` lower left. `#before` and `#after` are text fields,
- * which WebKit's Tab reaches.
+ * below it, its 8px margin the gap (spec, Positioning); `#page` (not
+ * focusable) and `#before` above-left; `#other` (a button) and `#after` lower
+ * left. `#before` and `#after` are text fields, which WebKit's Tab reaches.
  */
 const LAYOUT = h(
   'style',
@@ -61,7 +67,7 @@ const LAYOUT = h(
   `.sc-page { position: fixed; left: 0; top: 0; width: 100px; height: 20px; margin: 0 }
    .sc-before { position: fixed; left: 0; top: 30px; width: 100px }
    .sc-trigger { position: fixed; left: 150px; top: 30px; width: 80px; height: 30px; margin: 0; padding: 0 }
-   .sc-pop { width: 160px; padding: 0; border: 0; box-sizing: border-box }
+   .sc-pop { width: 160px; margin: 8px; padding: 0; border: 0; box-sizing: border-box }
    .sc-pop h2, .sc-pop p { margin: 0 }
    .sc-arrow { position: absolute; width: 10px; height: 10px }
    .sc-arrow[data-placement='bottom'] { top: -5px }
@@ -243,14 +249,39 @@ function expectNear(actual: number, expected: number, what: string): void {
   ).toBeLessThanOrEqual(1);
 }
 
-/** Runs `run` once per positioning path, with UniAria's switch set for it. */
-async function onEachPath(run: (path: string) => Promise<void>) {
-  for (const [path, fallbacks] of PATHS) {
-    if (fallbacks) Reflect.set(window, FALLBACKS, fallbacks);
+/**
+ * Runs `run` once per positioning mode, with UniAria's setting for it. In
+ * CSS mode the consumer's anchor positioning places the popover and the
+ * props are ignored: `css` gives the same options as the consumer's rule on
+ * `.sc-pop` there, and nothing in script mode.
+ */
+async function onEachMode(
+  run: (
+    mode: string,
+    css: (options?: Placing) => TemplateNode[],
+  ) => Promise<void>,
+) {
+  for (const mode of ['script', 'css'] as const) {
+    Reflect.set(globalThis, SETTINGS, { positioning: mode });
     try {
-      await run(path);
+      await run(
+        mode,
+        ({
+          positionArea = 'bottom',
+          positionTryFallbacks = 'flip-block, flip-inline',
+        } = {}) =>
+          mode === 'script'
+            ? []
+            : [
+                h(
+                  'style',
+                  null,
+                  `.sc-pop { inset: auto; position-area: ${positionArea}; position-try-fallbacks: ${positionTryFallbacks} }`,
+                ),
+              ],
+      );
     } finally {
-      Reflect.deleteProperty(window, FALLBACKS);
+      Reflect.deleteProperty(globalThis, SETTINGS);
     }
   }
 }
@@ -1036,10 +1067,10 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
 
     group('positioning', () => {
       scenario(
-        'below the trigger by default: centred, 8px away, with data-placement bottom on the popover and the arrow',
+        'below the trigger by default: centred, its 8px margin away, with data-placement bottom on the popover and the arrow',
         async ({ mount, pointer }) => {
-          await onEachPath(async (path) => {
-            const mounted = await mount({ template: size() });
+          await onEachMode(async (mode, css) => {
+            const mounted = await mount({ template: size({ head: css() }) });
             const trigger = mounted.part('trigger');
             const popover = root(mounted);
             await pointer.click(trigger);
@@ -1048,11 +1079,11 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
               .toBe('bottom');
             const t = rect(trigger);
             const p = rect(popover);
-            expectNear(p.top, t.bottom + 8, `${path}: top`);
+            expectNear(p.top, t.bottom + 8, `${mode}: top`);
             expectNear(
               p.left + p.width / 2,
               t.left + t.width / 2,
-              `${path}: centre`,
+              `${mode}: centre`,
             );
             expect(mounted.part('arrow').getAttribute('data-placement')).toBe(
               'bottom',
@@ -1065,28 +1096,44 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       );
 
       scenario(
-        'placement, offset and crossOffset move it',
+        'positionArea and the consumer’s margins move it',
         async ({ mount, pointer }) => {
           // Each with room on its side: the popover is 160px wide.
-          const cases: readonly [Partial<PopoverProps>, string, string][] = [
+          const cases: readonly [
+            PopoverPositionArea,
+            string,
+            string,
+            string,
+          ][] = [
             [
-              { placement: 'bottom start', offset: 20, crossOffset: 10 },
+              'bottom span-right',
               'bottom',
               'top: 300px; left: 150px',
+              '20px 0 0 10px',
             ],
-            [{ placement: 'top end' }, 'top', 'top: 300px; left: 150px'],
-            [{ placement: 'end' }, 'right', 'top: 200px; left: 20px'],
-            [{ placement: 'left top' }, 'left', 'top: 300px; left: 240px'],
+            ['top span-left', 'top', 'top: 300px; left: 150px', '0 0 8px'],
+            ['inline-end', 'right', 'top: 200px; left: 20px', '0 0 0 8px'],
+            [
+              'left span-bottom',
+              'left',
+              'top: 300px; left: 240px',
+              '0 8px 0 0',
+            ],
           ];
-          await onEachPath(async (path) => {
-            for (const [props, side, place] of cases) {
-              const what = `${path}, ${props.placement}`;
+          await onEachMode(async (mode, css) => {
+            for (const [positionArea, side, place, margin] of cases) {
+              const what = `${mode}, ${positionArea}`;
               const mounted = await mount({
                 template: size({
-                  head: [triggerAt('sc-placed', place)],
+                  head: [
+                    triggerAt('sc-placed', place),
+                    h('style', null, `.sc-pop.sc-margin { margin: ${margin} }`),
+                    ...css({ positionArea }),
+                  ],
                   triggerClass: 'sc-placed',
+                  rootAttrs: { class: 'sc-pop sc-margin' },
                 }),
-                props,
+                props: { positionArea },
               });
               const trigger = mounted.part('trigger');
               const popover = root(mounted);
@@ -1098,13 +1145,13 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
                 .toBe(side);
               const t = rect(trigger);
               const p = rect(popover);
-              if (props.placement === 'bottom start') {
+              if (positionArea === 'bottom span-right') {
                 expectNear(p.top, t.bottom + 20, `${what}: top`);
                 expectNear(p.left, t.left + 10, `${what}: left`);
-              } else if (props.placement === 'top end') {
+              } else if (positionArea === 'top span-left') {
                 expectNear(p.bottom, t.top - 8, `${what}: bottom`);
                 expectNear(p.right, t.right, `${what}: right`);
-              } else if (props.placement === 'end') {
+              } else if (positionArea === 'inline-end') {
                 expectNear(p.left, t.right + 8, `${what}: left`);
                 expectNear(
                   p.top + p.height / 2,
@@ -1123,12 +1170,18 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       );
 
       scenario(
-        'start and end follow the direction: bottom start aligns right edges in a right-to-left page',
+        'in script mode, self- keywords follow the popover’s direction: self-block-end span-self-inline-end aligns right edges in a right-to-left popover',
         async ({ mount, pointer }) => {
-          await onEachPath(async (path) => {
+          // In CSS mode this is the browser's: Firefox 155 misplaces it.
+          const gap = h('style', null, '.sc-pop.sc-gap { margin: 8px 0 0 }');
+          {
             const mounted = await mount({
-              template: h('div', { dir: 'rtl' }, ...size()),
-              props: { placement: 'bottom start' },
+              template: h(
+                'div',
+                { dir: 'rtl' },
+                ...size({ head: [gap], rootAttrs: { class: 'sc-pop sc-gap' } }),
+              ),
+              props: { positionArea: 'self-block-end span-self-inline-end' },
             });
             const trigger = mounted.part('trigger');
             const popover = root(mounted);
@@ -1136,24 +1189,20 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             await expect
               .poll(() => popover.getAttribute('data-placement'))
               .toBe('bottom');
-            expectNear(
-              rect(popover).right,
-              rect(trigger).right,
-              `${path}: right`,
-            );
+            expectNear(rect(popover).right, rect(trigger).right, 'right');
             await retire(mounted);
-          });
+          }
         },
         PHASE,
       );
 
       scenario(
-        'flips to the side with room and says so; shouldFlip false keeps the side',
+        'flips to the side with room and says so; positionTryFallbacks none keeps the side',
         async ({ mount, pointer }) => {
           const low = triggerAt('sc-low', 'top: auto; bottom: 10px');
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
-              template: size({ head: [low], triggerClass: 'sc-low' }),
+              template: size({ head: [low, ...css()], triggerClass: 'sc-low' }),
             });
             const trigger = mounted.part('trigger');
             const popover = root(mounted);
@@ -1164,7 +1213,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             expectNear(
               rect(popover).bottom,
               rect(trigger).top - 8,
-              `${path}: bottom`,
+              `${mode}: bottom`,
             );
             expect(mounted.part('arrow').getAttribute('data-placement')).toBe(
               'top',
@@ -1173,12 +1222,15 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             await retire(mounted);
 
             const fixed = await mount({
-              template: size({ head: [low], triggerClass: 'sc-low' }),
-              props: { shouldFlip: false },
+              template: size({
+                head: [low, ...css({ positionTryFallbacks: 'none' })],
+                triggerClass: 'sc-low',
+              }),
+              props: { positionTryFallbacks: 'none' },
             });
             await pointer.click(fixed.part('trigger'));
             await pause(100);
-            expect(root(fixed).getAttribute('data-placement'), path).toBe(
+            expect(root(fixed).getAttribute('data-placement'), mode).toBe(
               'bottom',
             );
             await retire(fixed);
@@ -1188,14 +1240,25 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       );
 
       scenario(
-        'keeps containerPadding from the edges of the viewport',
+        'its margins keep it off the edges of the viewport',
         async ({ mount, pointer }) => {
           const edge = triggerAt('sc-edge', 'left: 0');
-          await onEachPath(async (path) => {
-            for (const containerPadding of [12, 0]) {
+          await onEachMode(async (mode, css) => {
+            for (const margin of [12, 0]) {
               const mounted = await mount({
-                template: size({ head: [edge], triggerClass: 'sc-edge' }),
-                props: { containerPadding },
+                template: size({
+                  head: [
+                    edge,
+                    ...css(),
+                    h(
+                      'style',
+                      null,
+                      `.sc-pop.sc-edges { margin: 8px ${margin}px }`,
+                    ),
+                  ],
+                  triggerClass: 'sc-edge',
+                  rootAttrs: { class: 'sc-pop sc-edges' },
+                }),
               });
               await pointer.click(mounted.part('trigger'));
               await expect
@@ -1203,8 +1266,8 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
                 .toBe('bottom');
               expectNear(
                 rect(root(mounted)).left,
-                containerPadding,
-                `${path}, ${containerPadding}`,
+                margin,
+                `${mode}, ${margin}`,
               );
               await retire(mounted);
             }
@@ -1216,7 +1279,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       scenario(
         'the anchor part takes the trigger’s place',
         async ({ mount, pointer }) => {
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
               template: [
                 h(
@@ -1225,7 +1288,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
                   '.sc-anchor { position: fixed; left: 150px; top: 200px; width: 200px; height: 40px }',
                 ),
                 h('div', { part: 'anchor', class: 'sc-anchor' }),
-                ...size(),
+                ...size({ head: css() }),
               ],
             });
             const anchor = mounted.part('anchor');
@@ -1236,11 +1299,11 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
               .toBe('bottom');
             const a = rect(anchor);
             const p = rect(popover);
-            expectNear(p.top, a.bottom + 8, `${path}: top`);
+            expectNear(p.top, a.bottom + 8, `${mode}: top`);
             expectNear(
               p.left + p.width / 2,
               a.left + a.width / 2,
-              `${path}: centre`,
+              `${mode}: centre`,
             );
             await retire(mounted);
           });
@@ -1249,19 +1312,19 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       );
 
       scenario(
-        '--trigger-width and --available-height size it from the consumer’s CSS',
+        '--anchor-width and --available-height size it from the consumer’s CSS',
         async ({ mount, pointer }) => {
           const sizing = h(
             'style',
             null,
             `.sc-trigger.sc-wide { width: 300px; left: 20px }
-           .sc-fit { width: auto; min-width: var(--trigger-width); max-height: var(--available-height); overflow: auto }
+           .sc-pop.sc-fit { width: auto; margin: 8px 12px 12px; min-width: var(--anchor-width); max-height: var(--available-height); overflow: auto }
            .sc-tall { height: 3000px }`,
           );
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
               template: size({
-                head: [sizing],
+                head: [sizing, ...css()],
                 triggerClass: 'sc-wide',
                 rootAttrs: { class: 'sc-pop sc-fit' },
                 content: [h('div', { class: 'sc-tall' })],
@@ -1275,9 +1338,9 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
               .toBe('bottom');
             const view = mounted.container.ownerDocument.defaultView!;
             const p = rect(popover);
-            expectNear(p.width, 300, `${path}: width`);
-            expectNear(p.top, rect(trigger).bottom + 8, `${path}: top`);
-            expectNear(p.bottom, view.innerHeight - 12, `${path}: bottom`);
+            expectNear(p.width, 300, `${mode}: width`);
+            expectNear(p.top, rect(trigger).bottom + 8, `${mode}: top`);
+            expectNear(p.bottom, view.innerHeight - 12, `${mode}: bottom`);
             await retire(mounted);
           });
         },
@@ -1287,10 +1350,12 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       scenario(
         'the arrow points at the centre of the trigger',
         async ({ mount, pointer }) => {
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
-              template: size(),
-              props: { placement: 'bottom start' },
+              template: size({
+                head: css({ positionArea: 'bottom span-right' }),
+              }),
+              props: { positionArea: 'bottom span-right' },
             });
             const trigger = mounted.part('trigger');
             const arrow = mounted.part('arrow');
@@ -1303,7 +1368,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             expectNear(
               a.left + a.width / 2,
               t.left + t.width / 2,
-              `${path}: arrow centre`,
+              `${mode}: arrow centre`,
             );
             await retire(mounted);
           });
@@ -1320,10 +1385,13 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             `.sc-trigger.sc-scrolls { position: absolute; top: 100px }
            .sc-spacer { height: 3000px }`,
           );
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
               template: [
-                ...size({ head: [scrolling], triggerClass: 'sc-scrolls' }),
+                ...size({
+                  head: [scrolling, ...css()],
+                  triggerClass: 'sc-scrolls',
+                }),
                 h('div', { class: 'sc-spacer' }),
               ],
               events: EVENTS,
@@ -1339,7 +1407,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             await expect
               .poll(() => Math.round(rect(popover).top - rect(trigger).bottom))
               .toBe(8);
-            expect(isInTopLayer(popover), path).toBe(true);
+            expect(isInTopLayer(popover), mode).toBe(true);
             expect(reasons(mounted)).toEqual([]);
             view.scrollTo(0, 0);
             await retire(mounted);
@@ -1358,14 +1426,14 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
            .sc-box .sc-trigger { position: static }
            .sc-spacer { height: 1000px }`,
           );
-          await onEachPath(async (path) => {
+          await onEachMode(async (mode, css) => {
             const mounted = await mount({
               template: [
                 box,
                 h(
                   'div',
                   { id: 'box', class: 'sc-box' },
-                  ...size(),
+                  ...size({ head: css() }),
                   h('div', { class: 'sc-spacer' }),
                 ),
               ],
@@ -1379,8 +1447,8 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             scroller.scrollTop = 500;
             await expect.poll(() => reasons(mounted)).toEqual(['scroll']);
             await closed(root(mounted));
-            expect(activeElement(mounted), path).not.toBe(trigger);
-            expect(scroller.scrollTop, path).toBe(500);
+            expect(activeElement(mounted), mode).not.toBe(trigger);
+            expect(scroller.scrollTop, mode).toBe(500);
             await retire(mounted);
           });
         },

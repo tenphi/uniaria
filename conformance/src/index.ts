@@ -46,7 +46,7 @@ export type {
 export type { FieldProps, FieldState } from './field/types';
 export type {
   PopoverDismissEvent,
-  PopoverPlacement,
+  PopoverPositionArea,
   PopoverProps,
   PopoverState,
 } from './popover/types';
