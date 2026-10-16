@@ -16,6 +16,7 @@ export default defineConfig({
     'switch/index': 'src/components/switch/index.ts',
     'radio/index': 'src/components/radio/index.ts',
     'dialog/index': 'src/components/dialog/index.ts',
+    'popover/index': 'src/components/popover/index.ts',
     'radio-group/index': 'src/components/radio-group/index.ts',
   },
   format: 'esm',

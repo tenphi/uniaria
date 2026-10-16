@@ -11,6 +11,7 @@ import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
 import { checkboxGroup } from '@tenphi/sous/checkbox-group';
 import { dialog } from '@tenphi/sous/dialog';
+import { popover } from '@tenphi/sous/popover';
 import { radio } from '@tenphi/sous/radio';
 import { radioGroup } from '@tenphi/sous/radio-group';
 import { toggleSwitch } from '@tenphi/sous/switch';
@@ -46,6 +47,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   radio,
   'radio-group': radioGroup,
   dialog,
+  popover,
 };
 
 /** Form values a consumer would pass as defaults in React. */

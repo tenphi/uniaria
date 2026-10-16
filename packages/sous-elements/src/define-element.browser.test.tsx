@@ -2,10 +2,12 @@ import { bindable, defineComponent, prop } from '@tenphi/sous';
 import type { dialog } from '@tenphi/sous/dialog';
 import { announce, destroyAnnouncer } from '@tenphi/sous/dom';
 import { field } from '@tenphi/sous/field';
+import type { popover } from '@tenphi/sous/popover';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 
 import './button';
 import './field';
@@ -16,6 +18,7 @@ import './switch';
 import './radio';
 import './radio-group';
 import './dialog';
+import './popover';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -891,6 +894,205 @@ describe('<sous-dialog>', () => {
     host.innerHTML = DIALOG;
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('<sous-popover>', () => {
+  const POPOVER = `
+    <button data-part="trigger">Size</button>
+    <div data-part="root">
+      <h2 data-part="title">Size</h2>
+      <input aria-label="Width" />
+      <button data-part="close">Apply</button>
+    </div>`;
+
+  type Popover = SousElement<typeof popover>;
+
+  /** The popover's parts and its own events, not a nested one's. */
+  function popoverIn(host: Popover) {
+    const part = (name: string) =>
+      host.querySelector<HTMLElement>(`:scope > [data-part="${name}"]`)!;
+    const events: unknown[] = [];
+    for (const type of ['dismiss', 'openchange']) {
+      host.addEventListener(type, (event) => {
+        if (event.target === host) events.push((event as CustomEvent).detail);
+      });
+    }
+    return { trigger: part('trigger'), root: part('root'), events };
+  }
+
+  const hostIn = (container: HTMLElement, selector = 'sous-popover') =>
+    container.querySelector<Popover>(selector)!;
+
+  it('reads its attributes, "false" turning off what is on by default', async () => {
+    const container = mount(`
+      <sous-popover non-modal dismissable="false" flip="false" restore-focus="false"
+        placement="top start" offset="4" cross-offset="2" container-padding="0">
+        ${POPOVER}
+      </sous-popover>`);
+    const host = hostIn(container);
+    expect(host).toMatchObject({
+      isNonModal: true,
+      isDismissable: false,
+      shouldFlip: false,
+      shouldRestoreFocus: false,
+      placement: 'top start',
+      offset: 4,
+      crossOffset: 2,
+      containerPadding: 0,
+    });
+    // A property only: a function can't be an attribute.
+    host.setAttribute('should-close-on-interact-outside', '');
+    expect(host.shouldCloseOnInteractOutside).toBe(undefined);
+
+    const { trigger, root } = popoverIn(host);
+    trigger.click();
+    expect(root.matches(':popover-open')).toBe(true);
+    await vi.waitFor(() => expect(root.dataset.placement).toBe('top'));
+    // Non-modal: the page stays exposed.
+    expect(trigger.hasAttribute('aria-hidden')).toBe(false);
+  });
+
+  it('opens from instance.api.open() and closes from close()', async () => {
+    const container = mount(`<sous-popover>${POPOVER}</sous-popover>`);
+    const host = hostIn(container);
+    const { root, events } = popoverIn(host);
+    host.instance.api.open();
+    expect(root.matches(':popover-open')).toBe(true);
+    host.instance.api.close();
+    expect(events).toEqual([true, false]);
+    await vi.waitFor(() => expect(root.matches(':popover-open')).toBe(false));
+  });
+
+  it('asks shouldCloseOnInteractOutside about a press outside', async () => {
+    const container = mount(`
+      <sous-popover>${POPOVER}</sous-popover>
+      <button id="keep">Keep</button><button id="other">Other</button>`);
+    const host = hostIn(container);
+    host.shouldCloseOnInteractOutside = (target) => !target.closest('#keep');
+    const { trigger, root, events } = popoverIn(host);
+    await userEvent.click(trigger);
+    expect(root.matches(':popover-open')).toBe(true);
+
+    await userEvent.click(container.querySelector('#keep')!);
+    expect(events).toEqual([true]);
+    await userEvent.click(container.querySelector('#other')!);
+    expect(events).toEqual([true, { reason: 'outside' }, false]);
+  });
+
+  it('reports a popover removed while open and restores focus', async () => {
+    const container = mount(`<sous-popover>${POPOVER}</sous-popover>`);
+    const { trigger, root, events } = popoverIn(hostIn(container));
+    trigger.click();
+    expect(root.contains(document.activeElement)).toBe(true);
+
+    root.remove();
+    await vi.waitFor(() =>
+      expect(events).toEqual([true, { reason: 'browser' }, false]),
+    );
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('closes a popover nested in it as it closes, with reason "parent"', async () => {
+    const container = mount(`
+      <sous-popover id="outer">
+        <button data-part="trigger">Outer</button>
+        <div data-part="root" aria-label="Outer">
+          <sous-popover id="inner">
+            <button data-part="trigger">Inner</button>
+            <div data-part="root" aria-label="Inner"><button>Deep</button></div>
+          </sous-popover>
+        </div>
+      </sous-popover>`);
+    const outerHost = hostIn(container, '#outer');
+    const outer = popoverIn(outerHost);
+    const inner = popoverIn(hostIn(container, '#inner'));
+    outer.trigger.click();
+    inner.trigger.click();
+    expect(inner.root.matches(':popover-open')).toBe(true);
+
+    outerHost.instance.api.close();
+    expect(inner.events).toEqual([true, { reason: 'parent' }, false]);
+    expect(outer.events).toEqual([true, false]);
+    await vi.waitFor(() =>
+      expect(inner.root.matches(':popover-open')).toBe(false),
+    );
+  });
+
+  it('opens above a modal dialog it is inside, and Escape closes only the popover', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const container = mount(`
+      <sous-dialog>
+        <button data-part="trigger">Settings</button>
+        <dialog data-part="root" aria-label="Settings">
+          <sous-popover>${POPOVER}</sous-popover>
+          <button data-part="close">Done</button>
+        </dialog>
+      </sous-dialog>`);
+    const modal = container.querySelector('dialog')!;
+    container
+      .querySelector<HTMLElement>('sous-dialog > [data-part="trigger"]')!
+      .click();
+    expect(modal.matches(':modal')).toBe(true);
+
+    const { trigger, root, events } = popoverIn(hostIn(container));
+    await userEvent.click(trigger);
+    expect(root.matches(':popover-open')).toBe(true);
+    const box = root.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      box.left + box.width / 2,
+      box.top + box.height / 2,
+    );
+    expect(root.contains(hit)).toBe(true);
+    expect(root.contains(document.activeElement)).toBe(true);
+
+    await userEvent.keyboard('{Escape}');
+    expect(events).toEqual([true, { reason: 'escape' }, false]);
+    expect(modal.matches(':modal')).toBe(true);
+    expect(document.activeElement).toBe(trigger);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('warns about a popover without a name and one opened outside an open modal dialog', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const container = mount(`
+      <sous-popover id="unnamed">
+        <div data-part="root"><button>Go</button></div>
+      </sous-popover>
+      <sous-popover id="outside">${POPOVER}</sous-popover>
+      <dialog id="modal">Modal</dialog>`);
+    const messages = () => warn.mock.calls.map(([message]) => String(message));
+    hostIn(container, '#unnamed').isOpen = true;
+    await vi.waitFor(() =>
+      expect(
+        messages().filter((message) => message.includes('popover:')),
+      ).toHaveLength(1),
+    );
+    container.querySelector<HTMLDialogElement>('#modal')!.showModal();
+    hostIn(container, '#outside').isOpen = true;
+    await vi.waitFor(() =>
+      expect(
+        messages().filter((message) => message.includes('popover:')),
+      ).toHaveLength(2),
+    );
+    const all = messages();
+    warn.mockRestore();
+    expect(all.some((message) => message.includes('no name'))).toBe(true);
+    expect(all.some((message) => message.includes('modal dialog'))).toBe(true);
+  });
+
+  it('does not warn about a titled popover that opens with its parts', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const host = document.createElement('sous-popover');
+    host.defaultOpen = true;
+    document.body.append(host);
+    host.innerHTML = POPOVER;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(warn).not.toHaveBeenCalled();
+    expect(host.querySelector(':popover-open')).not.toBe(null);
     warn.mockRestore();
   });
 });

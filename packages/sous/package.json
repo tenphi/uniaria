@@ -55,6 +55,11 @@
       "types": "./dist/dialog/index.d.ts",
       "default": "./dist/dialog/index.js"
     },
+    "./popover": {
+      "sous-source": "./src/components/popover/index.ts",
+      "types": "./dist/popover/index.d.ts",
+      "default": "./dist/popover/index.js"
+    },
     "./radio": {
       "sous-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

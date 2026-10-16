@@ -23,7 +23,9 @@
     "./src/radio-group.ts",
     "./dist/radio-group.js",
     "./src/dialog.ts",
-    "./dist/dialog.js"
+    "./dist/dialog.js",
+    "./src/popover.ts",
+    "./dist/popover.js"
   ],
   "exports": {
     ".": {
@@ -65,6 +67,11 @@
       "sous-source": "./src/dialog.ts",
       "types": "./dist/dialog.d.ts",
       "default": "./dist/dialog.js"
+    },
+    "./popover": {
+      "sous-source": "./src/popover.ts",
+      "types": "./dist/popover.d.ts",
+      "default": "./dist/popover.js"
     },
     "./radio": {
       "sous-source": "./src/radio.ts",

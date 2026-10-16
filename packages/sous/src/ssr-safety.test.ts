@@ -21,6 +21,7 @@ const entries = {
   '@tenphi/sous/radio': () => import('./components/radio/index'),
   '@tenphi/sous/radio-group': () => import('./components/radio-group/index'),
   '@tenphi/sous/dialog': () => import('./components/dialog/index'),
+  '@tenphi/sous/popover': () => import('./components/popover/index'),
 };
 
 describe('SSR safety', () => {

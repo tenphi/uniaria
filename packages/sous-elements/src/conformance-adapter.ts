@@ -19,6 +19,7 @@ import './switch';
 import './radio';
 import './radio-group';
 import './dialog';
+import './popover';
 import type { SousElement } from './define-element';
 
 /**

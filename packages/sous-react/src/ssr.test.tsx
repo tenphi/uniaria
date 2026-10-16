@@ -2,6 +2,7 @@ import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
 import { dialog } from '@tenphi/sous/dialog';
 import { field } from '@tenphi/sous/field';
+import { popover } from '@tenphi/sous/popover';
 import { radio } from '@tenphi/sous/radio';
 import { radioGroup } from '@tenphi/sous/radio-group';
 import { toggleSwitch } from '@tenphi/sous/switch';
@@ -200,5 +201,33 @@ describe('Dialog on the server', () => {
     // Only rendered parts are referenced, which is known after commit.
     expect(tag).not.toContain('aria-labelledby');
     expect(html).toContain('type="button"');
+  });
+});
+
+function SizePicker() {
+  const ui = useComponent(popover, {});
+  return (
+    <>
+      <button {...ui.parts.trigger}>Size</button>
+      <div {...ui.parts.root}>
+        <input aria-label="Width" />
+      </div>
+    </>
+  );
+}
+
+describe('Popover on the server', () => {
+  it('renders a closed popover that assumes the Popover API', () => {
+    const html = renderToString(<SizePicker />);
+    const root = html.match(/<div[^>]*>/)![0];
+    expect(root).toContain('popover="manual"');
+    expect(root).toContain('role="dialog"');
+    expect(root).toContain('tabindex="-1"');
+    expect(root).not.toMatch(/\shidden[\s=>]/);
+    // Only rendered parts are referenced, which is known after commit.
+    expect(root).not.toContain('aria-labelledby');
+    const trigger = html.match(/<button[^>]*>/)![0];
+    expect(trigger).toContain('aria-expanded="false"');
+    expect(trigger).toContain('type="button"');
   });
 });
