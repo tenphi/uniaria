@@ -4,8 +4,9 @@
  * Button plus `isSelected`, so this suite covers what the selection adds:
  * `aria-pressed` and `data-selected`, toggling from every input, the event
  * order, controlled and uncontrolled use, disabled modes, render counts and
- * spoken output. Press, hover and focus behave as Button's suite checks.
- * Everything here is phase 3.
+ * spoken output, and `focusChange` (from the gate 3 API review). Press,
+ * hover and focus behave as Button's suite checks. Everything here is
+ * phase 3.
  */
 
 import { defineConformance, h } from '@tenphi/sous-testing';
@@ -269,6 +270,27 @@ export const toggleButtonConformance = defineConformance<
         await pointer.click(mounted.part());
         expectSelected(mounted, true);
         expect(document.activeElement).toBe(editor);
+      },
+      PHASE,
+    );
+
+    scenario(
+      'focusChange reports focus and blur once each, toggling in between',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: bold(),
+          events: [...EVENTS, 'focusChange'],
+        });
+        const root = mounted.part();
+        root.focus();
+        await keyboard.press('Space');
+        root.blur();
+        expectSelected(mounted, true);
+        expect(
+          mounted.events
+            .filter((event) => event.name === 'focusChange')
+            .map((event) => event.detail),
+        ).toEqual([true, false]);
       },
       PHASE,
     );

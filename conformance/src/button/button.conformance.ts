@@ -8,7 +8,8 @@
  * touch, a touch that turns into a scroll and the long-press click
  * fallback. Touch scenarios need real touch input, which only Chromium
  * takes; elsewhere they are skipped. Nested pressables need a second
- * component and join with the first composite.
+ * component and join with the first composite. Phase 3 adds `focusChange`,
+ * from the gate 3 API review (@tenphi, 2026-10-16).
  */
 
 import { defineConformance, h } from '@tenphi/sous-testing';
@@ -447,6 +448,26 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(mounted.state().isFocusVisible).toBe(true);
         },
         { phase: 2 },
+      );
+
+      scenario(
+        'focusChange reports focus and blur once each',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: save(),
+            events: ['focusChange', 'press'],
+          });
+          const root = mounted.part();
+          await keyboard.tab();
+          await keyboard.press('Enter');
+          root.blur();
+          expect(
+            mounted.events
+              .filter((event) => event.name === 'focusChange')
+              .map((event) => event.detail),
+          ).toEqual([true, false]);
+        },
+        { phase: 3 },
       );
     });
 

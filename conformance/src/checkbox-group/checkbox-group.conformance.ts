@@ -4,8 +4,10 @@
  * a `role="group"` root, the `string[]` value its checkboxes read and change
  * through their owner link, the group's modes, required and invalid states
  * on every checkbox, form reset, focus within, public state, render counts
- * and spoken output. The checkboxes are nested Checkbox components; their
- * own behavior is Checkbox's suite. Everything here is phase 3.
+ * and spoken output, and the `name` and focus-visible the gate 3 API review
+ * added (@tenphi, 2026-10-16). The checkboxes are nested Checkbox
+ * components; their own behavior is Checkbox's suite. Everything here is
+ * phase 3.
  */
 
 import { defineConformance, h, nested } from '@tenphi/sous-testing';
@@ -30,6 +32,7 @@ const STATE_ATTRIBUTES = [
   'data-invalid',
   'data-required',
   'data-focus-within',
+  'data-focus-visible',
 ];
 
 const EVENTS = ['valueChange', 'focusChange'];
@@ -170,6 +173,27 @@ export const checkboxGroupConformance = defineConformance<
         expect(inputs(mounted).map((input) => input.value)).toEqual([
           'email',
           'sms',
+        ]);
+      },
+      PHASE,
+    );
+
+    scenario(
+      "the name prop is every checkbox's name; without it, each keeps its own",
+      async ({ mount }) => {
+        const named = await mount({
+          template: notify(),
+          props: { name: 'channels' },
+        });
+        expect(inputs(named).map((input) => input.name)).toEqual([
+          'channels',
+          'channels',
+        ]);
+
+        const unnamed = await mount({ template: notify() });
+        expect(inputs(unnamed).map((input) => input.name)).toEqual([
+          'notify',
+          'notify',
         ]);
       },
       PHASE,
@@ -500,8 +524,8 @@ export const checkboxGroupConformance = defineConformance<
 
   group('focus', () => {
     scenario(
-      'focus within marks every part, and focusChange reports entering and leaving',
-      async ({ mount, keyboard }) => {
+      'focus within marks every part, visible after keyboard, and focusChange reports entering and leaving',
+      async ({ mount, keyboard, pointer }) => {
         // tabindex: WebKit tabs to a checkbox only with one, as macOS.
         const tabbable = { tabindex: '0' };
         const mounted = await mount({
@@ -521,7 +545,11 @@ export const checkboxGroupConformance = defineConformance<
         await keyboard.tab();
         expect(document.activeElement).toBe(inputs(mounted)[0]);
         expectOnEveryPart(mounted, 'data-focus-within', true);
-        expect(mounted.state().isFocusWithin).toBe(true);
+        expectOnEveryPart(mounted, 'data-focus-visible', true);
+        expect(mounted.state()).toMatchObject({
+          isFocusWithin: true,
+          isFocusVisible: true,
+        });
 
         await keyboard.tab();
         expect(document.activeElement).toBe(inputs(mounted)[1]);
@@ -529,7 +557,15 @@ export const checkboxGroupConformance = defineConformance<
 
         inputs(mounted)[1]!.blur();
         expectOnEveryPart(mounted, 'data-focus-within', false);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
         expect(focusChanges(mounted)).toEqual([true, false]);
+
+        // After a pointer press, focus within isn't visible.
+        await pointer.click(inputs(mounted)[0]!);
+        inputs(mounted)[0]!.focus();
+        expectOnEveryPart(mounted, 'data-focus-within', true);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
+        expect(mounted.state().isFocusVisible).toBe(false);
       },
       PHASE,
     );
@@ -551,6 +587,7 @@ export const checkboxGroupConformance = defineConformance<
           isInvalid: false,
           isErrorShown: false,
           isFocusWithin: false,
+          isFocusVisible: false,
         });
       },
       PHASE,

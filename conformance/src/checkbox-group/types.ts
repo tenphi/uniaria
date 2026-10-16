@@ -6,6 +6,7 @@
 export interface CheckboxGroupProps {
   value: readonly string[];
   defaultValue: readonly string[];
+  name: string | undefined;
   isDisabled: boolean;
   isReadOnly: boolean;
   isRequired: boolean;
@@ -23,4 +24,5 @@ export interface CheckboxGroupState {
   isInvalid: boolean;
   isErrorShown: boolean;
   isFocusWithin: boolean;
+  isFocusVisible: boolean;
 }
