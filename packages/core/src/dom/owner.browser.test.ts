@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { Instance } from '../runtime';
+import type { Instance, LinkKey } from '../runtime';
 import { createInstance, defineComponent } from '../runtime';
 import { provideOwner, requestOwner } from './owner';
+import { UNI_HOST } from './parts';
 
 const group = defineComponent({
   name: 'group',
@@ -104,5 +105,61 @@ describe('owner lookup', () => {
       provideOwner(createInstance(group), container.querySelector('#owner')!),
     );
     expect(seen).toEqual([]);
+  });
+});
+
+describe('link lookup', () => {
+  const hintLink: LinkKey<'hint'> = { name: 'hint' };
+  const hint = defineComponent({
+    name: 'hint',
+    parts: ['root'],
+    props: {},
+    provides: [hintLink],
+    setup: () => ({}),
+    expose: () => ({}),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+
+  class Host extends HTMLElement {
+    static readonly [UNI_HOST] = true;
+  }
+  if (!customElements.get('test-link-host')) {
+    customElements.define('test-link-host', Host);
+  }
+
+  function trackLink(element: Element, ownerId?: string) {
+    const seen: (Instance | undefined)[] = [];
+    cleanups.push(
+      requestOwner(element, hintLink, (owner) => seen.push(owner), ownerId),
+    );
+    return seen;
+  }
+
+  it('asks only the nearest UniAria host, by key, and waits for it', () => {
+    const container = tree(
+      '<test-link-host id="tip"><div><test-link-host id="pop"><span id="inside"></span></test-link-host><span id="direct"></span></div></test-link-host>',
+    );
+    const inside = trackLink(container.querySelector('#inside')!);
+    const direct = trackLink(container.querySelector('#direct')!);
+    const instance = createInstance(hint);
+    cleanups.push(provideOwner(instance, container.querySelector('#tip')!));
+    expect(direct).toEqual([instance]);
+    expect(inside).toEqual([]);
+    // An owner of another kind on the nearest host doesn't answer either.
+    cleanups.push(
+      provideOwner(createInstance(group), container.querySelector('#pop')!),
+    );
+    expect(inside).toEqual([]);
+  });
+
+  it('finds a link by id', () => {
+    const container = tree(
+      '<span id="child"></span><test-link-host id="tip"></test-link-host>',
+    );
+    const instance = createInstance(hint);
+    cleanups.push(provideOwner(instance, container.querySelector('#tip')!));
+    expect(trackLink(container.querySelector('#child')!, 'tip')).toEqual([
+      instance,
+    ]);
   });
 });

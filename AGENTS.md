@@ -235,7 +235,15 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 - Request events are not `composed`; lookup stops at shadow roots.
 - Collections stay data. Owner links are for composed components, not for
   collection items.
-- Lookup code lives in `dom/`; the DOM-free runtime only sees `ctx.owner()`.
+- Lookup code lives in `dom/`; the DOM-free runtime only sees `ctx.owner()`
+  and `ctx.link()`.
+- A link (Tooltip spec, Resolved questions 2) names a small key (`LinkKey`)
+  instead of a definition, so the linking component doesn't bundle the one
+  it links to: a definition takes it in `links`, the one answering lists it
+  in `provides`, and `ctx.link(key)` reads it as `ctx.owner()` does. It comes
+  from the prop of the key's name in React (`tooltip`), else on elements from
+  the attribute of that name (an id) or the UniAria host the element sits in
+  directly, never through another host.
 - Tests cover each path: nested, consumer portal (React), another branch,
   React child inside a custom-element owner, and an owner that connects late.
 

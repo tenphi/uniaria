@@ -1,4 +1,5 @@
 import { bindable, defineComponent, prop } from '@uniaria/core';
+import type { LinkKey } from '@uniaria/core';
 import type { dialog } from '@uniaria/core/dialog';
 import { announce, destroyAnnouncer } from '@uniaria/core/dom';
 import { field } from '@uniaria/core/field';
@@ -352,6 +353,68 @@ describe('defineElement', () => {
   });
 });
 
+describe('links', () => {
+  const hintLink: LinkKey<'hint'> = { name: 'hint' };
+  const hint = defineComponent({
+    name: 'test-hint',
+    parts: ['root'],
+    props: {},
+    provides: [hintLink],
+    setup: () => ({}),
+    expose: () => ({}),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+  const linker = defineComponent({
+    name: 'test-linker',
+    parts: ['root'],
+    props: {},
+    links: [hintLink],
+    setup: () => ({}),
+    expose: () => ({}),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+  defineElement(hint);
+  defineElement(linker);
+  type Host = UniElement<typeof linker>;
+
+  it('links to the host it sits in directly, not through another host', () => {
+    const container = mount(`
+      <uni-test-hint>
+        <uni-test-linker id="direct"><span data-part="root"></span></uni-test-linker>
+        <uni-test-disclosure>
+          <uni-test-linker id="nested"><span data-part="root"></span></uni-test-linker>
+        </uni-test-disclosure>
+      </uni-test-hint>`);
+    const tip =
+      container.querySelector<UniElement<typeof hint>>('uni-test-hint')!;
+    const direct = container.querySelector<Host>('#direct')!;
+    const nested = container.querySelector<Host>('#nested')!;
+    expect(direct.instance.linked(hintLink)).toBe(tip.instance);
+    expect(nested.instance.linked(hintLink)).toBeUndefined();
+  });
+
+  it('links by id through the attribute of the key’s name, and unlinks when moved', () => {
+    const container = mount(`
+      <uni-test-linker hint="tip"><span data-part="root"></span></uni-test-linker>`);
+    const host = container.querySelector<Host>('uni-test-linker')!;
+    expect(host.instance.linked(hintLink)).toBeUndefined();
+
+    const tip = document.createElement('uni-test-hint') as UniElement<
+      typeof hint
+    >;
+    tip.id = 'tip';
+    container.append(tip);
+    expect(host.instance.linked(hintLink)).toBe(tip.instance);
+
+    host.removeAttribute('hint');
+    expect(host.instance.linked(hintLink)).toBeUndefined();
+    host.setAttribute('hint', 'tip');
+    expect(host.instance.linked(hintLink)).toBe(tip.instance);
+    host.remove();
+    expect(host.instance.linked(hintLink)).toBeUndefined();
+  });
+});
+
 describe('<uni-button>', () => {
   it('adopts the root tag and its href', () => {
     const container = mount(`
@@ -563,7 +626,7 @@ describe('<uni-checkbox-group>', () => {
     expect(group.instance.getState().value).toEqual(['sms', 'email']);
   });
 
-  it('links a checkbox by id, to a group that comes later', () => {
+  it('links a checkbox by id, to a group that comes later, and unlinks without the id', () => {
     const container = mount(option('email', 'group="notify"'));
     const box = container.querySelector('uni-checkbox')!;
     expect(box.instance.owner()).toBeUndefined();
@@ -575,6 +638,9 @@ describe('<uni-checkbox-group>', () => {
     container.append(group);
     expect(box.instance.owner()).toBe(group.instance);
     expect(box.querySelector('input')!.checked).toBe(true);
+
+    box.removeAttribute('group');
+    expect(box.instance.owner()).toBeUndefined();
   });
 
   it('leaves the group when moved out of it', () => {

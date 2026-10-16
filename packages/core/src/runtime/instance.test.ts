@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { defineComponent, isOwnerDefinition } from './define';
-import type { PropsOf, StateOf } from './define';
+import type { LinkKey, PropsOf, StateOf } from './define';
 import { createInstance } from './instance';
 import { bindable, event, prop } from './schema';
 
@@ -764,5 +764,107 @@ describe('owner', () => {
     const child = createInstance(item);
     child.link(createInstance(other) as never);
     expect(child.api.owned()).toBeUndefined();
+  });
+});
+
+describe('links', () => {
+  interface HintApi {
+    text(): string;
+    setText(text: string): void;
+  }
+  const hintLink: LinkKey<'hint', HintApi> = { name: 'hint' };
+  const hint = defineComponent({
+    name: 'hint',
+    parts: ['root'],
+    props: { text: prop('') },
+    provides: [hintLink],
+    setup(ctx): HintApi {
+      const override = ctx.state<string | undefined>(undefined);
+      return {
+        text: () => override.get() ?? ctx.props.text(),
+        setText: override.set,
+      };
+    },
+    expose: () => ({}),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+  const button = defineComponent({
+    name: 'button',
+    parts: ['root'],
+    props: {},
+    links: [hintLink],
+    setup(ctx) {
+      const linked = () => ctx.link(hintLink);
+      return { linked, text: () => linked()?.api.text() };
+    },
+    expose: ({ api }) => ({ text: api.text() }),
+    connect: ({ api }) => ({
+      root: { attrs: { title: api.text() } },
+    }),
+  });
+
+  it('marks a definition that provides a link, and reserves the prop', () => {
+    expect(isOwnerDefinition(hint)).toBe(true);
+    expect(isOwnerDefinition(button)).toBe(false);
+    expect(() =>
+      defineComponent({
+        name: 'clash',
+        parts: ['root'],
+        props: { hint: prop('') },
+        links: [hintLink],
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      }),
+    ).toThrow(/"hint" is defined twice/);
+  });
+
+  it('types the link prop and the handle', () => {
+    expectTypeOf(createInstance(hint)).toMatchTypeOf<
+      NonNullable<PropsOf<typeof button>['hint']>
+    >();
+    expectTypeOf<PropsOf<typeof hint>>().not.toHaveProperty('hint');
+    const child = createInstance(button);
+    expectTypeOf(child.api.linked()?.api).toEqualTypeOf<HintApi | undefined>();
+  });
+
+  it('reads the link prop, else the adapter’s link, and follows it while started', () => {
+    const linked = createInstance(hint, { props: { text: 'Linked' } });
+    const explicit = createInstance(hint, { props: { text: 'Explicit' } });
+    const child = createInstance(button);
+    expect(child.getState().text).toBeUndefined();
+
+    child.link(linked, hintLink);
+    child.sync();
+    child.start();
+    expect(child.linked(hintLink)).toBe(linked);
+    expect(child.owner()).toBeUndefined();
+    expect(child.connect().root.attrs.title).toBe('Linked');
+    const listener = vi.fn();
+    child.subscribe(listener);
+    linked.api.setText('Changed');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(child.getState().text).toBe('Changed');
+
+    child.setProps({ hint: explicit });
+    child.sync();
+    expect(child.api.linked()?.instance).toBe(explicit);
+    linked.api.setText('Ignored');
+    expect(listener).toHaveBeenCalledTimes(2);
+    explicit.api.setText('Followed');
+    expect(listener).toHaveBeenCalledTimes(3);
+
+    child.setProps({});
+    child.link(undefined, hintLink);
+    child.sync();
+    expect(child.api.linked()).toBeUndefined();
+    child.stop();
+  });
+
+  it('returns nothing for an instance that doesn’t provide the link', () => {
+    const child = createInstance(button);
+    child.setProps({ hint: createInstance(button) });
+    child.sync();
+    expect(child.api.linked()).toBeUndefined();
   });
 });

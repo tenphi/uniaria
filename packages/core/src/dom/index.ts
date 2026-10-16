@@ -9,8 +9,8 @@
  * dismissable layer stack, hiding everything outside a modal, scroll lock
  * (iOS strategy pending), presence (enter and exit phases), positioning (one
  * wrapper, by script or by the consumer's CSS anchor positioning), page-wide
- * settings (`configure`) and feature detection with the development switch
- * for fallbacks. Planned: owner lookup.
+ * settings (`configure`), owner and link lookup, and feature detection with
+ * the development switch for fallbacks.
  *
  * Nothing here may touch `document` or `window` at module scope.
  */

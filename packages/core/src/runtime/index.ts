@@ -29,7 +29,7 @@ export type {
   PropsSchema,
   ResolvedSchema,
 } from './schema';
-export { defineComponent, isOwnerDefinition } from './define';
+export { answers, defineComponent, isOwnerDefinition } from './define';
 export type {
   AnyDefinition,
   ApiOf,
@@ -42,6 +42,9 @@ export type {
   Definition,
   Env,
   InputProps,
+  LinkKey,
+  Linkable,
+  Linked,
   Owned,
   OwnerLink,
   PartHandler,

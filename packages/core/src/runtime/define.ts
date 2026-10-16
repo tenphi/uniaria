@@ -11,6 +11,9 @@
  *   after every flush, so keep it cheap.
  * - `owner` — for a component that works inside another instance, such as a
  *   checkbox in its group (decision 11): `ctx.owner()` reads that instance.
+ * - `links` / `provides` — links named by a small key rather than a
+ *   definition, such as a button's link to its tooltip (Tooltip spec,
+ *   Resolved questions 2): `ctx.link()` reads the linked instance.
  */
 
 import type {
@@ -174,6 +177,13 @@ export interface SetupContext<
    * watch): while started, the owner's changes re-run them.
    */
   owner<D extends AnyDefinition>(definition: D): Owned<D> | undefined;
+  /**
+   * The instance linked by `key`, one of the definition's `links`, or
+   * `undefined` until there is one: the prop of the key's name, else the
+   * adapter's link. Read it where it is used: while started, the linked
+   * instance's changes re-run `connect()`, `expose()` and watches.
+   */
+  link<Api>(key: LinkKey<string, Api>): Linked<Api> | undefined;
 }
 
 export interface ComposeOptions<Inner extends string, Outer extends string> {
@@ -220,6 +230,10 @@ export interface ComponentConfig<
   readonly events?: E;
   /** The instance this component works inside, when it has one. */
   readonly owner?: OwnerLink;
+  /** Links this component takes, each through a prop of the key's name. */
+  readonly links?: readonly LinkKey[];
+  /** Links this component answers, such as a tooltip's. */
+  readonly provides?: readonly LinkKey[];
   setup(ctx: SetupContext<Part, P, E>): Api;
   expose(ctx: ViewContext<Part, P, Api>): State;
   connect(ctx: ViewContext<Part, P, Api>): ConnectedParts<Part>;
@@ -250,7 +264,8 @@ export type PropsOf<D extends AnyDefinition> = InputProps<
   D['props'],
   D['events']
 > &
-  OwnerProps<D>;
+  OwnerProps<D> &
+  LinkProps<D>;
 
 /** An owned component takes its owner instance as the `owner` prop. */
 type OwnerProps<D extends AnyDefinition> = [NonNullable<D['owner']>] extends [
@@ -260,6 +275,40 @@ type OwnerProps<D extends AnyDefinition> = [NonNullable<D['owner']>] extends [
   : NonNullable<D['owner']> extends OwnerLink<infer O>
     ? { readonly owner?: Instance<O> }
     : unknown;
+
+/** A linking component takes each linked instance as a prop of the key's name. */
+type LinkProps<D extends AnyDefinition> = D['links'] extends readonly LinkKey[]
+  ? Partial<Readonly<Record<D['links'][number]['name'], Linkable>>>
+  : unknown;
+
+/**
+ * An instance a link prop takes. Loosely typed: an `Instance<D>` isn't an
+ * `Instance`, since its typed callback props don't take `unknown`.
+ */
+export interface Linkable {
+  readonly definition: AnyDefinition;
+}
+
+/**
+ * A link named by a small key rather than the definition that answers it
+ * (Tooltip spec, Resolved questions 2), so a component that takes the link
+ * doesn't bundle the component it links to. The name is the prop that takes
+ * the instance and the element attribute that names its host by id; a
+ * custom element without the attribute links to the host it sits in
+ * directly. `Api` is what the linked instance's `setup()` returns.
+ */
+export interface LinkKey<Name extends string = string, Api = unknown> {
+  /** `tooltip`: `useComponent(button, { tooltip })`, `<uni-button tooltip="hint">`. */
+  readonly name: Name;
+  /** Types `ctx.link()`; never set. */
+  readonly api?: Api;
+}
+
+/** The instance linked by a key, as `ctx.link()` returns it. */
+export interface Linked<Api> {
+  readonly instance: Instance;
+  readonly api: Api;
+}
 
 /**
  * How a component finds its owner (decision 11): the owner's definition, and
@@ -283,11 +332,23 @@ export interface Owned<D extends AnyDefinition> {
 const owners = new WeakSet<AnyDefinition>();
 
 /**
- * Whether a defined component names `definition` as its owner, so adapters
- * answer owner lookups only for instances that can be owners.
+ * Whether a defined component names `definition` as its owner, or it
+ * provides a link, so adapters answer owner lookups only for instances that
+ * can be owners.
  */
 export function isOwnerDefinition(definition: AnyDefinition): boolean {
-  return owners.has(definition);
+  return owners.has(definition) || (definition.provides?.length ?? 0) > 0;
+}
+
+/** Whether `definition` answers a lookup for `wanted`: its owner or a link key. */
+export function answers(
+  definition: AnyDefinition,
+  wanted: AnyDefinition | LinkKey,
+): boolean {
+  return (
+    definition === wanted ||
+    (definition.provides?.includes(wanted as LinkKey) ?? false)
+  );
 }
 
 const NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
@@ -299,9 +360,16 @@ export function defineComponent<
   State,
   E extends EventsSchema = Record<never, EventSpec<unknown>>,
   O extends OwnerLink | undefined = undefined,
+  const L extends readonly LinkKey[] | undefined = undefined,
 >(
-  config: ComponentConfig<Part, P, E, Api, State> & { readonly owner?: O },
-): Definition<Part, P, E, Api, State> & { readonly owner: O } {
+  config: ComponentConfig<Part, P, E, Api, State> & {
+    readonly owner?: O;
+    readonly links?: L;
+  },
+): Definition<Part, P, E, Api, State> & {
+  readonly owner: O;
+  readonly links: L;
+} {
   if (!NAME.test(config.name)) {
     throw new Error(
       `[uniaria] Component name "${config.name}" must be kebab-case.`,
@@ -327,7 +395,9 @@ export function defineComponent<
     callback('owner');
     owners.add(config.owner.definition);
   }
+  for (const key of config.links ?? []) callback(key.name);
   return { ...config, events, schema } as Definition<Part, P, E, Api, State> & {
     readonly owner: O;
+    readonly links: L;
   };
 }

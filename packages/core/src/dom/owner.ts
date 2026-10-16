@@ -14,9 +14,14 @@
  *   mount order don't matter.
  * - **Leaving.** An owner that stops providing releases its children, which
  *   ask again: another owner may answer.
+ * - **Links** (Tooltip spec, Resolved questions 2) are asked for by key
+ *   rather than definition, and only of the nearest UniAria host around the
+ *   child: a button in a popover inside a tooltip isn't the tooltip's.
  */
 
-import type { AnyDefinition, Instance } from '../runtime';
+import type { AnyDefinition, Instance, LinkKey } from '../runtime';
+import { answers } from '../runtime';
+import { isUniHost } from './parts';
 
 const REQUEST = 'uni-owner-request';
 
@@ -27,13 +32,16 @@ interface Provider {
   track(release: () => void): () => void;
 }
 
+/** An owner's definition, or a link's key. */
+type Wanted = AnyDefinition | LinkKey;
+
 interface RequestDetail {
-  readonly definition: AnyDefinition;
+  readonly wanted: Wanted;
   answer(provider: Provider): void;
 }
 
 interface Waiting {
-  readonly definition: AnyDefinition;
+  readonly wanted: Wanted;
   /** Whether an owner providing on `element` answers this request. */
   matches(element: Element): boolean;
   ask(): void;
@@ -61,7 +69,7 @@ export function provideOwner(instance: Instance, element: Element): () => void {
   };
   const onRequest = (event: Event) => {
     const detail = (event as CustomEvent<RequestDetail | undefined>).detail;
-    if (detail?.definition !== instance.definition) return;
+    if (!detail || !answers(instance.definition, detail.wanted)) return;
     event.stopImmediatePropagation();
     detail.answer(provider);
   };
@@ -71,7 +79,7 @@ export function provideOwner(instance: Instance, element: Element): () => void {
   providers.set(element, list);
   for (const request of [...waiting]) {
     if (
-      request.definition === instance.definition &&
+      answers(instance.definition, request.wanted) &&
       request.matches(element)
     ) {
       request.ask();
@@ -86,17 +94,28 @@ export function provideOwner(instance: Instance, element: Element): () => void {
   };
 }
 
+/** The nearest UniAria host around `element`. */
+function hostAround(element: Element): Element | null {
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    if (isUniHost(node)) return node;
+  }
+  return null;
+}
+
 /**
- * Keeps `onChange` told of the owner of `definition` for `element`: the one
- * whose element has the id `ownerId` when given, else the nearest providing
- * ancestor. `undefined` while there is none. Returns the cleanup.
+ * Keeps `onChange` told of the owner of `wanted` for `element`, an owner's
+ * definition or a link's key: the one whose element has the id `ownerId`
+ * when given, else the nearest providing ancestor (for a link, only the
+ * nearest UniAria host). `undefined` while there is none. Returns the
+ * cleanup.
  */
 export function requestOwner(
   element: Element,
-  definition: AnyDefinition,
+  wanted: Wanted,
   onChange: (owner: Instance | undefined) => void,
   ownerId?: string,
 ): () => void {
+  const isLink = !('setup' in wanted);
   let isDone = false;
   let forget: (() => void) | undefined;
 
@@ -110,30 +129,34 @@ export function requestOwner(
     onChange(provider.instance);
   };
 
-  const byId = (): Provider | undefined => {
-    const root = element.getRootNode() as Partial<DocumentOrShadowRoot> & Node;
-    const target =
-      'getElementById' in root
-        ? (root as Document).getElementById(ownerId!)
-        : null;
-    return target
+  const providerOn = (target: Element | null): Provider | undefined =>
+    target
       ? providers
           .get(target)
-          ?.find((provider) => provider.instance.definition === definition)
+          ?.find((provider) => answers(provider.instance.definition, wanted))
       : undefined;
+
+  const byId = (): Provider | undefined => {
+    const root = element.getRootNode() as Partial<DocumentOrShadowRoot> & Node;
+    return providerOn(
+      'getElementById' in root
+        ? (root as Document).getElementById(ownerId!)
+        : null,
+    );
   };
 
   const ask = () => {
     if (isDone) return;
-    if (ownerId !== undefined) {
-      const provider = byId();
+    if (ownerId !== undefined || isLink) {
+      const provider =
+        ownerId !== undefined ? byId() : providerOn(hostAround(element));
       if (provider) accept(provider);
       else waiting.add(request);
       return;
     }
     let isAnswered = false;
     const detail: RequestDetail = {
-      definition,
+      wanted,
       answer(provider) {
         isAnswered = true;
         accept(provider);
@@ -146,11 +169,13 @@ export function requestOwner(
   };
 
   const request: Waiting = {
-    definition,
+    wanted,
     matches: (owner) =>
-      ownerId === undefined
-        ? owner.contains(element)
-        : owner.id === ownerId && owner.getRootNode() === element.getRootNode(),
+      ownerId !== undefined
+        ? owner.id === ownerId && owner.getRootNode() === element.getRootNode()
+        : isLink
+          ? owner === hostAround(element)
+          : owner.contains(element),
     ask,
   };
 

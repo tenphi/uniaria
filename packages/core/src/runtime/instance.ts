@@ -16,6 +16,7 @@ import type {
   Cell,
   ConnectedParts,
   Env,
+  LinkKey,
   Owned,
   PartHandler,
   PartOf,
@@ -70,12 +71,15 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   batch<T>(fn: () => T): T;
   /**
    * Links the instance this one works inside, found by the adapter (React
-   * context, the DOM), or `undefined` to unlink. Silent like `setProps()`:
-   * call `sync()` after it. The `owner` prop wins over the link.
+   * context, the DOM), or `undefined` to unlink. With `key`, one of the
+   * definition's `links`, links that instead. Silent like `setProps()`: call
+   * `sync()` after it. The `owner` prop, or the key's, wins over the link.
    */
-  link(owner: Instance | undefined): void;
+  link(owner: Instance | undefined, key?: LinkKey): void;
   /** The owner now: the `owner` prop, else the link. */
   owner(): Instance | undefined;
+  /** The instance linked by `key` now: the key's prop, else the link. */
+  linked(key: LinkKey): Instance | undefined;
 }
 
 interface Watcher {
@@ -124,6 +128,9 @@ export function createInstance<D extends AnyDefinition>(
   const elements = new Map<string, unknown>();
   let linked: Instance | undefined;
   const currentOwner = () => (props.owner as Instance | undefined) ?? linked;
+  const linkedByKey = new Map<LinkKey, Instance>();
+  const currentLink = (key: LinkKey) =>
+    (props[key.name] as Instance | undefined) ?? linkedByKey.get(key);
   // One handle per owner, so `ctx.owner()` is stable while it is the same.
   const handles = new WeakMap<Instance, Owned<AnyDefinition>>();
   const handleOf = (owner: Instance): Owned<AnyDefinition> => {
@@ -138,16 +145,33 @@ export function createInstance<D extends AnyDefinition>(
     }
     return handle;
   };
-  // While started, the owner's changes count as this instance's, so the
-  // binder re-runs connect() and watchers see them; nothing renders.
-  let following: { owner: Instance; stop: () => void } | undefined;
+  // While started, the owner's and linked instances' changes count as this
+  // instance's, so the binder re-runs connect() and watchers see them;
+  // nothing renders.
+  const following = new Map<Instance, () => void>();
   const follow = () => {
-    const owner = isStarted ? currentOwner() : undefined;
-    if (following?.owner === owner) return;
-    following?.stop();
-    following = owner
-      ? { owner, stop: owner.subscribe(() => changed()) }
-      : undefined;
+    const next = new Set<Instance>();
+    if (isStarted) {
+      const owner = currentOwner();
+      if (owner) next.add(owner);
+      for (const key of definition.links ?? []) {
+        const target = currentLink(key);
+        if (target) next.add(target);
+      }
+    }
+    for (const [target, stop] of following) {
+      if (next.has(target)) continue;
+      stop();
+      following.delete(target);
+    }
+    for (const target of next) {
+      if (!following.has(target)) {
+        following.set(
+          target,
+          target.subscribe(() => changed()),
+        );
+      }
+    }
   };
   const watchers: Watcher[] = [];
   const effects: (() => void | (() => void))[] = [];
@@ -278,6 +302,12 @@ export function createInstance<D extends AnyDefinition>(
         const owner = currentOwner();
         return owner?.definition === ownerDefinition
           ? (handleOf(owner) as never)
+          : undefined;
+      },
+      link(key) {
+        const target = currentLink(key);
+        return target?.definition.provides?.includes(key)
+          ? (handleOf(target) as never)
           : undefined;
       },
       use(child, childProps, composeOptions) {
@@ -432,14 +462,18 @@ export function createInstance<D extends AnyDefinition>(
     },
     element: (part) => elements.get(part) ?? null,
     batch: store.batch,
-    link(owner) {
-      if (owner === linked) return;
-      linked = owner;
+    link(owner, key) {
+      const previous = key ? linkedByKey.get(key) : linked;
+      if (owner === previous) return;
+      if (!key) linked = owner;
+      else if (owner) linkedByKey.set(key, owner);
+      else linkedByKey.delete(key);
       // A new owner changes what connect() and expose() return.
       propsVersion++;
       hasUnsyncedProps = true;
     },
     owner: currentOwner,
+    linked: currentLink,
   };
   return instance as unknown as Instance<D>;
 }

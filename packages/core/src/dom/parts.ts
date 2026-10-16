@@ -18,7 +18,7 @@ export const UNI_HOST: unique symbol = Symbol.for('@uniaria/host') as never;
  * True for an element whose tag is defined as a UniAria host. A tag defined
  * later counts from then on.
  */
-function isUniHost(element: Element): boolean {
+export function isUniHost(element: Element): boolean {
   if (!element.localName.includes('-')) return false;
   const registry = element.ownerDocument.defaultView?.customElements;
   const host = registry?.get(element.localName) as

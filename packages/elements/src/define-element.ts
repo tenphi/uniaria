@@ -27,6 +27,7 @@
 import type {
   AnyDefinition,
   Instance,
+  LinkKey,
   OwnerLink,
   PropInfo,
   PropsOf,
@@ -125,6 +126,10 @@ export function defineElement<D extends AnyDefinition>(
   }
   const ownerLink = (definition as { owner?: OwnerLink }).owner;
   if (ownerLink) properties.set('owner', undefined);
+  // Each link's attribute names its host by id (Tooltip spec, Resolved
+  // questions 2).
+  const links: readonly LinkKey[] = definition.links ?? [];
+  const linkAttributes = new Map(links.map((key) => [key.name, key]));
   const builtIn = Object.getOwnPropertyNames(HTMLElement.prototype);
   for (const property of properties.keys()) {
     if (builtIn.includes(property) || property === 'instance') {
@@ -139,9 +144,11 @@ export function defineElement<D extends AnyDefinition>(
     static readonly [UNI_HOST] = true;
 
     static get observedAttributes(): string[] {
-      return ownerLink
-        ? [...byAttribute.keys(), ownerLink.attribute]
-        : [...byAttribute.keys()];
+      return [
+        ...byAttribute.keys(),
+        ...(ownerLink ? [ownerLink.attribute] : []),
+        ...linkAttributes.keys(),
+      ];
     }
 
     static {
@@ -174,6 +181,7 @@ export function defineElement<D extends AnyDefinition>(
     #unobserve: (() => void) | undefined;
     #unprovide: (() => void) | undefined;
     #unlink: (() => void) | undefined;
+    readonly #unlinks = new Map<LinkKey, () => void>();
 
     constructor() {
       super();
@@ -206,6 +214,7 @@ export function defineElement<D extends AnyDefinition>(
       // Linked before the first write, so a checkbox in a group starts with
       // the group's state.
       this.#relink();
+      for (const key of links) this.#relinkKey(key);
       this.instance.start();
       this.#binder.start();
     }
@@ -218,6 +227,11 @@ export function defineElement<D extends AnyDefinition>(
       this.#unlink?.();
       this.#unlink = undefined;
       this.instance.link(undefined);
+      for (const [key, unlink] of this.#unlinks) {
+        unlink();
+        this.instance.link(undefined, key);
+      }
+      this.#unlinks.clear();
       this.instance.sync();
       this.#binder.stop();
       this.instance.stop();
@@ -227,6 +241,8 @@ export function defineElement<D extends AnyDefinition>(
     #relink(): void {
       if (!ownerLink) return;
       this.#unlink?.();
+      // The owner named before is no longer this one's unless it answers.
+      this.instance.link(undefined);
       this.#unlink = requestOwner(
         this,
         ownerLink.definition,
@@ -236,6 +252,26 @@ export function defineElement<D extends AnyDefinition>(
         },
         this.getAttribute(ownerLink.attribute) ?? undefined,
       );
+      this.instance.sync();
+    }
+
+    /** Asks for a link again: on connect and when its attribute changes. */
+    #relinkKey(key: LinkKey): void {
+      this.#unlinks.get(key)?.();
+      this.instance.link(undefined, key);
+      this.#unlinks.set(
+        key,
+        requestOwner(
+          this,
+          key,
+          (target) => {
+            this.instance.link(target, key);
+            this.instance.sync();
+          },
+          this.getAttribute(key.name) ?? undefined,
+        ),
+      );
+      this.instance.sync();
     }
 
     attributeChangedCallback(
@@ -245,6 +281,11 @@ export function defineElement<D extends AnyDefinition>(
     ): void {
       if (attribute === ownerLink?.attribute) {
         if (this.isConnected) this.#relink();
+        return;
+      }
+      const key = linkAttributes.get(attribute);
+      if (key) {
+        if (this.isConnected) this.#relinkKey(key);
         return;
       }
       const info = byAttribute.get(attribute);
