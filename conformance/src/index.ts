@@ -14,6 +14,7 @@ import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { checkboxGroupConformance } from './checkbox-group/checkbox-group.conformance';
 import { dialogConformance } from './dialog/dialog.conformance';
 import { fieldConformance } from './field/field.conformance';
+import { popoverConformance } from './popover/popover.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { switchConformance } from './switch/switch.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
@@ -25,6 +26,7 @@ export {
   checkboxGroupConformance,
   dialogConformance,
   fieldConformance,
+  popoverConformance,
   radioGroupConformance,
   switchConformance,
   textFieldConformance,
@@ -42,6 +44,12 @@ export type {
   DialogState,
 } from './dialog/types';
 export type { FieldProps, FieldState } from './field/types';
+export type {
+  PopoverDismissEvent,
+  PopoverPlacement,
+  PopoverProps,
+  PopoverState,
+} from './popover/types';
 export type { RadioGroupProps, RadioGroupState } from './radio-group/types';
 export type { SwitchProps, SwitchState } from './switch/types';
 export type { TextFieldProps, TextFieldState } from './text-field/types';
@@ -61,4 +69,5 @@ export const suites = [
   switchConformance,
   radioGroupConformance,
   dialogConformance,
+  popoverConformance,
 ];
