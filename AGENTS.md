@@ -397,8 +397,8 @@ One component per task, small commits, in this order:
    spec on its own and ask the owner to review it. Do not go further until
    the owner sets its status to `approved`.
 
-   Complex components (overlays and collections: Popover, Listbox, Select,
-   ComboBox) start from Cube UI Kit, not React Aria (owner, 2026-10-15). UI
+   Complex components (overlays and collections: Dialog, Popover, Tooltip,
+   Listbox, Select, ComboBox) start from Cube UI Kit, not React Aria (owner, 2026-10-15). UI
    Kit replaced React Aria patterns that hurt its users: its ComboBox is its
    own implementation, and one click outside a popover acts. Read the
    component's source, tests and docs in `references/cube-ui-kit`, and list
@@ -419,14 +419,21 @@ One component per task, small commits, in this order:
 Naming: folder and subpath in kebab-case (`checkbox-group`,
 `@tenphi/sous/checkbox-group`); definition export in camelCase
 (`checkboxGroup`); `name: 'checkbox-group'`; element `<sous-checkbox-group>`.
-The cuisine theme stays in the brand only — APIs get descriptive names.
+A reserved word gets a descriptive export instead: `toggleSwitch` for
+`name: 'switch'` (owner, 2026-10-16). The cuisine theme stays in the brand
+only — APIs get descriptive names.
 
 First scope, in roadmap order: Button, ToggleButton, Field, TextField,
-Checkbox, CheckboxGroup, Switch, RadioGroup → Popover, NumberField → Listbox,
-Select, ComboBox. Button also covers navigation (link mode with `href`);
-there is no separate Link component. Field plus a text control is
-`<Name>Field` (TextField, NumberField); TextField covers `<textarea>` too, so
-there is no separate TextArea.
+Checkbox, CheckboxGroup, Switch, RadioGroup → Dialog, Popover, Tooltip,
+NumberField → Listbox, Select, ComboBox. Dialog and Tooltip joined on
+2026-10-16 (owner): Dialog first, since it needs no positioning and settles
+the overlay contract Popover reuses; Tooltip after Popover, whose
+positioning and top-layer fallback it reuses.
+
+Button also covers navigation (link mode with `href`); there is no separate
+Link component. Field plus a text control is `<Name>Field` (TextField,
+NumberField); TextField covers `<textarea>` too, so there is no separate
+TextArea.
 
 ## Conformance
 
