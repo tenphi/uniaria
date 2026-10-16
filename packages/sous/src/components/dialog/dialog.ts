@@ -173,7 +173,10 @@ export const dialog = defineComponent({
           initialFocus(element).focus();
         };
         show();
-        if (isDevelopment()) checkNames(element);
+        // A custom element may get its title after its root: check later.
+        const nameCheck = isDevelopment()
+          ? setTimeout(() => checkNames(element))
+          : undefined;
         const release = hostAnnouncer(element);
 
         // Sous prevents every Escape that reaches the dialog, so the browser
@@ -216,6 +219,7 @@ export const dialog = defineComponent({
         document.addEventListener('submit', onSubmit);
 
         return () => {
+          clearTimeout(nameCheck);
           element.removeEventListener('keydown', onKeyDown);
           element.removeEventListener('cancel', onCancel);
           element.removeEventListener('close', onClose);
@@ -279,7 +283,7 @@ export const dialog = defineComponent({
     /** Development checks for a dialog that just opened. */
     function checkNames(root: HTMLElement) {
       const hasName =
-        isRendered('title') ||
+        partElement(ctx, 'title') !== null ||
         props.labelledBy() !== undefined ||
         root.hasAttribute('aria-label');
       if (!hasName) {
@@ -289,7 +293,8 @@ export const dialog = defineComponent({
         );
       }
       const hasDescription =
-        isRendered('description') || props.describedBy() !== undefined;
+        partElement(ctx, 'description') !== null ||
+        props.describedBy() !== undefined;
       if (props.role() === 'alertdialog' && !hasDescription) {
         warn(
           'dialog: an alertdialog needs a description part (or describedBy) ' +

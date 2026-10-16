@@ -827,7 +827,7 @@ describe('<sous-dialog>', () => {
 
   it('hosts the live announcer while open', async () => {
     const container = mount(`<sous-dialog>${DIALOG}</sous-dialog>`);
-    const { trigger, modal } = dialogIn(container);
+    const { trigger, modal, events } = dialogIn(container);
     announce('Before');
     const announcer = () =>
       document.querySelector('[data-sous-live-announcer]')!;
@@ -836,12 +836,17 @@ describe('<sous-dialog>', () => {
     trigger.click();
     expect(announcer().parentElement).toBe(modal);
     escape(modal);
+    expect(events).toEqual([
+      true,
+      { reason: 'escape', returnValue: '' },
+      false,
+    ]);
     await vi.waitFor(() => expect(modal.open).toBe(false));
     expect(announcer().parentElement).toBe(document.body);
     destroyAnnouncer();
   });
 
-  it('warns about a dialog without a name, an alertdialog without a description and a root that is not a dialog', () => {
+  it('warns about a dialog without a name, an alertdialog without a description and a root that is not a dialog', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <sous-dialog id="unnamed">
@@ -861,13 +866,31 @@ describe('<sous-dialog>', () => {
         `#${id}`,
       )!;
       host.isOpen = true;
-      host.isOpen = false;
     }
+    // Checked once its parts have settled.
+    await vi.waitFor(() =>
+      expect(
+        messages().filter((message) => message.includes('dialog:')),
+      ).toHaveLength(3),
+    );
     const all = messages();
     warn.mockRestore();
     expect(all.some((message) => message.includes('no name'))).toBe(true);
     expect(all.some((message) => message.includes('needs a description'))).toBe(
       true,
     );
+  });
+
+  // Parts added after it connected arrive in document order: the root,
+  // which opens it, before the title.
+  it('does not warn about a titled dialog that opens with its parts', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const host = document.createElement('sous-dialog');
+    host.defaultOpen = true;
+    document.body.append(host);
+    host.innerHTML = DIALOG;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
