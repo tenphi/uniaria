@@ -21,7 +21,9 @@
     "./src/radio.ts",
     "./dist/radio.js",
     "./src/radio-group.ts",
-    "./dist/radio-group.js"
+    "./dist/radio-group.js",
+    "./src/dialog.ts",
+    "./dist/dialog.js"
   ],
   "exports": {
     ".": {
@@ -58,6 +60,11 @@
       "sous-source": "./src/checkbox-group.ts",
       "types": "./dist/checkbox-group.d.ts",
       "default": "./dist/checkbox-group.js"
+    },
+    "./dialog": {
+      "sous-source": "./src/dialog.ts",
+      "types": "./dist/dialog.d.ts",
+      "default": "./dist/dialog.js"
     },
     "./radio": {
       "sous-source": "./src/radio.ts",

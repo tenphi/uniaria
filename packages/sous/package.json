@@ -50,6 +50,11 @@
       "types": "./dist/checkbox-group/index.d.ts",
       "default": "./dist/checkbox-group/index.js"
     },
+    "./dialog": {
+      "sous-source": "./src/components/dialog/index.ts",
+      "types": "./dist/dialog/index.d.ts",
+      "default": "./dist/dialog/index.js"
+    },
     "./radio": {
       "sous-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

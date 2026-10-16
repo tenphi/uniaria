@@ -1,5 +1,6 @@
 import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
+import { dialog } from '@tenphi/sous/dialog';
 import { field } from '@tenphi/sous/field';
 import { radio } from '@tenphi/sous/radio';
 import { radioGroup } from '@tenphi/sous/radio-group';
@@ -173,5 +174,31 @@ describe('RadioGroup on the server', () => {
     expect(radios[0]).not.toContain('checked');
     expect(radios[1]).toContain('checked=""');
     expect(html).not.toContain('aria-checked');
+  });
+});
+
+function Confirm() {
+  const ui = useComponent(dialog, { defaultOpen: true });
+  return (
+    <>
+      <button {...ui.parts.trigger}>Delete file</button>
+      <dialog {...ui.parts.root}>
+        <h2 {...ui.parts.title}>Delete file</h2>
+        <button {...ui.parts.close}>Cancel</button>
+      </dialog>
+    </>
+  );
+}
+
+describe('Dialog on the server', () => {
+  it('renders a closed dialog, even one open by default', () => {
+    const html = renderToString(<Confirm />);
+    const tag = html.match(/<dialog[^>]*>/)![0];
+    // `open` would open it non-modally; it opens after hydration.
+    expect(tag).not.toMatch(/\sopen[\s=>]/);
+    expect(tag).toContain('tabindex="-1"');
+    // Only rendered parts are referenced, which is known after commit.
+    expect(tag).not.toContain('aria-labelledby');
+    expect(html).toContain('type="button"');
   });
 });

@@ -1,4 +1,6 @@
 import { bindable, defineComponent, prop } from '@tenphi/sous';
+import type { dialog } from '@tenphi/sous/dialog';
+import { announce, destroyAnnouncer } from '@tenphi/sous/dom';
 import { field } from '@tenphi/sous/field';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
@@ -13,6 +15,7 @@ import './checkbox-group';
 import './switch';
 import './radio';
 import './radio-group';
+import './dialog';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -722,5 +725,149 @@ describe('<sous-radio-group>', () => {
     expect(input.checked).toBe(true);
     // No name prop: the group's root id, unique on the page.
     expect(input.name).toBe(group.querySelector('[data-part="root"]')!.id);
+  });
+});
+
+describe('<sous-dialog>', () => {
+  const DIALOG = `
+    <button data-part="trigger">Delete file</button>
+    <dialog data-part="root" role="alertdialog">
+      <h2 data-part="title">Delete file</h2>
+      <p data-part="description">This can't be undone.</p>
+      <button data-part="close">Cancel</button>
+    </dialog>`;
+
+  function dialogIn(container: HTMLElement) {
+    const host = container.querySelector('sous-dialog')!;
+    const trigger = host.querySelector<HTMLElement>('[data-part="trigger"]')!;
+    const modal = host.querySelector('dialog')!;
+    const events: unknown[] = [];
+    for (const type of ['dismiss', 'openchange']) {
+      host.addEventListener(type, (event) =>
+        events.push((event as CustomEvent).detail),
+      );
+    }
+    return { host, trigger, modal, events };
+  }
+
+  const escape = (target: Element) =>
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+  it('adopts the role of its dialog and turns off dismissal with "false"', () => {
+    const container = mount(
+      `<sous-dialog dismissable="false">${DIALOG}</sous-dialog>`,
+    );
+    const { host, trigger, modal, events } = dialogIn(container);
+    expect(host.role).toBe('alertdialog');
+    expect(host.hasAttribute('role')).toBe(false);
+    expect(modal.getAttribute('role')).toBe('alertdialog');
+
+    trigger.click();
+    expect(modal.matches(':modal')).toBe(true);
+    escape(modal);
+    expect(events).toEqual([true]);
+    host.removeAttribute('dismissable');
+    escape(modal);
+    expect(events).toEqual([
+      true,
+      { reason: 'escape', returnValue: '' },
+      false,
+    ]);
+  });
+
+  it('opens from instance.api.open() and closes from close()', async () => {
+    const container = mount(`<sous-dialog>${DIALOG}</sous-dialog>`);
+    const { host, modal, events } = dialogIn(container);
+    host.instance.api.open();
+    expect(modal.matches(':modal')).toBe(true);
+    host.instance.api.close();
+    expect(events).toEqual([true, false]);
+    await vi.waitFor(() => expect(modal.open).toBe(false));
+  });
+
+  it('reports a dialog removed while open, unlocks scroll and restores focus', async () => {
+    const container = mount(`<sous-dialog>${DIALOG}</sous-dialog>`);
+    const { host, trigger, modal, events } = dialogIn(container);
+    trigger.click();
+    expect(getComputedStyle(document.documentElement).overflow).toBe('hidden');
+
+    modal.remove();
+    await vi.waitFor(() =>
+      expect(events).toEqual([
+        true,
+        { reason: 'browser', returnValue: '' },
+        false,
+      ]),
+    );
+    expect(host.instance.getState().isOpen).toBe(false);
+    expect(getComputedStyle(document.documentElement).overflow).not.toBe(
+      'hidden',
+    );
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('leaves focus the page moved elsewhere when its dialog is removed', async () => {
+    const container = mount(
+      `<sous-dialog>${DIALOG}</sous-dialog><input id="elsewhere" aria-label="Elsewhere" />`,
+    );
+    const { trigger, modal, events } = dialogIn(container);
+    trigger.click();
+    modal.remove();
+    const elsewhere = container.querySelector<HTMLElement>('#elsewhere')!;
+    elsewhere.focus();
+    await vi.waitFor(() => expect(events).toHaveLength(3));
+    expect(document.activeElement).toBe(elsewhere);
+  });
+
+  it('hosts the live announcer while open', async () => {
+    const container = mount(`<sous-dialog>${DIALOG}</sous-dialog>`);
+    const { trigger, modal } = dialogIn(container);
+    announce('Before');
+    const announcer = () =>
+      document.querySelector('[data-sous-live-announcer]')!;
+    expect(announcer().parentElement).toBe(document.body);
+
+    trigger.click();
+    expect(announcer().parentElement).toBe(modal);
+    escape(modal);
+    await vi.waitFor(() => expect(modal.open).toBe(false));
+    expect(announcer().parentElement).toBe(document.body);
+    destroyAnnouncer();
+  });
+
+  it('warns about a dialog without a name, an alertdialog without a description and a root that is not a dialog', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const container = mount(`
+      <sous-dialog id="unnamed">
+        <dialog data-part="root"><button data-part="close">Close</button></dialog>
+      </sous-dialog>
+      <sous-dialog id="alert">
+        <dialog data-part="root" role="alertdialog">
+          <h2 data-part="title">Delete file</h2>
+        </dialog>
+      </sous-dialog>
+      <sous-dialog id="div"><div data-part="root"></div></sous-dialog>`);
+    const messages = () => warn.mock.calls.map(([message]) => String(message));
+    expect(messages().some((message) => message.includes('<div>'))).toBe(true);
+
+    for (const id of ['unnamed', 'alert']) {
+      const host = container.querySelector<SousElement<typeof dialog>>(
+        `#${id}`,
+      )!;
+      host.isOpen = true;
+      host.isOpen = false;
+    }
+    const all = messages();
+    warn.mockRestore();
+    expect(all.some((message) => message.includes('no name'))).toBe(true);
+    expect(all.some((message) => message.includes('needs a description'))).toBe(
+      true,
+    );
   });
 });

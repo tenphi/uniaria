@@ -15,6 +15,7 @@ export default defineConfig({
     'checkbox-group/index': 'src/components/checkbox-group/index.ts',
     'switch/index': 'src/components/switch/index.ts',
     'radio/index': 'src/components/radio/index.ts',
+    'dialog/index': 'src/components/dialog/index.ts',
     'radio-group/index': 'src/components/radio-group/index.ts',
   },
   format: 'esm',

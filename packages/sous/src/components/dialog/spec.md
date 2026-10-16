@@ -358,7 +358,9 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    live in the page, which the open modal makes inert: Chromium's
    accessibility tree marks everything outside the dialog ignored (probed),
    which takes the regions with it, so a Field error inside a dialog would
-   go unannounced. To confirm in a scenario before building. React Aria exempts its announcer from
+   go unannounced. Confirmed before building: Chromium's tree marks the
+   regions ignored as `activeModalDialog`, and a region inside the dialog
+   stays exposed. React Aria exempts its announcer from
    `ariaHideOutside`; native inertness has no exemption. Proposed: while a
    modal dialog is open, the announcer writes to a region inside the top
    one, and moves back when it closes. This touches `dom/`'s announcer and

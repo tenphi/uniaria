@@ -16,6 +16,7 @@ const entries = {
   '@tenphi/sous-elements/switch': () => import('./switch'),
   '@tenphi/sous-elements/radio': () => import('./radio'),
   '@tenphi/sous-elements/radio-group': () => import('./radio-group'),
+  '@tenphi/sous-elements/dialog': () => import('./dialog'),
 };
 
 describe('SSR safety', () => {
@@ -46,5 +47,7 @@ describe('SSR safety', () => {
     expect(SousRadio).toBeUndefined();
     const { SousRadioGroup } = await import('./radio-group');
     expect(SousRadioGroup).toBeUndefined();
+    const { SousDialog } = await import('./dialog');
+    expect(SousDialog).toBeUndefined();
   });
 });

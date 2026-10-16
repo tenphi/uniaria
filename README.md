@@ -16,8 +16,9 @@ Styling stays with your design system: every part exposes `data-scope`,
 | `@tenphi/sous-testing`  | Test instances, conformance runner, screen-reader helpers     |
 
 The first release covers Button, ToggleButton, Field, TextField (inputs and
-textareas), Checkbox, CheckboxGroup, Switch, RadioGroup, NumberField, Popover,
-Listbox, Select and ComboBox, at React Aria-level accessibility.
+textareas), Checkbox, CheckboxGroup, Switch, RadioGroup, Dialog, Popover,
+Tooltip, NumberField, Listbox, Select and ComboBox, at React Aria-level
+accessibility.
 
 Sous is part of the same family as [Tasty](https://tasty.style) and
 [Glaze](https://github.com/tenphi/glaze): a sous-chef does the prep nobody sees

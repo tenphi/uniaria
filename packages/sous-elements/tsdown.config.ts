@@ -14,6 +14,7 @@ export default defineConfig({
     switch: 'src/switch.ts',
     radio: 'src/radio.ts',
     'radio-group': 'src/radio-group.ts',
+    dialog: 'src/dialog.ts',
   },
   format: 'esm',
   platform: 'neutral',
