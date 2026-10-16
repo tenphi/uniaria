@@ -1,5 +1,6 @@
 import { defineComponent, prop } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
+import { field } from '@tenphi/sous/field';
 import type { ButtonProps } from '@tenphi/sous/button';
 import { toggleButton } from '@tenphi/sous/toggle-button';
 import { keyboard, pointer, releaseInput } from '@tenphi/sous-testing/browser';
@@ -196,6 +197,27 @@ describe('development warnings', () => {
     const warn = vi.spyOn(console, 'warn');
     render(<Save />);
     render(<Docs />);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  // Field links its label only once it has started; StrictMode then
+  // attaches the same elements again.
+  it('stays quiet when StrictMode attaches an element Sous wrote to', () => {
+    const warn = vi.spyOn(console, 'warn');
+    function Name() {
+      const ui = useComponent(field, {});
+      return (
+        <>
+          <label {...ui.parts.label}>Name</label>
+          <input {...ui.parts.control} />
+        </>
+      );
+    }
+    const rendered = render(<Name />);
+    expect(
+      rendered.querySelector('input')!.hasAttribute('aria-labelledby'),
+    ).toBe(true);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });

@@ -21,7 +21,10 @@ const ATTRIBUTES: Readonly<Record<string, string>> = {
   colspan: 'colSpan',
   rowspan: 'rowSpan',
   formaction: 'formAction',
+  formenctype: 'formEncType',
+  formmethod: 'formMethod',
   formnovalidate: 'formNoValidate',
+  formtarget: 'formTarget',
   novalidate: 'noValidate',
 };
 

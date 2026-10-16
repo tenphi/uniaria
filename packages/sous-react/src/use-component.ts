@@ -70,6 +70,8 @@ interface Internal<D extends AnyDefinition> {
   readonly refs: Map<string, (element: Element | null) => void>;
   /** Default props from the first render, kept stable after it. */
   readonly defaults: Map<string, Readonly<Record<string, unknown>>>;
+  /** Elements whose attributes were checked against the render. */
+  readonly checked: WeakSet<Element>;
   /** Whether the instance's owner came from React context. */
   isLinkedByContext: boolean;
   rendered?: {
@@ -167,7 +169,12 @@ function toReactParts<D extends AnyDefinition>(
     let ref = refs.get(part);
     if (!ref) {
       ref = (element: Element | null) => {
-        if (element && isDevelopment()) checkOwnership(internal, part, element);
+        // Once per element: one attached again (StrictMode does) carries
+        // what the binder wrote since the render.
+        if (element && isDevelopment() && !internal.checked.has(element)) {
+          internal.checked.add(element);
+          checkOwnership(internal, part, element);
+        }
         binder.attach(part, element);
       };
       refs.set(part, ref);
@@ -196,6 +203,7 @@ export function useComponent<D extends AnyDefinition>(
       handlers: new Map(),
       refs: new Map(),
       defaults: new Map(),
+      checked: new WeakSet(),
       isLinkedByContext: false,
     };
   } else {
