@@ -17,7 +17,11 @@
     "./src/checkbox-group.ts",
     "./dist/checkbox-group.js",
     "./src/switch.ts",
-    "./dist/switch.js"
+    "./dist/switch.js",
+    "./src/radio.ts",
+    "./dist/radio.js",
+    "./src/radio-group.ts",
+    "./dist/radio-group.js"
   ],
   "exports": {
     ".": {
@@ -54,6 +58,16 @@
       "sous-source": "./src/checkbox-group.ts",
       "types": "./dist/checkbox-group.d.ts",
       "default": "./dist/checkbox-group.js"
+    },
+    "./radio": {
+      "sous-source": "./src/radio.ts",
+      "types": "./dist/radio.d.ts",
+      "default": "./dist/radio.js"
+    },
+    "./radio-group": {
+      "sous-source": "./src/radio-group.ts",
+      "types": "./dist/radio-group.d.ts",
+      "default": "./dist/radio-group.js"
     },
     "./switch": {
       "sous-source": "./src/switch.ts",

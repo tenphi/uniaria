@@ -11,6 +11,8 @@ import './text-field';
 import './checkbox';
 import './checkbox-group';
 import './switch';
+import './radio';
+import './radio-group';
 import { defineElement } from './define-element';
 import type { SousElement } from './define-element';
 
@@ -606,5 +608,88 @@ describe('<sous-switch>', () => {
     host.querySelector('input')!.click();
     expect(host.instance.getState().isSelected).toBe(false);
     expect(group.instance.getState().value).toEqual([]);
+  });
+});
+
+describe('<sous-radio-group>', () => {
+  const option = (value: string, extra = '') => `
+    <sous-radio value="${value}" ${extra}>
+      <label data-part="root">
+        <input data-part="input" type="radio" ${value === 'pro' ? 'checked' : ''} />
+        <span data-part="label">${value}</span>
+      </label>
+    </sous-radio>`;
+
+  it('takes the radio checked in the markup as its default and names its radios', () => {
+    const container = mount(`
+      <sous-radio-group name="plan">
+        <div data-part="root">
+          <span data-part="label">Plan</span>
+          ${option('free')}${option('pro')}
+        </div>
+      </sous-radio-group>`);
+    const group = container.querySelector('sous-radio-group')!;
+    const [free, pro] = Array.from(container.querySelectorAll('input'));
+    expect(group.instance.getState().value).toBe('pro');
+    expect([free!.name, pro!.name]).toEqual(['plan', 'plan']);
+    expect([free!.value, pro!.value]).toEqual(['free', 'pro']);
+    expect(pro!.checked).toBe(true);
+    expect([free!.tabIndex, pro!.tabIndex]).toEqual([-1, 0]);
+
+    const changes: unknown[] = [];
+    group.addEventListener('valuechange', (event) =>
+      changes.push((event as CustomEvent).detail),
+    );
+    free!.click();
+    expect(changes).toEqual(['free']);
+    expect([free!.tabIndex, pro!.tabIndex]).toEqual([0, -1]);
+  });
+
+  it('gives each radio its own state and focuschange', () => {
+    const container = mount(`
+      <sous-radio-group>
+        <div data-part="root">${option('free')}${option('pro')}</div>
+      </sous-radio-group>`);
+    const [free, pro] = Array.from(container.querySelectorAll('sous-radio'));
+    expect(pro!.instance.getState()).toMatchObject({
+      isSelected: true,
+      isFocused: false,
+      isDisabled: false,
+    });
+    expect(free!.instance.getState().isSelected).toBe(false);
+
+    const focus: unknown[] = [];
+    free!.addEventListener('focuschange', (event) =>
+      focus.push((event as CustomEvent).detail),
+    );
+    const input = free!.querySelector('input')!;
+    input.focus();
+    expect(free!.instance.getState().isFocused).toBe(true);
+    input.blur();
+    expect(focus).toEqual([true, false]);
+  });
+
+  it('links a radio by id, to a group that comes later', () => {
+    const container = mount(
+      option('free', 'group="plan"').replace(
+        'type="radio"',
+        'type="radio" name="legacy"',
+      ),
+    );
+    const host = container.querySelector('sous-radio')!;
+    const input = host.querySelector('input')!;
+    expect(host.instance.owner()).toBeUndefined();
+    // Until it links, the markup's name stays.
+    expect(input.name).toBe('legacy');
+
+    const group = document.createElement('sous-radio-group');
+    group.id = 'plan';
+    group.defaultValue = 'free';
+    group.innerHTML = '<div data-part="root"></div>';
+    container.append(group);
+    expect(host.instance.owner()).toBe(group.instance);
+    expect(input.checked).toBe(true);
+    // No name prop: the group's root id, unique on the page.
+    expect(input.name).toBe(group.querySelector('[data-part="root"]')!.id);
   });
 });

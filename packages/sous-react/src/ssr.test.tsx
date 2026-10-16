@@ -1,11 +1,14 @@
 import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
 import { field } from '@tenphi/sous/field';
+import { radio } from '@tenphi/sous/radio';
+import { radioGroup } from '@tenphi/sous/radio-group';
 import { toggleSwitch } from '@tenphi/sous/switch';
 import { textField } from '@tenphi/sous/text-field';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { OwnerProvider } from './owner';
 import { useComponent, useComponentState } from './use-component';
 
 function Docs({ isDisabled = false }: { readonly isDisabled?: boolean }) {
@@ -123,6 +126,52 @@ describe('Switch on the server', () => {
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('checked=""');
     expect(html).toContain('data-scope="switch"');
+    expect(html).not.toContain('aria-checked');
+  });
+});
+
+function PlanOption({
+  value,
+  children,
+}: {
+  readonly value: string;
+  readonly children: string;
+}) {
+  const ui = useComponent(radio, { value, labelElementType: 'span' });
+  return (
+    <label {...ui.parts.root}>
+      <input {...ui.parts.input} />
+      <span {...ui.parts.label}>{children}</span>
+    </label>
+  );
+}
+
+function Plan() {
+  const ui = useComponent(radioGroup, { defaultValue: 'pro', name: 'plan' });
+  return (
+    <div {...ui.parts.root}>
+      <span {...ui.parts.label}>Plan</span>
+      <OwnerProvider owner={ui}>
+        <PlanOption value="free">Free</PlanOption>
+        <PlanOption value="pro">Pro</PlanOption>
+      </OwnerProvider>
+    </div>
+  );
+}
+
+describe('RadioGroup on the server', () => {
+  it("renders its radios with the group's name and value", () => {
+    const html = renderToString(<Plan />);
+    expect(html).toContain('role="radiogroup"');
+    const radios = html.match(/<input[^>]*>/g)!;
+    expect(radios).toHaveLength(2);
+    for (const input of radios) {
+      expect(input).toContain('type="radio"');
+      expect(input).toContain('name="plan"');
+    }
+    expect(radios[0]).toContain('value="free"');
+    expect(radios[0]).not.toContain('checked');
+    expect(radios[1]).toContain('checked=""');
     expect(html).not.toContain('aria-checked');
   });
 });

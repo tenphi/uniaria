@@ -10,6 +10,8 @@ import { callbackName } from '@tenphi/sous';
 import { button } from '@tenphi/sous/button';
 import { checkbox } from '@tenphi/sous/checkbox';
 import { checkboxGroup } from '@tenphi/sous/checkbox-group';
+import { radio } from '@tenphi/sous/radio';
+import { radioGroup } from '@tenphi/sous/radio-group';
 import { toggleSwitch } from '@tenphi/sous/switch';
 import { field } from '@tenphi/sous/field';
 import { textField } from '@tenphi/sous/text-field';
@@ -40,6 +42,8 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   checkbox,
   'checkbox-group': checkboxGroup,
   switch: toggleSwitch,
+  radio,
+  'radio-group': radioGroup,
 };
 
 /** Form values a consumer would pass as defaults in React. */

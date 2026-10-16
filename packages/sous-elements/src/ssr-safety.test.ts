@@ -14,6 +14,8 @@ const entries = {
   '@tenphi/sous-elements/checkbox': () => import('./checkbox'),
   '@tenphi/sous-elements/checkbox-group': () => import('./checkbox-group'),
   '@tenphi/sous-elements/switch': () => import('./switch'),
+  '@tenphi/sous-elements/radio': () => import('./radio'),
+  '@tenphi/sous-elements/radio-group': () => import('./radio-group'),
 };
 
 describe('SSR safety', () => {
@@ -40,5 +42,9 @@ describe('SSR safety', () => {
     expect(SousCheckboxGroup).toBeUndefined();
     const { SousSwitch } = await import('./switch');
     expect(SousSwitch).toBeUndefined();
+    const { SousRadio } = await import('./radio');
+    expect(SousRadio).toBeUndefined();
+    const { SousRadioGroup } = await import('./radio-group');
+    expect(SousRadioGroup).toBeUndefined();
   });
 });

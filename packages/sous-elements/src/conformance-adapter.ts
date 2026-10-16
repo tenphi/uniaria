@@ -16,6 +16,8 @@ import './text-field';
 import './checkbox';
 import './checkbox-group';
 import './switch';
+import './radio';
+import './radio-group';
 import type { SousElement } from './define-element';
 
 /**

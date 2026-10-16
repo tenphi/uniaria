@@ -18,6 +18,8 @@ const entries = {
   '@tenphi/sous/checkbox-group': () =>
     import('./components/checkbox-group/index'),
   '@tenphi/sous/switch': () => import('./components/switch/index'),
+  '@tenphi/sous/radio': () => import('./components/radio/index'),
+  '@tenphi/sous/radio-group': () => import('./components/radio-group/index'),
 };
 
 describe('SSR safety', () => {

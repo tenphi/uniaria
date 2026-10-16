@@ -12,6 +12,8 @@ export default defineConfig({
     checkbox: 'src/checkbox.ts',
     'checkbox-group': 'src/checkbox-group.ts',
     switch: 'src/switch.ts',
+    radio: 'src/radio.ts',
+    'radio-group': 'src/radio-group.ts',
   },
   format: 'esm',
   platform: 'neutral',

@@ -50,6 +50,16 @@
       "types": "./dist/checkbox-group/index.d.ts",
       "default": "./dist/checkbox-group/index.js"
     },
+    "./radio": {
+      "sous-source": "./src/components/radio/index.ts",
+      "types": "./dist/radio/index.d.ts",
+      "default": "./dist/radio/index.js"
+    },
+    "./radio-group": {
+      "sous-source": "./src/components/radio-group/index.ts",
+      "types": "./dist/radio-group/index.d.ts",
+      "default": "./dist/radio-group/index.js"
+    },
     "./switch": {
       "sous-source": "./src/components/switch/index.ts",
       "types": "./dist/switch/index.d.ts",
