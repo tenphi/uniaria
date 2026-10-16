@@ -1,6 +1,6 @@
 # RadioGroup spec
 
-Status: draft, awaiting owner review
+Status: approved by @tenphi on 2026-10-16
 
 ## Summary
 
@@ -48,7 +48,7 @@ RadioGroup:
 | root        | any; usually `div`                                        | `role="radiogroup"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `aria-disabled`, `aria-readonly`, `aria-orientation`, state attributes | Holds the radios. Unlike CheckboxGroup's `group`, a `radiogroup` takes and exposes required, invalid and read-only. |
 | label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                                                                                                   | No `for`. A `<fieldset role="radiogroup">` root with a `<legend>` label works too.                                  |
 | description | any                                                       | as Field                                                                                                                                                                                           | Read when focus enters the group.                                                                                   |
-| error       | any                                                       | as Field                                                                                                                                                                                           | Announced by Field when it appears, and linked to every radio (Open questions 3).                                   |
+| error       | any                                                       | as Field                                                                                                                                                                                           | Announced by Field when it appears, and linked to every radio (Resolved questions 3).                               |
 
 Radio:
 
@@ -61,7 +61,7 @@ Radio:
 | description | any                                                           | as Field                                                                                                                                                                        | Optional. Outside a `label` root.                                                                                                |
 
 A radio has no error part: it has no required, invalid or error of its own
-(Open questions 6).
+(Resolved questions 6).
 
 State attributes on every part of the group: `data-disabled`,
 `data-readonly`, `data-invalid`, `data-required`, `data-focus-within`,
@@ -75,30 +75,30 @@ a radio: `data-selected`, `data-hovered`, `data-focused`,
 
 RadioGroup:
 
-| Prop             | Type                                      | Default   | Bindable | Change event  | Notes                                                                                                            |
-| ---------------- | ----------------------------------------- | --------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| value            | `string \| null`                          | `null`    | yes      | `valueChange` | The selected radio's `value`; `null` is none (Open questions 4).                                                 |
-| name             | `string \| undefined`                     | generated | no       | —             | Written to every radio's input, so they form one native group and the form submits the value (Open questions 2). |
-| isDisabled       | `boolean`                                 | `false`   | no       | —             | Disables every radio natively; `aria-disabled="true"` on the root.                                               |
-| isReadOnly       | `boolean`                                 | `false`   | no       | —             | `aria-readonly="true"` on the root; arrows move focus but select nothing. Attribute `readonly`.                  |
-| isRequired       | `boolean`                                 | `false`   | no       | —             | Field's: `aria-required` on the root.                                                                            |
-| isInvalid        | `boolean`                                 | `false`   | no       | —             | Field's: `aria-invalid` on the root, shows and announces the error.                                              |
-| orientation      | `'horizontal' \| 'vertical' \| undefined` | —         | no       | —             | `aria-orientation` and `data-orientation`, only when given (Open questions 7).                                   |
-| labelElementType | `string`                                  | `'span'`  | no       | —             | Field's. The element reads the label's tag.                                                                      |
-| labelledBy       | `string \| undefined`                     | —         | no       | —             | Field's.                                                                                                         |
-| describedBy      | `string \| undefined`                     | —         | no       | —             | Field's.                                                                                                         |
+| Prop             | Type                                      | Default   | Bindable | Change event  | Notes                                                                                                                |
+| ---------------- | ----------------------------------------- | --------- | -------- | ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| value            | `string \| null`                          | `null`    | yes      | `valueChange` | The selected radio's `value`; `null` is none (Resolved questions 4).                                                 |
+| name             | `string \| undefined`                     | generated | no       | —             | Written to every radio's input, so they form one native group and the form submits the value (Resolved questions 2). |
+| isDisabled       | `boolean`                                 | `false`   | no       | —             | Disables every radio natively; `aria-disabled="true"` on the root.                                                   |
+| isReadOnly       | `boolean`                                 | `false`   | no       | —             | `aria-readonly="true"` on the root; arrows move focus but select nothing. Attribute `readonly`.                      |
+| isRequired       | `boolean`                                 | `false`   | no       | —             | Field's: `aria-required` on the root.                                                                                |
+| isInvalid        | `boolean`                                 | `false`   | no       | —             | Field's: `aria-invalid` on the root, shows and announces the error.                                                  |
+| orientation      | `'horizontal' \| 'vertical' \| undefined` | —         | no       | —             | `aria-orientation` and `data-orientation`, only when given (Resolved questions 7).                                   |
+| labelElementType | `string`                                  | `'span'`  | no       | —             | Field's. The element reads the label's tag.                                                                          |
+| labelledBy       | `string \| undefined`                     | —         | no       | —             | Field's.                                                                                                             |
+| describedBy      | `string \| undefined`                     | —         | no       | —             | Field's.                                                                                                             |
 
 Radio:
 
-| Prop                    | Type                  | Default   | Notes                                                                                                               |
-| ----------------------- | --------------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
-| value                   | `string`              | —         | Its key in the group's value, written to the input. Required; development warns when missing.                       |
-| isDisabled              | `boolean`             | `false`   | This radio only; the group's `isDisabled` disables every radio.                                                     |
-| isFocusableWhenDisabled | `boolean`             | `false`   | As Button's: `aria-disabled` instead of `disabled`, so a tooltip can explain it; never selected (Open questions 5). |
-| inputId                 | `string \| undefined` | generated | Field's `controlId`. The element adopts the input's `id`.                                                           |
-| labelElementType        | `string`              | `'label'` | Field's. Pass `'span'` for a label part inside a `label` root. The element reads the label's tag.                   |
-| labelledBy              | `string \| undefined` | —         | Field's.                                                                                                            |
-| describedBy             | `string \| undefined` | —         | Field's.                                                                                                            |
+| Prop                    | Type                  | Default   | Notes                                                                                                                   |
+| ----------------------- | --------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| value                   | `string`              | —         | Its key in the group's value, written to the input. Required; development warns when missing.                           |
+| isDisabled              | `boolean`             | `false`   | This radio only; the group's `isDisabled` disables every radio.                                                         |
+| isFocusableWhenDisabled | `boolean`             | `false`   | As Button's: `aria-disabled` instead of `disabled`, so a tooltip can explain it; never selected (Resolved questions 5). |
+| inputId                 | `string \| undefined` | generated | Field's `controlId`. The element adopts the input's `id`.                                                               |
+| labelElementType        | `string`              | `'label'` | Field's. Pass `'span'` for a label part inside a `label` root. The element reads the label's tag.                       |
+| labelledBy              | `string \| undefined` | —         | Field's.                                                                                                                |
+| describedBy             | `string \| undefined` | —         | Field's.                                                                                                                |
 
 A radio's `group` attribute (elements) and `owner` prop (React) link it to
 a group it isn't inside, as a checkbox's do.
@@ -151,7 +151,7 @@ on a native radio.
 
 ## Keyboard
 
-Sous moves focus itself (Open questions 1): native arrow keys differ
+Sous moves focus itself (Resolved questions 1): native arrow keys differ
 between browsers (WebKit doesn't wrap, and the engines disagree in
 right-to-left), and Safari doesn't Tab to radios at all.
 
@@ -287,9 +287,11 @@ RadioGroup and Radio back `Radio.Group`, `Radio.ButtonGroup`, `Radio.Tabs`,
 ## Deviations from the WAI-ARIA pattern
 
 None by default. With `isFocusableWhenDisabled`, arrows stop on a disabled
-radio, which the pattern skips (Open questions 5).
+radio, which the pattern skips (Resolved questions 5).
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-16, as recommended.
 
 1. **Sous moves focus with the arrow keys, not the browser.** The design
    doc expected native arrow keys. Probed: WebKit doesn't wrap at the ends,
@@ -298,10 +300,10 @@ radio, which the pattern skips (Open questions 5).
    from an unchecked radio stops on the checked one ahead. Cube UI Kit
    (through React Aria) wraps everywhere, swaps the horizontal arrows in
    right-to-left, and gives radios a roving `tabindex`, so Safari reaches
-   them. Recommended: the same, as above. Sous only picks the radio and
+   them. Decided: the same, as above. Sous only picks the radio and
    focuses it, then calls its `click()`, so native `input` and `change`
    fire and read-only and disabled cancel it like a pointer click. The
-   alternative is native keys, with these differences listed as platform
+   alternative was native keys, with these differences listed as platform
    behavior.
 2. **The group writes `name` to every radio**, its `name` prop or one
    generated from its id, as React Aria and Zag do. Without a shared name
@@ -319,16 +321,20 @@ radio, which the pattern skips (Open questions 5).
    uncontrolled group starts at `null`; a controlled `null` clears it.
 5. **`isFocusableWhenDisabled` on Radio**, as Button's, for UI Kit's
    disabled radio with a tooltip (CUB-5387): `aria-disabled`, a cancelled
-   click, reached by arrows but never selected. Recommended: yes; Tooltip
-   is next on the roadmap. Without it, a disabled radio can't show a
+   click, reached by arrows but never selected. Decided: yes; Tooltip
+   follows on the roadmap. Without it, a disabled radio can't show a
    tooltip by keyboard.
 6. **Radio composes Field without the error part.** A composed
    definition's parts must all exist on the outer one today, and a radio
-   has no error. Recommended: `ctx.use` accepts `parts: { error: null }`
-   to leave a composed part out (a runtime change). The alternative is an
+   has no error. Decided: `ctx.use` accepts `parts: { error: null }`
+   to leave a composed part out (a runtime change). The alternative was an
    error part on Radio that never shows.
 7. **`aria-orientation` only when `orientation` is given.** React Aria
    always writes it (vertical by default), which adds "orientated
    vertically" to what screen readers say on every group. All four arrows
    work in either orientation; it only changes which arrows swap in
    right-to-left.
+
+## Open questions
+
+None.
