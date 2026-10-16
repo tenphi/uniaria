@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { h, templateParts } from './template';
+import { h, nested, templateParts } from './template';
 
 describe('h', () => {
   it('separates the part name from consumer attributes', () => {
@@ -32,5 +32,22 @@ describe('templateParts', () => {
       'panel',
       'label',
     ]);
+  });
+});
+
+describe('nested', () => {
+  it('builds a nested component whose parts are its own', () => {
+    const option = nested(
+      'checkbox',
+      { value: 'email' },
+      h('input', { part: 'input' }),
+    );
+    expect(option).toEqual({
+      component: 'checkbox',
+      props: { value: 'email' },
+      children: [{ tag: 'input', part: 'input', attrs: {}, children: [] }],
+    });
+    const group = h('div', { part: 'root' }, option);
+    expect(templateParts([group]).map((node) => node.part)).toEqual(['root']);
   });
 });

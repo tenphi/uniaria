@@ -10,17 +10,25 @@ import type {
   AnyDefinition,
   ApiOf,
   Instance,
+  OwnerLink,
   PartOf,
   PartProps,
   PropsOf,
   StateOf,
 } from '@tenphi/sous';
-import { createInstance } from '@tenphi/sous';
+import { createInstance, isOwnerDefinition } from '@tenphi/sous';
 import type { Binder } from '@tenphi/sous/dom';
-import { createBinder, isDevelopment, warn } from '@tenphi/sous/dom';
+import {
+  createBinder,
+  isDevelopment,
+  provideOwner,
+  requestOwner,
+  warn,
+} from '@tenphi/sous/dom';
 import type { SyntheticEvent } from 'react';
 import {
   useCallback,
+  useContext,
   useEffect,
   useId,
   useInsertionEffect,
@@ -29,6 +37,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 
+import { OwnerContext, findOwner } from './owner';
 import { reactEventName, reactPropName, reactPropValue } from './props';
 
 /** Props to spread onto a part element: attributes, stable handlers, a ref. */
@@ -61,6 +70,8 @@ interface Internal<D extends AnyDefinition> {
   readonly refs: Map<string, (element: Element | null) => void>;
   /** Default props from the first render, kept stable after it. */
   readonly defaults: Map<string, Readonly<Record<string, unknown>>>;
+  /** Whether the instance's owner came from React context. */
+  isLinkedByContext: boolean;
   rendered?: {
     readonly connected: unknown;
     readonly parts: Record<string, ReactPartProps>;
@@ -185,6 +196,7 @@ export function useComponent<D extends AnyDefinition>(
       handlers: new Map(),
       refs: new Map(),
       defaults: new Map(),
+      isLinkedByContext: false,
     };
   } else {
     ref.current.instance.setProps(props);
@@ -192,14 +204,66 @@ export function useComponent<D extends AnyDefinition>(
   const internal = ref.current;
   const { instance, binder } = internal;
 
+  // Decision 11: the `owner` prop, else React context during render (so the
+  // first render and SSR have it), else the DOM after mount.
+  const scope = useContext(OwnerContext);
+  const ownerLink = (definition as { owner?: OwnerLink }).owner;
+  const contextOwner = ownerLink
+    ? findOwner(scope, ownerLink.definition)
+    : undefined;
+  if (contextOwner) {
+    instance.link(contextOwner);
+    internal.isLinkedByContext = true;
+  } else if (internal.isLinkedByContext) {
+    instance.link(undefined);
+    internal.isLinkedByContext = false;
+  }
+  const isLinkedByDom =
+    ownerLink !== undefined &&
+    contextOwner === undefined &&
+    (props as { owner?: unknown }).owner === undefined;
+
   useIsomorphicLayoutEffect(() => {
     instance.start();
     binder.start();
+    // Answers owner requests from custom elements and React components that
+    // find their owner through the DOM.
+    const unprovide = isOwnerDefinition(definition)
+      ? definition.parts.flatMap((part: string) => {
+          const element = instance.element(part as PartOf<D>);
+          return element
+            ? [
+                provideOwner(
+                  instance as unknown as Instance,
+                  element as Element,
+                ),
+              ]
+            : [];
+        })
+      : [];
     return () => {
+      for (const stop of unprovide) stop();
       binder.stop();
       instance.stop();
     };
   }, [instance, binder]);
+
+  useIsomorphicLayoutEffect(() => {
+    if (!isLinkedByDom) return;
+    const element = definition.parts
+      .map((part: string) => instance.element(part as PartOf<D>))
+      .find(Boolean) as Element | undefined;
+    if (!element) return;
+    const forget = requestOwner(element, ownerLink!.definition, (owner) => {
+      instance.link(owner);
+      instance.sync();
+    });
+    return () => {
+      forget();
+      instance.link(undefined);
+      instance.sync();
+    };
+  }, [instance, isLinkedByDom]);
 
   useIsomorphicLayoutEffect(() => {
     syncing.add(instance);

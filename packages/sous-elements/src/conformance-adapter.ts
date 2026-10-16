@@ -42,8 +42,27 @@ export const elementsAdapter: ConformanceAdapter = {
     if (!customElements.get(name)) {
       throw new Error(`<${name}> is not registered.`);
     }
-    container.appendChild(renderTemplate(template, document));
-    const parts = Array.from(container.querySelectorAll('[data-part]'));
+    // Nested components get their own hosts, props set as properties.
+    const nestedHosts = new Set<Element>();
+    container.appendChild(
+      renderTemplate(template, document, undefined, (node) => {
+        const nestedHost = document.createElement(`sous-${node.component}`);
+        for (const [key, value] of Object.entries(node.props)) {
+          (nestedHost as unknown as Record<string, unknown>)[key] = value;
+        }
+        nestedHosts.add(nestedHost);
+        return nestedHost;
+      }),
+    );
+    const isOwn = (part: Element) => {
+      for (let node = part.parentElement; node; node = node.parentElement) {
+        if (nestedHosts.has(node)) return false;
+      }
+      return true;
+    };
+    const parts = Array.from(container.querySelectorAll('[data-part]')).filter(
+      isOwn,
+    );
     if (parts.length === 0) throw new Error('The template has no parts.');
 
     const host = document.createElement(name) as SousElement<never>;
@@ -53,10 +72,12 @@ export const elementsAdapter: ConformanceAdapter = {
       }
     };
     apply(props);
+    // Events bubble: a nested component's own events aren't this one's.
     for (const event of events) {
-      host.addEventListener(domEventName(event), (domEvent) =>
-        record(event, (domEvent as CustomEvent).detail),
-      );
+      host.addEventListener(domEventName(event), (domEvent) => {
+        if (domEvent.target !== host) return;
+        record(event, (domEvent as CustomEvent).detail);
+      });
     }
     wrap(parts, host);
 

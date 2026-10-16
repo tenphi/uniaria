@@ -16,16 +16,28 @@
  *   delegates their listeners from the host.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
  *   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
+ * - Owners (decision 11): every host answers owner requests for its
+ *   instance. A host whose definition names an owner links to the host its
+ *   owner attribute names by id (`group="plan"`), else to the nearest
+ *   owner around it; the `owner` property (an instance) wins over both.
  */
 
-import type { AnyDefinition, Instance, PropInfo, PropsOf } from '@tenphi/sous';
+import type {
+  AnyDefinition,
+  Instance,
+  OwnerLink,
+  PropInfo,
+  PropsOf,
+} from '@tenphi/sous';
 import { callbackName, createInstance, domEventName } from '@tenphi/sous';
 import type { Binder } from '@tenphi/sous/dom';
 import {
   SOUS_HOST,
   createBinder,
   observeParts,
+  provideOwner,
   queryParts,
+  requestOwner,
 } from '@tenphi/sous/dom';
 
 export interface DefineElementOptions {
@@ -96,14 +108,19 @@ export function defineElement<D extends AnyDefinition>(
   for (const info of infos) {
     if (info.attribute !== false) byAttribute.set(info.attribute, info);
   }
-  /** Property name → the prop it sets. Bindables also take `default<Key>`. */
-  const properties = new Map<string, PropInfo>();
+  /**
+   * Property name → the prop it sets. Bindables also take `default<Key>`;
+   * an owned component's `owner` property sets no schema prop.
+   */
+  const properties = new Map<string, PropInfo | undefined>();
   for (const info of infos) {
     properties.set(info.key, info);
     if (info.kind === 'bindable') {
       properties.set(info.defaultKey!, info);
     }
   }
+  const ownerLink = (definition as { owner?: OwnerLink }).owner;
+  if (ownerLink) properties.set('owner', undefined);
   const builtIn = Object.getOwnPropertyNames(HTMLElement.prototype);
   for (const property of properties.keys()) {
     if (builtIn.includes(property) || property === 'instance') {
@@ -118,7 +135,9 @@ export function defineElement<D extends AnyDefinition>(
     static readonly [SOUS_HOST] = true;
 
     static get observedAttributes(): string[] {
-      return [...byAttribute.keys()];
+      return ownerLink
+        ? [...byAttribute.keys(), ownerLink.attribute]
+        : [...byAttribute.keys()];
     }
 
     static {
@@ -128,7 +147,7 @@ export function defineElement<D extends AnyDefinition>(
           enumerable: true,
           get(this: Element) {
             const value = this.#values[property];
-            return value === undefined && property === info.key
+            return value === undefined && property === info?.key
               ? info.kind === 'prop'
                 ? info.defaultValue
                 : undefined
@@ -149,6 +168,8 @@ export function defineElement<D extends AnyDefinition>(
     readonly #callbacks: Record<string, (detail: unknown) => void> = {};
     readonly #parts = new Map<string, HTMLElement>();
     #unobserve: (() => void) | undefined;
+    #unprovide: (() => void) | undefined;
+    #unlink: (() => void) | undefined;
 
     constructor() {
       super();
@@ -177,6 +198,10 @@ export function defineElement<D extends AnyDefinition>(
     connectedCallback(): void {
       this.#scan();
       this.#unobserve ??= observeParts(this, () => this.#scan());
+      this.#unprovide ??= provideOwner(this.instance as Instance, this);
+      // Linked before the first write, so a checkbox in a group starts with
+      // the group's state.
+      this.#relink();
       this.instance.start();
       this.#binder.start();
     }
@@ -184,8 +209,29 @@ export function defineElement<D extends AnyDefinition>(
     disconnectedCallback(): void {
       this.#unobserve?.();
       this.#unobserve = undefined;
+      this.#unprovide?.();
+      this.#unprovide = undefined;
+      this.#unlink?.();
+      this.#unlink = undefined;
+      this.instance.link(undefined);
+      this.instance.sync();
       this.#binder.stop();
       this.instance.stop();
+    }
+
+    /** Asks for the owner again: on connect and when the attribute changes. */
+    #relink(): void {
+      if (!ownerLink) return;
+      this.#unlink?.();
+      this.#unlink = requestOwner(
+        this,
+        ownerLink.definition,
+        (owner) => {
+          this.instance.link(owner);
+          this.instance.sync();
+        },
+        this.getAttribute(ownerLink.attribute) ?? undefined,
+      );
     }
 
     attributeChangedCallback(
@@ -193,6 +239,10 @@ export function defineElement<D extends AnyDefinition>(
       _previous: string | null,
       value: string | null,
     ): void {
+      if (attribute === ownerLink?.attribute) {
+        if (this.isConnected) this.#relink();
+        return;
+      }
       const info = byAttribute.get(attribute);
       if (!info) return;
       const property = info.kind === 'bindable' ? info.defaultKey! : info.key;

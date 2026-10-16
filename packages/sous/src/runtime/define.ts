@@ -9,6 +9,8 @@
  * - `expose()` — the public state selectors read. It is public API.
  * - `connect()` — a pure function from current state to part props, re-run
  *   after every flush, so keep it cheap.
+ * - `owner` — for a component that works inside another instance, such as a
+ *   checkbox in its group (decision 11): `ctx.owner()` reads that instance.
  */
 
 import type {
@@ -21,6 +23,7 @@ import type {
   StateName,
 } from './schema';
 import { capitalize, resolveSchema } from './schema';
+import type { Instance } from './instance';
 
 /**
  * A handler on a part. The runtime is DOM-free, so the event type is left
@@ -164,6 +167,13 @@ export interface SetupContext<
     props: () => NoInfer<PropsOf<D>>,
     options?: ComposeOptions<NoInfer<PartOf<D>>, Part>,
   ): Composed<D>;
+  /**
+   * The instance of `definition` this one works inside (decision 11), or
+   * `undefined` until the adapter finds it: the `owner` prop, else the
+   * adapter's link. Read it where it is used (`connect()`, `expose()`, a
+   * watch): while started, the owner's changes re-run them.
+   */
+  owner<D extends AnyDefinition>(definition: D): Owned<D> | undefined;
 }
 
 export interface ComposeOptions<Inner extends string, Outer extends string> {
@@ -204,6 +214,8 @@ export interface ComponentConfig<
   readonly parts: readonly Part[];
   readonly props: P;
   readonly events?: E;
+  /** The instance this component works inside, when it has one. */
+  readonly owner?: OwnerLink;
   setup(ctx: SetupContext<Part, P, E>): Api;
   expose(ctx: ViewContext<Part, P, Api>): State;
   connect(ctx: ViewContext<Part, P, Api>): ConnectedParts<Part>;
@@ -233,7 +245,46 @@ export type StateOf<D extends AnyDefinition> = ReturnType<D['expose']>;
 export type PropsOf<D extends AnyDefinition> = InputProps<
   D['props'],
   D['events']
->;
+> &
+  OwnerProps<D>;
+
+/** An owned component takes its owner instance as the `owner` prop. */
+type OwnerProps<D extends AnyDefinition> = [NonNullable<D['owner']>] extends [
+  never,
+]
+  ? unknown
+  : NonNullable<D['owner']> extends OwnerLink<infer O>
+    ? { readonly owner?: Instance<O> }
+    : unknown;
+
+/**
+ * How a component finds its owner (decision 11): the owner's definition, and
+ * the element attribute that names the owner's host by id.
+ */
+export interface OwnerLink<D extends AnyDefinition = AnyDefinition> {
+  readonly definition: D;
+  /** `group`: `<sous-checkbox group="plan">`. */
+  readonly attribute: string;
+}
+
+/** The owner as `ctx.owner()` returns it. */
+export interface Owned<D extends AnyDefinition> {
+  readonly instance: Instance<D>;
+  /** What the owner's `setup()` returned. */
+  readonly api: ApiOf<D>;
+  /** The owner's `expose()` now. */
+  state(): StateOf<D>;
+}
+
+const owners = new WeakSet<AnyDefinition>();
+
+/**
+ * Whether a defined component names `definition` as its owner, so adapters
+ * answer owner lookups only for instances that can be owners.
+ */
+export function isOwnerDefinition(definition: AnyDefinition): boolean {
+  return owners.has(definition);
+}
 
 const NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
@@ -243,9 +294,10 @@ export function defineComponent<
   Api,
   State,
   E extends EventsSchema = Record<never, EventSpec<unknown>>,
+  O extends OwnerLink | undefined = undefined,
 >(
-  config: ComponentConfig<Part, P, E, Api, State>,
-): Definition<Part, P, E, Api, State> {
+  config: ComponentConfig<Part, P, E, Api, State> & { readonly owner?: O },
+): Definition<Part, P, E, Api, State> & { readonly owner: O } {
   if (!NAME.test(config.name)) {
     throw new Error(
       `[sous] Component name "${config.name}" must be kebab-case.`,
@@ -267,5 +319,11 @@ export function defineComponent<
     if (info.defaultKey) callback(info.defaultKey);
   }
   for (const name of schema.events) callback(`on${capitalize(name)}`);
-  return { ...config, events, schema };
+  if (config.owner) {
+    callback('owner');
+    owners.add(config.owner.definition);
+  }
+  return { ...config, events, schema } as Definition<Part, P, E, Api, State> & {
+    readonly owner: O;
+  };
 }

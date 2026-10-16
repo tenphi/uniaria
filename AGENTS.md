@@ -454,9 +454,13 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
 - **Templates** describe the consumer's markup adapter-neutrally:
   `h('button', { part: 'root', class: 'x' }, 'Save')`. `part` names the Sous
   part; every other key is a consumer-owned attribute.
+  `nested('checkbox', { value: 'email' }, …)` puts another component inside:
+  React renders it with its own `useComponent()` inside its owner's
+  `OwnerProvider`, custom elements wrap its children in `<sous-checkbox>`.
 - **Adapters** implement `mount(request)`: render the template (React spreads
   part props onto it; custom elements wrap it in `<sous-<name>>`), apply props
-  the way their consumers do, call `record()` for component events, and
+  the way their consumers do, call `record()` for the component's own events
+  (not a nested component's, which bubble through a custom element), and
   return `setProps`, `state` (what `expose()` returns), `renderCount` (React
   renders of the owning component; 0 for elements) and `unmount`. Attribute
   changes must be visible as soon as the interaction that caused them

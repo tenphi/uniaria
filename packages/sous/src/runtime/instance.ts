@@ -16,6 +16,7 @@ import type {
   Cell,
   ConnectedParts,
   Env,
+  Owned,
   PartHandler,
   PartOf,
   PartProps,
@@ -67,6 +68,14 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   attach(part: PartOf<D>, element: unknown): void;
   element(part: PartOf<D>): unknown;
   batch<T>(fn: () => T): T;
+  /**
+   * Links the instance this one works inside, found by the adapter (React
+   * context, the DOM), or `undefined` to unlink. Silent like `setProps()`:
+   * call `sync()` after it. The `owner` prop wins over the link.
+   */
+  link(owner: Instance | undefined): void;
+  /** The owner now: the `owner` prop, else the link. */
+  owner(): Instance | undefined;
 }
 
 interface Watcher {
@@ -113,6 +122,33 @@ export function createInstance<D extends AnyDefinition>(
   const ids: Record<string, string> = {};
   for (const part of definition.parts) ids[part] = `${id}-${part}`;
   const elements = new Map<string, unknown>();
+  let linked: Instance | undefined;
+  const currentOwner = () => (props.owner as Instance | undefined) ?? linked;
+  // One handle per owner, so `ctx.owner()` is stable while it is the same.
+  const handles = new WeakMap<Instance, Owned<AnyDefinition>>();
+  const handleOf = (owner: Instance): Owned<AnyDefinition> => {
+    let handle = handles.get(owner);
+    if (!handle) {
+      handle = {
+        instance: owner,
+        api: owner.api,
+        state: () => owner.getState(),
+      };
+      handles.set(owner, handle);
+    }
+    return handle;
+  };
+  // While started, the owner's changes count as this instance's, so the
+  // binder re-runs connect() and watchers see them; nothing renders.
+  let following: { owner: Instance; stop: () => void } | undefined;
+  const follow = () => {
+    const owner = isStarted ? currentOwner() : undefined;
+    if (following?.owner === owner) return;
+    following?.stop();
+    following = owner
+      ? { owner, stop: owner.subscribe(() => changed()) }
+      : undefined;
+  };
   const watchers: Watcher[] = [];
   const effects: (() => void | (() => void))[] = [];
   let cleanups: (() => void)[] = [];
@@ -229,6 +265,12 @@ export function createInstance<D extends AnyDefinition>(
       },
       element: (part) => elements.get(partOf(part)) ?? null,
       batch: store.batch,
+      owner(ownerDefinition) {
+        const owner = currentOwner();
+        return owner?.definition === ownerDefinition
+          ? (handleOf(owner) as never)
+          : undefined;
+      },
       use(child, childProps, composeOptions) {
         const map: Readonly<Record<string, string | undefined>> =
           composeOptions?.parts ?? {};
@@ -315,11 +357,13 @@ export function createInstance<D extends AnyDefinition>(
     sync() {
       if (!hasUnsyncedProps) return;
       hasUnsyncedProps = false;
+      follow();
       store.notify();
     },
     start() {
       if (isStarted) return;
       isStarted = true;
+      follow();
       store.batch(() => {
         for (const watcher of watchers) watcher.value = watcher.read();
         for (const effect of effects) runEffect(effect);
@@ -328,6 +372,7 @@ export function createInstance<D extends AnyDefinition>(
     stop() {
       if (!isStarted) return;
       isStarted = false;
+      follow();
       const list = cleanups;
       cleanups = [];
       store.batch(() => {
@@ -375,6 +420,14 @@ export function createInstance<D extends AnyDefinition>(
     },
     element: (part) => elements.get(part) ?? null,
     batch: store.batch,
+    link(owner) {
+      if (owner === linked) return;
+      linked = owner;
+      // A new owner changes what connect() and expose() return.
+      propsVersion++;
+      hasUnsyncedProps = true;
+    },
+    owner: currentOwner,
   };
   return instance as unknown as Instance<D>;
 }

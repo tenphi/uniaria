@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { defineComponent } from './define';
+import { defineComponent, isOwnerDefinition } from './define';
 import type { PropsOf, StateOf } from './define';
 import { createInstance } from './instance';
 import { bindable, event, prop } from './schema';
@@ -615,5 +615,122 @@ describe('ctx.use', () => {
     expect(() => createInstance(host)).toThrow(
       'host composes disclosure, whose "panel" part has no "panel" part to render on.',
     );
+  });
+});
+
+describe('owner', () => {
+  const group = defineComponent({
+    name: 'group',
+    parts: ['root'],
+    props: { value: bindable<string[]>([]) },
+    setup(ctx) {
+      const add = (item: string) =>
+        ctx.props.value.set([...ctx.props.value.get(), item]);
+      return { add };
+    },
+    expose: ({ props }) => ({ value: props.value.get() }),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+  const item = defineComponent({
+    name: 'item',
+    parts: ['root'],
+    props: { value: prop('') },
+    owner: { definition: group, attribute: 'group' },
+    setup(ctx) {
+      const owned = () => ctx.owner(group);
+      const isSelected = () =>
+        owned()?.state().value.includes(ctx.props.value()) ?? false;
+      return { owned, isSelected };
+    },
+    expose: ({ api }) => ({ isSelected: api.isSelected() }),
+    connect: ({ api }) => ({
+      root: { attrs: { 'data-selected': api.isSelected() ? '' : undefined } },
+    }),
+  });
+
+  it('marks the owner definition', () => {
+    expect(isOwnerDefinition(group)).toBe(true);
+    expect(isOwnerDefinition(item)).toBe(false);
+  });
+
+  it('types the owner prop and the handle', () => {
+    const owner = createInstance(group);
+    expectTypeOf(owner).toMatchTypeOf<
+      NonNullable<PropsOf<typeof item>['owner']>
+    >();
+    expectTypeOf<PropsOf<typeof group>>().not.toHaveProperty('owner');
+  });
+
+  it('reads nothing until linked, then the owner', () => {
+    const owner = createInstance(group, { props: { defaultValue: ['a'] } });
+    const child = createInstance(item, { props: { value: 'a' } });
+    expect(child.api.owned()).toBeUndefined();
+    expect(child.getState().isSelected).toBe(false);
+
+    child.link(owner);
+    child.sync();
+    expect(child.owner()).toBe(owner);
+    expect(child.api.owned()?.instance).toBe(owner);
+    expect(child.api.owned()).toBe(child.api.owned());
+    expect(child.getState().isSelected).toBe(true);
+  });
+
+  it('follows the owner while started, and stops with the instance', () => {
+    const owner = createInstance(group);
+    const child = createInstance(item, { props: { value: 'b' } });
+    child.link(owner);
+    child.sync();
+    child.start();
+    const listener = vi.fn();
+    child.subscribe(listener);
+
+    owner.api.add('b');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(child.connect().root.attrs['data-selected']).toBe('');
+
+    child.stop();
+    owner.api.add('c');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('prefers the owner prop to the link, and unlinks', () => {
+    const linked = createInstance(group);
+    const explicit = createInstance(group, { props: { defaultValue: ['a'] } });
+    const child = createInstance(item, { props: { value: 'a' } });
+    child.start();
+    child.link(linked);
+    child.sync();
+    expect(child.getState().isSelected).toBe(false);
+
+    child.setProps({ value: 'a', owner: explicit });
+    child.sync();
+    expect(child.owner()).toBe(explicit);
+    expect(child.getState().isSelected).toBe(true);
+    const listener = vi.fn();
+    child.subscribe(listener);
+    linked.api.add('x');
+    expect(listener).not.toHaveBeenCalled();
+    explicit.api.add('y');
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    child.setProps({ value: 'a' });
+    child.link(undefined);
+    child.sync();
+    expect(child.owner()).toBeUndefined();
+    expect(child.getState().isSelected).toBe(false);
+  });
+
+  it('returns nothing for another definition', () => {
+    const other = defineComponent({
+      name: 'other',
+      parts: ['root'],
+      props: {},
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    const child = createInstance(item);
+    child.link(createInstance(other) as never);
+    expect(child.api.owned()).toBeUndefined();
   });
 });

@@ -17,8 +17,22 @@ export interface TemplateElement {
   readonly children: readonly TemplateNode[];
 }
 
-/** An element or a text node. */
-export type TemplateNode = TemplateElement | string;
+/**
+ * Another Sous component inside the markup, such as a checkbox in its group.
+ * React renders it with its own `useComponent()`; custom elements wrap its
+ * children in its own host.
+ */
+export interface TemplateComponent {
+  /** The nested component's definition name: `checkbox`. */
+  readonly component: string;
+  /** Its props, passed the way the adapter's consumers pass them. */
+  readonly props: Readonly<Record<string, unknown>>;
+  /** Its markup: part elements in it are its own parts. */
+  readonly children: readonly TemplateNode[];
+}
+
+/** An element, a nested component or a text node. */
+export type TemplateNode = TemplateElement | TemplateComponent | string;
 
 export type TemplateAttrs = Readonly<Record<string, string>> & {
   readonly part?: string;
@@ -40,14 +54,34 @@ export function h(
     : { tag, part, attrs: rest, children };
 }
 
-/** Every part element in document order, for adapters that render templates. */
+/**
+ * Nests another component: `nested('checkbox', { value: 'email' }, …)`.
+ * Its children's `part`s are its own parts.
+ */
+export function nested(
+  component: string,
+  props?: Readonly<Record<string, unknown>> | null,
+  ...children: TemplateNode[]
+): TemplateComponent {
+  return { component, props: props ?? {}, children };
+}
+
+/** Whether a node is a nested component. */
+export function isNested(node: TemplateNode): node is TemplateComponent {
+  return typeof node !== 'string' && 'component' in node;
+}
+
+/**
+ * The component's part elements in document order, for adapters that render
+ * templates; nested components' parts are left out.
+ */
 export function templateParts(
   nodes: readonly TemplateNode[],
 ): TemplateElement[] {
   const found: TemplateElement[] = [];
   const walk = (list: readonly TemplateNode[]) => {
     for (const node of list) {
-      if (typeof node === 'string') continue;
+      if (typeof node === 'string' || isNested(node)) continue;
       if (node.part !== undefined) found.push(node);
       walk(node.children);
     }
@@ -59,18 +93,31 @@ export function templateParts(
 /**
  * Renders a template to real DOM, writing `data-part` on part elements the way
  * a consumer of the custom elements would. `decorate` lets an adapter add
- * attributes to part elements as they are created.
+ * attributes to part elements as they are created; `host` creates the
+ * element for a nested component, which its children go into.
  */
 export function renderTemplate(
   nodes: readonly TemplateNode[],
   doc: Document,
   decorate?: (element: HTMLElement, node: TemplateElement) => void,
+  host?: (node: TemplateComponent) => HTMLElement,
 ): DocumentFragment {
   const fragment = doc.createDocumentFragment();
   const append = (parent: Node, list: readonly TemplateNode[]) => {
     for (const node of list) {
       if (typeof node === 'string') {
         parent.appendChild(doc.createTextNode(node));
+        continue;
+      }
+      if (isNested(node)) {
+        if (!host) {
+          throw new Error(
+            `The template nests "${node.component}", which needs a host.`,
+          );
+        }
+        const element = host(node);
+        append(element, node.children);
+        parent.appendChild(element);
         continue;
       }
       const element = doc.createElement(node.tag);

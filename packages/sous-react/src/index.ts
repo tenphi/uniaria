@@ -8,5 +8,7 @@
  * component-specific code belongs in this package.
  */
 
+export { OwnerProvider } from './owner';
+export type { OwnerProviderProps } from './owner';
 export { useComponent, useComponentState } from './use-component';
 export type { ComponentHandle, ReactPartProps } from './use-component';

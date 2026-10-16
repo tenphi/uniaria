@@ -31,9 +31,16 @@ export type {
   ScenarioRun,
   TouchInput,
 } from './conformance/scenario';
-export { h, renderTemplate, templateParts } from './conformance/template';
+export {
+  h,
+  isNested,
+  nested,
+  renderTemplate,
+  templateParts,
+} from './conformance/template';
 export type {
   TemplateAttrs,
+  TemplateComponent,
   TemplateElement,
   TemplateNode,
 } from './conformance/template';

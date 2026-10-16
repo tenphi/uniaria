@@ -14,14 +14,17 @@ import { textField } from '@tenphi/sous/text-field';
 import { toggleButton } from '@tenphi/sous/toggle-button';
 import type {
   ConformanceAdapter,
+  TemplateComponent,
   TemplateElement,
   TemplateNode,
 } from '@tenphi/sous-testing';
+import { isNested } from '@tenphi/sous-testing';
 import type { ReactNode } from 'react';
 import { StrictMode, createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import { OwnerProvider } from './owner';
 import { reactPropName, reactPropValue } from './props';
 import type { ReactPartProps } from './use-component';
 import { useComponent } from './use-component';
@@ -57,6 +60,7 @@ function renderNodes(
 ): ReactNode[] {
   return nodes.map((node, index) => {
     if (typeof node === 'string') return node;
+    if (isNested(node)) return createElement(Nested, { key: index, node });
     const props: Record<string, unknown> = {
       key: index,
       ...templateProps(node),
@@ -64,6 +68,27 @@ function renderNodes(
     if (node.part !== undefined) Object.assign(props, parts[node.part]);
     return createElement(node.tag, props, ...renderNodes(node.children, parts));
   });
+}
+
+function definitionOf(component: string): AnyDefinition {
+  const definition = definitions[component];
+  if (!definition) {
+    throw new Error(`No definition registered for "${component}".`);
+  }
+  return definition;
+}
+
+/**
+ * A component nested in the template, rendered as a consumer would: its own
+ * `useComponent()`, inside its owner's provider.
+ */
+function Nested({ node }: { readonly node: TemplateComponent }) {
+  const ui = useComponent(definitionOf(node.component), node.props as never);
+  return createElement(
+    OwnerProvider,
+    { owner: ui.instance },
+    ...renderNodes(node.children, ui.parts),
+  );
 }
 
 interface HarnessProps {
@@ -84,16 +109,18 @@ function Harness({
   onRender();
   const ui = useComponent(definition, props as never);
   onInstance(ui.instance);
-  return renderNodes(template, ui.parts);
+  // Components nested in the template find this one as their owner.
+  return createElement(
+    OwnerProvider,
+    { owner: ui.instance },
+    ...renderNodes(template, ui.parts),
+  );
 }
 
 export const reactAdapter: ConformanceAdapter = {
   name: 'react',
   async mount({ component, props, template, events, record, container }) {
-    const definition = definitions[component];
-    if (!definition) {
-      throw new Error(`No definition registered for "${component}".`);
-    }
+    const definition = definitionOf(component);
     let renders = 0;
     let instance: Instance | undefined;
     let current = { ...props };
