@@ -215,6 +215,27 @@ export const checkboxConformance = defineConformance<
       },
       PHASE,
     );
+    scenario(
+      "labelledBy and describedBy join Field's ids, after its own",
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: [
+            h('span', { id: 'privacy' }, 'Privacy'),
+            h('span', { id: 'hint' }, 'Shown to your contacts'),
+            ...terms(),
+          ],
+          props: { ...IN_LABEL, labelledBy: 'privacy', describedBy: 'hint' },
+        });
+        const input = inputOf(mounted);
+        expect(input.getAttribute('aria-labelledby')).toBe(
+          `${mounted.part('label').id} privacy`,
+        );
+        expect(input.getAttribute('aria-describedby')).toBe(
+          `${mounted.part('description').id} hint`,
+        );
+      },
+      PHASE,
+    );
   });
 
   group('selection', () => {
