@@ -1,0 +1,284 @@
+/**
+ * The core Checkbox and Switch share (`./spec.md`, `../switch/spec.md`): Field
+ * composed on a native `<input type="checkbox">`, plus the selected state
+ * (uncontrolled, or controlled with a refused toggle put back after the
+ * event), read-only mode that cancels every toggle, form reset, and hover
+ * and focus state on every part. The browser keeps doing the toggling.
+ * Checkbox adds its indeterminate state and its group on top; Switch, its
+ * role.
+ */
+
+import {
+  createFocus,
+  createHover,
+  mergeHandlers,
+  partEffect,
+  partElement,
+} from '../../dom';
+import type { DomPartProps } from '../../dom';
+import type {
+  BindableSpec,
+  EventSpec,
+  PartProps,
+  PropSpec,
+  PropsSchema,
+  SetupContext,
+} from '../../runtime';
+import { field } from '../field/field';
+
+const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
+
+type TogglePart =
+  'root' | 'input' | 'indicator' | 'label' | 'description' | 'error';
+
+/** The props both definitions declare. */
+interface ToggleSchema extends PropsSchema {
+  readonly isSelected: BindableSpec<boolean>;
+  readonly isDisabled: PropSpec<boolean>;
+  readonly isReadOnly: PropSpec<boolean>;
+  readonly isRequired: PropSpec<boolean>;
+  readonly isInvalid: PropSpec<boolean>;
+  readonly inputId: PropSpec<string | undefined>;
+  readonly labelElementType: PropSpec<string>;
+  readonly labelledBy: PropSpec<string | undefined>;
+  readonly describedBy: PropSpec<string | undefined>;
+}
+
+type ToggleContext = SetupContext<
+  TogglePart,
+  ToggleSchema,
+  { readonly focusChange: EventSpec<boolean> }
+>;
+
+/** The selected state when something else holds it: a checkbox's group. */
+export interface ExternalSelection {
+  isSelected(): boolean;
+  setSelected(isSelected: boolean): void;
+}
+
+/** Where the state comes from when it isn't only the props. */
+export interface ToggleOptions {
+  /** Read, set and reset there instead of `isSelected`, while it exists. */
+  readonly external?: () => ExternalSelection | undefined;
+  readonly isDisabled?: () => boolean;
+  readonly isReadOnly?: () => boolean;
+  readonly isInvalid?: () => boolean;
+  readonly isRequired?: () => boolean;
+  readonly describedBy?: () => string | undefined;
+}
+
+export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
+  const { props } = ctx;
+  const external = options.external ?? (() => undefined);
+  const isSelected = () => external()?.isSelected() ?? props.isSelected.get();
+  const isDisabled = options.isDisabled ?? props.isDisabled;
+  const isReadOnly = options.isReadOnly ?? props.isReadOnly;
+  const isInvalid = options.isInvalid ?? props.isInvalid;
+  const isRequired = options.isRequired ?? props.isRequired;
+  const describedBy = options.describedBy ?? props.describedBy;
+
+  const labelling = ctx.use(
+    field,
+    () => ({
+      isInvalid: isInvalid(),
+      isRequired: isRequired(),
+      isDisabled: isDisabled(),
+      controlId: props.inputId(),
+      labelElementType: props.labelElementType(),
+      labelledBy: props.labelledBy(),
+      describedBy: describedBy(),
+    }),
+    { parts: { control: 'input' } },
+  );
+
+  // The root is where a label root takes clicks; the input counts too, for
+  // a control without a root.
+  const rootHover = createHover(ctx, { part: 'root', isDisabled });
+  const inputHover = createHover(ctx, { part: 'input', isDisabled });
+  const focus = createFocus(ctx, 'input');
+
+  ctx.watch(focus.isFocused, (isFocused) => {
+    ctx.emit('focusChange', isFocused);
+  });
+
+  // Bumped to write the state to the input again when the element and
+  // the state may differ: after a refused toggle and after a form reset.
+  const resync = ctx.state(0);
+  const writeAgain = () => resync.set(resync.get() + 1);
+
+  // A controlled toggle the consumer hasn't accepted once the event's work
+  // is done goes back. The native `change` comes right after `input`, so
+  // its listeners see the browser's toggle; the window sees it last.
+  let isRefusing = false;
+  const settle = () => {
+    if (!isRefusing) return;
+    isRefusing = false;
+    writeAgain();
+  };
+  const settleAfterChange = (input: HTMLInputElement) => {
+    const view = input.ownerDocument.defaultView;
+    isRefusing = true;
+    if (!view) return settle();
+    view.addEventListener('change', settle, { once: true });
+    // A listener that stops `change` keeps it from the window.
+    view.setTimeout(() => {
+      view.removeEventListener('change', settle);
+      settle();
+    });
+  };
+
+  // `input` fires only for a toggle that happened, never for a cancelled
+  // click. React's `onChange` on a checkbox runs on `click` instead, and a
+  // cancelled click leaves React's value tracker wrong.
+  const onInput = (inputEvent: Event) => {
+    const input = inputEvent.target as HTMLInputElement;
+    if (input !== partElement(ctx, 'input')) return;
+    const selection = external();
+    if (selection) {
+      // A controlled group follows the same rule as a controlled input.
+      settleAfterChange(input);
+      selection.setSelected(input.checked);
+      return;
+    }
+    if (props.isSelected.isControlled()) settleAfterChange(input);
+    props.isSelected.set(input.checked);
+  };
+
+  // Read-only: the browser puts back `checked` and `indeterminate` after a
+  // cancelled click, and fires no `input` or `change`.
+  const onClick = (clickEvent: MouseEvent) => {
+    if (clickEvent.target !== partElement(ctx, 'input')) return;
+    if (isReadOnly()) clickEvent.preventDefault();
+  };
+
+  // Form reset goes back to the state the input mounted with, its
+  // defaultSelected when uncontrolled, as TextField's does.
+  let initial: boolean | undefined;
+  partEffect(ctx, 'input', (element) => {
+    initial ??= props.isSelected.get();
+    const form = (element as HTMLInputElement).form;
+    if (!form) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onReset = (resetEvent: Event) => {
+      if (resetEvent.defaultPrevented) return;
+      // External state resets itself; it is written again below.
+      if (!external()) {
+        ctx.batch(() => {
+          isRefusing = false;
+          props.isSelected.set(initial!);
+        });
+      }
+      // The native reset runs after this event and sets `checked` from the
+      // attribute, so the state is written again after it.
+      clearTimeout(timer);
+      timer = setTimeout(writeAgain);
+    };
+    form.addEventListener('reset', onReset);
+    return () => {
+      form.removeEventListener('reset', onReset);
+      clearTimeout(timer);
+    };
+  });
+
+  return {
+    field: labelling,
+    isSelected,
+    isDisabled,
+    isReadOnly,
+    isInvalid,
+    isRequired,
+    isHovered: () => rootHover.isHovered() || inputHover.isHovered(),
+    isFocused: focus.isFocused,
+    isFocusVisible: focus.isFocusVisible,
+    rootHandlers: rootHover.handlers,
+    handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
+      input: onInput,
+      click: onClick,
+    }),
+  };
+}
+
+export type Toggle = ReturnType<typeof createToggle>;
+
+/** The public state both definitions expose. */
+export function toggleState(toggle: Toggle) {
+  return {
+    isSelected: toggle.isSelected(),
+    isFocused: toggle.isFocused(),
+    isFocusVisible: toggle.isFocusVisible(),
+    isHovered: toggle.isHovered(),
+    isDisabled: toggle.isDisabled(),
+    isReadOnly: toggle.isReadOnly(),
+    isRequired: toggle.isRequired(),
+    isInvalid: toggle.isInvalid(),
+    isErrorShown: toggle.field.state().isErrorShown,
+  };
+}
+
+/** What a definition adds to the shared parts. */
+export interface ToggleExtras {
+  /** State attributes for every part. */
+  readonly state?: Readonly<Record<string, string | undefined>>;
+  /** Attributes for the input. */
+  readonly input?: Readonly<Record<string, string | undefined>>;
+  /** Live properties for the input. */
+  readonly properties?: Readonly<Record<string, unknown>>;
+}
+
+/** The parts both definitions connect, with a definition's extras. */
+export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
+  const { control, ...parts } = toggle.field.connect();
+  const isSelected = toggle.isSelected();
+  const isReadOnly = toggle.isReadOnly();
+  // Every part, so the box, the label and the messages can be styled.
+  const state = {
+    'data-selected': flag(isSelected),
+    ...extras.state,
+    'data-hovered': flag(toggle.isHovered()),
+    'data-focused': flag(toggle.isFocused()),
+    'data-focus-visible': flag(toggle.isFocusVisible()),
+    'data-readonly': flag(isReadOnly),
+  };
+  const withState = (part: PartProps): PartProps => ({
+    ...part,
+    attrs: { ...part.attrs, ...state },
+  });
+  const root: DomPartProps = {
+    attrs: { ...parts.root.attrs, ...state },
+    on: toggle.rootHandlers,
+  };
+  const input: DomPartProps = {
+    attrs: {
+      ...control.attrs,
+      ...state,
+      type: 'checkbox',
+      ...extras.input,
+      disabled: flag(toggle.isDisabled()),
+      // Not `readonly`: HTML ignores it on a checkbox, and it takes the
+      // input out of constraint validation.
+      'aria-readonly': isReadOnly ? 'true' : undefined,
+    },
+    on: toggle.handlers,
+    // Never `aria-checked`: browsers read these properties on a native
+    // checkbox and ignore it.
+    properties: { checked: isSelected, ...extras.properties },
+  };
+  // Not a Field part, so it takes Field's state attributes from the root.
+  const indicator: PartProps = {
+    attrs: {
+      'aria-hidden': 'true',
+      'data-invalid': parts.root.attrs['data-invalid'],
+      'data-required': parts.root.attrs['data-required'],
+      'data-disabled': parts.root.attrs['data-disabled'],
+      ...state,
+    },
+  };
+  return {
+    root,
+    input,
+    indicator,
+    label: withState(parts.label),
+    description: withState(parts.description),
+    error: withState(parts.error),
+  };
+}
