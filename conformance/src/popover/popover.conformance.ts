@@ -1075,7 +1075,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
               'top: 300px; left: 150px',
             ],
             [{ placement: 'top end' }, 'top', 'top: 300px; left: 150px'],
-            [{ placement: 'end' }, 'right', 'top: 300px; left: 20px'],
+            [{ placement: 'end' }, 'right', 'top: 200px; left: 20px'],
             [{ placement: 'left top' }, 'left', 'top: 300px; left: 240px'],
           ];
           await onEachPath(async (path) => {
