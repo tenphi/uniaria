@@ -196,7 +196,10 @@ These are decided; follow them rather than the catalogue.
   - Elsewhere `@floating-ui/dom` (the one runtime dependency, owner
     decision, 2026-10-16) computes the same placement. It is imported on
     demand by the browsers that need it, and its flips are sticky, as the
-    browser's are, until the placement asks for another side.
+    browser's are, until the placement asks for another side. It also
+    places a part whose direction differs from the page's in every browser:
+    Firefox misplaces such a part with anchor positioning (probed in
+    Firefox 155).
   - Both paths write `--trigger-width`, `--available-width` and
     `--available-height` (on the larger side when it may flip, so a
     `max-height` never stops a flip) and place the arrow part. Sous writes

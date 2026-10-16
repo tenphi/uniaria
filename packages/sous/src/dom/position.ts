@@ -8,9 +8,10 @@
  *   picked is read back from the computed `position-area` (both engines
  *   report the applied fallback; probed).
  * - Elsewhere `@floating-ui/dom`, loaded by the browsers that need it,
- *   computes the same placement and Sous writes `top` and `left`. Its flips
- *   are sticky, as the browser's are: a part that flipped stays flipped
- *   until that side has no room.
+ *   computes the same placement and Sous writes `top` and `left`. It also
+ *   places a part whose direction differs from the page's (`canAnchor`).
+ *   Its flips are sticky, as the browser's are: a part that flipped stays
+ *   flipped until that side has no room.
  *
  * On both paths placements are React Aria's strings, resolved to physical
  * sides first: `start` and `end` follow the floating part's direction.
@@ -217,6 +218,23 @@ function nameAnchor(anchor: HTMLElement, name: string): () => void {
   };
 }
 
+/**
+ * Whether CSS anchor positioning can place the part. Firefox misplaces a
+ * part whose direction differs from its containing block's, the viewport's
+ * for a popover in the top layer (probed with Firefox 155: `position-area:
+ * bottom` puts a right-to-left part in a left-to-right page off screen), so
+ * Floating UI places such a part in every browser.
+ */
+function canAnchor(floating: HTMLElement): boolean {
+  const view = floating.ownerDocument.defaultView;
+  if (!view || !supportsAnchorPositioning(view)) return false;
+  const direction = (element: Element) =>
+    view.getComputedStyle(element).direction;
+  return (
+    direction(floating) === direction(floating.ownerDocument.documentElement)
+  );
+}
+
 interface Placed {
   readonly floating: HTMLElement;
   readonly anchor: HTMLElement;
@@ -321,7 +339,7 @@ export function createPosition(
       placeArrow(placedSide);
     };
 
-    if (supportsAnchorPositioning(view)) {
+    if (canAnchor(floating)) {
       const name = anchorName(view);
       const unname = nameAnchor(anchor, name);
       let frame = 0;
@@ -505,11 +523,19 @@ export function createPosition(
   ctx.watch(settings, () => placed?.update());
   ctx.watch(arrowElement, () => placed?.update());
 
-  // Load Floating UI early in the browsers that need it, so the first open
-  // doesn't wait for it.
+  // Load Floating UI early where it will be needed, so the first open
+  // doesn't wait for it. The direction comes from `dir` attributes: reading
+  // the part's style here, before a popover's `popover` attribute is
+  // written, leaves it displayed while closed in WebKit (probed).
   partEffect(ctx, options.part, (element) => {
     const view = element.ownerDocument.defaultView;
-    if (view && !supportsAnchorPositioning(view)) {
+    const dir = (from: Element) =>
+      from.closest('[dir]')?.getAttribute('dir')?.toLowerCase() ?? 'ltr';
+    if (
+      view &&
+      (!supportsAnchorPositioning(view) ||
+        dir(element) !== dir(element.ownerDocument.documentElement))
+    ) {
       loadFloatingUi().catch(() => undefined);
     }
   });

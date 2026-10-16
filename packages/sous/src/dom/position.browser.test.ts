@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { createInstance, defineComponent, prop } from '../runtime';
 import { createPosition } from './position';
@@ -50,6 +50,11 @@ type FloatingProps = Partial<{
 
 const FALLBACKS = Symbol.for('@tenphi/sous/fallbacks/v1');
 const running: { stop(): void }[] = [];
+
+// Loaded once up front: the first import can outlast a wait.
+beforeAll(async () => {
+  await import('@floating-ui/dom');
+});
 
 afterEach(() => {
   for (const instance of running.splice(0)) instance.stop();
@@ -293,6 +298,17 @@ describe.runIf(supportsAnchorPositioning(window))(
       instance.sync();
       expect(anchor.style.getPropertyValue('anchor-name')).toBe('--mine');
       expect(root.style.getPropertyValue('margin')).toBe('5px');
+    });
+
+    // Firefox misplaces it with anchor positioning.
+    it('leaves a part whose direction differs from the page’s to Floating UI', async () => {
+      const { root, side } = render(
+        { placement: 'bottom start' },
+        { dir: 'rtl' },
+      );
+      await vi.waitFor(() => expect(side()).toBe('bottom'));
+      expect(root.style.getPropertyValue('position-area')).toBe('');
+      expect(root.style.getPropertyValue('position')).toBe('fixed');
     });
   },
 );
