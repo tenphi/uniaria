@@ -16,20 +16,27 @@ const layer = defineComponent({
     isDismissable: prop(true),
     isKeyboardDismissDisabled: prop(false),
     shouldCloseOnBlur: prop(false),
+    isModal: prop(false),
+    source: prop<string | undefined>(undefined, { type: 'string' }),
   },
   events: { dismiss: event<DismissReason>() },
   setup(ctx) {
-    createLayer(ctx, {
+    const { props } = ctx;
+    return createLayer(ctx, {
       part: 'root',
-      isOpen: ctx.props.isOpen,
-      isDismissable: ctx.props.isDismissable,
-      isKeyboardDismissDisabled: ctx.props.isKeyboardDismissDisabled,
-      shouldCloseOnBlur: ctx.props.shouldCloseOnBlur,
+      isOpen: props.isOpen,
+      isDismissable: props.isDismissable,
+      isKeyboardDismissDisabled: props.isKeyboardDismissDisabled,
+      shouldCloseOnBlur: (next) =>
+        props.shouldCloseOnBlur() && !next.closest('[data-keep-focus]'),
       shouldCloseOnInteractOutside: (target) =>
         !target.closest('[data-keep-open]'),
+      isModal: props.isModal,
+      ...(props.source() === undefined
+        ? {}
+        : { source: () => document.getElementById(props.source()!) }),
       onDismiss: (reason) => ctx.emit('dismiss', reason),
     });
-    return {};
   },
   expose: () => ({}),
   connect: () => ({ root: { attrs: {} } }),
@@ -56,9 +63,13 @@ interface LayerProps {
   isDismissable?: boolean;
   isKeyboardDismissDisabled?: boolean;
   shouldCloseOnBlur?: boolean;
+  isModal?: boolean;
+  source?: string;
 }
 
 const running: { stop(): void }[] = [];
+/** Every layer's id, in the order they were dismissed. */
+const dismissed: string[] = [];
 const byId = (id: string) => document.getElementById(id)!;
 
 function render(html: string): void {
@@ -74,6 +85,7 @@ function open(id: string, props: LayerProps = {}) {
     props: { ...props, onDismiss: (reason: DismissReason) => close(reason) },
   });
   function close(reason: DismissReason) {
+    dismissed.push(id);
     reasons.push(reason);
     set({ isOpen: false });
   }
@@ -84,7 +96,7 @@ function open(id: string, props: LayerProps = {}) {
   running.push(instance);
   instance.attach('root', byId(id));
   instance.start();
-  return { reasons, set };
+  return { reasons, set, api: instance.api };
 }
 
 function escape(target: Element, init: KeyboardEventInit = {}) {
@@ -99,6 +111,7 @@ function escape(target: Element, init: KeyboardEventInit = {}) {
 }
 
 afterEach(() => {
+  dismissed.length = 0;
   for (const instance of running.splice(0)) instance.stop();
   document.body.replaceChildren();
 });
@@ -225,16 +238,64 @@ describe('createLayer outside press', () => {
     expect(reasons).toEqual([]);
   });
 
-  it('closes only the layer that was on top at pointer down', async () => {
+  // Popover spec, Resolved questions 9: as the native popover's light
+  // dismiss, not React Aria's one layer per click.
+  it('closes every layer the press is outside of, top down', async () => {
     render(`<div id="first">First</div><div id="second">Second</div>
       <button id="out">Out</button>`);
     const first = open('first');
     const second = open('second');
     await userEvent.click(byId('out'));
     expect(second.reasons).toEqual(['outside']);
-    expect(first.reasons).toEqual([]);
-    await userEvent.click(byId('out'));
     expect(first.reasons).toEqual(['outside']);
+    expect(dismissed).toEqual(['second', 'first']);
+  });
+
+  it('stops at a layer that holds the press; one that stays open does not stop it', async () => {
+    render(`<div id="parent"><button id="p">P</button>
+      <div id="child">Child</div></div><button id="out">Out</button>`);
+    const parent = open('parent');
+    const child = open('child');
+    await userEvent.click(byId('p'));
+    expect(child.reasons).toEqual(['outside']);
+    expect(parent.reasons).toEqual([]);
+
+    const strict = open('child', { isDismissable: false });
+    await userEvent.click(byId('out'));
+    expect(strict.reasons).toEqual([]);
+    expect(parent.reasons).toEqual(['outside']);
+  });
+
+  it('a modal layer closes only on top and shields the layers below', async () => {
+    render(`<div id="page">Page</div><div id="modal"><button id="m">M</button></div>
+      <div id="popover">Popover</div><button id="out">Out</button>`);
+    const page = open('page');
+    const modal = open('modal', { isModal: true });
+    const popover = open('popover');
+    await userEvent.click(byId('out'));
+    expect(popover.reasons).toEqual(['outside']);
+    expect(modal.reasons).toEqual([]);
+    expect(page.reasons).toEqual([]);
+    await userEvent.click(byId('out'));
+    expect(modal.reasons).toEqual(['outside']);
+    expect(page.reasons).toEqual([]);
+  });
+
+  it('reports a press that will close it from pointer down to its click', async () => {
+    render(`<div id="layer">In</div><button id="out">Out</button>
+      <button id="keep" data-keep-open>Keep</button>`);
+    const { api } = open('layer');
+    const seen: boolean[] = [];
+    for (const id of ['out', 'keep']) {
+      byId(id).addEventListener('mousedown', () =>
+        seen.push(api.isClosingPress()),
+      );
+    }
+    await userEvent.click(byId('keep'));
+    expect(api.isClosingPress()).toBe(false);
+    await userEvent.click(byId('out'));
+    expect(seen).toEqual([false, true]);
+    expect(api.isClosingPress()).toBe(false);
   });
 
   it('closes a parent from inside it only once the child is gone', async () => {
@@ -245,6 +306,32 @@ describe('createLayer outside press', () => {
     await userEvent.click(byId('p'));
     expect(child.reasons).toEqual(['outside']);
     expect(parent.reasons).toEqual([]);
+  });
+});
+
+describe('createLayer parent', () => {
+  it('closes the layers above that it holds, or whose source it holds', () => {
+    render(`<div id="parent"><button id="t">T</button>
+        <div id="inner">Inner</div><div id="plain">Plain</div></div>
+      <div id="sourced">Sourced</div><div id="unrelated">Unrelated</div>`);
+    const parent = open('parent');
+    const inner = open('inner', { source: 'none' });
+    const plain = open('plain');
+    const sourced = open('sourced', { source: 't' });
+    const unrelated = open('unrelated', { source: 'none' });
+    parent.set({ isOpen: false });
+    expect(inner.reasons).toEqual(['parent']);
+    expect(sourced.reasons).toEqual(['parent']);
+    expect(plain.reasons).toEqual([]);
+    expect(unrelated.reasons).toEqual([]);
+  });
+
+  it('closes no one when it stops while open', () => {
+    render(`<div id="parent"><div id="inner">Inner</div></div>`);
+    open('parent');
+    const inner = open('inner', { source: 'none' });
+    running[0]!.stop();
+    expect(inner.reasons).toEqual([]);
   });
 });
 
@@ -358,6 +445,15 @@ describe('createLayer blur', () => {
     byId('in').focus();
     byId('out').focus();
     expect(reasons).toEqual(['blur']);
+  });
+
+  it('asks with the element focus moved to', () => {
+    render(`<div id="layer"><button id="in">In</button></div>
+      <button id="trigger" data-keep-focus>Trigger</button>`);
+    const { reasons } = open('layer', { shouldCloseOnBlur: true });
+    byId('in').focus();
+    byId('trigger').focus();
+    expect(reasons).toEqual([]);
   });
 
   it('stays open when focus moves into a layer above', () => {

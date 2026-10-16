@@ -23,19 +23,19 @@ parity with a React Aria button. The screen-reader matrix moved to the last
 gate. What is still unbuilt below waits for the component that needs it, and
 the items marked for a real device or screen reader stay open.
 
-| Area                   | Status                               | Where                                                       |
-| ---------------------- | ------------------------------------ | ----------------------------------------------------------- |
-| 1. Press               | Built, except as noted               | `dom/press.ts`; Button conformance                          |
-| 2. Hover               | Built                                | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
-| 3. Focus-visible       | Built                                | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Built                                | `dom/focus-within.ts`, its tests                            |
-| 5. Focus scope         | Built, except as noted               | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
-| 6. Interact outside    | Built                                | `dom/interact-outside.ts`, layer tests                      |
-| 7. Dismissable layers  | Built (stack, Escape, outside, blur) | `dom/layers.ts`, its tests                                  |
-| 8. Scroll lock         | Built; iOS unverified on a device    | `dom/scroll-lock.ts`, its tests                             |
-| 9. aria-hidden outside | Built, except shadow DOM             | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
-| 10. Live announcer     | Built                                | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built (core), not wired yet          | `collections/typeahead.ts`, `typeahead.test.ts`             |
+| Area                   | Status                            | Where                                                       |
+| ---------------------- | --------------------------------- | ----------------------------------------------------------- |
+| 1. Press               | Built, except as noted            | `dom/press.ts`; Button conformance                          |
+| 2. Hover               | Built                             | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
+| 3. Focus-visible       | Built                             | `dom/modality.ts`, `dom/focus.ts`, their tests              |
+| 4. Focus-within        | Built                             | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted            | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
+| 6. Interact outside    | Built                             | `dom/interact-outside.ts`, layer tests                      |
+| 7. Dismissable layers  | Built                             | `dom/layers.ts`, its tests; Dialog and Popover conformance  |
+| 8. Scroll lock         | Built; iOS unverified on a device | `dom/scroll-lock.ts`, its tests                             |
+| 9. aria-hidden outside | Built, except shadow DOM          | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
+| 10. Live announcer     | Built                             | `dom/announcer.ts`, `announcer.browser.test.ts`             |
+| 11. Typeahead          | Built (core), not wired yet       | `collections/typeahead.ts`, `typeahead.test.ts`             |
 
 Press is complete. Button's touch scenarios use real touch input, which only
 Chromium takes in the harness (DevTools `Input.dispatchTouchEvent`), so
@@ -166,6 +166,48 @@ These are decided; follow them rather than the catalogue.
   - Nested layers resolve Escape through `defaultPrevented` instead of
     `stopPropagation` (§7.1). The modal, popover and close-on-scroll
     compositions (§7.17-24) belong to the Popover component.
+- **A press closes every layer it is outside of** (Popover spec, Resolved
+  questions 9), top down, as the native popover and UI Kit's menus do; React
+  Aria closes only the top one (§7.11, 7.13). The stack is one listener set
+  per window under `Symbol.for('@tenphi/sous/layers/v1')`. At `pointerdown`
+  it works out which layers the press will close and the `click` closes
+  them, so a layer can ask `isClosingPress()` in between: a modal popover's
+  focus containment lets pointer focus go where the press puts it (Resolved
+  questions 5). It stops at a layer that holds the press; one that stays
+  open (not dismissable, or kept by `shouldCloseOnInteractOutside`) doesn't
+  stop it. A modal layer (`isModal`, Dialog) closes only when it is on top
+  and shields the layers below it.
+  - Closing a layer closes the layers above it that it holds, or whose
+    `source()` (a popover's anchor) it holds, with reason `'parent'`, as the
+    native popover and Zag do; React Aria gets it by unmounting. Stopping a
+    layer that is still open closes no one.
+  - `shouldCloseOnBlur(next)` gets the element focus moved to, so a
+    non-modal popover stays open when focus goes to its trigger.
+- **Positioning** (`dom/position.ts`, Popover spec, Resolved questions 3 and 11) is not in the catalogue: React Aria computes positions in script
+  (`useOverlayPosition`). `createPosition(ctx, options)` places a floating
+  part against an anchor while active and reports the side it landed on.
+  Placements are React Aria's strings, resolved to physical sides first.
+  - Where CSS anchor positioning works, Sous writes inline `position-anchor`
+    (a name unique in the window, added to the anchor's own `anchor-name`
+    list), `position-area`, `position-try-fallbacks` and margins for the
+    offset, cross offset and container padding, and reads the side back from
+    the computed `position-area`. The browser keeps the part placed as the
+    page scrolls.
+  - Elsewhere `@floating-ui/dom` (the one runtime dependency, owner
+    decision, 2026-10-16) computes the same placement. It is imported on
+    demand by the browsers that need it, and its flips are sticky, as the
+    browser's are, until the placement asks for another side.
+  - Both paths write `--trigger-width`, `--available-width` and
+    `--available-height` (on the larger side when it may flip, so a
+    `max-height` never stops a flip) and place the arrow part. Sous writes
+    `inset` and `margin` as longhands and puts back every inline style it
+    replaced when it stops.
+- **Feature detection and its development switch** (`dom/support.ts`).
+  `supportsPopover` and `supportsAnchorPositioning` read a window property
+  under `Symbol.for('@tenphi/sous/fallbacks/v1')`: `{ popover: false }` or
+  `{ anchorPositioning: false }` forces the fallback in a browser that has
+  the feature, so tests run both paths. Components read it when they
+  start.
 - **Parts can arrive late.** A custom element connects before its children
   are parsed, so anything that needs a part element runs through
   `partEffect()`.

@@ -7,9 +7,10 @@
  * the shared input-modality tracker, focus-within, focus scopes, the
  * focusable/tabbable rules, the live announcer, outside interaction, the
  * dismissable layer stack, hiding everything outside a modal, scroll lock
- * (iOS strategy pending) and presence (enter and exit phases). Planned:
- * owner lookup, and positioning (CSS anchor positioning with the Floating UI
- * fallback behind one wrapper).
+ * (iOS strategy pending), presence (enter and exit phases), positioning (CSS
+ * anchor positioning with the Floating UI fallback behind one wrapper) and
+ * feature detection with the development switch for fallbacks. Planned:
+ * owner lookup.
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -26,6 +27,7 @@ export type {
   Politeness,
 } from './announcer';
 export { createBinder } from './binder';
+export { isComposing } from './events';
 export { isDevelopment, warn } from './dev';
 export type { Binder, BinderOptions } from './binder';
 export { createFocus } from './focus';
@@ -55,8 +57,15 @@ export type { Modality, ModalityEvent, ModalityTracker } from './modality';
 export { interactOutside } from './interact-outside';
 export type { InteractOutsideHandlers } from './interact-outside';
 export { createLayer, isTopLayer } from './layers';
-export type { DismissReason, LayerOptions } from './layers';
+export type { DismissReason, Layer, LayerOptions } from './layers';
 export { provideOwner, requestOwner } from './owner';
+export { createPosition } from './position';
+export type {
+  Placement,
+  PlacementSide,
+  Position,
+  PositionOptions,
+} from './position';
 export { SOUS_HOST, observeParts, queryParts } from './parts';
 export { createPresence } from './presence';
 export type { Presence, PresenceOptions } from './presence';
@@ -64,5 +73,6 @@ export { createPress, isVirtualClick } from './press';
 export { createScrollLock, lockScroll } from './scroll-lock';
 export type { ScrollLockOptions } from './scroll-lock';
 export type { PointerType, Press, PressEvent, PressOptions } from './press';
+export { supportsAnchorPositioning, supportsPopover } from './support';
 export { mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';

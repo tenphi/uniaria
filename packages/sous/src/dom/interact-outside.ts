@@ -51,7 +51,8 @@ function isOnBackdrop(element: Element, event: Event): boolean {
   );
 }
 
-function isOutside(element: Element, event: Event): boolean {
+/** Whether a press event lands outside `element` (a removed target never does). */
+export function isPressOutside(element: Element, event: Event): boolean {
   const target = event.target as Node | null;
   if (!target?.isConnected) return false;
   return (
@@ -68,7 +69,7 @@ export function interactOutside(
   let isPointerDown = false;
 
   const onPointerDown = (event: PointerEvent) => {
-    isPointerDown = event.button === 0 && isOutside(element, event);
+    isPointerDown = event.button === 0 && isPressOutside(element, event);
     if (isPointerDown) handlers.onStart?.(event);
   };
 
@@ -76,7 +77,7 @@ export function interactOutside(
     const wasPointerDown = isPointerDown;
     isPointerDown = false;
     if (!wasPointerDown || event.button !== 0) return;
-    if (isOutside(element, event)) handlers.onInteract?.(event);
+    if (isPressOutside(element, event)) handlers.onInteract?.(event);
   };
 
   document.addEventListener('pointerdown', onPointerDown, true);

@@ -306,8 +306,9 @@ handler with its event.
 
 - Overlays use the top layer (Popover API, `<dialog>`); nothing moves nodes
   into a portal. The Popover API is Baseline only since January 2025 (widely
-  available from July 2027), so popovers detect it and need a fallback,
-  designed with the Popover spec.
+  available from July 2027), so popovers detect it (`dom/support.ts`) and,
+  without it, open in place: `hidden` while closed, `position: fixed` while
+  open (Popover spec).
 - One click outside a popover both closes it and acts on what it hit, as in
   Cube UI Kit (owner decision; React Aria needs a second click). Popovers
   never make the outside inert or put an underlay over it; they may hide it
@@ -316,9 +317,11 @@ handler with its event.
   `shouldCloseOnInteractOutside` keeps it open for chosen targets. A modal
   `<dialog>` makes the outside inert natively, so a press outside a dialog
   only dismisses it.
-- Nested overlays coordinate through the global layer stack. Never call
-  `stopPropagation` or `stopImmediatePropagation` in components (ESLint
-  enforces it).
+- Nested overlays coordinate through the global layer stack: a press closes
+  every layer it is outside of, top down, stopping at one that holds it or a
+  modal dialog, and closing a layer closes the layers opened from inside it.
+  Never call `stopPropagation` or `stopImmediatePropagation` in components
+  (ESLint enforces it).
 - Positioning uses CSS anchor positioning where the browser supports it, with
   `@floating-ui/dom` as the fallback behind one wrapper in `dom/`. The fallback
   is removed once anchor positioning is Baseline widely available.

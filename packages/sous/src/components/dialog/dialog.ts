@@ -147,7 +147,11 @@ export const dialog = defineComponent({
       isOpen: () => isOpen.get(),
       isDismissable: props.isDismissable,
       isKeyboardDismissDisabled: () => !canEscape(),
-      // Never 'blur': closing on blur is off.
+      // The inert page takes no press, and a press on the backdrop closes
+      // only the top dialog.
+      isModal: () => true,
+      // Never 'blur' or 'parent': closing on blur is off, and there is no
+      // source.
       onDismiss: (reason) => requestClose(reason as 'escape' | 'outside'),
     });
 
