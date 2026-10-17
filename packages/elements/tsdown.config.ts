@@ -17,6 +17,7 @@ export default defineConfig({
     dialog: 'src/dialog.ts',
     popover: 'src/popover.ts',
     tooltip: 'src/tooltip.ts',
+    'number-field': 'src/number-field.ts',
   },
   format: 'esm',
   platform: 'neutral',

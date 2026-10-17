@@ -19,6 +19,7 @@ export default defineConfig({
     'popover/index': 'src/components/popover/index.ts',
     'tooltip/index': 'src/components/tooltip/index.ts',
     'radio-group/index': 'src/components/radio-group/index.ts',
+    'number-field/index': 'src/components/number-field/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

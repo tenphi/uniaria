@@ -23,6 +23,7 @@ const entries = {
   '@uniaria/core/dialog': () => import('./components/dialog/index'),
   '@uniaria/core/popover': () => import('./components/popover/index'),
   '@uniaria/core/tooltip': () => import('./components/tooltip/index'),
+  '@uniaria/core/number-field': () => import('./components/number-field/index'),
 };
 
 describe('SSR safety', () => {

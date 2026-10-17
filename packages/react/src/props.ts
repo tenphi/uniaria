@@ -12,6 +12,7 @@ const ATTRIBUTES: Readonly<Record<string, string>> = {
   readonly: 'readOnly',
   autofocus: 'autoFocus',
   autocomplete: 'autoComplete',
+  autocorrect: 'autoCorrect',
   contenteditable: 'contentEditable',
   enterkeyhint: 'enterKeyHint',
   inputmode: 'inputMode',

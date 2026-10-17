@@ -65,6 +65,11 @@
       "types": "./dist/tooltip/index.d.ts",
       "default": "./dist/tooltip/index.js"
     },
+    "./number-field": {
+      "uniaria-source": "./src/components/number-field/index.ts",
+      "types": "./dist/number-field/index.d.ts",
+      "default": "./dist/number-field/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

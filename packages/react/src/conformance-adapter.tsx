@@ -16,6 +16,7 @@ import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { field } from '@uniaria/core/field';
+import { numberField } from '@uniaria/core/number-field';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
 import { tooltip } from '@uniaria/core/tooltip';
@@ -50,6 +51,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   dialog,
   popover,
   tooltip,
+  'number-field': numberField,
 };
 
 /** Form values a consumer would pass as defaults in React. */

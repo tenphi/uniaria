@@ -22,6 +22,7 @@ import './radio-group';
 import './dialog';
 import './popover';
 import './tooltip';
+import './number-field';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
 
@@ -543,6 +544,68 @@ describe('<uni-text-field>', () => {
     expect(host.defaultValue).toBe('Jane');
     expect(input.value).toBe('Jane');
     expect(input.readOnly).toBe(true);
+  });
+});
+
+describe('<uni-number-field>', () => {
+  const field = (attributes = '', value = '1.234,5') => `
+    <uni-number-field lang="de-DE" ${attributes}>
+      <label data-part="label">Menge</label>
+      <input data-part="input" value="${value}" />
+      <button data-part="decrement">−</button>
+      <button data-part="increment">+</button>
+      <input data-part="hiddenInput" name="menge" />
+    </uni-number-field>`;
+
+  it('takes the markup text, parsed for its language, as its default', () => {
+    const container = mount(field());
+    const host = container.querySelector('uni-number-field')!;
+    const [input, hidden] = Array.from(host.querySelectorAll('input'));
+    expect(host.instance.getState().value).toBe(1234.5);
+    expect(input!.value).toBe('1.234,5');
+    expect(hidden!.type).toBe('hidden');
+    expect(hidden!.value).toBe('1234.5');
+    // German: no English role description.
+    expect(input!.hasAttribute('aria-roledescription')).toBe(false);
+  });
+
+  it('takes number attributes, and default-value over the markup text', () => {
+    const container = mount(
+      field('default-value="7" min-value="0" max-value="7" step="0.5"'),
+    );
+    const host = container.querySelector('uni-number-field')!;
+    const input = host.querySelector('input')!;
+    expect(host.instance.getState()).toMatchObject({
+      value: 7,
+      canIncrement: false,
+      canDecrement: true,
+    });
+    expect(input.value).toBe('7');
+    expect(host.minValue).toBe(0);
+    expect(host.step).toBe(0.5);
+  });
+
+  it('takes formatOptions as a property', () => {
+    const container = mount(field('', '12,5'));
+    const host = container.querySelector('uni-number-field')!;
+    host.formatOptions = { style: 'currency', currency: 'EUR' };
+    expect(host.querySelector('input')!.value).toBe('12,50\u00a0€');
+  });
+
+  it('reports a commit as valuechange', () => {
+    const container = mount(field('', ''));
+    const host = container.querySelector('uni-number-field')!;
+    const input = host.querySelector('input')!;
+    const values: unknown[] = [];
+    host.addEventListener('valuechange', (event) =>
+      values.push((event as CustomEvent).detail),
+    );
+    input.focus();
+    input.value = '2,5';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    input.blur();
+    expect(values).toEqual([2.5]);
+    expect(input.value).toBe('2,5');
   });
 });
 

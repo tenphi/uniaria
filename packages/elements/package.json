@@ -27,7 +27,9 @@
     "./src/popover.ts",
     "./dist/popover.js",
     "./src/tooltip.ts",
-    "./dist/tooltip.js"
+    "./dist/tooltip.js",
+    "./src/number-field.ts",
+    "./dist/number-field.js"
   ],
   "exports": {
     ".": {
@@ -79,6 +81,11 @@
       "uniaria-source": "./src/tooltip.ts",
       "types": "./dist/tooltip.d.ts",
       "default": "./dist/tooltip.js"
+    },
+    "./number-field": {
+      "uniaria-source": "./src/number-field.ts",
+      "types": "./dist/number-field.d.ts",
+      "default": "./dist/number-field.js"
     },
     "./radio": {
       "uniaria-source": "./src/radio.ts",

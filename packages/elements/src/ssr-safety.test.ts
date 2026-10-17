@@ -19,6 +19,7 @@ const entries = {
   '@uniaria/elements/dialog': () => import('./dialog'),
   '@uniaria/elements/popover': () => import('./popover'),
   '@uniaria/elements/tooltip': () => import('./tooltip'),
+  '@uniaria/elements/number-field': () => import('./number-field'),
 };
 
 describe('SSR safety', () => {
@@ -55,5 +56,7 @@ describe('SSR safety', () => {
     expect(UniPopover).toBeUndefined();
     const { UniTooltip } = await import('./tooltip');
     expect(UniTooltip).toBeUndefined();
+    const { UniNumberField } = await import('./number-field');
+    expect(UniNumberField).toBeUndefined();
   });
 });
