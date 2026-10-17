@@ -19,6 +19,7 @@ import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { switchConformance } from './switch/switch.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
+import { tooltipConformance } from './tooltip/tooltip.conformance';
 
 export {
   buttonConformance,
@@ -31,6 +32,7 @@ export {
   switchConformance,
   textFieldConformance,
   toggleButtonConformance,
+  tooltipConformance,
 };
 export type { ButtonProps, ButtonState, PressEvent } from './button/types';
 export type { CheckboxProps, CheckboxState } from './checkbox/types';
@@ -57,6 +59,7 @@ export type {
   ToggleButtonProps,
   ToggleButtonState,
 } from './toggle-button/types';
+export type { TooltipProps, TooltipState } from './tooltip/types';
 
 /** Every suite, in roadmap order. */
 export const suites = [
@@ -70,4 +73,5 @@ export const suites = [
   radioGroupConformance,
   dialogConformance,
   popoverConformance,
+  tooltipConformance,
 ];
