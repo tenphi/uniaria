@@ -6,7 +6,7 @@
  */
 
 import type { AnyDefinition, Instance } from '@uniaria/core';
-import { callbackName } from '@uniaria/core';
+import { answers, callbackName } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
@@ -26,11 +26,11 @@ import type {
 } from '@uniaria/testing';
 import { isNested } from '@uniaria/testing';
 import type { ReactNode } from 'react';
-import { StrictMode, createElement } from 'react';
+import { StrictMode, createElement, useContext } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import { OwnerProvider } from './owner';
+import { OwnerContext, OwnerProvider } from './owner';
 import { reactPropName, reactPropValue } from './props';
 import type { ReactPartProps } from './use-component';
 import { useComponent } from './use-component';
@@ -95,7 +95,15 @@ function definitionOf(component: string): AnyDefinition {
  * `useComponent()`, inside its owner's provider.
  */
 function Nested({ node }: { readonly node: TemplateComponent }) {
-  const ui = useComponent(definitionOf(node.component), node.props as never);
+  const definition = definitionOf(node.component);
+  // A link to the component it sits in directly, passed as a consumer
+  // would: `useComponent(button, { tooltip: hint.instance })`.
+  const parent = useContext(OwnerContext)?.instance;
+  const links: Record<string, unknown> = {};
+  for (const key of definition.links ?? []) {
+    if (parent && answers(parent.definition, key)) links[key.name] = parent;
+  }
+  const ui = useComponent(definition, { ...links, ...node.props } as never);
   return createElement(
     OwnerProvider,
     { owner: ui.instance },

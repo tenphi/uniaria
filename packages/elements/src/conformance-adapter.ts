@@ -5,7 +5,8 @@
  * props as properties. Test support only; not exported.
  */
 
-import { domEventName } from '@uniaria/core';
+import { answers, domEventName } from '@uniaria/core';
+import type { AnyDefinition } from '@uniaria/core';
 import type { ConformanceAdapter } from '@uniaria/testing';
 import { renderTemplate } from '@uniaria/testing';
 
@@ -72,6 +73,15 @@ export const elementsAdapter: ConformanceAdapter = {
     if (parts.length === 0) throw new Error('The template has no parts.');
 
     const host = document.createElement(name) as UniElement<never>;
+    // A nested component that links to this one goes inside its host, as a
+    // consumer writes `<uni-tooltip><uni-button>…</uni-button>…</uni-tooltip>`.
+    for (const nestedHost of nestedHosts) {
+      const { definition } = (nestedHost as UniElement<AnyDefinition>).instance;
+      const isLinking = (definition.links ?? []).some((key) =>
+        answers(host.instance.definition, key),
+      );
+      if (isLinking && isOwn(nestedHost)) parts.push(nestedHost);
+    }
     const apply = (next: Readonly<Record<string, unknown>>) => {
       for (const [key, value] of Object.entries(next)) {
         (host as unknown as Record<string, unknown>)[key] = value;

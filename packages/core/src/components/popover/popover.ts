@@ -28,8 +28,10 @@ import {
   mergeHandlers,
   partEffect,
   partElement,
+  restoreFocus,
   supportsPopover,
   warn,
+  watchLeavingView,
 } from '../../dom';
 import type { DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
@@ -67,39 +69,6 @@ function initialFocus(root: HTMLElement): HTMLElement {
   );
   for (const element of marked) if (isFocusable(element)) return element;
   return root;
-}
-
-/**
- * Whether any of `element` shows: inside the viewport and every scrolling
- * box around it. An IntersectionObserver reports it only at the next
- * rendering update, after a scroll that already happened.
- */
-function isInView(element: HTMLElement): boolean {
-  const view = element.ownerDocument.defaultView;
-  if (!view) return false;
-  const box = element.getBoundingClientRect();
-  let { left, top, right, bottom } = box;
-  const clip = (rect: {
-    left: number;
-    top: number;
-    right: number;
-    bottom: number;
-  }) => {
-    left = Math.max(left, rect.left);
-    top = Math.max(top, rect.top);
-    right = Math.min(right, rect.right);
-    bottom = Math.min(bottom, rect.bottom);
-  };
-  for (let node = element.parentElement; node; node = node.parentElement) {
-    const style = view.getComputedStyle(node);
-    if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
-      clip(node.getBoundingClientRect());
-    }
-    if (style.position === 'fixed') break;
-  }
-  const { clientWidth, clientHeight } = element.ownerDocument.documentElement;
-  clip({ left: 0, top: 0, right: clientWidth, bottom: clientHeight });
-  return right > left && bottom > top;
 }
 
 function isEscape(event: KeyboardEvent): boolean {
@@ -290,7 +259,7 @@ export const popover = defineComponent({
           const restore = () => {
             for (const target of [trigger, before]) {
               if (!target?.isConnected || !isFocusable(target)) continue;
-              target.focus();
+              restoreFocus(target);
               if (document.activeElement === target) return;
             }
           };
@@ -339,34 +308,11 @@ export const popover = defineComponent({
 
     // Closes once the anchor has been scrolled out of view (Resolved
     // questions 10). The browser keeps it attached while scrolling.
-    let observed: { anchor: HTMLElement; stop(): void } | null = null;
-    const watchedAnchor = () => (isOpen.get() ? anchorElement() : null);
-    const observe = (anchor: HTMLElement | null) => {
-      if (observed?.anchor === anchor) return;
-      observed?.stop();
-      observed = null;
-      const view = anchor?.ownerDocument.defaultView;
-      if (!anchor || !view || typeof view.IntersectionObserver !== 'function') {
-        return;
-      }
-      let wasVisible = isInView(anchor);
-      const observer = new view.IntersectionObserver(
-        (entries) => {
-          const entry = entries[entries.length - 1];
-          if (!entry) return;
-          if (entry.isIntersecting) wasVisible = true;
-          else if (wasVisible) requestClose('scroll');
-        },
-        { root: anchor.ownerDocument },
-      );
-      observer.observe(anchor);
-      observed = { anchor, stop: () => observer.disconnect() };
-    };
-    ctx.effect(() => {
-      observe(watchedAnchor());
-      return () => observe(null);
-    });
-    ctx.watch(watchedAnchor, observe);
+    watchLeavingView(
+      ctx,
+      () => (isOpen.get() ? anchorElement() : null),
+      () => requestClose('scroll'),
+    );
 
     /** Escape on the trigger of an open popover closes it (spec, Keyboard). */
     const onTriggerKeyDown = (keyEvent: KeyboardEvent) => {

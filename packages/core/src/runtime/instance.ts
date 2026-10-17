@@ -305,6 +305,9 @@ export function createInstance<D extends AnyDefinition>(
           : undefined;
       },
       link(key) {
+        // Links are the instance's own: a composed definition, such as the
+        // Button in a Popover's trigger, never takes one.
+        if (scoped !== definition) return undefined;
         const target = currentLink(key);
         return target?.definition.provides?.includes(key)
           ? (handleOf(target) as never)

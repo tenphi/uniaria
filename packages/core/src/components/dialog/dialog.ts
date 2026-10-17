@@ -20,6 +20,7 @@ import {
   isTopLayer,
   partEffect,
   partElement,
+  restoreFocus,
   warn,
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
@@ -246,7 +247,7 @@ export const dialog = defineComponent({
           const restore = () => {
             for (const target of [triggerElement, before, below]) {
               if (!target?.isConnected || !isFocusable(target)) continue;
-              target.focus();
+              restoreFocus(target);
               if (document.activeElement === target) return;
             }
           };

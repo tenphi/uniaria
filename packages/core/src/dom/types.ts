@@ -53,7 +53,23 @@ export function partEffect(
   effect: (element: HTMLElement) => void | (() => void),
   isActive?: () => boolean,
 ): void {
-  const read = () => (isActive && !isActive() ? null : partElement(ctx, part));
+  elementEffect(
+    ctx,
+    () => (isActive && !isActive() ? null : partElement(ctx, part)),
+    effect,
+  );
+}
+
+/**
+ * Runs `effect` with the element `read()` returns while the instance is
+ * started, and again (after the previous cleanup) whenever it changes: any
+ * element, such as another component's part.
+ */
+export function elementEffect(
+  ctx: InteractionContext,
+  read: () => HTMLElement | null,
+  effect: (element: HTMLElement) => void | (() => void),
+): void {
   let cleanup: (() => void) | undefined;
   const run = (element: HTMLElement | null) => {
     const previous = cleanup;

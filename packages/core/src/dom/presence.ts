@@ -20,6 +20,11 @@ export interface PresenceOptions {
   /** The part that animates, such as a dialog. */
   readonly part: string;
   isOpen(): boolean;
+  /**
+   * Read as it closes: `true` hides it at once, with no exit phase, as a
+   * tooltip that another one replaces (Tooltip spec, Warm-up).
+   */
+  shouldSkipExit?(): boolean;
 }
 
 export interface Presence {
@@ -97,6 +102,7 @@ export function createPresence(
         shown.set(false);
       });
     };
+    if (options.shouldSkipExit?.()) return finish();
     // Read in the next frame, once every adapter has written the exiting
     // attribute; `getAnimations()` computes styles, which starts transitions.
     afterFrames(1, () => {

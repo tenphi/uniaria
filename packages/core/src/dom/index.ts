@@ -69,12 +69,14 @@ export type {
   PositionOptions,
 } from './position';
 export { UNI_HOST, observeParts, queryParts } from './parts';
+export { isInView, watchLeavingView } from './in-view';
 export { createPresence } from './presence';
 export type { Presence, PresenceOptions } from './presence';
+export { isRestoringFocus, restoreFocus } from './restore-focus';
 export { createPress, isVirtualClick } from './press';
 export { createScrollLock, lockScroll } from './scroll-lock';
 export type { ScrollLockOptions } from './scroll-lock';
 export type { PointerType, Press, PressEvent, PressOptions } from './press';
 export { supportsAnchorPositioning, supportsPopover } from './support';
-export { mergeHandlers, partEffect, partElement } from './types';
+export { elementEffect, mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';

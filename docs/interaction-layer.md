@@ -145,7 +145,19 @@ These are decided; follow them rather than the catalogue.
   (`getAnimations({ subtree: true })`, which includes `::backdrop` in
   Chromium and WebKit), read a frame after the exiting attribute is written;
   reopening cancels the exit. React Aria reads `getAnimations()` without the
-  subtree.
+  subtree. `shouldSkipExit()`, read as it closes, hides it at once instead:
+  a tooltip another one replaces (Tooltip spec, Warm-up).
+- **Restored focus is marked** (`dom/restore-focus.ts`, Tooltip spec, Resolved
+  questions 8). An overlay that returns focus as it closes calls
+  `restoreFocus(element)`, which holds the element under
+  `Symbol.for('@uniaria/restoring-focus/v1')` on its window while it focuses
+  it; `isRestoringFocus(element)` reads it in a `focus` listener, so a
+  tooltip doesn't open for focus coming back to its trigger. Dialog, Popover
+  and focus scopes restore through it.
+- **Leaving view** (`dom/in-view.ts`). `isInView(element)` and
+  `watchLeavingView(ctx, read, onLeave)`, an `IntersectionObserver` on the
+  element `read()` returns: a popover or tooltip closes once its trigger has
+  been scrolled out of view (Popover spec, Resolved questions 10).
 - **One click outside a popover closes it and acts on what it hit** (owner
   decision, 2026-10-15, after Cube UI Kit). React Aria stops the outside
   `pointerdown` and `click` of the top layer at the document (§7.12), so the

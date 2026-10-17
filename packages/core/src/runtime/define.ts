@@ -180,8 +180,10 @@ export interface SetupContext<
   /**
    * The instance linked by `key`, one of the definition's `links`, or
    * `undefined` until there is one: the prop of the key's name, else the
-   * adapter's link. Read it where it is used: while started, the linked
-   * instance's changes re-run `connect()`, `expose()` and watches.
+   * adapter's link. Always `undefined` in a definition composed with
+   * `ctx.use()`: links are the instance's own. Read it where it is used:
+   * while started, the linked instance's changes re-run `connect()`,
+   * `expose()` and watches.
    */
   link<Api>(key: LinkKey<string, Api>): Linked<Api> | undefined;
 }

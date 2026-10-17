@@ -41,6 +41,7 @@ import {
   lastFocusable,
 } from './focusable';
 import { modalityTrackerFor } from './modality';
+import { restoreFocus } from './restore-focus';
 import type { InteractionContext } from './types';
 import { partEffect } from './types';
 
@@ -379,7 +380,7 @@ function activate(element: HTMLElement, options: FocusScopeOptions) {
       if (current !== document.body && !element.contains(current)) return;
       for (const step of path) {
         if (step.nodeToRestore?.isConnected) {
-          focus(step.nodeToRestore);
+          restoreFocus(step.nodeToRestore, { preventScroll: true });
           return;
         }
       }
