@@ -7,6 +7,7 @@ export interface SwitchProps {
   isSelected: boolean;
   defaultSelected: boolean;
   isDisabled: boolean;
+  isFocusableWhenDisabled: boolean;
   isReadOnly: boolean;
   isRequired: boolean;
   isInvalid: boolean;

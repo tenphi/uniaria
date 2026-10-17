@@ -23,6 +23,9 @@ type MountedSwitch = Mounted<SwitchProps, SwitchState>;
 
 const PHASE = { phase: 3 } as const;
 
+/** isFocusableWhenDisabled came with Tooltip (Tooltip spec, Resolved questions 12). */
+const FOCUSABLE_PHASE = { phase: 4 } as const;
+
 const PARTS = ['root', 'input', 'indicator', 'label', 'description', 'error'];
 
 const STATE_ATTRIBUTES = [
@@ -537,6 +540,95 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
       );
 
       scenario(
+        'isFocusableWhenDisabled keeps a disabled switch focusable, with aria-disabled, and cancels every toggle',
+        async ({ mount, pointer, keyboard }) => {
+          const mounted = await mount({
+            template: [
+              h('button', { type: 'button' }, 'Before'),
+              // tabindex: WebKit tabs to a checkbox only with one, as macOS.
+              ...wifi({
+                input: h('input', {
+                  part: 'input',
+                  type: 'checkbox',
+                  tabindex: '0',
+                }),
+              }),
+            ],
+            props: {
+              ...IN_LABEL,
+              isDisabled: true,
+              isFocusableWhenDisabled: true,
+              defaultSelected: true,
+            },
+            events: EVENTS,
+          });
+          const input = inputOf(mounted);
+          const native = countNativeEvents(mounted);
+          expect(input.disabled).toBe(false);
+          expect(input.getAttribute('aria-disabled')).toBe('true');
+          expectOnEveryPart(mounted, 'data-disabled', true);
+          expect(mounted.state().isDisabled).toBe(true);
+
+          mounted.container.querySelector('button')!.focus();
+          await keyboard.tab();
+          expect(document.activeElement).toBe(input);
+          await keyboard.press('Space');
+          await pointer.click(input);
+          await pointer.click(mounted.part('label'));
+          expect(input.checked).toBe(true);
+          expect(mounted.state().isSelected).toBe(true);
+          expect(changes(mounted)).toEqual([]);
+          expect(native.count).toBe(0);
+
+          await mounted.setProps({
+            ...IN_LABEL,
+            isDisabled: true,
+            isFocusableWhenDisabled: false,
+            defaultSelected: true,
+          });
+          expect(input.disabled).toBe(true);
+          expect(input.hasAttribute('aria-disabled')).toBe(false);
+        },
+        FOCUSABLE_PHASE,
+      );
+
+      scenario(
+        'a focusable disabled switch is left out of its form’s data, as a disabled one is',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: inForm([
+              ...wifi({
+                input: h('input', {
+                  part: 'input',
+                  type: 'checkbox',
+                  name: 'wifi',
+                  value: 'yes',
+                }),
+              }),
+              h('input', { type: 'hidden', name: 'wifi', value: 'also' }),
+            ]),
+            props: {
+              ...IN_LABEL,
+              isDisabled: true,
+              isFocusableWhenDisabled: true,
+              defaultSelected: true,
+            },
+          });
+          const form = mounted.container.querySelector('form')!;
+          expect(new FormData(form).getAll('wifi')).toEqual(['also']);
+
+          await mounted.setProps({
+            ...IN_LABEL,
+            isDisabled: false,
+            isFocusableWhenDisabled: true,
+            defaultSelected: true,
+          });
+          expect(new FormData(form).getAll('wifi')).toEqual(['yes', 'also']);
+        },
+        FOCUSABLE_PHASE,
+      );
+
+      scenario(
         "isRequired and isInvalid are Field's",
         async ({ mount }) => {
           const mounted = await mount({
@@ -806,6 +898,24 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
           );
         },
         PHASE,
+      );
+
+      scenario(
+        'reads a focusable disabled switch as disabled',
+        async ({ mount, spoken }) => {
+          await mount({
+            template: wifi({ hasDescription: false }),
+            props: {
+              ...IN_LABEL,
+              isDisabled: true,
+              isFocusableWhenDisabled: true,
+            },
+          });
+          expect(await spoken()).toContain(
+            'switch, Wi-Fi, not checked, disabled',
+          );
+        },
+        FOCUSABLE_PHASE,
       );
 
       scenario(

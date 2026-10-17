@@ -8,6 +8,7 @@ export interface CheckboxProps {
   defaultSelected: boolean;
   isIndeterminate: boolean;
   isDisabled: boolean;
+  isFocusableWhenDisabled: boolean;
   isReadOnly: boolean;
   isRequired: boolean;
   isInvalid: boolean;
