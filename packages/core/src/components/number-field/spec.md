@@ -352,8 +352,8 @@ scenarios confirm them in both engines.
 | disabled                                         | `Number field, Quantity, 5, disabled`                      |
 | invalid and required, with an error "At most 10" | `Number field, Quantity, 5, At most 10, invalid, required` |
 | 5 with `lang="de"`, label "Menge"                | `textbox, Menge, 5`                                        |
-| the increment button, browsing                   | `button, Increase Quantity`                                |
-| at the maximum, browsing                         | `button, Increase Quantity, disabled`                      |
+| the increment button, browsing                   | `button, Increase Quantity, 1 control`                     |
+| at the maximum, browsing                         | `button, Increase Quantity, 1 control, disabled`           |
 | after ArrowUp from 5 (live announcer)            | `assertive: 6`                                             |
 
 A spinbutton instead (Resolved questions 1) reads `spinbutton, Quantity, max
