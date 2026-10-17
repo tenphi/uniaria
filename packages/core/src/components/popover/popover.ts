@@ -12,7 +12,9 @@
  * (Resolved questions 4). `isNonModal` keeps the page exposed, lets Tab
  * continue past it, and closes it when focus leaves.
  *
- * The trigger and the close button are Button, composed twice.
+ * The trigger and the close button are Button, composed twice. The trigger
+ * takes a tooltip through the popover's `tooltip` link (Tooltip spec,
+ * Resolved questions 2).
  */
 
 import {
@@ -37,6 +39,7 @@ import type { DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { button } from '../button/button';
+import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Why the user closed the popover (spec, Events). */
 export type PopoverDismissReason =
@@ -94,6 +97,7 @@ export const popover = defineComponent({
     'description',
     'close',
   ],
+  links: [tooltipLink],
   props: {
     isOpen: bindable(false),
     isNonModal: prop(false),
@@ -153,6 +157,7 @@ export const popover = defineComponent({
       () => ({ onPress: () => requestClose('close') }),
       { parts: { root: 'close' } },
     );
+    const tooltip = linkTooltip(ctx, { hover: 'trigger', focus: 'trigger' });
 
     // Rendered parts, and a name the consumer put on the root, as in Dialog.
     // React attaches elements before `start()`; the watch follows changes.
@@ -349,6 +354,7 @@ export const popover = defineComponent({
     return {
       trigger,
       closeButton,
+      tooltip,
       isRendered,
       hasPopoverApi: () => hasPopoverApi.get(),
       isShown,
@@ -390,6 +396,7 @@ export const popover = defineComponent({
         id: ids.trigger,
         'aria-expanded': String(isOpen),
         'aria-controls': isOpen ? ids.root : undefined,
+        ...relationAttributes(api.tooltip),
         ...state,
       },
       on: mergeHandlers(triggerRoot.on ?? {}, {

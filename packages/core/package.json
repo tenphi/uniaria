@@ -60,6 +60,11 @@
       "types": "./dist/popover/index.d.ts",
       "default": "./dist/popover/index.js"
     },
+    "./tooltip": {
+      "uniaria-source": "./src/components/tooltip/index.ts",
+      "types": "./dist/tooltip/index.d.ts",
+      "default": "./dist/tooltip/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

@@ -6,10 +6,12 @@
 
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { connectToggle, createToggle, toggleState } from '../checkbox/toggle';
+import { tooltipLink } from '../tooltip/link';
 
 export const toggleSwitch = defineComponent({
   name: 'switch',
   parts: ['root', 'input', 'indicator', 'label', 'description', 'error'],
+  links: [tooltipLink],
   props: {
     // The element adopts the input's checked state: the markup's `checked`,
     // or a click before upgrade.

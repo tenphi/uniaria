@@ -27,6 +27,7 @@ import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { button } from '../button/button';
+import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Why the user closed the dialog (Resolved questions 9). */
 export type DialogDismissReason =
@@ -64,6 +65,8 @@ function methodOf(form: HTMLFormElement, submitter: HTMLElement | null) {
 export const dialog = defineComponent({
   name: 'dialog',
   parts: ['trigger', 'root', 'title', 'description', 'close'],
+  // The trigger takes a tooltip (Tooltip spec, Resolved questions 2).
+  links: [tooltipLink],
   props: {
     isOpen: bindable(false),
     isDismissable: prop(true),
@@ -113,6 +116,7 @@ export const dialog = defineComponent({
       () => ({ onPress: () => requestClose('close') }),
       { parts: { root: 'close' } },
     );
+    const tooltip = linkTooltip(ctx, { hover: 'trigger', focus: 'trigger' });
 
     // Only rendered parts are referenced, as in Field. React attaches
     // elements before `start()`; the watch follows parts added later.
@@ -311,6 +315,7 @@ export const dialog = defineComponent({
     return {
       trigger,
       closeButton,
+      tooltip,
       isRendered,
       isEntering: presence.isEntering,
       isExiting: presence.isExiting,
@@ -352,8 +357,12 @@ export const dialog = defineComponent({
         ...state,
       },
     };
+    const trigger = api.trigger.connect().root;
     return {
-      trigger: withState(api.trigger.connect().root),
+      trigger: withState({
+        ...trigger,
+        attrs: { ...trigger.attrs, ...relationAttributes(api.tooltip) },
+      }),
       root,
       title: { attrs: { id: ids.title, ...state } },
       description: { attrs: { id: ids.description, ...state } },

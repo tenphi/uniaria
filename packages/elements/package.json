@@ -25,7 +25,9 @@
     "./src/dialog.ts",
     "./dist/dialog.js",
     "./src/popover.ts",
-    "./dist/popover.js"
+    "./dist/popover.js",
+    "./src/tooltip.ts",
+    "./dist/tooltip.js"
   ],
   "exports": {
     ".": {
@@ -72,6 +74,11 @@
       "uniaria-source": "./src/popover.ts",
       "types": "./dist/popover.d.ts",
       "default": "./dist/popover.js"
+    },
+    "./tooltip": {
+      "uniaria-source": "./src/tooltip.ts",
+      "types": "./dist/tooltip.d.ts",
+      "default": "./dist/tooltip.js"
     },
     "./radio": {
       "uniaria-source": "./src/radio.ts",

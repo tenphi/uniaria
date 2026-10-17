@@ -4,6 +4,7 @@ import type { dialog } from '@uniaria/core/dialog';
 import { announce, destroyAnnouncer } from '@uniaria/core/dom';
 import { field } from '@uniaria/core/field';
 import type { popover } from '@uniaria/core/popover';
+import type { tooltip } from '@uniaria/core/tooltip';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -20,6 +21,7 @@ import './radio';
 import './radio-group';
 import './dialog';
 import './popover';
+import './tooltip';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
 
@@ -1158,5 +1160,173 @@ describe('<uni-popover>', () => {
     expect(warn).not.toHaveBeenCalled();
     expect(host.querySelector(':popover-open')).not.toBe(null);
     warn.mockRestore();
+  });
+});
+
+describe('<uni-tooltip>', () => {
+  type Tooltip = UniElement<typeof tooltip>;
+
+  const TOOLTIP = `
+    <button data-part="trigger">Save</button>
+    <div data-part="root">Saves the file</div>`;
+
+  /** The tooltip's parts and its `openchange` details. */
+  function tooltipIn(container: HTMLElement, selector = 'uni-tooltip') {
+    const host = container.querySelector<Tooltip>(selector)!;
+    const part = (name: string) =>
+      host.querySelector<HTMLElement>(`:scope > [data-part="${name}"]`);
+    const events: unknown[] = [];
+    host.addEventListener('openchange', (event) =>
+      events.push((event as CustomEvent).detail),
+    );
+    return { host, trigger: part('trigger'), root: part('root')!, events };
+  }
+
+  const isOpen = (root: Element) => root.matches(':popover-open');
+
+  it('reads its attributes', () => {
+    const container = mount(`
+      <uni-tooltip relation="label" delay="0" close-delay="100" trigger="focus">
+        ${TOOLTIP}
+      </uni-tooltip>`);
+    const { trigger, root } = tooltipIn(container);
+    expect(trigger!.getAttribute('aria-labelledby')).toBe(root.id);
+    expect(trigger!.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('links a component outside it by id through the tooltip attribute', async () => {
+    const container = mount(`
+      <uni-button tooltip="save-tip"><button data-part="root">Save</button></uni-button>
+      <uni-tooltip id="save-tip"><div data-part="root">Saves the file</div></uni-tooltip>`);
+    const button = container.querySelector('button')!;
+    const { root, events } = tooltipIn(container);
+    expect(button.getAttribute('aria-describedby')).toBe(root.id);
+
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(button);
+    expect(events).toEqual([true]);
+    await vi.waitFor(() => expect(isOpen(root)).toBe(true));
+
+    button.blur();
+    button.parentElement!.removeAttribute('tooltip');
+    expect(button.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('closes when its trigger or the component it describes is removed', async () => {
+    // One at a time: each opens after the one before has gone.
+    const container = mount(
+      `<uni-tooltip id="plain" default-open>${TOOLTIP}</uni-tooltip>`,
+    );
+    const plain = tooltipIn(container, '#plain');
+    await vi.waitFor(() => expect(isOpen(plain.root)).toBe(true));
+    plain.trigger!.remove();
+    await vi.waitFor(() => expect(isOpen(plain.root)).toBe(false));
+    expect(plain.events).toEqual([false]);
+
+    container.insertAdjacentHTML(
+      'beforeend',
+      `<uni-tooltip id="linked" default-open>
+        <uni-button><button data-part="root">Open</button></uni-button>
+        <div data-part="root">Opens a file</div>
+      </uni-tooltip>`,
+    );
+    const linked = tooltipIn(container, '#linked');
+    await vi.waitFor(() => expect(isOpen(linked.root)).toBe(true));
+    linked.host.querySelector('uni-button')!.remove();
+    await vi.waitFor(() => expect(isOpen(linked.root)).toBe(false));
+    expect(linked.events).toEqual([false]);
+  });
+
+  it('leaves an Escape that is composing text alone', async () => {
+    const container = mount(
+      `<uni-tooltip default-open>${TOOLTIP}</uni-tooltip>`,
+    );
+    const { root, events } = tooltipIn(container);
+    await vi.waitFor(() => expect(isOpen(root)).toBe(true));
+    const escape = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      isComposing: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.body.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBe(false);
+    expect(events).toEqual([]);
+  });
+
+  it('does not open for focus coming back with the window', async () => {
+    // tabindex: WebKit tabs to a button only with one, as macOS.
+    const container = mount(`
+      <input aria-label="Before" />
+      <uni-tooltip>
+        <button data-part="trigger" tabindex="0">Save</button>
+        <div data-part="root">Saves the file</div>
+      </uni-tooltip>`);
+    const { trigger, root, events } = tooltipIn(container);
+    container.querySelector('input')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(trigger);
+    expect(events).toEqual([true]);
+
+    // The window loses focus and gets it back, as switching apps does: the
+    // browser blurs and focuses the trigger again.
+    window.dispatchEvent(new FocusEvent('blur'));
+    trigger!.dispatchEvent(new FocusEvent('blur'));
+    expect(events).toEqual([true, false]);
+    window.dispatchEvent(new FocusEvent('focus'));
+    trigger!.dispatchEvent(new FocusEvent('focus'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(events).toEqual([true, false]);
+    expect(isOpen(root)).toBe(false);
+  });
+
+  it('warns about a focusable element inside, a second component, a trigger part beside a component and opening outside an open modal dialog', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const container = mount(`
+      <uni-tooltip id="focusable">
+        <button data-part="trigger">Help</button>
+        <div data-part="root">See <a href="#docs">the docs</a></div>
+      </uni-tooltip>
+      <uni-tooltip id="both">
+        <button data-part="trigger">Save</button>
+        <uni-button><button data-part="root">Open</button></uni-button>
+        <uni-button><button data-part="root">Close</button></uni-button>
+        <div data-part="root">Opens a file</div>
+      </uni-tooltip>
+      <uni-tooltip id="outside">${TOOLTIP}</uni-tooltip>
+      <dialog id="modal">Modal</dialog>`);
+    const messages = () =>
+      warn.mock.calls
+        .map(([message]) => String(message))
+        .filter((message) => message.includes('tooltip:'));
+    tooltipIn(container, '#focusable').host.isOpen = true;
+    await vi.waitFor(() => expect(messages()).toHaveLength(1));
+    tooltipIn(container, '#both').host.isOpen = true;
+    await vi.waitFor(() => expect(messages()).toHaveLength(3));
+    container.querySelector<HTMLDialogElement>('#modal')!.showModal();
+    tooltipIn(container, '#outside').host.isOpen = true;
+    await vi.waitFor(() => expect(messages()).toHaveLength(4));
+    const all = messages();
+    container.querySelector<HTMLDialogElement>('#modal')!.close();
+    warn.mockRestore();
+    expect(all.some((message) => message.includes('focusable'))).toBe(true);
+    expect(all.some((message) => message.includes('another component'))).toBe(
+      true,
+    );
+    expect(all.some((message) => message.includes('trigger part'))).toBe(true);
+    expect(all.some((message) => message.includes('modal dialog'))).toBe(true);
+  });
+
+  it('does not warn about a tooltip that opens with its text', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const host = document.createElement('uni-tooltip');
+    host.defaultOpen = true;
+    document.body.append(host);
+    host.innerHTML = TOOLTIP;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(warn).not.toHaveBeenCalled();
+    expect(host.querySelector(':popover-open')).not.toBe(null);
+    warn.mockRestore();
+    host.remove();
   });
 });

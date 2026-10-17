@@ -18,6 +18,7 @@ const entries = {
   '@uniaria/elements/radio-group': () => import('./radio-group'),
   '@uniaria/elements/dialog': () => import('./dialog'),
   '@uniaria/elements/popover': () => import('./popover'),
+  '@uniaria/elements/tooltip': () => import('./tooltip'),
 };
 
 describe('SSR safety', () => {
@@ -52,5 +53,7 @@ describe('SSR safety', () => {
     expect(UniDialog).toBeUndefined();
     const { UniPopover } = await import('./popover');
     expect(UniPopover).toBeUndefined();
+    const { UniTooltip } = await import('./tooltip');
+    expect(UniTooltip).toBeUndefined();
   });
 });

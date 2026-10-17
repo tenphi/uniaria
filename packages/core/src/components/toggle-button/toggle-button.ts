@@ -1,16 +1,19 @@
 /**
  * ToggleButton, from the approved spec (`./spec.md`): Button, composed with
  * `ctx.use()`, plus a bindable `isSelected` announced through
- * `aria-pressed`. Every press toggles it before `press` fires.
+ * `aria-pressed`. Every press toggles it before `press` fires. It takes a
+ * tooltip as Button does.
  */
 
 import type { PressEvent } from '../../dom';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { button } from '../button/button';
+import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 export const toggleButton = defineComponent({
   name: 'toggle-button',
   parts: ['root'],
+  links: [tooltipLink],
   props: {
     isSelected: bindable(false),
     isDisabled: prop(false),
@@ -47,7 +50,9 @@ export const toggleButton = defineComponent({
         ctx.emit('press', detail);
       },
     }));
-    return { button: inner };
+    // The composed Button sees no link: the toggle button takes it.
+    const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'root' });
+    return { button: inner, tooltip };
   },
   expose({ props, api }) {
     return { ...api.button.state(), isSelected: props.isSelected.get() };
@@ -63,6 +68,7 @@ export const toggleButton = defineComponent({
           // Always present: without it the root is a plain button.
           'aria-pressed': String(isSelected),
           'data-selected': isSelected ? '' : undefined,
+          ...relationAttributes(api.tooltip),
         },
       },
     };

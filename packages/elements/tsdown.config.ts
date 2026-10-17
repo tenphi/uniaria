@@ -16,6 +16,7 @@ export default defineConfig({
     'radio-group': 'src/radio-group.ts',
     dialog: 'src/dialog.ts',
     popover: 'src/popover.ts',
+    tooltip: 'src/tooltip.ts',
   },
   format: 'esm',
   platform: 'neutral',

@@ -21,6 +21,7 @@ import './radio';
 import './radio-group';
 import './dialog';
 import './popover';
+import './tooltip';
 import type { UniElement } from './define-element';
 
 /**

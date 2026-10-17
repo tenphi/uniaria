@@ -1,7 +1,8 @@
 /**
  * Button, from the approved spec (`./spec.md`): a native `<button>`, a native
  * `<a href>` in link mode, or any element with `role="button"`, with one
- * `press` event for every input and state attributes for styling.
+ * `press` event for every input and state attributes for styling. It takes
+ * a tooltip through its `tooltip` link (Tooltip spec, Resolved questions 2).
  *
  * Still to come with the interaction layer: nested pressables.
  */
@@ -16,6 +17,7 @@ import {
 } from '../../dom';
 import type { DomPartProps, PressEvent } from '../../dom';
 import { defineComponent, event, prop } from '../../runtime';
+import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Roots with native button semantics; anything else gets `role="button"`. */
 const NATIVE = new Set(['button', 'input']);
@@ -31,6 +33,7 @@ function role(isLink: boolean, isNative: boolean, isDisabled: boolean) {
 export const button = defineComponent({
   name: 'button',
   parts: ['root'],
+  links: [tooltipLink],
   props: {
     isDisabled: prop(false),
     isFocusableWhenDisabled: prop(false),
@@ -71,6 +74,7 @@ export const button = defineComponent({
     ctx.watch(focus.isFocused, (isFocused) => {
       ctx.emit('focusChange', isFocused);
     });
+    const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'root' });
     // The element adapter reads the tag; React can only check it.
     partEffect(ctx, 'root', (root) => {
       const expected = ctx.props.elementType();
@@ -83,6 +87,7 @@ export const button = defineComponent({
       }
     });
     return {
+      tooltip,
       isPressed: press.isPressed,
       isHovered: hover.isHovered,
       isFocused: focus.isFocused,
@@ -124,6 +129,7 @@ export const button = defineComponent({
         'data-focused': flag(api.isFocused()),
         'data-focus-visible': flag(api.isFocusVisible()),
         'data-disabled': flag(isDisabled),
+        ...relationAttributes(api.tooltip),
       },
       on: api.handlers,
     };

@@ -17,6 +17,7 @@ import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { field } from '../field/field';
+import { linkTooltip, tooltipLink } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -27,6 +28,7 @@ const CONTROLS =
 export const textField = defineComponent({
   name: 'text-field',
   parts: ['root', 'label', 'input', 'description', 'error'],
+  links: [tooltipLink],
   props: {
     // The element adopts the input's current text: the markup's value, or
     // what the user typed before upgrade.
@@ -53,6 +55,9 @@ export const textField = defineComponent({
   },
   setup(ctx) {
     const { props } = ctx;
+    // Hover, focus and typing on the input (Tooltip spec, Resolved
+    // questions 2): a key closes the tooltip.
+    const tooltip = linkTooltip(ctx, { hover: 'input', focus: 'input' });
     const labelling = ctx.use(
       field,
       () => ({
@@ -61,8 +66,14 @@ export const textField = defineComponent({
         isDisabled: props.isDisabled(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
-        labelledBy: props.labelledBy(),
-        describedBy: props.describedBy(),
+        labelledBy:
+          [props.labelledBy(), tooltip.labelledBy()]
+            .filter(Boolean)
+            .join(' ') || undefined,
+        describedBy:
+          [props.describedBy(), tooltip.describedBy()]
+            .filter(Boolean)
+            .join(' ') || undefined,
       }),
       { parts: { control: 'input' } },
     );

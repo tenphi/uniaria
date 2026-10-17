@@ -25,8 +25,13 @@ import type {
   SetupContext,
 } from '../../runtime';
 import { field } from '../field/field';
+import { linkTooltip } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
+
+/** Ids joined for an `aria-*` reference; `undefined` when there are none. */
+const references = (...ids: (string | undefined)[]): string | undefined =>
+  ids.filter(Boolean).join(' ') || undefined;
 
 type TogglePart =
   'root' | 'input' | 'indicator' | 'label' | 'description' | 'error';
@@ -45,6 +50,7 @@ interface ToggleSchema extends PropsSchema {
   readonly describedBy: PropSpec<string | undefined>;
 }
 
+/** A definition that takes a tooltip (`links: [tooltipLink]`). */
 type ToggleContext = SetupContext<
   TogglePart,
   ToggleSchema,
@@ -79,6 +85,9 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const describedBy = options.describedBy ?? props.describedBy;
   // Focusable while disabled: never toggles, and never submitted.
   const isInert = () => isDisabled() && props.isFocusableWhenDisabled();
+  // Hover from the root, focus and presses from the input (Tooltip spec,
+  // Resolved questions 2).
+  const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'input' });
 
   const labelling = ctx.use(
     field,
@@ -88,8 +97,8 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
       isDisabled: isDisabled(),
       controlId: props.inputId(),
       labelElementType: props.labelElementType(),
-      labelledBy: props.labelledBy(),
-      describedBy: describedBy(),
+      labelledBy: references(props.labelledBy(), tooltip.labelledBy()),
+      describedBy: references(describedBy(), tooltip.describedBy()),
     }),
     { parts: { control: 'input' } },
   );

@@ -18,6 +18,7 @@ import { toggleSwitch } from '@uniaria/core/switch';
 import { field } from '@uniaria/core/field';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
+import { tooltip } from '@uniaria/core/tooltip';
 import type {
   ConformanceAdapter,
   TemplateComponent,
@@ -48,6 +49,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   'radio-group': radioGroup,
   dialog,
   popover,
+  tooltip,
 };
 
 /** Form values a consumer would pass as defaults in React. */

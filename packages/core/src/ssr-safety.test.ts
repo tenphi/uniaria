@@ -22,6 +22,7 @@ const entries = {
   '@uniaria/core/radio-group': () => import('./components/radio-group/index'),
   '@uniaria/core/dialog': () => import('./components/dialog/index'),
   '@uniaria/core/popover': () => import('./components/popover/index'),
+  '@uniaria/core/tooltip': () => import('./components/tooltip/index'),
 };
 
 describe('SSR safety', () => {

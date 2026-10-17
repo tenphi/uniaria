@@ -12,6 +12,7 @@
 import { isDevelopment, partEffect, partElement, warn } from '../../dom';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { checkboxGroup } from '../checkbox-group/checkbox-group';
+import { tooltipLink } from '../tooltip/link';
 import { connectToggle, createToggle, toggleState } from './toggle';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -19,6 +20,7 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 export const checkbox = defineComponent({
   name: 'checkbox',
   parts: ['root', 'input', 'indicator', 'label', 'description', 'error'],
+  links: [tooltipLink],
   owner: { definition: checkboxGroup, attribute: 'group' },
   props: {
     // The key in a group's value, written to the input's `value`.

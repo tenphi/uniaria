@@ -20,6 +20,7 @@ import type { PartProps } from '../../runtime';
 import { defineComponent, event, prop } from '../../runtime';
 import { field } from '../field/field';
 import { radioGroup } from '../radio-group/radio-group';
+import { linkTooltip, tooltipLink } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -27,6 +28,7 @@ export const radio = defineComponent({
   name: 'radio',
   parts: ['root', 'input', 'indicator', 'label', 'description'],
   owner: { definition: radioGroup, attribute: 'group' },
+  links: [tooltipLink],
   props: {
     // The key in the group's value, written to the input's `value`.
     value: prop<string | undefined>(undefined, { type: 'string' }),
@@ -63,6 +65,9 @@ export const radio = defineComponent({
     const isInvalid = () => group()?.state().isInvalid ?? false;
     // Focusable while disabled: never selected, by click or arrow key.
     const isInert = () => isDisabled() && props.isFocusableWhenDisabled();
+    // Hover from the root, focus and presses from the input (Tooltip spec,
+    // Resolved questions 2).
+    const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'input' });
 
     const labelling = ctx.use(
       field,
@@ -71,10 +76,13 @@ export const radio = defineComponent({
         isDisabled: isDisabled(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
-        labelledBy: props.labelledBy(),
+        labelledBy:
+          [props.labelledBy(), tooltip.labelledBy()]
+            .filter(Boolean)
+            .join(' ') || undefined,
         // The group's error explains an invalid group wherever focus is.
         describedBy:
-          [props.describedBy(), group()?.api.errorId()]
+          [props.describedBy(), group()?.api.errorId(), tooltip.describedBy()]
             .filter(Boolean)
             .join(' ') || undefined,
       }),
