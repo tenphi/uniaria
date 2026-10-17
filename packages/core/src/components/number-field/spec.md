@@ -1,6 +1,6 @@
 # NumberField spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-17
 
 ## Summary
 
@@ -11,7 +11,7 @@ it within `minValue` and `maxValue` and on `step`, and steps it with the arrow
 keys, the buttons held down and, while focused, the mouse wheel. Cube UI Kit's
 NumberInput is the model; it is React Aria's `useNumberField` with UI Kit's
 input around it, so React Aria is the reference for most of the behavior.
-`@internationalized/number` parses and formats (open question 9).
+`@internationalized/number` parses and formats (Resolved questions 9).
 
 The input is a native `<input type="text">`, not `type="number"`: a number
 input can't show a currency symbol, a percent sign or grouping, and its
@@ -20,12 +20,12 @@ selection APIs throw.
 - **WAI-ARIA pattern:** [Spinbutton](https://www.w3.org/WAI/ARIA/apg/patterns/spinbutton/)
   (`references/aria-practices/content/patterns/spinbutton/`, the quantity
   example). NumberField follows its keys and its buttons; the input's role is
-  open question 1.
+  Resolved questions 1.
 - **Builds on:** Field (`ctx.use`) for the labelling, as TextField does;
   Button (`ctx.use`, twice) for the increment and decrement parts; `hover`,
   `focus`, `press` and the live announcer from `dom/`. New in `dom/`: phone
-  detection for the keyboard (`inputmode`). New dependency, already approved in
-  AGENTS.md: `@internationalized/number` (open question 9).
+  detection for the keyboard (`inputmode`). New dependency, approved:
+  `@internationalized/number` (Resolved questions 9).
 - **Owner:** none.
 - **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec,
   Resolved questions 2), as TextField: hover, focus and keys count on the
@@ -38,7 +38,7 @@ Not part of NumberField:
 - **Validation messages.** As in Field: NumberField shows `isInvalid`, the form
   decides it. React Aria's `commitBehavior: 'validate'` (out-of-range values
   kept and reported through a hidden `type="number"` input's native messages)
-  is left out: UI Kit never uses it (open question 11).
+  is left out: UI Kit never uses it (Resolved questions 11).
 - **Scrubbing** (Zag's drag-to-change handle with pointer lock): pointer lock
   is not Baseline. It can come later as its own part.
 - **Formatting while typing** (grouping digits as they are typed): no reference
@@ -46,22 +46,22 @@ Not part of NumberField:
 - **Numbers beyond a double** (big integers, exact decimals): values are
   JavaScript numbers, as in every reference.
 - **Translations.** UniAria ships no locale tables; the button labels and the
-  role description are props with English defaults (open question 2).
+  role description are props with English defaults (Resolved questions 2).
 - **Looks.** Stepper icons, their layout, right-aligned text and UI Kit's
   `hideStepper` (render no stepper parts) are the design system's.
 
 ## Anatomy
 
-| Part        | Element               | Attributes UniAria owns                                                                                                                                                                                                                                   | Notes                                                                                                                                                                               |
-| ----------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`    | state attributes                                                                                                                                                                                                                                          | Optional wrapper, the box around the input and the buttons. No role (open question 1). A press on it outside any control focuses the input, as TextField's.                         |
-| label       | `label` by default    | as Field                                                                                                                                                                                                                                                  |                                                                                                                                                                                     |
-| input       | `input`               | as Field's control; `type="text"`, `inputmode` (Keyboard on phones), `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `aria-roledescription` (open question 1), `disabled`, `readonly`, the `value` property (the text), state attributes | The consumer owns `placeholder`, `autofocus`, `enterkeyhint`, `size`, `tabindex` and `form`. Not `name`: the hidden input carries it, so the form gets the number and not the text. |
-| increment   | `button`              | Button's (`type="button"`); `tabindex="-1"`, `aria-label` (`incrementLabel`), `aria-labelledby` (itself and the label), `aria-controls` (the input), `aria-disabled` while it can't step (open question 5)                                                | Optional. Out of the Tab order, as in the APG, React Aria and Zag: the arrow keys do the same. Still reachable by touch, voice control and a screen reader's browse mode.           |
-| decrement   | `button`              | as increment, with `decrementLabel`                                                                                                                                                                                                                       | Optional.                                                                                                                                                                           |
-| hiddenInput | `input type="hidden"` | the `value` property (the committed number, `''` when empty), `disabled` while the field is                                                                                                                                                               | Optional; the consumer puts `name` here (open question 4).                                                                                                                          |
-| description | any                   | as Field                                                                                                                                                                                                                                                  |                                                                                                                                                                                     |
-| error       | any                   | as Field                                                                                                                                                                                                                                                  |                                                                                                                                                                                     |
+| Part        | Element               | Attributes UniAria owns                                                                                                                                                                                                                                        | Notes                                                                                                                                                                               |
+| ----------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`    | state attributes                                                                                                                                                                                                                                               | Optional wrapper, the box around the input and the buttons. No role (Resolved questions 1). A press on it outside any control focuses the input, as TextField's.                    |
+| label       | `label` by default    | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
+| input       | `input`               | as Field's control; `type="text"`, `inputmode` (Keyboard on phones), `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `aria-roledescription` (Resolved questions 1), `disabled`, `readonly`, the `value` property (the text), state attributes | The consumer owns `placeholder`, `autofocus`, `enterkeyhint`, `size`, `tabindex` and `form`. Not `name`: the hidden input carries it, so the form gets the number and not the text. |
+| increment   | `button`              | Button's (`type="button"`); `tabindex="-1"`, `aria-label` (`incrementLabel`), `aria-labelledby` (itself and the label), `aria-controls` (the input), `aria-disabled` while it can't step (Resolved questions 5)                                                | Optional. Out of the Tab order, as in the APG, React Aria and Zag: the arrow keys do the same. Still reachable by touch, voice control and a screen reader's browse mode.           |
+| decrement   | `button`              | as increment, with `decrementLabel`                                                                                                                                                                                                                            | Optional.                                                                                                                                                                           |
+| hiddenInput | `input type="hidden"` | the `value` property (the committed number, `''` when empty), `disabled` while the field is                                                                                                                                                                    | Optional; the consumer puts `name` here (Resolved questions 4).                                                                                                                     |
+| description | any                   | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
+| error       | any                   | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
 
 State attributes, as TextField's: `data-hovered` (the pointer is over the
 input), `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`,
@@ -80,21 +80,21 @@ Without a label part they are just "Increase" and "Decrease".
 
 | Prop             | Type                       | Default              | Bindable | Change event  | Notes                                                                                                                                                              |
 | ---------------- | -------------------------- | -------------------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| value            | `number \| null`           | `null`               | yes      | `valueChange` | The committed number; `null` when empty (open question 3). Reported on commit and on each step, never per keystroke. See Value.                                    |
+| value            | `number \| null`           | `null`               | yes      | `valueChange` | The committed number; `null` when empty (Resolved questions 3). Reported on commit and on each step, never per keystroke. See Value.                               |
 | minValue         | `number \| undefined`      | —                    | no       | —             | Commits and steps stay at or above it. A minus sign can be typed only when it is unset or below 0.                                                                 |
 | maxValue         | `number \| undefined`      | —                    | no       | —             | Commits and steps stay at or below it.                                                                                                                             |
 | step             | `number \| undefined`      | —                    | no       | —             | When set, a commit snaps to it, counted from `minValue` (or 0). Steps move by it, else by 1, or 0.01 for `style: 'percent'` (1%).                                  |
-| pageStep         | `number \| undefined`      | 10 steps             | no       | —             | What PageUp and PageDown move by (open question 6).                                                                                                                |
+| pageStep         | `number \| undefined`      | 10 steps             | no       | —             | What PageUp and PageDown move by (Resolved questions 6).                                                                                                           |
 | formatOptions    | `Intl.NumberFormatOptions` | `{}`                 | no       | —             | How the number is shown and read: `style` (`currency`, `percent`, `unit`), fraction digits, grouping, `signDisplay`, `currencySign`. Property only on the element. |
-| locale           | `string \| undefined`      | the input's language | no       | —             | A BCP 47 tag; without it, the input's `lang` (the nearest one), else the browser's language (open question 10).                                                    |
-| isWheelDisabled  | `boolean`                  | `false`              | no       | —             | Turns off the wheel while focused (open question 7).                                                                                                               |
+| locale           | `string \| undefined`      | the input's language | no       | —             | A BCP 47 tag; without it, the input's `lang` (the nearest one), else the browser's language (Resolved questions 10).                                               |
+| isWheelDisabled  | `boolean`                  | `false`              | no       | —             | Turns off the wheel while focused (Resolved questions 7).                                                                                                          |
 | isDisabled       | `boolean`                  | `false`              | no       | —             | As TextField's; the buttons can't step and the hidden input is disabled, so the form leaves the value out, as a disabled native field.                             |
 | isReadOnly       | `boolean`                  | `false`              | no       | —             | As TextField's; no keys, wheel or buttons change it. Element attribute `readonly`.                                                                                 |
 | isRequired       | `boolean`                  | `false`              | no       | —             | Field's.                                                                                                                                                           |
 | isInvalid        | `boolean`                  | `false`              | no       | —             | Field's.                                                                                                                                                           |
-| incrementLabel   | `string`                   | `'Increase'`         | no       | —             | The increment button's own name (open question 2).                                                                                                                 |
+| incrementLabel   | `string`                   | `'Increase'`         | no       | —             | The increment button's own name (Resolved questions 2).                                                                                                            |
 | decrementLabel   | `string`                   | `'Decrease'`         | no       | —             | The decrement button's own name.                                                                                                                                   |
-| roleDescription  | `string`                   | `'Number field'`     | no       | —             | The input's `aria-roledescription` (open questions 1 and 2).                                                                                                       |
+| roleDescription  | `string`                   | `'Number field'`     | no       | —             | The input's `aria-roledescription` (Resolved questions 1 and 2).                                                                                                   |
 | inputId          | `string \| undefined`      | generated            | no       | —             | As TextField's.                                                                                                                                                    |
 | labelElementType | `string`                   | `'label'`            | no       | —             | As TextField's.                                                                                                                                                    |
 | labelledBy       | `string \| undefined`      | —                    | no       | —             | As TextField's; also names the buttons.                                                                                                                            |
@@ -122,6 +122,7 @@ Without a label part they are just "Increase" and "Decrease".
 | isRequired     | `boolean`        | The prop.                                                                          |
 | isInvalid      | `boolean`        | The prop.                                                                          |
 | isErrorShown   | `boolean`        | Field's: invalid and not disabled.                                                 |
+| isOutOfRange   | `boolean`        | The value is below `minValue` or above `maxValue`: only a controlled value can be. |
 
 `canIncrement` and `canDecrement` follow the text as it is typed, as React
 Aria's do: typing 100 with a maximum of 15 makes `canIncrement` false before
@@ -197,6 +198,13 @@ step the value. Each step commits at once: the value, the text and
   next render, as React Aria does. The consumer's value is shown as it is,
   even off the step or out of range: React Aria clamps and snaps it for
   display without reporting, which leaves the state and the screen apart.
+- **Out of range** (owner, 2026-10-17: handle out-of-range values where they
+  can occur; Resolved questions 11). Only a controlled value can be: a commit
+  or a step always lands in range. While it is, the input gets
+  `aria-invalid="true"`, as the APG asks, the field parts `data-out-of-range`,
+  and `isOutOfRange` is true. Field's error isn't shown for it: `isInvalid` is
+  the consumer's. Typed text is judged only once committed, so `1` on the way
+  to `12` with a minimum of 10 never flags.
 
 ### Formatting and locale
 
@@ -207,9 +215,10 @@ step the value. Each step commits at once: the value, the text and
   in another numbering system keeps it: Arabic digits typed in an English
   field stay Arabic after the commit.
 - **The locale** is the `locale` prop, else the language of the input (its
-  nearest `lang`), else `navigator.language` (open question 10). On the server,
-  without a `locale`, the text is formatted for `en-US`, and the browser formats
-  it again after hydration; a page rendered on the server passes `locale`.
+  nearest `lang`), else `navigator.language` (Resolved questions 10). On the
+  server, without a `locale`, the text is formatted for `en-US`, and the
+  browser formats it again after hydration; a page rendered on the server
+  passes `locale`.
 - **A new locale or format** formats the text again. `formatOptions` are
   compared by value, so a new object with the same options changes nothing.
 - The text stays formatted while focused; there is no raw editing mode.
@@ -218,8 +227,8 @@ step the value. Each step commits at once: the value, the text and
 
 - **Submitting.** The hidden input part carries the committed value as a plain
   number (`1234.5`, `0.25` for 25%), or `''` when empty, and is disabled with
-  the field (open question 4). Enter commits before the form submits; a press
-  on a submit button blurs the input first, which commits.
+  the field (Resolved questions 4). Enter commits before the form submits; a
+  press on a submit button blurs the input first, which commits.
 - **Reset.** On the form's `reset` event (skipped when `defaultPrevented`) the
   value goes back to `defaultValue`, or without one the value it mounted with,
   as TextField's does, and `valueChange` reports it.
@@ -234,13 +243,13 @@ React Aria runs before its handlers). Keys with modifiers keep their native
 meaning (Shift+ArrowUp selects text). Nothing happens while composing text, or
 while the field is read-only or disabled.
 
-| Key                | Behavior                                                                                                                                 |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| ArrowUp, ArrowDown | One step up or down; held, it repeats with the key. Prevented.                                                                           |
-| PageUp, PageDown   | `pageStep` up or down, 10 steps by default (open question 6). Prevented.                                                                 |
-| Home, End          | To `minValue` or to the last step at or below `maxValue`, when that bound is set; otherwise the caret moves, natively (open question 6). |
-| Enter              | Commits, then the form submits as usual: not prevented, not stopped.                                                                     |
-| Escape             | Nothing; it propagates (a dialog around it closes).                                                                                      |
+| Key                | Behavior                                                                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| ArrowUp, ArrowDown | One step up or down; held, it repeats with the key. Prevented.                                                                                |
+| PageUp, PageDown   | `pageStep` up or down, 10 steps by default (Resolved questions 6). Prevented.                                                                 |
+| Home, End          | To `minValue` or to the last step at or below `maxValue`, when that bound is set; otherwise the caret moves, natively (Resolved questions 6). |
+| Enter              | Commits, then the form submits as usual: not prevented, not stopped.                                                                          |
+| Escape             | Nothing; it propagates (a dialog around it closes).                                                                                           |
 
 On phones the input's `inputmode` picks a keyboard with what can be typed, as
 React Aria and Spectrum Web Components do: on an iPhone, `text` when a minus
@@ -265,9 +274,9 @@ for the phone after hydration.
 - **A press on the root** outside any control focuses the input, as TextField's.
 - **Wheel**, while focus is in the field and the pointer over the input, unless
   `isWheelDisabled`, read-only or disabled: one step per event, up for a wheel
-  turned up, as Chromium's own number input (open question 7). The page doesn't
-  scroll meanwhile. A mostly horizontal scroll and a pinch zoom (Ctrl+wheel)
-  are left alone.
+  turned up, as Chromium's own number input (Resolved questions 7). The page
+  doesn't scroll meanwhile. A mostly horizontal scroll and a pinch zoom
+  (Ctrl+wheel) are left alone.
 
 ## Announcements
 
@@ -276,7 +285,7 @@ under it. After a step (keys, buttons, wheel) and after a commit that changed
 what was typed (clamped, snapped, rounded or formatted), NumberField announces
 the new text through the live announcer, assertively, as React Aria does, with
 a minus sign that VoiceOver reads as minus (U+2212). Typing announces nothing:
-the screen reader already echoes it (open question 8).
+the screen reader already echoes it (Resolved questions 8).
 
 ## ARIA and state attributes per state
 
@@ -297,10 +306,12 @@ the screen reader already echoes it (open question 8).
 |                   | both buttons | + `aria-disabled="true"`, `data-disabled`                                                                        |
 |                   | hiddenInput  | + `disabled`                                                                                                     |
 | invalid, required | as Field     | `aria-invalid="true"`, `aria-required="true"`, `data-invalid`, `data-required`                                   |
+| out of range      | input        | + `aria-invalid="true"`                                                                                          |
+|                   | field parts  | + `data-out-of-range`                                                                                            |
 | on iOS            | input        | − `aria-roledescription`, so VoiceOver reads the required state (React Aria)                                     |
 
 The input gets no `aria-valuenow`, `aria-valuemin`, `aria-valuemax` or
-`aria-valuetext`: they belong to the spinbutton role (open question 1).
+`aria-valuetext`: they belong to the spinbutton role (Resolved questions 1).
 
 ## Focus
 
@@ -317,13 +328,14 @@ to these tokens. UniAria sets no look.
 | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------- |
 | `data-scope="number-field"`, `data-part`                                                                                | every part                             | Which part an element is.                                  |
 | `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, label, input, description, error | The field's state, as TextField's.                         |
+| `data-out-of-range`                                                                                                     | root, label, input, description, error | A controlled value outside `minValue` and `maxValue`.      |
 | `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                   | Button's own; `data-disabled` while the button can't step. |
-| `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)     | The same, for a framework's own bindings.                  |
+| `value`, `canIncrement`, `canDecrement`, `isOutOfRange`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …     | public state (`useComponentState`)     | The same, for a framework's own bindings.                  |
 
 ## Expected spoken output
 
 Probed with `@guidepup/virtual-screen-reader` for a `label` "Quantity" and the
-input as recommended (a text box with the role description "Number field"); the
+input as decided (a text box with the role description "Number field"); the
 scenarios confirm them in both engines.
 
 | State                                            | Spoken phrase                                              |
@@ -334,12 +346,13 @@ scenarios confirm them in both engines.
 | read-only                                        | `Number field, Quantity, 5, read only`                     |
 | disabled                                         | `Number field, Quantity, 5, disabled`                      |
 | invalid and required, with an error "At most 10" | `Number field, Quantity, 5, At most 10, invalid, required` |
+| controlled 12 with a maximum of 10               | `Number field, Quantity, 12, invalid`                      |
 | the increment button, browsing                   | `button, Increase Quantity`                                |
 | at the maximum, browsing                         | `button, Increase Quantity, disabled`                      |
 | after ArrowUp from 5 (live announcer)            | `assertive: 6`                                             |
 
-A spinbutton instead (open question 1) reads `spinbutton, Quantity, max value
-10, min value 0, 1024`: the number in `aria-valuenow`, not the text, so a
+A spinbutton instead (Resolved questions 1) reads `spinbutton, Quantity, max
+value 10, min value 0, 1024`: the number in `aria-valuenow`, not the text, so a
 formatted value needs `aria-valuetext` (`spinbutton, Price, current value
 €12.50`).
 
@@ -398,7 +411,7 @@ NumberField backs NumberInput.
   reference rather than formatted in.
 - The locale from `useLocale()` (UI Kit's i18next language) is passed as
   `locale`.
-- `commitBehavior` goes: UI Kit never sets it (open question 11).
+- `commitBehavior` goes: UI Kit never sets it (Resolved questions 11).
 - `hideStepper` is not rendering the button parts.
 - `isDisabled`, `isReadOnly`, `isRequired`, `isInvalid` (after UI Kit resolves
   `validationState`), `label`, `description` and `errorMessage` map as in
@@ -417,94 +430,104 @@ NumberField backs NumberInput.
 ## Differences from React Aria, Zag and native behavior
 
 UI Kit's NumberInput is React Aria's, so its column is React Aria's unless
-noted. Each row is a choice for the owner, through the open questions.
+noted. Each row was decided with the resolved questions.
 
-| #   | Topic                           | Cube UI Kit and React Aria                                             | APG, Zag, Lion, Spectrum Web Components, native                                                            | Recommended                                             |
-| --- | ------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 1   | The input's role                | Text box with `aria-roledescription` "Number field", none on iOS       | APG, Zag, Lion: `spinbutton` with `aria-valuenow`; SWC: plain text box; native `type="number"`: spinbutton | React Aria's (Q1)                                       |
-| 2   | Group around input and buttons  | `role="group"` with `aria-disabled`, `aria-invalid`                    | Zag: `role="group"`; APG quantity: none                                                                    | No role (Q1)                                            |
-| 3   | Strings                         | 34 locales built in; UI Kit's own labels unused                        | Zag: English, overridable; Lion: translated                                                                | Props with English defaults (Q2)                        |
-| 4   | Empty                           | `NaN`; UI Kit's `null` makes it uncontrolled                           | Zag: `''`; Lion: 0                                                                                         | `null` (Q3)                                             |
-| 5   | Form submission                 | UI Kit: nothing; React Aria Components: a hidden input with the number | Zag, Lion: `name` on the visible input, so the text                                                        | A hidden input part with the number (Q4)                |
-| 6   | Buttons at a bound              | Native `disabled` (focus falls to the body on touch)                   | APG: `aria-disabled`; Zag: `disabled`; Lion: `disabled`, focus moved to the input                          | `aria-disabled`, still focusable (Q5)                   |
-| 7   | PageUp, PageDown                | One step                                                               | APG: optional larger step; Zag, Lion, SWC, native: nothing                                                 | `pageStep`, 10 steps (Q6)                               |
-| 8   | Home, End without that bound    | Prevented, nothing happens                                             | APG: only with a bound; native: the caret moves                                                            | The caret moves (Q6)                                    |
-| 9   | Wheel                           | On while focused; a wheel turned down increments                       | Zag: opt-in; Chromium's number input: on while focused, up increments; WebKit, Firefox: off (probed)       | On while focused, up increments (Q7)                    |
-| 10  | Announcements                   | Every change of the text while focused, typing included                | APG: button presses only (the spinbutton role reads the rest); Lion: a live output                         | Steps and corrected commits, not typing (Q8)            |
-| 11  | Out of range when committed     | Clamped and snapped; `commitBehavior: 'validate'` keeps it             | Zag: clamped on blur, no snapping; APG: `aria-invalid` while out of range                                  | Clamped and snapped, no other mode (Q11)                |
-| 12  | A controlled value off the step | Shown clamped and snapped, not reported                                | —                                                                                                          | Shown as given                                          |
-| 13  | Shift with arrows               | Not intercepted (selects text)                                         | Zag, SWC: 10 steps                                                                                         | Not intercepted                                         |
-| 14  | Enter                           | Commits; UI Kit stops its propagation                                  | —                                                                                                          | Commits; never stopped                                  |
-| 15  | Holding a button                | 400 ms, then every 60 ms; touch 600 ms                                 | Zag: 300 ms, 50 ms; SWC: 400 ms, every 5 frames                                                            | React Aria's                                            |
-| 16  | Locale                          | React Aria's `I18nProvider` (UI Kit: i18next)                          | SWC: `lang`, then `<html lang>`, then the browser's                                                        | Prop, else the input's `lang`, else the browser's (Q10) |
+| #   | Topic                           | Cube UI Kit and React Aria                                             | APG, Zag, Lion, Spectrum Web Components, native                                                            | Decided                                                              |
+| --- | ------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1   | The input's role                | Text box with `aria-roledescription` "Number field", none on iOS       | APG, Zag, Lion: `spinbutton` with `aria-valuenow`; SWC: plain text box; native `type="number"`: spinbutton | React Aria's (Q1)                                                    |
+| 2   | Group around input and buttons  | `role="group"` with `aria-disabled`, `aria-invalid`                    | Zag: `role="group"`; APG quantity: none                                                                    | No role (Q1)                                                         |
+| 3   | Strings                         | 34 locales built in; UI Kit's own labels unused                        | Zag: English, overridable; Lion: translated                                                                | Props with English defaults (Q2)                                     |
+| 4   | Empty                           | `NaN`; UI Kit's `null` makes it uncontrolled                           | Zag: `''`; Lion: 0                                                                                         | `null` (Q3)                                                          |
+| 5   | Form submission                 | UI Kit: nothing; React Aria Components: a hidden input with the number | Zag, Lion: `name` on the visible input, so the text                                                        | A hidden input part with the number (Q4)                             |
+| 6   | Buttons at a bound              | Native `disabled` (focus falls to the body on touch)                   | APG: `aria-disabled`; Zag: `disabled`; Lion: `disabled`, focus moved to the input                          | `aria-disabled`, still focusable (Q5)                                |
+| 7   | PageUp, PageDown                | One step                                                               | APG: optional larger step; Zag, Lion, SWC, native: nothing                                                 | `pageStep`, 10 steps (Q6)                                            |
+| 8   | Home, End without that bound    | Prevented, nothing happens                                             | APG: only with a bound; native: the caret moves                                                            | The caret moves (Q6)                                                 |
+| 9   | Wheel                           | On while focused; a wheel turned down increments                       | Zag: opt-in; Chromium's number input: on while focused, up increments; WebKit, Firefox: off (probed)       | On while focused, up increments (Q7)                                 |
+| 10  | Announcements                   | Every change of the text while focused, typing included                | APG: button presses only (the spinbutton role reads the rest); Lion: a live output                         | Steps and corrected commits, not typing (Q8)                         |
+| 11  | Out of range when committed     | Clamped and snapped; `commitBehavior: 'validate'` keeps it             | Zag: clamped on blur, no snapping; APG: `aria-invalid` while out of range                                  | Clamped and snapped; a controlled value out of range is marked (Q11) |
+| 12  | A controlled value off the step | Shown clamped and snapped, not reported                                | —                                                                                                          | Shown as given, marked when out of range                             |
+| 13  | Shift with arrows               | Not intercepted (selects text)                                         | Zag, SWC: 10 steps                                                                                         | Not intercepted                                                      |
+| 14  | Enter                           | Commits; UI Kit stops its propagation                                  | —                                                                                                          | Commits; never stopped                                               |
+| 15  | Holding a button                | 400 ms, then every 60 ms; touch 600 ms                                 | Zag: 300 ms, 50 ms; SWC: 400 ms, every 5 frames                                                            | React Aria's                                                         |
+| 16  | Locale                          | React Aria's `I18nProvider` (UI Kit: i18next)                          | SWC: `lang`, then `<html lang>`, then the browser's                                                        | Prop, else the input's `lang`, else the browser's (Q10)              |
 
 ## Deviations from the WAI-ARIA pattern
 
-If open question 1 goes as recommended: the input is a text box with a role
-description, not a `spinbutton`. React Aria found that VoiceOver can't edit a
+The input is a text box with a role description, not a `spinbutton`
+(Resolved questions 1). React Aria found that VoiceOver can't edit a
 spinbutton's text ("we can't focus a spin button with VO"), and a text box
 reads the formatted text without `aria-valuetext`. The APG's keys and buttons
 stay; only the role differs.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-17, each as recommended.
 
 1. **The input's role.** (a) A text box with `aria-roledescription` (the
    `roleDescription` prop, "Number field"), left off on iOS so VoiceOver reads
    the required state, and no `aria-value*`: React Aria and UI Kit, read as
    `Number field, Quantity, 1,024`. (b) `role="spinbutton"` with
    `aria-valuenow`, `aria-valuemin`, `aria-valuemax` and `aria-valuetext` (the
-   formatted text): the APG, Zag and Lion, read as `spinbutton, Price, current
-value €12.50`. A screen reader reports a focused spinbutton's value changes
-   itself (the APG's example announces only button presses for that reason),
-   but React Aria found VoiceOver can't edit its text. With either, the root gets no
-   `role="group"`: an unnamed group adds nothing a screen reader reads.
-   Recommended: (a), a deviation from the APG.
+   formatted text): the APG, Zag and Lion, read as
+   `spinbutton, Price, current value €12.50`. A screen reader reports a focused
+   spinbutton's value changes itself (the APG's example announces only button
+   presses for that reason), but React Aria found VoiceOver can't edit its
+   text. With either, the root gets no `role="group"`: an unnamed group adds
+   nothing a screen reader reads.
+   Decided: (a), a deviation from the APG.
 2. **Strings.** The button names and the role description are props with
    English defaults (`incrementLabel` "Increase", `decrementLabel` "Decrease",
    `roleDescription` "Number field"), and the field's label joins the button
    names by reference, so no string is formatted. React Aria ships 34
-   locales; UI Kit has its own i18next strings to pass. Recommended: props, no
-   locale tables in UniAria.
+   locales; UI Kit has its own i18next strings to pass. Decided: props, no
+   locale tables in UniAria. Owner note: built-in translations can come if
+   accessibility needs them; these strings are spoken, so a page that
+   doesn't pass them speaks English to its users.
 3. **Empty is `null`**, not `NaN`: `value: number | null`, `valueChange(null)`
    when cleared. `null` survives JSON and can't be mistaken for a number; UI
-   Kit converts at its boundary. Recommended: `null`.
+   Kit converts at its boundary. Decided: `null`.
 4. **What a form submits.** An optional `hiddenInput` part
    (`<input type="hidden" name>`) that carries the committed number as plain
    digits (`1234.5`), `''` when empty, disabled with the field, as React Aria
    Components' hidden input. The visible input carries no `name`, so the
-   formatted text isn't submitted. Recommended: yes, and the part's name is
-   yours to pick (`hiddenInput`, or `value`).
+   formatted text isn't submitted. Decided: yes, named `hiddenInput`.
 5. **Buttons at a bound.** `aria-disabled` through Button's
    `isFocusableWhenDisabled`, as the APG's quantity example: a touch or
    screen-reader user who pressed increment up to the maximum keeps focus on
    the button and hears it dimmed. React Aria and UI Kit use native
-   `disabled`, which drops focus to the body there. Recommended:
+   `disabled`, which drops focus to the body there. Decided:
    `aria-disabled`.
 6. **PageUp, PageDown, Home and End.** PageUp and PageDown move by `pageStep`,
    10 steps by default (the APG's optional larger step; React Aria and UI Kit
    move one step). Home and End go to a bound only when it is set, and
    otherwise move the caret, as in any text box (React Aria prevents them
-   always, so the caret can't jump). Recommended: both.
+   always, so the caret can't jump). Decided: both.
 7. **The wheel.** On while the field is focused and the pointer over the
    input, unless `isWheelDisabled`, as UI Kit and React Aria; a wheel turned up
    increments, as Chromium's number input (probed), where React Aria
    increments on a wheel turned down. WebKit and Firefox don't step a number
-   input on the wheel at all (probed), and Zag's is opt-in. Recommended: on by
+   input on the wheel at all (probed), and Zag's is opt-in. Decided: on by
    default, up increments.
 8. **What is announced.** The new text after a step and after a commit that
    changed what was typed, assertively. React Aria also announces each
    keystroke that changes the number, which a screen reader already echoes.
-   Recommended: steps and corrected commits only.
+   Decided: steps and corrected commits only.
 9. **The dependency.** `@internationalized/number` (^3.6.9, 1.7 kB with
    Brotli, depends only on `@swc/helpers`) is listed in AGENTS.md's approved
-   runtime dependencies for NumberField. Confirm adding it to `@uniaria/core`.
-   Recommended: yes.
+   runtime dependencies for NumberField. Decided: add it to `@uniaria/core`.
 10. **Where the locale comes from.** The `locale` prop; without it, the
     input's language (its nearest `lang` attribute), then
     `navigator.language`, as Spectrum Web Components does. A page rendered on
     the server passes `locale`, or the text is formatted for `en-US` until
-    hydration. Recommended: as described.
+    hydration. Decided: as described.
 11. **One commit behavior.** Commits clamp and snap. React Aria's
     `commitBehavior: 'validate'` (keep an out-of-range value and report it
     through native validation messages) is left out: UI Kit never uses it, and
-    Field's `isInvalid` is how UniAria shows errors. Recommended: snap only.
+    Field's `isInvalid` is how UniAria shows errors. Decided: snap only. Owner
+    addition: handle out-of-range values where they can occur. Only a
+    controlled value can stay out of range, so it is marked with
+    `aria-invalid`, `data-out-of-range` and `isOutOfRange` (Value, Controlled).
+
+## Open questions
+
+None.
