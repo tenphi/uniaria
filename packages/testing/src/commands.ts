@@ -52,6 +52,13 @@ export const uniPointerUp: BrowserCommand<[button: MouseButton]> = async (
   await context.page.mouse.up({ button });
 };
 
+/** Turns the wheel wherever the pointer is. */
+export const uniWheel: BrowserCommand<
+  [deltaX: number, deltaY: number]
+> = async (context, deltaX, deltaY) => {
+  await context.page.mouse.wheel(deltaX, deltaY);
+};
+
 export const uniKeyDown: BrowserCommand<[key: string]> = async (
   context,
   key,
@@ -123,6 +130,7 @@ export const uniCommands = {
   uniPointerDown,
   uniPointerMove,
   uniPointerUp,
+  uniWheel,
   uniKeyDown,
   uniKeyUp,
 };

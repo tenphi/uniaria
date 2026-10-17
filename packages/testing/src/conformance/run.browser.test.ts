@@ -154,6 +154,24 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
           expect(buttons).toEqual([1]);
         },
       );
+
+      scenario(
+        'turns the wheel where the pointer is',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: h('button', { part: 'root' }, 'Save'),
+          });
+          const deltas: number[] = [];
+          mounted.part().addEventListener('wheel', (event) => {
+            event.preventDefault();
+            deltas.push(Math.sign(event.deltaY));
+          });
+          await pointer.move(mounted.part());
+          await pointer.wheel({ deltaY: -100 });
+          await pointer.wheel({ deltaY: 100 });
+          await expect.poll(() => deltas).toEqual([-1, 1]);
+        },
+      );
     });
 
     group('keyboard', () => {

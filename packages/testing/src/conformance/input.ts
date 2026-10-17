@@ -22,6 +22,7 @@ declare module 'vitest/browser' {
       where: 'center' | 'outside',
     ): Promise<void>;
     uniPointerUp(button: MouseButton): Promise<void>;
+    uniWheel(deltaX: number, deltaY: number): Promise<void>;
     uniKeyDown(key: string): Promise<void>;
     uniKeyUp(key: string): Promise<void>;
     uniTouchSupported(): Promise<boolean>;
@@ -76,6 +77,7 @@ export const pointer: PointerInput = {
   move: (target) => commands.uniPointerMove(selectorFor(target), 'center'),
   moveOutside: (target) =>
     commands.uniPointerMove(selectorFor(target), 'outside'),
+  wheel: ({ deltaX = 0, deltaY = 0 }) => commands.uniWheel(deltaX, deltaY),
   async click(target, options) {
     await down(target, options);
     await up(options);

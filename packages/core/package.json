@@ -114,5 +114,8 @@
   "homepage": "https://github.com/tenphi/uniaria#readme",
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "@internationalized/number": "^3.6.8"
   }
 }

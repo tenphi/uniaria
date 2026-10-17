@@ -24,6 +24,11 @@ export interface PointerInput {
   moveOutside(target: Element): Promise<void>;
   /** Releases a button (left by default) wherever the pointer is. */
   up(options?: { button?: MouseButton }): Promise<void>;
+  /**
+   * Turns the wheel wherever the pointer is, with the modifier keys held
+   * down: a negative `deltaY` scrolls up. One call is one `wheel` event.
+   */
+  wheel(delta: { deltaX?: number; deltaY?: number }): Promise<void>;
   /** `down` on the target, then `up`. */
   click(target: Element, options?: { button?: MouseButton }): Promise<void>;
 }

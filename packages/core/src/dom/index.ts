@@ -9,8 +9,8 @@
  * dismissable layer stack, hiding everything outside a modal, scroll lock
  * (iOS strategy pending), presence (enter and exit phases), positioning (one
  * wrapper, by script or by the consumer's CSS anchor positioning), page-wide
- * settings (`configure`), owner and link lookup, and feature detection with
- * the development switch for fallbacks.
+ * settings (`configure`), owner and link lookup, platform checks, and feature
+ * detection with the development switch for fallbacks.
  *
  * Nothing here may touch `document` or `window` at module scope.
  */
@@ -59,6 +59,7 @@ export type { InteractOutsideHandlers } from './interact-outside';
 export { createLayer, isTopLayer } from './layers';
 export type { DismissReason, Layer, LayerOptions } from './layers';
 export { provideOwner, requestOwner } from './owner';
+export { isAndroid, isIOS, isIPhone } from './platform';
 export { createPosition } from './position';
 export { configure, getSettings } from './settings';
 export type { Positioning, Settings } from './settings';
