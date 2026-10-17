@@ -975,7 +975,9 @@ describe('<uni-dialog>', () => {
       { reason: 'escape', returnValue: '' },
       false,
     ]);
-    await vi.waitFor(() => expect(modal.open).toBe(false));
+    // The native dialog closes after the closing phase, which CI's WebKit
+    // has taken just over the default second to finish.
+    await vi.waitFor(() => expect(modal.open).toBe(false), { timeout: 3000 });
     expect(announcer().parentElement).toBe(document.body);
     destroyAnnouncer();
   });
