@@ -20,6 +20,15 @@ Space, toggle it natively, and Enter submits its form.
   live-property channel TextField added (`checked`, `indeterminate`).
 - **Owner:** none. CheckboxGroup will own its checkboxes through
   `ctx.owner()` (decision 11); its spec says which props the group sets.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. Hover counts on the root, focus and
+  presses on the input, and the tooltip is placed against the root
+  (UI Kit's split trigger). The input carries the tooltip's id after its
+  own references: `aria-describedby` after the description and error
+  (`aria-labelledby` with `relation: 'label'`), while the tooltip is
+  enabled.
 - **Custom element:** yes, `<uni-checkbox>`, hosting consumer markup.
 
 Not part of Checkbox:

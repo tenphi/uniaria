@@ -20,6 +20,12 @@ text control is `<Name>Field`, and the control part keeps the element's name,
 - **Builds on:** Field (`ctx.use`), `hover` and `focus` from `dom/`, and a new
   part-prop channel for live DOM properties (Resolved questions 1).
 - **Owner:** none.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. Hover, focus and keys all count on the
+  input, so typing closes the tooltip, and the input carries its id
+  after its own references.
 - **Custom element:** yes, `<uni-text-field>`, hosting consumer markup.
 
 Not part of TextField:

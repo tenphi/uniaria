@@ -26,6 +26,10 @@ description, and a close button.
   closing phase that waits for animations (Resolved questions 5), and the live
   announcer's place while a modal is open (Resolved questions 7).
 - **Owner:** none.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. On the trigger, as Popover's.
 - **Custom element:** yes, `<uni-dialog>`, wrapping the trigger and the
   `<dialog>`, which hosts consumer markup.
 

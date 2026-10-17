@@ -24,9 +24,12 @@ instead of the trigger part (Resolved questions 2).
   focus stays on the trigger, and it stays open while the pointer is over the
   trigger or the tooltip.
 - **Builds on:** `createPosition`, `createPresence`, `supportsPopover` and the
-  modality tracker from `dom/`. New in `dom/`: the tooltip registry (warm-up
-  and one at a time; Warm-up), the link components use to take a tooltip
-  (Resolved questions 2), and the CSS-shaped positioning props (Resolved questions 1).
+  modality tracker from `dom/`. New beside the tooltip: the registry (warm-up
+  and one at a time; Warm-up) and the link components use to take a tooltip
+  (Resolved questions 2), a module of its own so Button doesn't import the
+  tooltip. New in `dom/`: the restored-focus marker (Resolved questions 8),
+  the leaving-view watch Popover already used, and presence closing without
+  its exit. The positioning props are CSS-shaped (Resolved questions 1).
   No layer stack and no focus scope (Resolved questions 6).
 - **Owner:** none. It is an owner for the component it describes (Resolved
   questions 2).

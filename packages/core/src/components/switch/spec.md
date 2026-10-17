@@ -23,6 +23,11 @@ parts differ.
   re-declare Checkbox's adopted props. Checkbox's 35 scenarios guard the
   move.
 - **Owner:** none. A switch never joins a CheckboxGroup.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. As Checkbox's: hover on the root, focus
+  and presses on the input, which carries the tooltip's id.
 - **Custom element:** yes, `<uni-switch>`, hosting consumer markup.
 
 Not part of Switch:

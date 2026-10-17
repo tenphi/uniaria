@@ -29,6 +29,13 @@ an optional arrow, its title and description, and a close button.
   modality tracker from `dom/`. New in `dom/`: the positioning wrapper (Resolved
   questions 3), and layer-stack changes for nested popovers (Resolved questions 9).
 - **Owner:** none.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. On the trigger: hover, focus and presses
+  count there, and it carries the tooltip's id beside its own
+  attributes. Opening the popover is a press, so the tooltip closes;
+  focus the popover returns to the trigger doesn't open it again.
 - **Custom element:** yes, `<uni-popover>`, wrapping the trigger and the
   popover, which hosts consumer markup.
 

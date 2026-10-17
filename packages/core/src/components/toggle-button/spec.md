@@ -19,6 +19,11 @@ underneath by default. Every press toggles the state and reports
   come from Button unchanged.
 - **Owner:** none. A future ToggleButtonGroup would own selection through
   `ctx.owner()` (decision 11); it is not in the first scope.
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. As Button's, on the root. The Button
+  it composes doesn't link: a link belongs to the component itself.
 - **Custom element:** yes. `<uni-toggle-button>` hosts one native
   `<button data-part="root">` written by the consumer, as `<uni-button>`
   does. The host has no role and never takes focus.

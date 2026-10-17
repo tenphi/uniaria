@@ -24,6 +24,13 @@ Two definitions, as CheckboxGroup and Checkbox:
 - **Builds on:** Field (`ctx.use`), `ctx.owner()` and `OwnerProvider` from
   CheckboxGroup, `createFocusWithin`, hover and focus from `dom/`.
 - **Owner:** RadioGroup owns its radios.
+- **Tooltip:** a radio takes a Tooltip through its `tooltip` link (Tooltip
+  spec, Resolved questions 2): the tooltip instance in React
+  (`tooltip: hint.instance`), and on elements the `<uni-tooltip>` it sits in
+  directly or a `tooltip` attribute naming one's id. As Checkbox's: hover on
+  the radio's root, focus and presses on its input, which carries the
+  tooltip's id after its own references and the group's error. The group
+  itself takes none.
 - **Custom elements:** yes, `<uni-radio-group>` and `<uni-radio>`, hosting
   consumer markup.
 

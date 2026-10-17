@@ -17,6 +17,14 @@ suite in both adapters.
   Text-selection suppression during touch presses and nested pressables
   arrive later in phase 2, together with their conformance scenarios.
 - **Owner:** none
+- **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
+  questions 2): the tooltip instance in React (`tooltip: hint.instance`),
+  and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
+  attribute naming one's id. The root is where hover, focus and
+  presses count and what the tooltip is placed against, and it carries
+  the tooltip's id in `aria-describedby` (`aria-labelledby` with
+  `relation: 'label'`) while the tooltip is enabled. Without a tooltip,
+  the consumer's own `aria-describedby` on the root stays.
 - **Custom element:** yes. `<uni-button>` hosts one native
   `<button data-part="root">` (or `<a data-part="root" href>`) written by the
   consumer. The inner element provides native semantics, form submission and
