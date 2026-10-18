@@ -14,6 +14,7 @@ import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { checkboxGroupConformance } from './checkbox-group/checkbox-group.conformance';
 import { dialogConformance } from './dialog/dialog.conformance';
 import { fieldConformance } from './field/field.conformance';
+import { listboxConformance } from './listbox/listbox.conformance';
 import { numberFieldConformance } from './number-field/number-field.conformance';
 import { popoverConformance } from './popover/popover.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
@@ -28,6 +29,7 @@ export {
   checkboxGroupConformance,
   dialogConformance,
   fieldConformance,
+  listboxConformance,
   numberFieldConformance,
   popoverConformance,
   radioGroupConformance,
@@ -48,6 +50,7 @@ export type {
   DialogState,
 } from './dialog/types';
 export type { FieldProps, FieldState } from './field/types';
+export type { ListboxItem, ListboxProps, ListboxState } from './listbox/types';
 export type { NumberFieldProps, NumberFieldState } from './number-field/types';
 export type {
   PopoverDismissEvent,
@@ -78,4 +81,5 @@ export const suites = [
   popoverConformance,
   tooltipConformance,
   numberFieldConformance,
+  listboxConformance,
 ];
