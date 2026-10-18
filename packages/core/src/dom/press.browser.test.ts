@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
 
 import { createInstance, defineComponent, event, prop } from '../runtime';
 import { createBinder } from './binder';
-import { createPress } from './press';
+import { commands, userEvent } from 'vitest/browser';
+
+import { createItemPress, createPress } from './press';
 import type { PressEvent } from './press';
 
 // Press behavior runs through the Button conformance suite in both adapters;
@@ -46,7 +47,31 @@ function root(style = ''): HTMLElement {
   return element;
 }
 
-afterEach(() => {
+/** Real mouse input, from the commands `@uniaria/testing` registers. */
+const mouse = commands as unknown as {
+  uniPointerDown(selector: string, button: 'left'): Promise<void>;
+  uniPointerMove(selector: string, where: 'center'): Promise<void>;
+  uniPointerUp(button: 'left'): Promise<void>;
+};
+let isHeld = false;
+const pointer = {
+  async down(element: Element) {
+    await mouse.uniPointerDown(`#${element.id}`, 'left');
+    isHeld = true;
+  },
+  move: (element: Element) => mouse.uniPointerMove(`#${element.id}`, 'center'),
+  async up() {
+    await mouse.uniPointerUp('left');
+    isHeld = false;
+  },
+  async click(element: Element) {
+    await pointer.down(element);
+    await pointer.up();
+  },
+};
+
+afterEach(async () => {
+  if (isHeld) await pointer.up();
   document.body.replaceChildren();
 });
 
@@ -194,5 +219,115 @@ describe('createPress on macOS', () => {
     expect(presses).toEqual([]);
     key(element, 'keyup', { key: 'Enter' });
     expect(presses).toEqual(['Enter']);
+  });
+});
+
+/** Items pressed through one shared press, as a listbox's options are. */
+const pressableItems = defineComponent({
+  name: 'pressable-items',
+  parts: ['root'],
+  itemParts: ['item'],
+  props: { disabledKey: prop<string | undefined>(undefined) },
+  setup(ctx) {
+    const log: string[] = [];
+    const press = createItemPress(ctx, {
+      element: (key) => ctx.itemElement('item', key) as HTMLElement | null,
+      isDisabled: (key) => key === ctx.props.disabledKey(),
+      onPressStart: (key, event) =>
+        log.push(`start ${key} ${event.pointerType}`),
+      onPressEnd: (key) => log.push(`end ${key}`),
+      onPress: (key, event) =>
+        log.push(
+          `press ${key} ${event.pointerType}${event.shiftKey ? ' shift' : ''}`,
+        ),
+    });
+    ctx.watch(press.pressedKey, (key, previous) =>
+      ctx.invalidateItems([key, previous].filter((each) => each !== null)),
+    );
+    return { ...press, log };
+  },
+  expose: ({ api }) => ({ pressedKey: api.pressedKey() }),
+  connect: () => ({ root: { attrs: {} } }),
+  connectItem: ({ api }, _part, key) => ({
+    attrs: {
+      tabindex: '-1',
+      'data-pressed': api.pressedKey() === key ? '' : undefined,
+    },
+    on: api.handlers(key),
+  }),
+});
+
+function items(disabledKey?: string) {
+  const host = document.createElement('div');
+  host.innerHTML = ['a', 'b']
+    .map(
+      (key) =>
+        `<div id="item-${key}" data-part="item" data-key="${key}">Item ${key}</div>`,
+    )
+    .join('');
+  document.body.append(host);
+  const instance = createInstance(pressableItems, {
+    props: disabledKey ? { disabledKey } : {},
+  });
+  const binder = createBinder(instance, { host });
+  const item = (key: string) =>
+    host.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
+  binder.attachItem('item', 'a', item('a'));
+  binder.attachItem('item', 'b', item('b'));
+  instance.start();
+  binder.start();
+  return { instance, item };
+}
+
+describe('createItemPress', () => {
+  it('presses the item a pointer goes down on, focusing it, and activates on release over it', async () => {
+    const { instance, item } = items();
+    await pointer.down(item('b'));
+    expect(item('b').hasAttribute('data-pressed')).toBe(true);
+    expect(document.activeElement).toBe(item('b'));
+    await pointer.up();
+    await vi.waitFor(() =>
+      expect(instance.api.log).toEqual([
+        'start b mouse',
+        'end b',
+        'press b mouse',
+      ]),
+    );
+    expect(item('b').hasAttribute('data-pressed')).toBe(false);
+  });
+
+  it('ends without activating when released over another item', async () => {
+    const { instance, item } = items();
+    await pointer.down(item('a'));
+    await pointer.move(item('b'));
+    expect(item('a').hasAttribute('data-pressed')).toBe(false);
+    expect(item('b').hasAttribute('data-pressed')).toBe(false);
+    await pointer.move(item('a'));
+    expect(item('a').hasAttribute('data-pressed')).toBe(true);
+    await pointer.move(item('b'));
+    await pointer.up();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(instance.api.log).toEqual([
+      'start a mouse',
+      'end a',
+      'start a mouse',
+      'end a',
+    ]);
+  });
+
+  it('activates on a virtual click, and never for a disabled item', async () => {
+    const { instance, item } = items('a');
+    item('b').click();
+    expect(instance.api.log).toEqual([
+      'start b virtual',
+      'end b',
+      'press b virtual',
+    ]);
+    instance.api.log.length = 0;
+
+    await pointer.click(item('a'));
+    item('a').click();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(instance.api.log).toEqual([]);
   });
 });

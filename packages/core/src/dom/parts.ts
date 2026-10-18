@@ -53,6 +53,38 @@ export function queryParts(
   return found;
 }
 
+/**
+ * Every element of each item part that belongs to `host`, by part and the
+ * consumer's `data-key` (Listbox spec, Item parts), in document order. An
+ * element without a key is left out, and of two with the same part and key
+ * the first wins; `onSkip` hears about both.
+ */
+export function queryItemParts(
+  host: Element,
+  parts: readonly string[],
+  onSkip?: (element: HTMLElement, reason: 'no-key' | 'duplicate') => void,
+): Map<string, Map<string, HTMLElement>> {
+  const found = new Map<string, Map<string, HTMLElement>>();
+  if (parts.length === 0) return found;
+  for (const element of host.querySelectorAll<HTMLElement>('[data-part]')) {
+    const part = element.getAttribute('data-part')!;
+    if (!parts.includes(part) || !belongsTo(element, host)) continue;
+    const key = element.getAttribute('data-key');
+    if (key === null) {
+      onSkip?.(element, 'no-key');
+      continue;
+    }
+    let byKey = found.get(part);
+    if (!byKey) found.set(part, (byKey = new Map()));
+    if (byKey.has(key)) {
+      onSkip?.(element, 'duplicate');
+      continue;
+    }
+    byKey.set(key, element);
+  }
+  return found;
+}
+
 /** Calls `callback` whenever parts may have been added, removed or renamed. */
 export function observeParts(host: Element, callback: () => void): () => void {
   const view = host.ownerDocument.defaultView;
@@ -62,7 +94,7 @@ export function observeParts(host: Element, callback: () => void): () => void {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['data-part'],
+    attributeFilter: ['data-part', 'data-key'],
   });
   return () => observer.disconnect();
 }

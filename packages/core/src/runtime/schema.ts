@@ -35,7 +35,20 @@ export type PropType = 'boolean' | 'string' | 'number' | 'json';
 export type PropAdoption =
   | { readonly part: string; readonly tag: true }
   | { readonly part: string; readonly attribute: string }
-  | { readonly part: string; readonly property: string };
+  | { readonly part: string; readonly property: string }
+  | { readonly items: ItemsAdoption };
+
+/**
+ * A collection read from item parts in the markup (Listbox spec, Resolved
+ * questions 3), read again whenever they change: one item per `item` part
+ * in document order, `{ key, textValue }` from its `data-key` and its
+ * `data-text-value` or text, and one per `section` part, `{ key, items }`,
+ * holding the item parts inside it.
+ */
+export interface ItemsAdoption {
+  readonly item: string;
+  readonly section?: string;
+}
 
 export interface PropOptions {
   /**

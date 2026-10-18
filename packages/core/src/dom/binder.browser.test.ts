@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineComponent, itemId, prop } from '../runtime';
 import { createBinder } from './binder';
 
 const toy = defineComponent({
@@ -273,5 +273,123 @@ describe('createBinder', () => {
       root.click();
       expect(instance.getState().on).toBe(false);
     });
+  });
+});
+
+/** Rows keyed by item, one active, as a listbox's options are. */
+const rows = defineComponent({
+  name: 'rows',
+  parts: ['root'],
+  itemParts: ['row', 'rowLabel'],
+  props: { tone: prop('plain') },
+  setup(ctx) {
+    const active = ctx.state<string | null>(null);
+    const computed: string[] = [];
+    return {
+      active: () => active.get(),
+      computed,
+      label: (key: string) => ctx.itemElement('rowLabel', key),
+      activate(key: string) {
+        const previous = active.get();
+        active.set(key);
+        ctx.invalidateItems(previous === null ? [key] : [previous, key]);
+      },
+    };
+  },
+  expose: ({ api }) => ({ active: api.active() }),
+  connect: () => ({ root: { attrs: {} } }),
+  connectItem({ props, api }, part, key) {
+    api.computed.push(`${part}:${key}`);
+    if (part === 'rowLabel') return { attrs: { id: itemId('r', part, key) } };
+    return {
+      attrs: {
+        'data-active': api.active() === key ? '' : undefined,
+        'data-tone': props.tone(),
+        'aria-labelledby': api.label(key)
+          ? itemId('r', 'rowLabel', key)
+          : undefined,
+      },
+      on: { click: () => api.activate(key) },
+    };
+  },
+});
+
+function setupRows(keys = ['a', 'b', 'c']) {
+  const host = document.createElement('div');
+  host.innerHTML = keys
+    .map(
+      (key) => `<p data-part="row" data-key="${key}"><span>${key}</span></p>`,
+    )
+    .join('');
+  document.body.append(host);
+  const row = (key: string) =>
+    host.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
+  return { host, row };
+}
+
+describe('createBinder with item parts', () => {
+  it('writes every item part when it starts, and only invalidated keys after', async () => {
+    const { host, row } = setupRows();
+    const instance = createInstance(rows);
+    const binder = createBinder(instance, { host });
+    for (const key of ['a', 'b', 'c']) binder.attachItem('row', key, row(key));
+    expect(row('a').hasAttribute('data-scope')).toBe(false);
+
+    binder.start();
+    expect(row('a').getAttribute('data-scope')).toBe('rows');
+    expect(row('c').getAttribute('data-part')).toBe('row');
+    expect(binder.itemOf(row('b'))).toEqual({ part: 'row', key: 'b' });
+    instance.api.computed.length = 0;
+
+    row('b').querySelector('span')!.click();
+    expect(row('b').hasAttribute('data-active')).toBe(true);
+    expect(instance.api.computed).toEqual(['row:b']);
+    expect(await mutations(row('a'), () => row('c').click())).toEqual([]);
+    expect(row('b').hasAttribute('data-active')).toBe(false);
+    expect(row('c').hasAttribute('data-active')).toBe(true);
+    expect(instance.api.computed).toEqual(['row:b', 'row:b', 'row:c']);
+
+    instance.setProps({ tone: 'loud' });
+    instance.sync();
+    expect(row('a').getAttribute('data-tone')).toBe('loud');
+    binder.stop();
+  });
+
+  it('writes a key again when another of its parts attaches or detaches', () => {
+    const { host, row } = setupRows(['a']);
+    const label = document.createElement('span');
+    row('a').append(label);
+    const instance = createInstance(rows);
+    const binder = createBinder(instance, { host });
+    binder.attachItem('row', 'a', row('a'));
+    instance.start();
+    binder.start();
+    expect(row('a').hasAttribute('aria-labelledby')).toBe(false);
+
+    binder.attachItem('rowLabel', 'a', label);
+    expect(label.id).toBe('r-rowLabel-a');
+    expect(row('a').getAttribute('aria-labelledby')).toBe('r-rowLabel-a');
+    binder.attachItem('rowLabel', 'a', null);
+    expect(row('a').hasAttribute('aria-labelledby')).toBe(false);
+    expect(binder.itemOf(label)).toBeUndefined();
+    instance.stop();
+  });
+
+  it('stops writing and dispatching to a detached item', () => {
+    const { host, row } = setupRows(['a', 'b']);
+    const instance = createInstance(rows);
+    const binder = createBinder(instance, { host });
+    binder.attachItem('row', 'a', row('a'));
+    binder.attachItem('row', 'b', row('b'));
+    binder.start();
+
+    binder.attachItem('row', 'a', null);
+    row('a').click();
+    expect(instance.getState().active).toBeNull();
+    row('b').click();
+    expect(instance.getState().active).toBe('b');
+    expect(row('a').hasAttribute('data-active')).toBe(false);
+    expect(instance.itemElement('row', 'a')).toBeNull();
+    binder.stop();
   });
 });

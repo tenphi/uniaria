@@ -21,6 +21,7 @@ export type {
   BindableSpec,
   EventSpec,
   EventsSchema,
+  ItemsAdoption,
   PropAdoption,
   PropInfo,
   PropOptions,
@@ -29,7 +30,7 @@ export type {
   PropsSchema,
   ResolvedSchema,
 } from './schema';
-export { answers, defineComponent, isOwnerDefinition } from './define';
+export { answers, defineComponent, isOwnerDefinition, itemId } from './define';
 export type {
   AnyDefinition,
   ApiOf,
@@ -42,6 +43,7 @@ export type {
   Definition,
   Env,
   InputProps,
+  ItemPartOf,
   LinkKey,
   Linkable,
   Linked,

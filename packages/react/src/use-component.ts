@@ -10,6 +10,7 @@ import type {
   AnyDefinition,
   ApiOf,
   Instance,
+  ItemPartOf,
   OwnerLink,
   PartOf,
   PartProps,
@@ -52,6 +53,13 @@ export interface ComponentHandle<D extends AnyDefinition> {
   readonly api: ApiOf<D>;
   /** Props for each part, from this render. */
   readonly parts: Readonly<Record<PartOf<D>, ReactPartProps>>;
+  /**
+   * Props for one item part of one item (Listbox spec, Item parts), from
+   * this render. Later changes reach the element through the binder, so the
+   * component rendering the rows doesn't render again for them. Item parts
+   * take no live DOM properties as React defaults.
+   */
+  getItemProps(part: ItemPartOf<D>, key: string): ReactPartProps;
 }
 
 /**
@@ -68,6 +76,17 @@ interface Internal<D extends AnyDefinition> {
   readonly binder: Binder;
   readonly handlers: Map<string, (event: SyntheticEvent) => void>;
   readonly refs: Map<string, (element: Element | null) => void>;
+  /** Per item part and event type; the key comes from the element. */
+  readonly itemHandlers: Map<string, (event: SyntheticEvent) => void>;
+  /** Per item part and key: its ref, and the props it last rendered. */
+  readonly items: Map<
+    string,
+    {
+      readonly ref: (element: Element | null) => void;
+      rendered?: { readonly props: PartProps; readonly react: ReactPartProps };
+    }
+  >;
+  readonly getItemProps: (part: string, key: string) => ReactPartProps;
   /** Default props from the first render, kept stable after it. */
   readonly defaults: Map<string, Readonly<Record<string, unknown>>>;
   /** Elements whose attributes were checked against the render. */
@@ -103,10 +122,12 @@ function checkOwnership<D extends AnyDefinition>(
   internal: Internal<D>,
   part: string,
   element: Element,
+  rendered: PartProps | undefined = (
+    internal.rendered?.connected as
+      Readonly<Record<string, PartProps>> | undefined
+  )?.[part],
 ): void {
-  const rendered = internal.rendered?.connected as
-    Readonly<Record<string, PartProps>> | undefined;
-  for (const [name, value] of Object.entries(rendered?.[part]?.attrs ?? {})) {
+  for (const [name, value] of Object.entries(rendered?.attrs ?? {})) {
     const actual = element.getAttribute(name);
     if (actual === (value ?? null)) continue;
     warn(
@@ -115,6 +136,78 @@ function checkOwnership<D extends AnyDefinition>(
         'Pass it as a prop, or drop it from the JSX.',
     );
   }
+}
+
+/** Attributes and style as React props. */
+function toReactAttrs(
+  props: PartProps,
+  result: Record<string, unknown>,
+): Record<string, unknown> {
+  for (const [name, value] of Object.entries(props.attrs)) {
+    if (value === undefined) continue;
+    const prop = reactPropName(name);
+    result[prop] = reactPropValue(prop, value);
+  }
+  if (props.style) {
+    const style: Record<string, string> = {};
+    for (const [name, value] of Object.entries(props.style)) {
+      if (value !== undefined) style[name] = value;
+    }
+    result.style = style;
+  }
+  return result;
+}
+
+/**
+ * `getItemProps` for one instance: React props from the cached
+ * `connectItem()`, reused while it returns the same object, with handlers
+ * stable per part and event type and a ref stable per part and key.
+ */
+function createGetItemProps<D extends AnyDefinition>(
+  internal: () => Internal<D>,
+): (part: string, key: string) => ReactPartProps {
+  return (part, key) => {
+    const { instance, binder, itemHandlers, items } = internal();
+    const props = instance.connectItem(part as never, key);
+    const id = `${part}\n${key}`;
+    let item = items.get(id);
+    if (!item) {
+      const ref = (element: Element | null) => {
+        const current = internal();
+        const entry = current.items.get(id);
+        if (element && isDevelopment() && !current.checked.has(element)) {
+          current.checked.add(element);
+          checkOwnership(current, part, element, entry?.rendered?.props);
+        }
+        current.binder.attachItem(part, key, element);
+        // An item that unmounts takes its cache with it; a remount gets a
+        // new ref.
+        if (!element && entry?.ref === ref) current.items.delete(id);
+      };
+      item = { ref };
+      items.set(id, item);
+    }
+    if (item.rendered?.props === props) return item.rendered.react;
+    const result = toReactAttrs(props, {});
+    for (const type of Object.keys(props.on ?? {})) {
+      const handlerKey = `${part}:${type}`;
+      let handler = itemHandlers.get(handlerKey);
+      if (!handler) {
+        handler = (event: SyntheticEvent) => {
+          const target = binder.itemOf(event.currentTarget as Element);
+          if (!target) return;
+          instance
+            .connectItem(target.part as never, target.key)
+            .on?.[type]?.(event.nativeEvent as never);
+        };
+        itemHandlers.set(handlerKey, handler);
+      }
+      result[reactEventName(type)] = handler;
+    }
+    const react = { ...result, ref: item.ref } as ReactPartProps;
+    item.rendered = { props, react };
+    return react;
+  };
 }
 
 function toReactParts<D extends AnyDefinition>(
@@ -138,18 +231,7 @@ function toReactParts<D extends AnyDefinition>(
       defaults.set(part, initial);
     }
     Object.assign(result, initial);
-    for (const [name, value] of Object.entries(props.attrs)) {
-      if (value === undefined) continue;
-      const prop = reactPropName(name);
-      result[prop] = reactPropValue(prop, value);
-    }
-    if (props.style) {
-      const style: Record<string, string> = {};
-      for (const [name, value] of Object.entries(props.style)) {
-        if (value !== undefined) style[name] = value;
-      }
-      result.style = style;
-    }
+    toReactAttrs(props, result);
     // Handlers keep their identity across renders and call the handler from
     // the latest connect() with the native event.
     for (const type of Object.keys(props.on ?? {})) {
@@ -202,6 +284,9 @@ export function useComponent<D extends AnyDefinition>(
       binder: createBinder(instance),
       handlers: new Map(),
       refs: new Map(),
+      itemHandlers: new Map(),
+      items: new Map(),
+      getItemProps: createGetItemProps(() => ref.current!),
       defaults: new Map(),
       checked: new WeakSet(),
       isLinkedByContext: false,
@@ -294,6 +379,7 @@ export function useComponent<D extends AnyDefinition>(
     instance,
     api: instance.api,
     parts: internal.rendered.parts as ComponentHandle<D>['parts'],
+    getItemProps: internal.getItemProps as ComponentHandle<D>['getItemProps'],
   };
 }
 

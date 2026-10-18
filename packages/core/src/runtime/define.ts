@@ -155,6 +155,17 @@ export interface SetupContext<
    * helpers type it.
    */
   element(part: Part): unknown;
+  /**
+   * The element rendered for one of the definition's `itemParts` and an
+   * item's key, or `null`.
+   */
+  itemElement(part: string, key: string): unknown;
+  /**
+   * Marks the items whose `connectItem()` props changed, so only they are
+   * written again after the flush; with no keys, every item. A change of
+   * props rewrites every item by itself; any other change needs this.
+   */
+  invalidateItems(keys?: Iterable<string>): void;
   /** Groups changes so the store flushes once. */
   batch<T>(fn: () => T): T;
   /**
@@ -205,6 +216,8 @@ export interface Composed<D extends AnyDefinition> {
   state(): StateOf<D>;
   /** Its `connect()` now, keyed by its own part names, without data-scope. */
   connect(): ConnectedParts<PartOf<D>>;
+  /** Its `connectItem()` now, for a definition with item parts. */
+  connectItem(part: ItemPartOf<D>, key: string): PartProps;
 }
 
 /** What `expose()` and `connect()` read. */
@@ -251,6 +264,20 @@ export interface Definition<
   readonly events: E;
   /** The schema resolved for adapters: attributes, types, events. */
   readonly schema: ResolvedSchema;
+  /**
+   * Parts repeated once per item of a collection, keyed by the item's key
+   * (Listbox spec, Item parts).
+   */
+  readonly itemParts?: readonly string[];
+  /**
+   * Props for one item part of one item. Called only for rendered items,
+   * and cached until `ctx.invalidateItems()` names the key or props change.
+   */
+  connectItem?(
+    ctx: ViewContext<Part, P, Api>,
+    part: string,
+    key: string,
+  ): PartProps;
 }
 
 // Generic code (adapters, the instance) accepts definitions of any shape.
@@ -260,6 +287,9 @@ export type AnyDefinition = Definition<string, any, any, any, any>;
 // Read from the definition's members rather than inferred through its
 // generics: methods mention every type parameter, which muddies inference.
 export type PartOf<D extends AnyDefinition> = D['parts'][number];
+export type ItemPartOf<D extends AnyDefinition> = NonNullable<
+  D['itemParts']
+>[number];
 export type ApiOf<D extends AnyDefinition> = ReturnType<D['setup']>;
 export type StateOf<D extends AnyDefinition> = ReturnType<D['expose']>;
 export type PropsOf<D extends AnyDefinition> = InputProps<
@@ -363,14 +393,22 @@ export function defineComponent<
   E extends EventsSchema = Record<never, EventSpec<unknown>>,
   O extends OwnerLink | undefined = undefined,
   const L extends readonly LinkKey[] | undefined = undefined,
+  const ItemPart extends string = never,
 >(
   config: ComponentConfig<Part, P, E, Api, State> & {
     readonly owner?: O;
     readonly links?: L;
+    readonly itemParts?: readonly ItemPart[];
+    connectItem?(
+      ctx: ViewContext<Part, P, Api>,
+      part: ItemPart,
+      key: string,
+    ): PartProps;
   },
 ): Definition<Part, P, E, Api, State> & {
   readonly owner: O;
   readonly links: L;
+  readonly itemParts: readonly ItemPart[];
 } {
   if (!NAME.test(config.name)) {
     throw new Error(
@@ -398,8 +436,34 @@ export function defineComponent<
     owners.add(config.owner.definition);
   }
   for (const key of config.links ?? []) callback(key.name);
-  return { ...config, events, schema } as Definition<Part, P, E, Api, State> & {
+  if (config.itemParts && !config.connectItem) {
+    throw new Error(`[uniaria] ${config.name}: item parts need connectItem().`);
+  }
+  for (const part of config.itemParts ?? []) {
+    if ((config.parts as readonly string[]).includes(part)) {
+      throw new Error(
+        `[uniaria] ${config.name}: "${part}" is both a part and an item part.`,
+      );
+    }
+  }
+  return { ...config, events, schema } as unknown as Definition<
+    Part,
+    P,
+    E,
+    Api,
+    State
+  > & {
     readonly owner: O;
     readonly links: L;
+    readonly itemParts: readonly ItemPart[];
   };
+}
+
+/**
+ * The id of an item part: `<base>-<part>-<key>`, the key passed through
+ * `encodeURIComponent`, so keys never collide (`"a b"` and `"ab"`) and no id
+ * holds whitespace. A definition passes the base its other ids follow.
+ */
+export function itemId(base: string, part: string, key: string): string {
+  return `${base}-${part}-${encodeURIComponent(key)}`;
 }

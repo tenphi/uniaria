@@ -445,3 +445,219 @@ export function createPress(
 
   return { isPressed: () => isPressed.get(), handlers };
 }
+
+export interface ItemPressOptions {
+  /** The element of a pressable item, from its key. */
+  element(key: string): HTMLElement | null;
+  isDisabled(key: string): boolean;
+  onPressStart?(key: string, event: PressEvent): void;
+  onPressEnd?(key: string, event: PressEvent): void;
+  onPress?(key: string, event: PressEvent): void;
+}
+
+export interface ItemPress {
+  /** The item being pressed while the pointer is over it, or `null`. */
+  pressedKey(): string | null;
+  /** Handlers for one item's part. */
+  handlers(key: string): DomHandlers;
+}
+
+/**
+ * Press for the items of a collection (Listbox spec, Pointer and touch): one
+ * press at a time across every item, for mouse, pen, touch and virtual
+ * clicks, activating when it ends on the item it started on. The collection
+ * handles keys itself, so there is no keyboard press. A pointer press
+ * focuses the item, which needs a `tabindex`.
+ */
+export function createItemPress(
+  ctx: InteractionContext,
+  options: ItemPressOptions,
+): ItemPress {
+  const pressedKey = ctx.state<string | null>(null);
+  let active: (Active & { key: string; target: HTMLElement }) | null = null;
+  const listeners: (() => void)[] = [];
+  let clickTimer: ReturnType<typeof setTimeout> | undefined;
+  let unselectable: HTMLElement | null = null;
+
+  const reset = () => {
+    for (const remove of listeners.splice(0)) remove();
+    clearTimeout(clickTimer);
+    active = null;
+    if (unselectable) restoreTextSelection(unselectable);
+    unselectable = null;
+  };
+
+  const listen = <K extends keyof DocumentEventMap>(
+    doc: Document,
+    type: K,
+    listener: (event: DocumentEventMap[K]) => void,
+  ) => {
+    const batched = (event: DocumentEventMap[K]) =>
+      ctx.batch(() => listener(event));
+    doc.addEventListener(type, batched);
+    listeners.push(() => doc.removeEventListener(type, batched));
+  };
+
+  const pressEvent = (
+    type: PressEvent['type'],
+    target: HTMLElement,
+    pointerType: PointerType,
+    source?: Event,
+  ): PressEvent => {
+    const rect = target.getBoundingClientRect();
+    const input = source as MouseEvent | undefined;
+    const hasPosition =
+      pointerType !== 'virtual' && input !== undefined && 'clientX' in input;
+    return {
+      type,
+      pointerType,
+      target,
+      shiftKey: input?.shiftKey ?? false,
+      ctrlKey: input?.ctrlKey ?? false,
+      metaKey: input?.metaKey ?? false,
+      altKey: input?.altKey ?? false,
+      x: hasPosition ? input.clientX - rect.left : rect.width / 2,
+      y: hasPosition ? input.clientY - rect.top : rect.height / 2,
+    };
+  };
+
+  const begin = (
+    key: string,
+    target: HTMLElement,
+    pointerType: PointerType,
+    source: Event,
+    pointerId?: number,
+  ) => {
+    active = {
+      key,
+      target,
+      pointerType,
+      ...(pointerId === undefined ? {} : { pointerId }),
+      isOver: true,
+      isAwaitingClick: false,
+    };
+    pressedKey.set(key);
+    options.onPressStart?.(
+      key,
+      pressEvent('pressstart', target, pointerType, source),
+    );
+  };
+
+  const finish = (shouldActivate: boolean, source?: Event) => {
+    const current = active;
+    if (!current) return;
+    reset();
+    const { key, target, pointerType } = current;
+    if (pressedKey.get() !== null) {
+      pressedKey.set(null);
+      options.onPressEnd?.(
+        key,
+        pressEvent('pressend', target, pointerType, source),
+      );
+    }
+    if (shouldActivate) {
+      options.onPress?.(key, pressEvent('press', target, pointerType, source));
+    }
+  };
+
+  const onPointerUp = (event: PointerEvent) => {
+    if (!active || event.pointerId !== active.pointerId) return;
+    if (event.button !== 0) return;
+    const { target } = active;
+    if (active.isOver && target.contains(event.target as Node)) {
+      // As `createPress`: activate on the click that follows, or click
+      // ourselves when a long press loses it.
+      for (const remove of listeners.splice(0)) remove();
+      active.isAwaitingClick = true;
+      clickTimer = setTimeout(() => {
+        if (active?.isAwaitingClick) target.click();
+      }, CLICK_TIMEOUT);
+    } else {
+      finish(false, event);
+    }
+  };
+
+  const onPointerCancel = (event: PointerEvent) => {
+    if (active && event.pointerId === active.pointerId) finish(false, event);
+  };
+
+  ctx.effect(() => () => {
+    reset();
+    pressedKey.set(null);
+  });
+
+  return {
+    pressedKey: () => pressedKey.get(),
+    handlers: (key) => ({
+      pointerdown(event) {
+        const target = options.element(key);
+        if (!target || event.button !== 0 || !isOwnEvent(event, target)) {
+          return;
+        }
+        if (options.isDisabled(key) || active) return;
+        if (target.ownerDocument.activeElement !== target) {
+          target.focus({ preventScroll: true });
+        }
+        const origin = event.target as Element;
+        if (origin.hasPointerCapture?.(event.pointerId)) {
+          origin.releasePointerCapture(event.pointerId);
+        }
+        if (event.pointerType === 'touch') {
+          disableTextSelection(target);
+          unselectable = target;
+        }
+        begin(
+          key,
+          target,
+          (event.pointerType || 'mouse') as PointerType,
+          event,
+          event.pointerId,
+        );
+        const doc = target.ownerDocument;
+        listen(doc, 'pointerup', onPointerUp);
+        listen(doc, 'pointercancel', onPointerCancel);
+      },
+      pointerenter(event) {
+        if (active?.key !== key || active.pointerId !== event.pointerId) return;
+        if (active.isOver || active.isAwaitingClick) return;
+        active.isOver = true;
+        pressedKey.set(key);
+        options.onPressStart?.(
+          key,
+          pressEvent('pressstart', active.target, active.pointerType, event),
+        );
+      },
+      pointerleave(event) {
+        if (active?.key !== key || active.pointerId !== event.pointerId) return;
+        if (!active.isOver || active.isAwaitingClick) return;
+        active.isOver = false;
+        pressedKey.set(null);
+        options.onPressEnd?.(
+          key,
+          pressEvent('pressend', active.target, active.pointerType, event),
+        );
+      },
+      dragstart() {
+        if (active?.key === key) finish(false);
+      },
+      click(event) {
+        const target = options.element(key);
+        if (!target || !isOwnEvent(event, target)) return;
+        if (options.isDisabled(key)) {
+          event.preventDefault();
+          return;
+        }
+        if (active) {
+          if (active.key === key && active.isAwaitingClick) {
+            finish(true, event);
+          }
+          return;
+        }
+        if (isVirtualClick(event)) {
+          begin(key, target, 'virtual', event);
+          finish(true, event);
+        }
+      },
+    }),
+  };
+}

@@ -11,3 +11,10 @@ export type {
   TypeaheadInput,
   TypeaheadResult,
 } from './typeahead';
+export { createListCollection } from './list';
+export type {
+  ListAccessors,
+  ListCollection,
+  ListOption,
+  ListSection,
+} from './list';

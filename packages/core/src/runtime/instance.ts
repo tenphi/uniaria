@@ -16,6 +16,7 @@ import type {
   Cell,
   ConnectedParts,
   Env,
+  ItemPartOf,
   LinkKey,
   Owned,
   PartHandler,
@@ -68,6 +69,24 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    */
   attach(part: PartOf<D>, element: unknown): void;
   element(part: PartOf<D>): unknown;
+  /**
+   * Props for one item part of one item from the definition's
+   * `connectItem()`, with `data-scope` and `data-part` added and every
+   * handler run in a batch; cached per part and key until the key is
+   * invalidated (`ctx.invalidateItems()`, a change of props, or one of the
+   * key's item parts attached or detached).
+   */
+  connectItem(part: ItemPartOf<D>, key: string): PartProps;
+  /** Registers (or with `null`, removes) the element for an item part. */
+  attachItem(part: ItemPartOf<D>, key: string, element: unknown): void;
+  itemElement(part: ItemPartOf<D>, key: string): unknown;
+  /**
+   * Calls `listener` with the keys of items invalidated, or `null` when
+   * every item was, so the binder rewrites only those after the flush.
+   */
+  subscribeItems(
+    listener: (keys: readonly string[] | null) => void,
+  ): () => void;
   batch<T>(fn: () => T): T;
   /**
    * Links the instance this one works inside, found by the adapter (React
@@ -116,6 +135,35 @@ export function createInstance<D extends AnyDefinition>(
   let changes = 0;
   const changed = () => {
     changes++;
+    store.notify();
+  };
+  // Item parts: elements per part and key, and connectItem() results cached
+  // per part and key until every item (`allVersion`) or the key is
+  // invalidated.
+  const itemElements = new Map<string, Map<string, unknown>>();
+  const itemCache = new Map<
+    string,
+    { all: number; key: number; props: PartProps }
+  >();
+  const keyVersions = new Map<string, number>();
+  let allVersion = 0;
+  const itemListeners = new Set<(keys: readonly string[] | null) => void>();
+  const markItems = (keys: readonly string[] | null) => {
+    if (keys === null) allVersion++;
+    else {
+      for (const key of keys) {
+        keyVersions.set(key, (keyVersions.get(key) ?? 0) + 1);
+      }
+    }
+    for (const listener of Array.from(itemListeners)) listener(keys);
+  };
+  // Not a change of state: connect() and expose() stay cached, and the
+  // flush only lets the binder write the items.
+  const invalidateItems = (keys?: Iterable<string>) => {
+    if (!definition.itemParts) return;
+    const list = keys === undefined ? null : Array.from(keys);
+    if (list?.length === 0) return;
+    markItems(list);
     store.notify();
   };
   let props = (options.props ?? {}) as Readonly<Record<string, unknown>>;
@@ -297,6 +345,8 @@ export function createInstance<D extends AnyDefinition>(
         const own = partOf(part);
         return own === null ? null : (elements.get(own) ?? null);
       },
+      itemElement: (part, key) => itemElements.get(part)?.get(key) ?? null,
+      invalidateItems,
       batch: store.batch,
       owner(ownerDefinition) {
         const owner = currentOwner();
@@ -336,6 +386,8 @@ export function createInstance<D extends AnyDefinition>(
           api: composed.api,
           state: () => child.expose(composed.view),
           connect: () => child.connect(composed.view),
+          connectItem: (part: string, key: string) =>
+            child.connectItem!(composed.view, part, key),
         } as never;
       },
     };
@@ -397,6 +449,7 @@ export function createInstance<D extends AnyDefinition>(
       if (havePropsChanged(previous, props)) {
         propsVersion++;
         hasUnsyncedProps = true;
+        if (definition.itemParts) markItems(null);
       }
     },
     sync() {
@@ -464,6 +517,46 @@ export function createInstance<D extends AnyDefinition>(
       if (isStarted) changed();
     },
     element: (part) => elements.get(part) ?? null,
+    connectItem(part, key) {
+      const id = `${part}\n${key}`;
+      const version = keyVersions.get(key) ?? 0;
+      const cached = itemCache.get(id);
+      if (cached?.all === allVersion && cached.key === version) {
+        return cached.props;
+      }
+      const raw = definition.connectItem!(view, part, key);
+      const { attrs, on, style, properties } = raw;
+      const result: PartProps = {
+        attrs: { ...attrs, 'data-scope': definition.name, 'data-part': part },
+        ...(on ? { on: batched(on) } : {}),
+        ...(style ? { style } : {}),
+        ...(properties ? { properties } : {}),
+      };
+      itemCache.set(id, { all: allVersion, key: version, props: result });
+      return result;
+    },
+    attachItem(part, key, element) {
+      let byKey = itemElements.get(part);
+      if ((byKey?.get(key) ?? null) === (element ?? null)) return;
+      if (element == null) {
+        byKey?.delete(key);
+        itemCache.delete(`${part}\n${key}`);
+      } else {
+        if (!byKey) itemElements.set(part, (byKey = new Map()));
+        byKey.set(key, element);
+      }
+      // The key's other parts may point at this one (an option at its
+      // label), so all of them are written again.
+      markItems([key]);
+      if (isStarted) store.notify();
+    },
+    itemElement: (part, key) => itemElements.get(part)?.get(key) ?? null,
+    subscribeItems(listener) {
+      itemListeners.add(listener);
+      return () => {
+        itemListeners.delete(listener);
+      };
+    },
     batch: store.batch,
     link(owner, key) {
       const previous = key ? linkedByKey.get(key) : linked;
@@ -474,6 +567,7 @@ export function createInstance<D extends AnyDefinition>(
       // A new owner changes what connect() and expose() return.
       propsVersion++;
       hasUnsyncedProps = true;
+      if (definition.itemParts) markItems(null);
     },
     owner: currentOwner,
     linked: currentLink,

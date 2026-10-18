@@ -356,6 +356,156 @@ describe('defineElement', () => {
   });
 });
 
+/** Item parts keyed by data-key, with items read from the markup. */
+const rows = defineComponent({
+  name: 'test-rows',
+  parts: ['list'],
+  itemParts: ['row', 'section'],
+  props: {
+    items: prop<readonly unknown[]>([], {
+      attribute: false,
+      adopt: { items: { item: 'row', section: 'section' } },
+    }),
+  },
+  setup(ctx) {
+    const active = ctx.state<string | null>(null);
+    return {
+      active: () => active.get(),
+      activate(key: string) {
+        const previous = active.get();
+        active.set(key);
+        ctx.invalidateItems(previous === null ? [key] : [previous, key]);
+      },
+    };
+  },
+  expose: ({ props, api }) => ({ items: props.items(), active: api.active() }),
+  connect: () => ({ list: { attrs: { role: 'listbox' } } }),
+  connectItem: ({ api }, part, key) =>
+    part === 'section'
+      ? { attrs: { role: 'group' } }
+      : {
+          attrs: {
+            role: 'option',
+            'aria-selected': String(api.active() === key),
+          },
+          on: { click: () => api.activate(key) },
+        },
+});
+
+type Rows = UniElement<typeof rows>;
+
+defineElement(rows);
+
+describe('item parts', () => {
+  const ROWS = `
+    <uni-test-rows>
+      <div data-part="list">
+        <div data-part="row" data-key="apple">Apple</div>
+        <div data-part="section" data-key="citrus">
+          <span>Citrus</span>
+          <div data-part="row" data-key="lemon" data-text-value="Lemon">
+            Lemon <small>sour</small>
+          </div>
+        </div>
+        <div data-part="row" data-key="kiwi">  Kiwi
+          fruit </div>
+      </div>
+    </uni-test-rows>`;
+
+  const rowsIn = (container: HTMLElement) => {
+    const host = container.querySelector<Rows>('uni-test-rows')!;
+    const row = (key: string) =>
+      host.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
+    return { host, row };
+  };
+
+  it('writes every item part by its data-key and dispatches its events', () => {
+    const { host, row } = rowsIn(mount(ROWS));
+    expect(row('apple').getAttribute('role')).toBe('option');
+    expect(row('apple').getAttribute('data-part')).toBe('row');
+    expect(row('citrus').getAttribute('role')).toBe('group');
+    expect(row('lemon').getAttribute('aria-selected')).toBe('false');
+
+    row('lemon').querySelector('small')!.click();
+    expect(host.instance.getState().active).toBe('lemon');
+    expect(row('lemon').getAttribute('aria-selected')).toBe('true');
+    row('kiwi').click();
+    expect(row('lemon').getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('reads items from the markup in document order, sections holding theirs', () => {
+    const { host } = rowsIn(mount(ROWS));
+    expect(host.instance.getState().items).toEqual([
+      { key: 'apple', textValue: 'Apple' },
+      { key: 'citrus', items: [{ key: 'lemon', textValue: 'Lemon' }] },
+      { key: 'kiwi', textValue: 'Kiwi fruit' },
+    ]);
+  });
+
+  it('reads them again when the markup changes, and attaches new items', async () => {
+    const { host, row } = rowsIn(mount(ROWS));
+    const items = host.instance.getState().items;
+    row('apple').setAttribute('data-key', 'pear');
+    const fig = document.createElement('div');
+    fig.setAttribute('data-part', 'row');
+    fig.setAttribute('data-key', 'fig');
+    fig.textContent = 'Fig';
+    host.querySelector('[data-part="list"]')!.append(fig);
+    row('kiwi').remove();
+
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(host.instance.getState().items).toEqual([
+      { key: 'pear', textValue: 'Apple' },
+      { key: 'citrus', items: [{ key: 'lemon', textValue: 'Lemon' }] },
+      { key: 'fig', textValue: 'Fig' },
+    ]);
+    expect(host.instance.getState().items).not.toBe(items);
+    expect(fig.getAttribute('role')).toBe('option');
+    expect(host.instance.itemElement('row', 'kiwi')).toBeNull();
+    expect(host.instance.itemElement('row', 'pear')).toBe(row('pear'));
+    fig.click();
+    expect(host.instance.getState().active).toBe('fig');
+  });
+
+  it('keeps items the consumer sets, and the same items while the markup reads the same', async () => {
+    const { host, row } = rowsIn(mount(ROWS));
+    const items = host.instance.getState().items;
+    row('apple').append(document.createElement('i'));
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.getState().items).toBe(items);
+
+    const own = [{ key: 'only', textValue: 'Only' }];
+    host.items = own;
+    row('apple').setAttribute('data-key', 'pear');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.getState().items).toBe(own);
+  });
+
+  it('leaves an item part without a data-key, or a repeated one, alone and warns', async () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { host } = rowsIn(
+      mount(`
+        <uni-test-rows>
+          <div data-part="row">No key</div>
+          <div data-part="row" data-key="a">A</div>
+          <div data-part="row" data-key="a">Again</div>
+        </uni-test-rows>`),
+    );
+    const [noKey, , again] = host.querySelectorAll('[data-part="row"]');
+    expect(noKey!.hasAttribute('role')).toBe(false);
+    expect(again!.hasAttribute('role')).toBe(false);
+    expect(host.instance.getState().items).toEqual([
+      { key: 'a', textValue: 'A' },
+    ]);
+    expect(spy.mock.calls.map(([message]) => String(message))).toEqual([
+      expect.stringContaining('the row part has no data-key'),
+      expect.stringContaining('with data-key "a" repeats an earlier one'),
+    ]);
+    spy.mockRestore();
+  });
+});
+
 describe('links', () => {
   const hintLink: LinkKey<'hint'> = { name: 'hint' };
   const hint = defineComponent({

@@ -29,7 +29,7 @@ export type {
 export { createBinder } from './binder';
 export { isComposing } from './events';
 export { isDevelopment, warn } from './dev';
-export type { Binder, BinderOptions } from './binder';
+export type { Binder, BinderOptions, ItemTarget } from './binder';
 export { createFocus } from './focus';
 export type { Focus, FocusOptions } from './focus';
 export { createFocusScope } from './focus-scope';
@@ -69,15 +69,22 @@ export type {
   PositionArea,
   PositionOptions,
 } from './position';
-export { UNI_HOST, observeParts, queryParts } from './parts';
+export { UNI_HOST, observeParts, queryItemParts, queryParts } from './parts';
 export { isInView, watchLeavingView } from './in-view';
 export { createPresence } from './presence';
 export type { Presence, PresenceOptions } from './presence';
 export { isRestoringFocus, restoreFocus } from './restore-focus';
-export { createPress, isVirtualClick } from './press';
+export { createItemPress, createPress, isVirtualClick } from './press';
 export { createScrollLock, lockScroll } from './scroll-lock';
 export type { ScrollLockOptions } from './scroll-lock';
-export type { PointerType, Press, PressEvent, PressOptions } from './press';
+export type {
+  ItemPress,
+  ItemPressOptions,
+  PointerType,
+  Press,
+  PressEvent,
+  PressOptions,
+} from './press';
 export { supportsAnchorPositioning, supportsPopover } from './support';
 export { elementEffect, mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';

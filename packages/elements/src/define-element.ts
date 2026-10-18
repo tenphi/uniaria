@@ -15,7 +15,9 @@
  * - Parts: `data-part` elements inside the host, minus those inside a nested
  *   UniAria element (of any kind) or a nested host of the same tag, re-scanned
  *   when the subtree changes. The DOM binder writes their attributes and
- *   delegates their listeners from the host.
+ *   delegates their listeners from the host. Item parts are every such
+ *   element, keyed by the consumer's `data-key`; a prop that adopts
+ *   `items` reads its collection from them while the consumer sets none.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
  *   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
  * - Owners (decision 11): every host answers owner requests for its
@@ -27,6 +29,7 @@
 import type {
   AnyDefinition,
   Instance,
+  ItemsAdoption,
   LinkKey,
   OwnerLink,
   PropInfo,
@@ -37,10 +40,13 @@ import type { Binder } from '@uniaria/core/dom';
 import {
   UNI_HOST,
   createBinder,
+  isDevelopment,
   observeParts,
   provideOwner,
+  queryItemParts,
   queryParts,
   requestOwner,
+  warn,
 } from '@uniaria/core/dom';
 
 export interface DefineElementOptions {
@@ -92,6 +98,59 @@ function convert(info: PropInfo, value: string | null): unknown {
     default:
       return value;
   }
+}
+
+interface AdoptedItem {
+  readonly key: string;
+  readonly textValue?: string;
+  readonly items?: AdoptedItem[];
+}
+
+/** An element's text as typeahead reads it: whitespace collapsed. */
+function textOf(element: HTMLElement): string {
+  return (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * The collection an `items` adoption reads (`ItemsAdoption`): items and
+ * sections in document order, each item inside the section around it.
+ */
+function readItems(
+  found: ReadonlyMap<string, ReadonlyMap<string, HTMLElement>>,
+  adoption: ItemsAdoption,
+): AdoptedItem[] {
+  const entries = [
+    ...[...(found.get(adoption.item) ?? [])].map(([key, element]) => ({
+      key,
+      element,
+      isSection: false,
+    })),
+    ...[...(adoption.section ? (found.get(adoption.section) ?? []) : [])].map(
+      ([key, element]) => ({ key, element, isSection: true }),
+    ),
+  ].sort((a, b) =>
+    a.element.compareDocumentPosition(b.element) &
+    Node.DOCUMENT_POSITION_FOLLOWING
+      ? -1
+      : 1,
+  );
+  const result: AdoptedItem[] = [];
+  const sections: { element: HTMLElement; items: AdoptedItem[] }[] = [];
+  for (const { key, element, isSection } of entries) {
+    if (isSection) {
+      const items: AdoptedItem[] = [];
+      sections.push({ element, items });
+      result.push({ key, items });
+      continue;
+    }
+    const item = {
+      key,
+      textValue: element.getAttribute('data-text-value') ?? textOf(element),
+    };
+    const section = sections.find((each) => each.element.contains(element));
+    (section?.items ?? result).push(item);
+  }
+  return result;
 }
 
 /**
@@ -178,6 +237,9 @@ export function defineElement<D extends AnyDefinition>(
     readonly #explicit = new Set<string>();
     readonly #callbacks: Record<string, (detail: unknown) => void> = {};
     readonly #parts = new Map<string, HTMLElement>();
+    readonly #items = new Map<string, Map<string, HTMLElement>>();
+    /** What each `items` adoption last read, to set it only on a change. */
+    readonly #adoptedItems = new Map<string, string>();
     #unobserve: (() => void) | undefined;
     #unprovide: (() => void) | undefined;
     #unlink: (() => void) | undefined;
@@ -310,15 +372,61 @@ export function defineElement<D extends AnyDefinition>(
 
     /** Finds parts, adopts props from new part elements, attaches them. */
     #scan(): void {
-      const found = queryParts(this, definition.parts);
-      for (const part of definition.parts) {
-        const element = found.get(part);
-        if (element && element !== this.#parts.get(part)) {
-          this.#adopt(part, element);
+      this.instance.batch(() => {
+        const found = queryParts(this, definition.parts);
+        for (const part of definition.parts) {
+          const element = found.get(part);
+          if (element && element !== this.#parts.get(part)) {
+            this.#adopt(part, element);
+          }
+          if (element) this.#parts.set(part, element);
+          else this.#parts.delete(part);
+          this.#binder.attach(part, element ?? null);
         }
-        if (element) this.#parts.set(part, element);
-        else this.#parts.delete(part);
-        this.#binder.attach(part, element ?? null);
+        if (definition.itemParts?.length) this.#scanItems();
+      });
+    }
+
+    /** Attaches item parts by key, and reads adopted collections. */
+    #scanItems(): void {
+      const found = queryItemParts(
+        this,
+        definition.itemParts!,
+        isDevelopment()
+          ? (element, reason) =>
+              warn(
+                `${definition.name}: the ${element.getAttribute('data-part')} part ` +
+                  (reason === 'no-key'
+                    ? 'has no data-key, so it is left alone.'
+                    : `with data-key "${element.getAttribute('data-key')}" repeats an earlier one, so it is left alone.`),
+              )
+          : undefined,
+      );
+      for (const info of infos) {
+        const { adopt } = info;
+        if (!adopt || !('items' in adopt)) continue;
+        if (this.#explicit.has(info.key)) {
+          this.#adoptedItems.delete(info.key);
+          continue;
+        }
+        const items = readItems(found, adopt.items);
+        const serialized = JSON.stringify(items);
+        if (this.#adoptedItems.get(info.key) === serialized) continue;
+        this.#adoptedItems.set(info.key, serialized);
+        this.#set(info.key, items, false);
+      }
+      for (const part of definition.itemParts!) {
+        const next = found.get(part) ?? new Map<string, HTMLElement>();
+        const current = this.#items.get(part) ?? new Map<string, HTMLElement>();
+        for (const key of current.keys()) {
+          if (!next.has(key)) this.#binder.attachItem(part, key, null);
+        }
+        for (const [key, element] of next) {
+          if (current.get(key) !== element) {
+            this.#binder.attachItem(part, key, element);
+          }
+        }
+        this.#items.set(part, next);
       }
     }
 
@@ -329,7 +437,8 @@ export function defineElement<D extends AnyDefinition>(
     #adopt(part: string, element: HTMLElement): void {
       for (const info of infos) {
         const { adopt } = info;
-        if (adopt?.part !== part || this.#explicit.has(info.key)) continue;
+        if (!adopt || !('part' in adopt) || adopt.part !== part) continue;
+        if (this.#explicit.has(info.key)) continue;
         const property = info.kind === 'bindable' ? info.defaultKey! : info.key;
         if (this.#explicit.has(property)) continue;
         const value =

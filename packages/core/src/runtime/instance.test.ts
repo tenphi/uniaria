@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { defineComponent, isOwnerDefinition } from './define';
-import type { LinkKey, PropsOf, StateOf } from './define';
+import { defineComponent, isOwnerDefinition, itemId } from './define';
+import type { ItemPartOf, LinkKey, PropsOf, StateOf } from './define';
 import { createInstance } from './instance';
 import { bindable, event, prop } from './schema';
 
@@ -866,5 +866,199 @@ describe('links', () => {
     child.setProps({ hint: createInstance(button) });
     child.sync();
     expect(child.api.linked()).toBeUndefined();
+  });
+});
+
+/** Rows keyed by item, one active, as a listbox's options are. */
+const rows = defineComponent({
+  name: 'rows',
+  parts: ['root'],
+  itemParts: ['row', 'rowLabel'],
+  props: { tone: prop('plain') },
+  setup(ctx) {
+    const active = ctx.state<string | null>(null);
+    const computed: string[] = [];
+    const activate = (key: string) => {
+      const previous = active.get();
+      active.set(key);
+      ctx.invalidateItems(previous === null ? [key] : [previous, key]);
+    };
+    return {
+      active: () => active.get(),
+      activate,
+      refresh: (keys?: string[]) => ctx.invalidateItems(keys),
+      computed,
+      label: (key: string) => ctx.itemElement('rowLabel', key),
+    };
+  },
+  expose: ({ api }) => ({ active: api.active() }),
+  connect: ({ ids }) => ({ root: { attrs: { id: ids.root } } }),
+  connectItem({ props, api }, part, key) {
+    api.computed.push(`${part}:${key}`);
+    if (part === 'rowLabel') return { attrs: { id: itemId('r', part, key) } };
+    return {
+      attrs: {
+        'data-active': api.active() === key ? '' : undefined,
+        'data-tone': props.tone(),
+        'aria-labelledby': api.label(key)
+          ? itemId('r', 'rowLabel', key)
+          : undefined,
+      },
+      on: { click: () => api.activate(key) },
+    };
+  },
+});
+
+describe('item parts', () => {
+  it('types item parts, and refuses item parts without connectItem or named twice', () => {
+    expectTypeOf<ItemPartOf<typeof rows>>().toEqualTypeOf<'row' | 'rowLabel'>();
+    expectTypeOf<ItemPartOf<typeof disclosure>>().toEqualTypeOf<never>();
+    const base = {
+      name: 'broken',
+      parts: ['root'],
+      props: {},
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    } as const;
+    expect(() => defineComponent({ ...base, itemParts: ['row'] })).toThrow(
+      'item parts need connectItem()',
+    );
+    expect(() =>
+      defineComponent({
+        ...base,
+        itemParts: ['root'],
+        connectItem: () => ({ attrs: {} }),
+      }),
+    ).toThrow('"root" is both a part and an item part');
+  });
+
+  it('makes item ids that never collide or hold whitespace', () => {
+    expect(itemId('list', 'option', 'apple')).toBe('list-option-apple');
+    expect(itemId('list', 'option', 'a b')).toBe('list-option-a%20b');
+    expect(itemId('list', 'option', 'a%20b')).toBe('list-option-a%2520b');
+  });
+
+  it('connects an item part with data-scope and data-part, cached per part and key', () => {
+    const instance = createInstance(rows);
+    const row = instance.connectItem('row', 'a');
+    expect(row.attrs).toMatchObject({
+      'data-scope': 'rows',
+      'data-part': 'row',
+      'data-tone': 'plain',
+    });
+    expect(instance.connectItem('row', 'a')).toBe(row);
+    expect(instance.connectItem('row', 'b')).not.toBe(row);
+    expect(instance.api.computed).toEqual(['row:a', 'row:b']);
+  });
+
+  it('recomputes only the keys a definition invalidates', () => {
+    const instance = createInstance(rows);
+    const a = instance.connectItem('row', 'a');
+    const b = instance.connectItem('row', 'b');
+    const c = instance.connectItem('row', 'c');
+    instance.api.computed.length = 0;
+
+    a.on!.click!(undefined as never);
+    expect(instance.connectItem('row', 'a')).not.toBe(a);
+    expect(instance.connectItem('row', 'a').attrs['data-active']).toBe('');
+    expect(instance.connectItem('row', 'b')).toBe(b);
+    instance.connectItem('row', 'b').on!.click!(undefined as never);
+    expect(instance.connectItem('row', 'a').attrs['data-active']).toBe(
+      undefined,
+    );
+    expect(instance.connectItem('row', 'b').attrs['data-active']).toBe('');
+    expect(instance.connectItem('row', 'c')).toBe(c);
+    expect(instance.api.computed).toEqual(['row:a', 'row:a', 'row:b']);
+  });
+
+  it('recomputes every item when props change', () => {
+    const instance = createInstance(rows, { props: { tone: 'plain' } });
+    const a = instance.connectItem('row', 'a');
+    instance.setProps({ tone: 'plain' });
+    expect(instance.connectItem('row', 'a')).toBe(a);
+    instance.setProps({ tone: 'loud' });
+    expect(instance.connectItem('row', 'a').attrs['data-tone']).toBe('loud');
+  });
+
+  it('reports invalidated keys, and flushes without changing state', () => {
+    const instance = createInstance(rows);
+    const reported: (readonly string[] | null)[] = [];
+    instance.subscribeItems((keys) => reported.push(keys));
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    const state = instance.getState();
+    const connected = instance.connect();
+
+    instance.start();
+    instance.api.refresh(['a', 'b']);
+    expect(reported).toEqual([['a', 'b']]);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(instance.getState()).toBe(state);
+    expect(instance.connect()).toBe(connected);
+    instance.api.refresh([]);
+    expect(listener).toHaveBeenCalledTimes(1);
+    instance.api.refresh();
+    expect(reported).toEqual([['a', 'b'], null]);
+
+    instance.setProps({ tone: 'loud' });
+    expect(reported.at(-1)).toBeNull();
+    expect(reported).toHaveLength(3);
+    instance.stop();
+  });
+
+  it('registers item elements, and rewrites the key an item part attaches to', () => {
+    const instance = createInstance(rows);
+    const reported: (readonly string[] | null)[] = [];
+    instance.subscribeItems((keys) => reported.push(keys));
+    const row = instance.connectItem('row', 'a');
+    expect(row.attrs['aria-labelledby']).toBeUndefined();
+
+    const label = {};
+    instance.attachItem('rowLabel', 'a', label);
+    expect(instance.itemElement('rowLabel', 'a')).toBe(label);
+    expect(instance.itemElement('rowLabel', 'b')).toBeNull();
+    expect(reported).toEqual([['a']]);
+    expect(instance.connectItem('row', 'a').attrs['aria-labelledby']).toBe(
+      'r-rowLabel-a',
+    );
+
+    instance.attachItem('rowLabel', 'a', label);
+    expect(reported).toHaveLength(1);
+    instance.attachItem('rowLabel', 'a', null);
+    expect(instance.itemElement('rowLabel', 'a')).toBeNull();
+    expect(instance.connectItem('row', 'a').attrs['aria-labelledby']).toBe(
+      undefined,
+    );
+  });
+
+  it('notifies for an attached item element only while started', () => {
+    const instance = createInstance(rows);
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    instance.attachItem('row', 'a', {});
+    expect(listener).not.toHaveBeenCalled();
+    instance.start();
+    instance.attachItem('row', 'b', {});
+    expect(listener).toHaveBeenCalledTimes(1);
+    instance.stop();
+  });
+
+  it('forwards connectItem through ctx.use', () => {
+    const outer = defineComponent({
+      name: 'outer',
+      parts: ['root'],
+      itemParts: ['row', 'rowLabel'],
+      props: {},
+      setup: (ctx) => ({ inner: ctx.use(rows, () => ({ tone: 'quiet' })) }),
+      expose: () => ({}),
+      connect: ({ api }) => api.inner.connect(),
+      connectItem: ({ api }, part, key) => api.inner.connectItem(part, key),
+    });
+    const instance = createInstance(outer);
+    expect(instance.connectItem('row', 'a').attrs).toMatchObject({
+      'data-scope': 'outer',
+      'data-tone': 'quiet',
+    });
   });
 });

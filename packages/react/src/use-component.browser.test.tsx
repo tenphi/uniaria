@@ -1,4 +1,4 @@
-import { defineComponent, prop } from '@uniaria/core';
+import { defineComponent, itemId, prop } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { field } from '@uniaria/core/field';
 import type { ButtonProps } from '@uniaria/core/button';
@@ -374,5 +374,131 @@ describe('live DOM properties', () => {
 
   it('puts the starting value in server HTML', () => {
     expect(renderToString(<Live text="jane" />)).toContain('value="jane"');
+  });
+});
+
+/** Rows keyed by item, one active, as a listbox's options are. */
+const rows = defineComponent({
+  name: 'rows',
+  parts: ['list'],
+  itemParts: ['row', 'rowLabel'],
+  props: { tone: prop('plain') },
+  setup(ctx) {
+    const active = ctx.state<string | null>(null);
+    return {
+      active: () => active.get(),
+      label: (key: string) => ctx.itemElement('rowLabel', key),
+      activate(key: string) {
+        const previous = active.get();
+        active.set(key);
+        ctx.invalidateItems(previous === null ? [key] : [previous, key]);
+      },
+    };
+  },
+  expose: ({ api }) => ({ active: api.active() }),
+  connect: () => ({ list: { attrs: { role: 'listbox' } } }),
+  connectItem({ props, api }, part, key) {
+    if (part === 'rowLabel') return { attrs: { id: itemId('r', part, key) } };
+    return {
+      attrs: {
+        role: 'option',
+        'aria-selected': String(api.active() === key),
+        'data-tone': props.tone(),
+        'aria-labelledby': api.label(key)
+          ? itemId('r', 'rowLabel', key)
+          : undefined,
+      },
+      on: { click: () => api.activate(key) },
+    };
+  },
+});
+
+function Rows({
+  keys = ['a', 'b', 'c'],
+  tone,
+  onRender,
+  onHandle,
+}: {
+  readonly keys?: readonly string[];
+  readonly tone?: string;
+  readonly onRender?: () => void;
+  readonly onHandle?: (handle: ComponentHandle<typeof rows>) => void;
+}) {
+  onRender?.();
+  const ui = useComponent(rows, tone === undefined ? {} : { tone });
+  onHandle?.(ui);
+  return (
+    <div {...ui.parts.list}>
+      {keys.map((key) => (
+        <div key={key} {...ui.getItemProps('row', key)}>
+          <span {...ui.getItemProps('rowLabel', key)}>{key}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+describe('item parts', () => {
+  const row = (element: HTMLElement, key: string) =>
+    element.querySelector<HTMLElement>(
+      `[data-part="row"]:nth-child(${['a', 'b', 'c'].indexOf(key) + 1})`,
+    )!;
+
+  it('renders item props, and links item parts once they attach', () => {
+    const warn = vi.spyOn(console, 'warn');
+    const element = render(<Rows />);
+    expect(row(element, 'a').getAttribute('data-scope')).toBe('rows');
+    expect(row(element, 'a').getAttribute('aria-selected')).toBe('false');
+    expect(row(element, 'b').getAttribute('aria-labelledby')).toBe(
+      'r-rowLabel-b',
+    );
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('renders item props on the server', () => {
+    const html = renderToString(<Rows keys={['a']} />);
+    expect(html).toContain('role="option"');
+    expect(html).toContain('aria-selected="false"');
+    expect(html).toContain('id="r-rowLabel-a"');
+    expect(html).not.toContain('aria-labelledby');
+  });
+
+  it('finds the key from the element, with one handler per part and event', async () => {
+    const handles: ComponentHandle<typeof rows>[] = [];
+    const element = render(<Rows onHandle={(ui) => handles.push(ui)} />);
+    const handle = handles.at(-1)!;
+    expect(handle.getItemProps('row', 'a').onClick).toBe(
+      handle.getItemProps('row', 'b').onClick,
+    );
+    row(element, 'b').click();
+    expect(handle.instance.getState().active).toBe('b');
+    expect(row(element, 'b').getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('changes items through the binder without rendering again', () => {
+    const onRender = vi.fn();
+    const element = renderPlain(<Rows onRender={onRender} />);
+    expect(onRender).toHaveBeenCalledTimes(1);
+    row(element, 'a').click();
+    row(element, 'c').click();
+    expect(row(element, 'a').getAttribute('aria-selected')).toBe('false');
+    expect(row(element, 'c').getAttribute('aria-selected')).toBe('true');
+    expect(onRender).toHaveBeenCalledTimes(1);
+
+    renderPlain(<Rows onRender={onRender} tone="loud" />);
+    expect(row(element, 'a').getAttribute('data-tone')).toBe('loud');
+    expect(row(element, 'c').getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('detaches an item that unmounts', () => {
+    const handles: ComponentHandle<typeof rows>[] = [];
+    render(<Rows onHandle={(ui) => handles.push(ui)} />);
+    const { instance } = handles.at(-1)!;
+    expect(instance.itemElement('row', 'c')).not.toBeNull();
+    rerender(<Rows keys={['a', 'b']} onHandle={(ui) => handles.push(ui)} />);
+    expect(instance.itemElement('row', 'c')).toBeNull();
+    expect(instance.itemElement('rowLabel', 'c')).toBeNull();
+    expect(instance.itemElement('row', 'b')).not.toBeNull();
   });
 });
