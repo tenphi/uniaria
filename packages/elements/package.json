@@ -29,7 +29,9 @@
     "./src/tooltip.ts",
     "./dist/tooltip.js",
     "./src/number-field.ts",
-    "./dist/number-field.js"
+    "./dist/number-field.js",
+    "./src/listbox.ts",
+    "./dist/listbox.js"
   ],
   "exports": {
     ".": {
@@ -86,6 +88,11 @@
       "uniaria-source": "./src/number-field.ts",
       "types": "./dist/number-field.d.ts",
       "default": "./dist/number-field.js"
+    },
+    "./listbox": {
+      "uniaria-source": "./src/listbox.ts",
+      "types": "./dist/listbox.d.ts",
+      "default": "./dist/listbox.js"
     },
     "./radio": {
       "uniaria-source": "./src/radio.ts",

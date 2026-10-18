@@ -59,7 +59,7 @@ export type { InteractOutsideHandlers } from './interact-outside';
 export { createLayer, isTopLayer } from './layers';
 export type { DismissReason, Layer, LayerOptions } from './layers';
 export { provideOwner, requestOwner } from './owner';
-export { isAndroid, isIOS, isIPhone } from './platform';
+export { isAndroid, isIOS, isIPhone, isMac } from './platform';
 export { createPosition } from './position';
 export { configure, getSettings } from './settings';
 export type { Positioning, Settings } from './settings';

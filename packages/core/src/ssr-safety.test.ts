@@ -24,6 +24,7 @@ const entries = {
   '@uniaria/core/popover': () => import('./components/popover/index'),
   '@uniaria/core/tooltip': () => import('./components/tooltip/index'),
   '@uniaria/core/number-field': () => import('./components/number-field/index'),
+  '@uniaria/core/listbox': () => import('./components/listbox/index'),
 };
 
 describe('SSR safety', () => {

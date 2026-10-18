@@ -23,6 +23,7 @@ import './dialog';
 import './popover';
 import './tooltip';
 import './number-field';
+import './listbox';
 import type { UniElement } from './define-element';
 
 /**

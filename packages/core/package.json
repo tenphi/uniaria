@@ -70,6 +70,11 @@
       "types": "./dist/number-field/index.d.ts",
       "default": "./dist/number-field/index.js"
     },
+    "./listbox": {
+      "uniaria-source": "./src/components/listbox/index.ts",
+      "types": "./dist/listbox/index.d.ts",
+      "default": "./dist/listbox/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

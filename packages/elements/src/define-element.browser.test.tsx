@@ -1,6 +1,7 @@
 import { bindable, defineComponent, prop } from '@uniaria/core';
 import type { LinkKey } from '@uniaria/core';
 import type { dialog } from '@uniaria/core/dialog';
+import type { listbox } from '@uniaria/core/listbox';
 import { announce, destroyAnnouncer } from '@uniaria/core/dom';
 import { field } from '@uniaria/core/field';
 import type { popover } from '@uniaria/core/popover';
@@ -23,6 +24,7 @@ import './dialog';
 import './popover';
 import './tooltip';
 import './number-field';
+import './listbox';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
 
@@ -1543,5 +1545,72 @@ describe('<uni-tooltip>', () => {
     expect(host.querySelector(':popover-open')).not.toBe(null);
     warn.mockRestore();
     host.remove();
+  });
+});
+
+describe('<uni-listbox>', () => {
+  const FRUIT = `
+    <uni-listbox selection-mode="multiple" disabled-keys='["cherry"]'>
+      <span data-part="label">Fruit</span>
+      <div data-part="list" id="fruit">
+        <div data-part="option" data-key="apple">Apple</div>
+        <div data-part="option" data-key="cherry">Cherry</div>
+        <div data-part="group" data-key="citrus">
+          <span data-part="groupLabel" data-key="citrus">Citrus</span>
+          <div data-part="option" data-key="lemon" data-text-value="Lemon">
+            Lemon <small>sour</small>
+          </div>
+        </div>
+      </div>
+      <p data-part="empty">No fruit</p>
+    </uni-listbox>`;
+
+  const listboxIn = (container: HTMLElement) => {
+    const host =
+      container.querySelector<UniElement<typeof listbox>>('uni-listbox')!;
+    const part = (name: string) =>
+      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+    const option = (key: string) =>
+      host.querySelector<HTMLElement>(
+        `[data-part="option"][data-key="${key}"]`,
+      )!;
+    return { host, part, option };
+  };
+
+  it('reads its options from the markup and adopts the list id', () => {
+    const { host, part, option } = listboxIn(mount(FRUIT));
+    expect(host.listId).toBe('fruit');
+    expect(part('list').getAttribute('aria-multiselectable')).toBe('true');
+    expect(option('apple').getAttribute('role')).toBe('option');
+    expect(option('apple').id).toBe('fruit-option-apple');
+    expect(option('cherry').getAttribute('aria-disabled')).toBe('true');
+    expect(part('group').getAttribute('aria-labelledby')).toBe(
+      part('groupLabel').id,
+    );
+    expect(part('empty').hidden).toBe(true);
+
+    option('lemon').querySelector('small')!.click();
+    option('cherry').click();
+    option('apple').click();
+    expect(host.instance.getState().value).toEqual(['lemon', 'apple']);
+  });
+
+  it('finds an option by typing its data-text-value', async () => {
+    const { option } = listboxIn(mount(FRUIT));
+    option('apple').focus();
+    await userEvent.keyboard('l');
+    expect(document.activeElement).toBe(option('lemon'));
+  });
+
+  it('shows the empty part once the markup has no options', async () => {
+    const { host, part } = listboxIn(mount(FRUIT));
+    part('list').replaceChildren();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.getState().isEmpty).toBe(true);
+    expect(part('empty').hidden).toBe(false);
+    expect(part('list').getAttribute('tabindex')).toBe('0');
+    expect(part('list').getAttribute('aria-describedby')).toBe(
+      part('empty').id,
+    );
   });
 });

@@ -2,6 +2,7 @@ import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { dialog } from '@uniaria/core/dialog';
 import { field } from '@uniaria/core/field';
+import { listbox } from '@uniaria/core/listbox';
 import { popover } from '@uniaria/core/popover';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
@@ -229,5 +230,53 @@ describe('Popover on the server', () => {
     const trigger = html.match(/<button[^>]*>/)![0];
     expect(trigger).toContain('aria-expanded="false"');
     expect(trigger).toContain('type="button"');
+  });
+});
+
+const FRUIT = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+];
+
+function FruitList() {
+  const ui = useComponent(listbox, {
+    items: FRUIT,
+    defaultValue: ['banana'],
+    listId: 'fruit',
+  });
+  return (
+    <div {...ui.parts.root}>
+      <span {...ui.parts.label}>Fruit</span>
+      <ul {...ui.parts.list}>
+        {FRUIT.map((item) => (
+          <li
+            key={item.key}
+            data-key={item.key}
+            {...ui.getItemProps('option', item.key)}
+          >
+            {item.textValue}
+          </li>
+        ))}
+      </ul>
+      <p {...ui.parts.empty}>No fruit</p>
+    </div>
+  );
+}
+
+describe('Listbox on the server', () => {
+  it('renders its options, the selection and the tab stop', () => {
+    const html = renderToString(<FruitList />);
+    const [apple, banana] = html.match(/<li[^>]*>/g)!;
+    expect(apple).toContain('id="fruit-option-apple"');
+    expect(apple).toContain('role="option"');
+    expect(apple).toContain('aria-selected="false"');
+    expect(apple).toContain('tabindex="-1"');
+    expect(banana).toContain('aria-selected="true"');
+    expect(banana).toContain('tabindex="0"');
+    const list = html.match(/<ul[^>]*>/)![0];
+    expect(list).toContain('role="listbox"');
+    expect(list).toContain('id="fruit"');
+    expect(list).toContain('tabindex="-1"');
+    expect(html.match(/<p[^>]*>/)![0]).toMatch(/\shidden[\s=>]/);
   });
 });

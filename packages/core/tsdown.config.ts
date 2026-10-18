@@ -20,6 +20,7 @@ export default defineConfig({
     'tooltip/index': 'src/components/tooltip/index.ts',
     'radio-group/index': 'src/components/radio-group/index.ts',
     'number-field/index': 'src/components/number-field/index.ts',
+    'listbox/index': 'src/components/listbox/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

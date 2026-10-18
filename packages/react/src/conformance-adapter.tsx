@@ -16,6 +16,7 @@ import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { field } from '@uniaria/core/field';
+import { listbox } from '@uniaria/core/listbox';
 import { numberField } from '@uniaria/core/number-field';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
@@ -34,7 +35,7 @@ import { createRoot } from 'react-dom/client';
 
 import { OwnerContext, OwnerProvider } from './owner';
 import { reactPropName, reactPropValue } from './props';
-import type { ReactPartProps } from './use-component';
+import type { ComponentHandle } from './use-component';
 import { useComponent } from './use-component';
 
 /** Definitions by component name, as conformance suites name them. */
@@ -52,6 +53,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   popover,
   tooltip,
   'number-field': numberField,
+  listbox,
 };
 
 /** Form values a consumer would pass as defaults in React. */
@@ -70,10 +72,16 @@ function templateProps(node: TemplateElement): Record<string, unknown> {
   return props;
 }
 
+/**
+ * Spreads part props onto part elements: `ui.parts.<name>`, or for an item
+ * part `ui.getItemProps(part, key)` with the key the template gives as
+ * `data-key`, as a consumer mapping its items would.
+ */
 function renderNodes(
   nodes: readonly TemplateNode[],
-  parts: Readonly<Record<string, ReactPartProps>>,
+  ui: ComponentHandle<AnyDefinition>,
 ): ReactNode[] {
+  const itemParts: readonly string[] = ui.instance.definition.itemParts ?? [];
   return nodes.map((node, index) => {
     if (typeof node === 'string') return node;
     if (isNested(node)) return createElement(Nested, { key: index, node });
@@ -81,8 +89,16 @@ function renderNodes(
       key: index,
       ...templateProps(node),
     };
-    if (node.part !== undefined) Object.assign(props, parts[node.part]);
-    return createElement(node.tag, props, ...renderNodes(node.children, parts));
+    if (node.part !== undefined) {
+      const key = node.attrs['data-key'];
+      Object.assign(
+        props,
+        itemParts.includes(node.part) && key !== undefined
+          ? ui.getItemProps(node.part, key)
+          : (ui.parts as Readonly<Record<string, unknown>>)[node.part],
+      );
+    }
+    return createElement(node.tag, props, ...renderNodes(node.children, ui));
   });
 }
 
@@ -111,7 +127,7 @@ function Nested({ node }: { readonly node: TemplateComponent }) {
   return createElement(
     OwnerProvider,
     { owner: ui.instance },
-    ...renderNodes(node.children, ui.parts),
+    ...renderNodes(node.children, ui),
   );
 }
 
@@ -137,7 +153,7 @@ function Harness({
   return createElement(
     OwnerProvider,
     { owner: ui.instance },
-    ...renderNodes(template, ui.parts),
+    ...renderNodes(template, ui),
   );
 }
 

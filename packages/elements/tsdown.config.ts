@@ -18,6 +18,7 @@ export default defineConfig({
     popover: 'src/popover.ts',
     tooltip: 'src/tooltip.ts',
     'number-field': 'src/number-field.ts',
+    listbox: 'src/listbox.ts',
   },
   format: 'esm',
   platform: 'neutral',
