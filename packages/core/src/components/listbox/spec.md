@@ -96,27 +96,28 @@ from the list's id and the key (Item parts).
 
 Boolean props read as predicates. Keys are strings.
 
-| Prop               | Type                                           | Default                    | Bindable | Change event  | Notes                                                                                                                                                            |
-| ------------------ | ---------------------------------------------- | -------------------------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items              | `readonly Item[]`                              | `[]`                       | no       | —             | The options and groups, in order. A property on the element; without it the element reads them from its markup (Resolved questions 3).                           |
-| getKey             | `(item: Item) => string`                       | `item.key`                 | no       | —             | Unique per list; development warns about duplicates.                                                                                                             |
-| getTextValue       | `(item: Item) => string`                       | `item.textValue`           | no       | —             | What typeahead matches. Development warns when an option has none.                                                                                               |
-| isItemDisabled     | `(item: Item) => boolean`                      | `item.isDisabled === true` | no       | —             | Root AGENTS.md's `isDisabled` accessor, renamed so it doesn't collide with the list's own `isDisabled`.                                                          |
-| getChildren        | `(item: Item) => readonly Item[] \| undefined` | `item.items`               | no       | —             | An item with children is a group; its children are its options. Groups don't nest.                                                                               |
-| disabledKeys       | `readonly string[]`                            | `[]`                       | no       | —             | Disabled too, besides `isItemDisabled`: React Aria's and UI Kit's prop, and how markup says it (attribute `disabled-keys`, JSON).                                |
-| value              | `readonly string[]`                            | `[]`                       | yes      | `valueChange` | The selected keys, in the order they were selected; at most one in single mode (Resolved questions 5). Keys with no item stay in it.                             |
-| selectionMode      | `'single' \| 'multiple'`                       | `'single'`                 | no       | —             | `aria-multiselectable="true"` in multiple mode.                                                                                                                  |
-| isDisabled         | `boolean`                                      | `false`                    | no       | —             | `aria-disabled="true"` on the list and every option; no tab stop.                                                                                                |
-| isReadOnly         | `boolean`                                      | `false`                    | no       | —             | `aria-readonly="true"` on the list; focus moves, nothing is selected. Attribute `readonly`. As RadioGroup and CheckboxGroup; React Aria's ListBox has none.      |
-| isRequired         | `boolean`                                      | `false`                    | no       | —             | Field's: `aria-required` on the list.                                                                                                                            |
-| isInvalid          | `boolean`                                      | `false`                    | no       | —             | Field's: `aria-invalid` on the list, shows and announces the error.                                                                                              |
-| orientation        | `'vertical' \| 'horizontal'`                   | `'vertical'`               | no       | —             | Which arrows move; `aria-orientation`, always written, and `data-orientation`.                                                                                   |
-| shouldFocusWrap    | `boolean`                                      | `false`                    | no       | —             | The arrows go from the last option to the first and back. Home, End and the page keys never wrap. Attribute `focus-wrap`.                                        |
-| shouldFocusOnHover | `boolean`                                      | `false`                    | no       | —             | A hovering mouse moves focus to the option, unless focus is visible (the keyboard is in use), as React Aria. Select will turn it on. Attribute `focus-on-hover`. |
-| listId             | `string \| undefined`                          | generated                  | no       | —             | Field's `controlId`. The element adopts the list's `id`. Item ids follow it.                                                                                     |
-| labelElementType   | `string`                                       | `'span'`                   | no       | —             | Field's. The element reads the label's tag.                                                                                                                      |
-| labelledBy         | `string \| undefined`                          | —                          | no       | —             | Field's.                                                                                                                                                         |
-| describedBy        | `string \| undefined`                          | —                          | no       | —             | Field's.                                                                                                                                                         |
+| Prop                  | Type                                           | Default                    | Bindable | Change event  | Notes                                                                                                                                                            |
+| --------------------- | ---------------------------------------------- | -------------------------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items                 | `readonly Item[]`                              | `[]`                       | no       | —             | The options and groups, in order. A property on the element; without it the element reads them from its markup (Resolved questions 3).                           |
+| getKey                | `(item: Item) => string`                       | `item.key`                 | no       | —             | Unique per list; development warns about duplicates.                                                                                                             |
+| getTextValue          | `(item: Item) => string`                       | `item.textValue`           | no       | —             | What typeahead matches. Development warns when an option has none.                                                                                               |
+| isItemDisabled        | `(item: Item) => boolean`                      | `item.isDisabled === true` | no       | —             | Root AGENTS.md's `isDisabled` accessor, renamed so it doesn't collide with the list's own `isDisabled`.                                                          |
+| getChildren           | `(item: Item) => readonly Item[] \| undefined` | `item.items`               | no       | —             | An item with children is a group; its children are its options. Groups don't nest.                                                                               |
+| disabledKeys          | `readonly string[]`                            | `[]`                       | no       | —             | Disabled too, besides `isItemDisabled`: React Aria's and UI Kit's prop, and how markup says it (attribute `disabled-keys`, JSON).                                |
+| value                 | `readonly string[]`                            | `[]`                       | yes      | `valueChange` | The selected keys, in the order they were selected; at most one in single mode (Resolved questions 5). Keys with no item stay in it.                             |
+| selectionMode         | `'single' \| 'multiple'`                       | `'single'`                 | no       | —             | `aria-multiselectable="true"` in multiple mode.                                                                                                                  |
+| isDisabled            | `boolean`                                      | `false`                    | no       | —             | `aria-disabled="true"` on the list and every option; no tab stop.                                                                                                |
+| isReadOnly            | `boolean`                                      | `false`                    | no       | —             | `aria-readonly="true"` on the list; focus moves, nothing is selected. Attribute `readonly`. As RadioGroup and CheckboxGroup; React Aria's ListBox has none.      |
+| isRequired            | `boolean`                                      | `false`                    | no       | —             | Field's: `aria-required` on the list.                                                                                                                            |
+| isInvalid             | `boolean`                                      | `false`                    | no       | —             | Field's: `aria-invalid` on the list, shows and announces the error.                                                                                              |
+| orientation           | `'vertical' \| 'horizontal'`                   | `'vertical'`               | no       | —             | Which arrows move; `aria-orientation`, always written, and `data-orientation`.                                                                                   |
+| shouldFocusWrap       | `boolean`                                      | `false`                    | no       | —             | The arrows go from the last option to the first and back. Home, End and the page keys never wrap. Attribute `focus-wrap`.                                        |
+| shouldFocusOnHover    | `boolean`                                      | `false`                    | no       | —             | A hovering mouse moves focus to the option, unless focus is visible (the keyboard is in use), as React Aria. Select will turn it on. Attribute `focus-on-hover`. |
+| shouldUseVirtualFocus | `boolean`                                      | `false`                    | no       | —             | Virtual focus, for a component that keeps focus in its own input (Combobox, its Resolved questions 1): see Focus. Property only.                                 |
+| listId                | `string \| undefined`                          | generated                  | no       | —             | Field's `controlId`. The element adopts the list's `id`. Item ids follow it.                                                                                     |
+| labelElementType      | `string`                                       | `'span'`                   | no       | —             | Field's. The element reads the label's tag.                                                                                                                      |
+| labelledBy            | `string \| undefined`                          | —                          | no       | —             | Field's.                                                                                                                                                         |
+| describedBy           | `string \| undefined`                          | —                          | no       | —             | Field's.                                                                                                                                                         |
 
 `Item` is whatever the accessors read. Without accessors it is
 `{ key: string; textValue: string; isDisabled?: boolean; items?: Item[] }`,
@@ -338,6 +339,15 @@ on to the tab stop.
   while focus isn't visible (React Aria; Select will use it). UI Kit
   documents that as the default but its code leaves it off; UniAria's
   default is off.
+- **Virtual focus** (`shouldUseVirtualFocus`, added with Combobox). DOM
+  focus stays in the composing component's input, which points at the
+  highlighted option with `aria-activedescendant`. The list and its options
+  take no `tabindex`; `data-focused` follows the highlight, and
+  `data-focus-visible` marks a highlight the keys moved, which the composing
+  component sets through the api and Listbox scrolls into view. A press on
+  an option prevents its `mousedown`, so focus stays in the input. With
+  `shouldFocusOnHover`, hovering highlights, except over a highlight the keys
+  moved, as hover never takes keyboard focus.
 
 ## Styling tokens
 
@@ -467,7 +477,7 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
   `optionHighlight` and the style props are the design system's.
   `emptyLabel` is the empty part's text.
 - `showSelectAll` goes (Resolved questions 11); `isReorderable` waits;
-  `shouldUseVirtualFocus` comes with Combobox; `filter` is the consumer
+  `shouldUseVirtualFocus` came with Combobox; `filter` is the consumer
   passing fewer items.
 - **Fixes.** The list stays rendered when empty, and its empty state is read.
   No option outside the listbox (select-all), no `separator` inside it, no
