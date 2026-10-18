@@ -25,6 +25,7 @@ import './tooltip';
 import './number-field';
 import './listbox';
 import './select';
+import './combobox';
 import type { UniElement } from './define-element';
 
 /**

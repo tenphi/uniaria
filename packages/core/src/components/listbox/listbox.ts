@@ -7,6 +7,10 @@
  * (Resolved questions 9). Arrows, Home, End, the page keys and typeahead
  * move focus only.
  *
+ * In virtual focus (`shouldUseVirtualFocus`, Combobox's), DOM focus stays
+ * in the composing component's input: the highlighted option is state the
+ * component moves through the api, and nothing in the list takes focus.
+ *
  * Item props are cached per key, so every change an option shows is
  * reported with `ctx.invalidateItems()`: the watches below name the keys
  * whose focus, tab stop, hover, press or selection changed.
@@ -136,6 +140,8 @@ export const listbox = defineComponent({
     orientation: prop<Orientation>('vertical'),
     shouldFocusWrap: prop(false),
     shouldFocusOnHover: prop(false),
+    // Set by a component that keeps focus in its own input (Combobox).
+    shouldUseVirtualFocus: prop(false, { attribute: false }),
     // Field's `controlId`. The element adopts the list's id.
     listId: prop<string | undefined>(undefined, {
       attribute: false,
@@ -217,6 +223,7 @@ export const listbox = defineComponent({
     );
     const isMultiple = () => props.selectionMode() === 'multiple';
     const isVertical = () => props.orientation() !== 'horizontal';
+    const isVirtual = () => props.shouldUseVirtualFocus();
     const isEnabled = (key: string) =>
       !props.isDisabled() && collection().isEnabled(key);
 
@@ -225,6 +232,10 @@ export const listbox = defineComponent({
     /** The option focused last, where Tab comes back to. */
     const lastFocused = ctx.state<string | null>(null);
     const hoveredKey = ctx.state<string | null>(null);
+    // Virtual focus: the highlighted option, and whether the keyboard moved
+    // it there (its focus-visible).
+    const highlightedKey = ctx.state<string | null>(null);
+    const isHighlightVisible = ctx.state(false);
     // Range selection (Selection): where ranges start, and where the last
     // one ended, so the next range from the same anchor replaces it.
     let anchor: string | null = null;
@@ -268,6 +279,8 @@ export const listbox = defineComponent({
     follow(tabStop);
     follow(focusedKey.get);
     follow(hoveredKey.get);
+    follow(highlightedKey.get);
+    ctx.watch(isHighlightVisible.get, () => invalidate(highlightedKey.get()));
     ctx.watch(focusWithin.isFocusVisible, () => invalidate(focusedKey.get()));
     ctx.watch(value, (next, previous) => {
       ctx.invalidateItems(difference(next, previous));
@@ -345,6 +358,22 @@ export const listbox = defineComponent({
       if (!element) return;
       element.focus({ preventScroll: true });
       element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    };
+
+    /**
+     * Virtual focus: highlights `key`, or nothing. Moved by the keyboard, the
+     * option is scrolled into view, as browsers don't do it for
+     * `aria-activedescendant`.
+     */
+    const highlight = (key: string | null, isKeyboard: boolean) => {
+      const target = key !== null && isEnabled(key) ? key : null;
+      highlightedKey.set(target);
+      isHighlightVisible.set(target !== null && isKeyboard);
+      if (target === null || !isKeyboard) return;
+      optionElement(target)?.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest',
+      });
     };
 
     /**
@@ -509,6 +538,7 @@ export const listbox = defineComponent({
     const press = createItemPress(ctx, {
       element: optionElement,
       isDisabled: (key) => !isEnabled(key),
+      shouldPreventFocusOnPress: isVirtual,
       onPress(key, pressEvent) {
         if (pressEvent.shiftKey && isMultiple()) {
           extendTo(key, focusBeforePress);
@@ -554,6 +584,14 @@ export const listbox = defineComponent({
               return;
             }
             hoveredKey.set(key);
+            // A highlight the keys moved stays until a press, as keyboard
+            // focus does below (React Aria).
+            if (isVirtual()) {
+              if (props.shouldFocusOnHover() && !isHighlightVisible.get()) {
+                highlight(key, false);
+              }
+              return;
+            }
             // Hover focus stays inside the list, and leaves keyboard focus
             // where it is.
             if (
@@ -576,6 +614,10 @@ export const listbox = defineComponent({
     // moves to the next option of the old order still enabled, else the
     // previous, else the list. After the flush, so the list has its tab stop.
     ctx.watch(collection, (next, previous) => {
+      const highlighted = highlightedKey.get();
+      if (highlighted !== null && !next.isEnabled(highlighted)) {
+        highlight(null, false);
+      }
       const key = focusedKey.get();
       if (key === null || next.isEnabled(key)) return;
       const option = previous.get(key);
@@ -635,7 +677,8 @@ export const listbox = defineComponent({
       selected,
       tabStop,
       base,
-      focusedKey: () => focusedKey.get(),
+      focusedKey: () => (isVirtual() ? highlightedKey.get() : focusedKey.get()),
+      isHighlightVisible: () => isHighlightVisible.get(),
       hoveredKey: () => hoveredKey.get(),
       pressedKey: press.pressedKey,
       isFocusWithin: focusWithin.isFocusWithin,
@@ -645,6 +688,10 @@ export const listbox = defineComponent({
       setTabStop: (key: string | null) => lastFocused.set(key),
       /** Chooses an option as a press would (Select's press and release). */
       activate,
+      /** Virtual focus: the option the composing component highlights. */
+      highlight,
+      /** The option a page key moves to from `key` (Combobox's). */
+      pageFrom,
       optionHandlers,
       listHandlers: { keydown: onListKeyDown, focusin: onListFocusIn },
       isRendered: (part: string, key: string) =>
@@ -655,7 +702,9 @@ export const listbox = defineComponent({
     return {
       value: props.value.get(),
       selectionMode: props.selectionMode(),
-      focusedKey: api.tabStop(),
+      focusedKey: props.shouldUseVirtualFocus()
+        ? api.focusedKey()
+        : api.tabStop(),
       isEmpty: api.collection().options.length === 0,
       isDisabled: props.isDisabled(),
       isReadOnly: props.isReadOnly(),
@@ -699,8 +748,13 @@ export const listbox = defineComponent({
         'aria-disabled': isDisabled ? 'true' : undefined,
         'aria-readonly': props.isReadOnly() ? 'true' : undefined,
         // The tab stop while no option can take focus (Focus). Otherwise
-        // -1, or Firefox makes a list that scrolls a second tab stop.
-        tabindex: !isDisabled && api.tabStop() === null ? '0' : '-1',
+        // -1, or Firefox makes a list that scrolls a second tab stop. None
+        // in virtual focus: focus stays in the input.
+        tabindex: props.shouldUseVirtualFocus()
+          ? undefined
+          : !isDisabled && api.tabStop() === null
+            ? '0'
+            : '-1',
       },
       on: api.listHandlers,
     };
@@ -755,11 +809,20 @@ export const listbox = defineComponent({
     const option = api.collection().get(key);
     const isDisabled = isListDisabled || !option || option.isDisabled;
     const isSelected = api.selected().has(key);
+    const isVirtual = props.shouldUseVirtualFocus();
     const isFocused = api.focusedKey() === key;
+    const isFocusVisible = isVirtual
+      ? api.isHighlightVisible()
+      : api.isFocusVisible();
     const attrs = {
       role: 'option',
       id: itemId(base, 'option', key),
-      tabindex: isDisabled ? undefined : api.tabStop() === key ? '0' : '-1',
+      tabindex:
+        isDisabled || isVirtual
+          ? undefined
+          : api.tabStop() === key
+            ? '0'
+            : '-1',
       'aria-selected': String(isSelected),
       'aria-disabled': isDisabled ? 'true' : undefined,
       'aria-labelledby': api.isRendered('optionLabel', key)
@@ -770,7 +833,7 @@ export const listbox = defineComponent({
         : undefined,
       'data-selected': flag(isSelected),
       'data-focused': flag(isFocused),
-      'data-focus-visible': flag(isFocused && api.isFocusVisible()),
+      'data-focus-visible': flag(isFocused && isFocusVisible),
       'data-hovered': flag(!isDisabled && api.hoveredKey() === key),
       'data-pressed': flag(api.pressedKey() === key),
       ...common,

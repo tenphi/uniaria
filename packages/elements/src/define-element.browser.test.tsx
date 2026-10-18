@@ -1,5 +1,6 @@
 import { bindable, defineComponent, prop } from '@uniaria/core';
 import type { LinkKey } from '@uniaria/core';
+import type { combobox } from '@uniaria/core/combobox';
 import type { dialog } from '@uniaria/core/dialog';
 import type { listbox } from '@uniaria/core/listbox';
 import { announce, destroyAnnouncer } from '@uniaria/core/dom';
@@ -27,6 +28,7 @@ import './tooltip';
 import './number-field';
 import './listbox';
 import './select';
+import './combobox';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
 
@@ -1680,5 +1682,70 @@ describe('<uni-select>', () => {
     await expect
       .poll(() => part('popover').matches(':popover-open'))
       .toBe(false);
+  });
+});
+
+describe('<uni-combobox>', () => {
+  const FRUIT = `
+    <uni-combobox required>
+      <label data-part="label">Fruit</label>
+      <input data-part="input" id="pick" />
+      <button data-part="button">▾</button>
+      <div data-part="popover">
+        <div data-part="list" id="fruit">
+          <div data-part="option" data-key="apple">Apple</div>
+          <div data-part="group" data-key="citrus">
+            <span data-part="groupLabel" data-key="citrus">Citrus</span>
+            <div data-part="option" data-key="lemon">Lemon</div>
+          </div>
+        </div>
+      </div>
+      <input data-part="hiddenInput" name="fruit" />
+    </uni-combobox>`;
+
+  const comboboxIn = (container: HTMLElement) => {
+    const host =
+      container.querySelector<UniElement<typeof combobox>>('uni-combobox')!;
+    const part = (name: string) =>
+      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+    const option = (key: string) =>
+      host.querySelector<HTMLElement>(
+        `[data-part="option"][data-key="${key}"]`,
+      )!;
+    return { host, part, option };
+  };
+
+  it('reads its options from the markup and adopts the input and list ids', () => {
+    const { host, part, option } = comboboxIn(mount(FRUIT));
+    expect(host.inputId).toBe('pick');
+    expect(host.listId).toBe('fruit');
+    const input = part('input') as HTMLInputElement;
+    expect(input.getAttribute('role')).toBe('combobox');
+    expect(input.getAttribute('aria-controls')).toBe('fruit');
+    expect(input.required).toBe(true);
+    expect(part('label').getAttribute('for')).toBe('pick');
+    expect(option('lemon').id).toBe('fruit-option-lemon');
+    expect((part('hiddenInput') as HTMLInputElement).type).toBe('hidden');
+  });
+
+  it('hides the options and groups the typed text leaves out, and writes the option chosen', async () => {
+    const { host, part, option } = comboboxIn(mount(FRUIT));
+    const input = part('input') as HTMLInputElement;
+    input.focus();
+    await userEvent.keyboard('ap');
+    await expect
+      .poll(() => part('popover').matches(':popover-open'))
+      .toBe(true);
+    expect(option('apple').hidden).toBe(false);
+    expect(option('lemon').hidden).toBe(true);
+    expect(part('group').hidden).toBe(true);
+    option('apple').click();
+    expect(host.instance.getState().value).toEqual(['apple']);
+    expect(input.value).toBe('Apple');
+    expect((part('hiddenInput') as HTMLInputElement).value).toBe('apple');
+    await expect
+      .poll(() => part('popover').matches(':popover-open'))
+      .toBe(false);
+    expect(option('lemon').hidden).toBe(false);
   });
 });

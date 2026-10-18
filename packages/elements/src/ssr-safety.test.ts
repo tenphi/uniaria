@@ -22,6 +22,7 @@ const entries = {
   '@uniaria/elements/number-field': () => import('./number-field'),
   '@uniaria/elements/listbox': () => import('./listbox'),
   '@uniaria/elements/select': () => import('./select'),
+  '@uniaria/elements/combobox': () => import('./combobox'),
 };
 
 describe('SSR safety', () => {
@@ -64,5 +65,7 @@ describe('SSR safety', () => {
     expect(UniListbox).toBeUndefined();
     const { UniSelect } = await import('./select');
     expect(UniSelect).toBeUndefined();
+    const { UniCombobox } = await import('./combobox');
+    expect(UniCombobox).toBeUndefined();
   });
 });

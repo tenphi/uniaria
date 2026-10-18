@@ -1,5 +1,6 @@
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
+import { combobox } from '@uniaria/core/combobox';
 import { dialog } from '@uniaria/core/dialog';
 import { field } from '@uniaria/core/field';
 import { listbox } from '@uniaria/core/listbox';
@@ -331,5 +332,61 @@ describe('Select on the server', () => {
     const hidden = html.match(/<select[^>]*>/)![0];
     expect(hidden).toContain('aria-hidden="true"');
     expect(hidden).toContain('tabindex="-1"');
+  });
+});
+
+function FruitCombobox() {
+  const ui = useComponent(combobox, {
+    items: FRUIT,
+    defaultValue: ['banana'],
+    inputId: 'pick',
+    listId: 'fruit',
+  });
+  return (
+    <div {...ui.parts.root}>
+      <label {...ui.parts.label}>Fruit</label>
+      <input {...ui.parts.input} />
+      <button {...ui.parts.button}>▾</button>
+      <div {...ui.parts.popover}>
+        <ul {...ui.parts.list}>
+          {FRUIT.map((item) => (
+            <li
+              key={item.key}
+              data-key={item.key}
+              {...ui.getItemProps('option', item.key)}
+            >
+              {item.textValue}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <input {...ui.parts.hiddenInput} name="fruit" />
+    </div>
+  );
+}
+
+describe('Combobox on the server', () => {
+  it("renders the input with the value's text, the hidden popover and the hidden input", () => {
+    const html = renderToString(<FruitCombobox />);
+    const [input, hidden] = html.match(/<input[^>]*>/g)!;
+    expect(input).toContain('id="pick"');
+    expect(input).toContain('role="combobox"');
+    expect(input).toContain('aria-autocomplete="list"');
+    expect(input).toContain('aria-expanded="false"');
+    expect(input).toContain('aria-controls="fruit"');
+    expect(input).toContain('value="Banana"');
+    expect(input).not.toContain('aria-activedescendant');
+    expect(html).toContain('for="pick"');
+    const button = html.match(/<button[^>]*>/)![0];
+    expect(button).toContain('tabindex="-1"');
+    expect(button).toContain('aria-label="Show suggestions"');
+    const popover = html.match(/<div[^>]*popover[^>]*>/)![0];
+    expect(popover).toContain('popover="manual"');
+    expect(popover).not.toContain('role=');
+    const [, banana] = html.match(/<li[^>]*>/g)!;
+    expect(banana).toContain('aria-selected="true"');
+    expect(banana).not.toContain('tabindex');
+    expect(hidden).toContain('type="hidden"');
+    expect(hidden).toContain('value="banana"');
   });
 });

@@ -26,6 +26,7 @@ const entries = {
   '@uniaria/core/number-field': () => import('./components/number-field/index'),
   '@uniaria/core/listbox': () => import('./components/listbox/index'),
   '@uniaria/core/select': () => import('./components/select/index'),
+  '@uniaria/core/combobox': () => import('./components/combobox/index'),
 };
 
 describe('SSR safety', () => {

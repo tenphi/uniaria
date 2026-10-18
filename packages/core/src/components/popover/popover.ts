@@ -108,6 +108,8 @@ export const popover = defineComponent({
     >(undefined, { attribute: false }),
     isDisabled: prop(false),
     shouldRestoreFocus: prop(true),
+    // Combobox's popup leaves focus in its input.
+    shouldFocusOnOpen: prop(true),
     positionArea: prop<PositionArea>('bottom'),
     positionTryFallbacks: prop('flip-block, flip-inline'),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
@@ -147,6 +149,9 @@ export const popover = defineComponent({
     const trigger = ctx.use(
       button,
       () => ({
+        // Whatever the trigger is (Combobox's is its input), so Button
+        // gives it the right role and keys.
+        elementType: triggerElement()?.localName ?? 'button',
         isDisabled: props.isDisabled(),
         onPress: () => (isOpen.get() ? requestClose('trigger') : open()),
       }),
@@ -242,11 +247,13 @@ export const popover = defineComponent({
         // The element adapter attaches a part before the binder writes its
         // attributes, and a popover that takes focus itself must be able to
         // now. One that hands it to a marked element, as Select's, needn't.
-        const target = initialFocus(root);
-        if (target === root && !root.hasAttribute('tabindex')) {
-          root.tabIndex = -1;
+        if (props.shouldFocusOnOpen()) {
+          const target = initialFocus(root);
+          if (target === root && !root.hasAttribute('tabindex')) {
+            root.tabIndex = -1;
+          }
+          target.focus();
         }
-        target.focus();
         // A custom element may get its title after its root: check later.
         const checks = isDevelopment()
           ? setTimeout(() => checkOpen(root))

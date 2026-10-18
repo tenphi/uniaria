@@ -80,6 +80,11 @@
       "types": "./dist/select/index.d.ts",
       "default": "./dist/select/index.js"
     },
+    "./combobox": {
+      "uniaria-source": "./src/components/combobox/index.ts",
+      "types": "./dist/combobox/index.d.ts",
+      "default": "./dist/combobox/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

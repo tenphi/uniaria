@@ -33,7 +33,9 @@
     "./src/listbox.ts",
     "./dist/listbox.js",
     "./src/select.ts",
-    "./dist/select.js"
+    "./dist/select.js",
+    "./src/combobox.ts",
+    "./dist/combobox.js"
   ],
   "exports": {
     ".": {
@@ -100,6 +102,11 @@
       "uniaria-source": "./src/select.ts",
       "types": "./dist/select.d.ts",
       "default": "./dist/select.js"
+    },
+    "./combobox": {
+      "uniaria-source": "./src/combobox.ts",
+      "types": "./dist/combobox.d.ts",
+      "default": "./dist/combobox.js"
     },
     "./radio": {
       "uniaria-source": "./src/radio.ts",

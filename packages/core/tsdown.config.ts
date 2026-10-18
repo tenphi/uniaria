@@ -22,6 +22,7 @@ export default defineConfig({
     'number-field/index': 'src/components/number-field/index.ts',
     'listbox/index': 'src/components/listbox/index.ts',
     'select/index': 'src/components/select/index.ts',
+    'combobox/index': 'src/components/combobox/index.ts',
   },
   format: 'esm',
   platform: 'neutral',
