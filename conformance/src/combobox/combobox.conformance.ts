@@ -15,7 +15,7 @@
  * own test.
  */
 
-import { defineConformance, h } from '@uniaria/testing';
+import { VIRTUALIZER, defineConformance, h, rows } from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -182,6 +182,90 @@ function fruit({
     h('input', { id: 'after', class: 'sc-after', 'aria-label': 'After' }),
     h('button', { id: 'other', class: 'sc-other' }, 'Other'),
   ];
+}
+
+/** A thousand options, `item-0` to `item-999`, for virtualized lists. */
+const THOUSAND: readonly ComboboxItem[] = Array.from(
+  { length: 1000 },
+  (_, index) => ({ key: `item-${index}`, textValue: `Item ${index}` }),
+);
+
+/** The props of a virtualized combo box (Listbox virtualization spec). */
+const VIRTUAL = {
+  items: THOUSAND,
+  virtualizer: VIRTUALIZER,
+  itemSize: 20,
+} as const;
+
+/**
+ * The combo box "Fruit" with a virtualized list: a scroller 100px tall in
+ * the popover around the list, and 20px rows rendered from `renderedKeys`,
+ * as the virtualization spec's consumer writes them.
+ */
+function virtualFruit(): TemplateNode[] {
+  const text = new Map(THOUSAND.map((item) => [item.key, item.textValue!]));
+  return [
+    LAYOUT,
+    h(
+      'style',
+      null,
+      '.vs-scroller { height: 100px; overflow: auto }' +
+        ' .vs-row { height: 20px; inset-inline-end: 0; margin: 0; padding: 0; font: 12px/20px sans-serif; overflow: hidden }',
+    ),
+    h('input', { id: 'before', class: 'sc-before', 'aria-label': 'Before' }),
+    h(
+      'div',
+      { part: 'root', class: 'sc-root' },
+      h('label', { part: 'label', class: 'sc-label' }, 'Fruit'),
+      h(
+        'div',
+        { part: 'anchor', class: 'sc-anchor' },
+        h('input', { part: 'input', class: 'sc-input' }),
+        h(
+          'button',
+          { part: 'button', class: 'sc-button' },
+          h('span', { 'aria-hidden': 'true' }, '▾'),
+        ),
+      ),
+      h('p', { part: 'error' }, 'Pick one'),
+      h(
+        'div',
+        { part: 'popover', class: 'sc-pop' },
+        h(
+          'div',
+          { part: 'scroller', class: 'vs-scroller' },
+          h(
+            'div',
+            { part: 'list', class: 'sc-list' },
+            rows(({ keys }) =>
+              keys.map((key) =>
+                h(
+                  'div',
+                  { part: 'option', 'data-key': key, class: 'vs-row' },
+                  text.get(key)!,
+                ),
+              ),
+            ),
+          ),
+        ),
+        h('p', { part: 'empty' }, 'No fruit'),
+      ),
+      h('input', { part: 'hiddenInput', name: 'fruit' }),
+    ),
+    h('input', { id: 'after', class: 'sc-after', 'aria-label': 'After' }),
+  ];
+}
+
+/** Whether an element lies wholly inside the scroller's view. */
+function isInView(mounted: MountedCombobox, element: Element): boolean {
+  const view = mounted.part('scroller').getBoundingClientRect();
+  const box = element.getBoundingClientRect();
+  return box.top >= view.top - 0.5 && box.bottom <= view.bottom + 0.5;
+}
+
+/** Every rendered option's key, in document order. */
+function renderedKeys(mounted: MountedCombobox): string[] {
+  return mounted.parts('option').map((element) => element.dataset.key!);
 }
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -1872,6 +1956,9 @@ export const comboboxConformance = defineConformance<
           isErrorShown: false,
           isFocusWithin: false,
           isFocusVisible: false,
+          isVirtualized: false,
+          renderedKeys: ['apple', 'banana', 'cherry', 'date'],
+          renderedSections: [],
         });
         input(mounted).focus();
         await typeText(keyboard, 'b');
@@ -2033,6 +2120,110 @@ export const comboboxConformance = defineConformance<
         phrases = await spoken();
         expect(phrases).toContain(
           'combobox, Fruit, a, has popup listbox, expanded, active descendant Banana, autocomplete in list, 1 control',
+        );
+      },
+      PHASE,
+    );
+  });
+  group('virtualization', () => {
+    scenario(
+      'ArrowUp opens on the last option, rendered, named as the active descendant and scrolled into view',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: virtualFruit(),
+          props: VIRTUAL,
+        });
+        input(mounted).focus();
+        await keyboard.press('ArrowUp');
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        expect(highlighted(mounted)).toBe('item-999');
+        const last = option(mounted, 'item-999');
+        expect(isInView(mounted, last)).toBe(true);
+        expect(last.getAttribute('aria-posinset')).toBe('1000');
+        expect(last.getAttribute('aria-setsize')).toBe('1000');
+      },
+      PHASE,
+    );
+
+    scenario(
+      'the active descendant names a rendered option after every move',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: virtualFruit(),
+          props: VIRTUAL,
+        });
+        input(mounted).focus();
+        await keyboard.press('ArrowDown');
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        expect(highlighted(mounted)).toBe('item-0');
+        for (const key of ['item-5', 'item-10', 'item-15']) {
+          await keyboard.press('PageDown');
+          expect(highlighted(mounted)).toBe(key);
+          expect(isInView(mounted, option(mounted, key))).toBe(true);
+        }
+        await keyboard.press('ArrowUp');
+        expect(highlighted(mounted)).toBe('item-14');
+      },
+      PHASE,
+    );
+
+    scenario(
+      'typing renders the matching options, numbered among the matches',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: virtualFruit(),
+          props: VIRTUAL,
+        });
+        input(mounted).focus();
+        await typeText(keyboard, 'Item 99');
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        const matches = [
+          'item-99',
+          ...Array.from({ length: 10 }, (_, index) => `item-99${index}`),
+        ];
+        await expect.poll(() => renderedKeys(mounted)).toEqual(matches);
+        expect(mounted.state().renderedKeys).toEqual(matches);
+        expect(option(mounted, 'item-99').getAttribute('aria-posinset')).toBe(
+          '1',
+        );
+        expect(option(mounted, 'item-999').getAttribute('aria-setsize')).toBe(
+          '11',
+        );
+      },
+      PHASE,
+    );
+
+    scenario(
+      'the button opens the list scrolled to the selected option',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: virtualFruit(),
+          props: { ...VIRTUAL, defaultValue: ['item-500'] },
+        });
+        await pointer.click(button(mounted));
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        await expect.poll(() => highlighted(mounted)).toBe('item-500');
+        expect(isInView(mounted, option(mounted, 'item-500'))).toBe(true);
+      },
+      PHASE,
+    );
+
+    scenario(
+      'reads a highlighted option outside the first view as the active descendant',
+      async ({ mount, keyboard, spoken }) => {
+        const mounted = await mount({
+          template: virtualFruit(),
+          props: VIRTUAL,
+        });
+        input(mounted).focus();
+        await keyboard.press('ArrowUp');
+        await expect.poll(() => highlighted(mounted)).toBe('item-999');
+        const phrases = await spoken();
+        expect(phrases).toContain(
+          'combobox, Fruit, has popup listbox, expanded, active descendant Item 999, autocomplete in list, 1 control',
+        );
+        expect(phrases).toContain(
+          'option, Item 999, not selected, position 1000, set size 1000',
         );
       },
       PHASE,

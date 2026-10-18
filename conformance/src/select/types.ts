@@ -3,11 +3,15 @@
  * (`packages/core/src/components/select/spec.md`) defines them.
  */
 
-import type { ListboxItem } from '../listbox/types';
+import type {
+  ListboxItem,
+  VirtualizationProps,
+  VirtualizationState,
+} from '../listbox/types';
 
 export type SelectItem = ListboxItem;
 
-export interface SelectProps {
+export interface SelectProps extends VirtualizationProps {
   items: readonly SelectItem[];
   disabledKeys: readonly string[];
   value: readonly string[];
@@ -30,7 +34,7 @@ export interface SelectProps {
   describedBy: string | undefined;
 }
 
-export interface SelectState {
+export interface SelectState extends VirtualizationState {
   value: readonly string[];
   valueText: string;
   isPlaceholder: boolean;

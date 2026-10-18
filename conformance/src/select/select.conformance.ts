@@ -15,7 +15,7 @@
  * scenarios focus it by script.
  */
 
-import { defineConformance, h } from '@uniaria/testing';
+import { VIRTUALIZER, defineConformance, h, rows } from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -163,6 +163,107 @@ const MANY: readonly SelectItem[] = Array.from({ length: 20 }, (_, index) => ({
   key: `item-${index}`,
   textValue: `Item ${index}`,
 }));
+
+/** A thousand options, `item-0` to `item-999`, for virtualized lists. */
+const THOUSAND: readonly SelectItem[] = Array.from(
+  { length: 1000 },
+  (_, index) => ({ key: `item-${index}`, textValue: `Item ${index}` }),
+);
+
+/** The props of a virtualized select (Listbox virtualization spec). */
+const VIRTUAL = {
+  items: THOUSAND,
+  virtualizer: VIRTUALIZER,
+  itemSize: 20,
+} as const;
+
+/**
+ * The select "Fruit" with a virtualized list: a scroller 100px tall in the
+ * popover around the list, and 20px rows rendered from `renderedKeys`, as
+ * the virtualization spec's consumer writes them.
+ */
+function virtualFruit(): TemplateNode[] {
+  const text = new Map(THOUSAND.map((item) => [item.key, item.textValue!]));
+  return [
+    LAYOUT,
+    h(
+      'style',
+      null,
+      '.vs-scroller { height: 100px; overflow: auto }' +
+        ' .vs-row { height: 20px; inset-inline-end: 0; margin: 0; padding: 0; font: 12px/20px sans-serif; overflow: hidden }',
+    ),
+    h('input', { id: 'before', class: 'sc-before', 'aria-label': 'Before' }),
+    h(
+      'div',
+      { part: 'root', class: 'sc-root' },
+      h('span', { part: 'label', class: 'sc-label' }, 'Fruit'),
+      h(
+        'button',
+        { part: 'trigger', class: 'sc-trigger' },
+        h('span', { part: 'value' }),
+        h('span', { 'aria-hidden': 'true' }, '▾'),
+      ),
+      h('p', { part: 'error' }, 'Pick one'),
+      h(
+        'div',
+        { part: 'popover', class: 'sc-pop' },
+        h(
+          'div',
+          { part: 'scroller', class: 'vs-scroller' },
+          h(
+            'div',
+            { part: 'list', class: 'sc-list' },
+            rows(({ keys }) =>
+              keys.map((key) =>
+                h(
+                  'div',
+                  { part: 'option', 'data-key': key, class: 'vs-row' },
+                  text.get(key)!,
+                ),
+              ),
+            ),
+          ),
+        ),
+        h('p', { part: 'empty' }, 'No fruit'),
+      ),
+      h('select', { part: 'hiddenSelect', name: 'fruit' }),
+    ),
+    h('input', { id: 'after', class: 'sc-after', 'aria-label': 'After' }),
+  ];
+}
+
+/** Two animation frames: scroll events and the rows they render have landed. */
+function settle(): Promise<void> {
+  return new Promise((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+}
+
+/** Whether an element lies wholly inside the scroller's view. */
+function isInView(mounted: MountedSelect, element: Element): boolean {
+  const view = mounted.part('scroller').getBoundingClientRect();
+  const box = element.getBoundingClientRect();
+  return box.top >= view.top - 0.5 && box.bottom <= view.bottom + 0.5;
+}
+
+/** Every rendered option's key, in document order. */
+function renderedKeys(mounted: MountedSelect): string[] {
+  return mounted.parts('option').map((element) => element.dataset.key!);
+}
+
+/** Keys `item-<from>` to `item-<to>`, both included. */
+function keyRange(from: number, to: number): string[] {
+  return Array.from(
+    { length: to - from + 1 },
+    (_, index) => `item-${from + index}`,
+  );
+}
+
+async function typeText(keyboard: KeyboardInput, text: string): Promise<void> {
+  for (const character of text) {
+    await keyboard.press(character === ' ' ? 'Space' : character);
+  }
+}
 
 /** A stylesheet that animates `selector` while the popover exits. */
 function exitAnimation(selector: string): TemplateNode {
@@ -1493,6 +1594,9 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
             isErrorShown: false,
             isFocusWithin: false,
             isFocusVisible: false,
+            isVirtualized: false,
+            renderedKeys: ['apple', 'banana', 'cherry', 'date'],
+            renderedSections: [],
           });
           await openWith(mounted, keyboard);
           await keyboard.press('ArrowDown');
@@ -1650,6 +1754,81 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
           expect(await spoken()).toContain(
             'listbox, Fruit, No fruit, orientated vertically',
           );
+        },
+        PHASE,
+      );
+    });
+    group('virtualization', () => {
+      scenario(
+        'opening focuses the selected option outside the view, rendered, numbered and scrolled into view',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: virtualFruit(),
+            props: { ...VIRTUAL, defaultValue: ['item-500'] },
+          });
+          await openWith(mounted, keyboard);
+          await expect.poll(() => focusedKey(mounted)).toBe('item-500');
+          const selected = option(mounted, 'item-500');
+          expect(isInView(mounted, selected)).toBe(true);
+          expect(selected.getAttribute('aria-posinset')).toBe('501');
+          expect(selected.getAttribute('aria-setsize')).toBe('1000');
+          expect(mounted.part('scroller').getAttribute('tabindex')).toBe('-1');
+          expect(mounted.part('list').hasAttribute('data-virtualized')).toBe(
+            true,
+          );
+        },
+        PHASE,
+      );
+
+      scenario(
+        'End, typeahead and Enter reach and choose options outside the view',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: virtualFruit(),
+            props: VIRTUAL,
+            events: EVENTS,
+          });
+          await openWith(mounted, keyboard);
+          await expect.poll(() => focusedKey(mounted)).toBe('item-0');
+          await keyboard.press('End');
+          expect(focusedKey(mounted)).toBe('item-999');
+          expect(isInView(mounted, option(mounted, 'item-999'))).toBe(true);
+          await typeText(keyboard, 'Item 42');
+          expect(focusedKey(mounted)).toBe('item-42');
+          expect(isInView(mounted, option(mounted, 'item-42'))).toBe(true);
+          await keyboard.press('Enter');
+          await closed(mounted);
+          expect(changes(mounted)).toEqual([['item-42']]);
+          expect(valueText(mounted)).toBe('Item 42');
+        },
+        PHASE,
+      );
+
+      scenario(
+        "public state and renderedKeysChange report its list's rendered set",
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: virtualFruit(),
+            props: VIRTUAL,
+            events: ['renderedKeysChange'],
+          });
+          await settle();
+          // Closed, the scroller has no size: the first twenty render.
+          expect(mounted.state()).toMatchObject({
+            isVirtualized: true,
+            renderedKeys: keyRange(0, 19),
+            renderedSections: [],
+          });
+          expect(renderedKeys(mounted)).toEqual(keyRange(0, 19));
+          await openWith(mounted, keyboard);
+          await expect
+            .poll(() => mounted.state().renderedKeys)
+            .toEqual(keyRange(0, 14));
+          expect(renderedKeys(mounted)).toEqual(keyRange(0, 14));
+          expect(details(mounted, 'renderedKeysChange').at(-1)).toEqual({
+            keys: keyRange(0, 14),
+            sections: [],
+          });
         },
         PHASE,
       );

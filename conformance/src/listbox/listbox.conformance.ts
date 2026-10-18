@@ -1592,6 +1592,9 @@ export const listboxConformance = defineConformance<ListboxProps, ListboxState>(
             isErrorShown: false,
             isFocusWithin: false,
             isFocusVisible: false,
+            isVirtualized: false,
+            renderedKeys: ['apple', 'banana', 'cherry', 'date'],
+            renderedSections: [],
           });
           await tabIn(mounted, keyboard);
           await keyboard.press('ArrowDown');

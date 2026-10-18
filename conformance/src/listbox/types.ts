@@ -11,7 +11,30 @@ export interface ListboxItem {
   items?: readonly ListboxItem[];
 }
 
-export interface ListboxProps {
+/**
+ * The virtualization props (`packages/core/src/components/listbox/virtualization.md`),
+ * on Listbox, and on Select and Combobox, which forward them to their list.
+ */
+export interface VirtualizationProps {
+  /**
+   * `VIRTUALIZER` from `@uniaria/testing`, which each adapter replaces with
+   * `virtualizer` from `@uniaria/core/virtual`.
+   */
+  virtualizer: symbol | undefined;
+  itemSize: number | ((key: string) => number) | undefined;
+  shouldMeasureItems: boolean;
+  overscan: number;
+  initialItemCount: number;
+}
+
+/** The virtualization spec's public state, on Listbox, Select and Combobox. */
+export interface VirtualizationState {
+  isVirtualized: boolean;
+  renderedKeys: readonly string[];
+  renderedSections: readonly string[];
+}
+
+export interface ListboxProps extends VirtualizationProps {
   items: readonly ListboxItem[];
   disabledKeys: readonly string[];
   value: readonly string[];
@@ -30,7 +53,7 @@ export interface ListboxProps {
   describedBy: string | undefined;
 }
 
-export interface ListboxState {
+export interface ListboxState extends VirtualizationState {
   value: readonly string[];
   selectionMode: 'single' | 'multiple';
   focusedKey: string | null;

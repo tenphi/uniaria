@@ -3,11 +3,15 @@
  * (`packages/core/src/components/combobox/spec.md`) defines them.
  */
 
-import type { ListboxItem } from '../listbox/types';
+import type {
+  ListboxItem,
+  VirtualizationProps,
+  VirtualizationState,
+} from '../listbox/types';
 
 export type ComboboxItem = ListboxItem;
 
-export interface ComboboxProps {
+export interface ComboboxProps extends VirtualizationProps {
   items: readonly ComboboxItem[];
   disabledKeys: readonly string[];
   value: readonly string[];
@@ -36,7 +40,7 @@ export interface ComboboxProps {
   describedBy: string | undefined;
 }
 
-export interface ComboboxState {
+export interface ComboboxState extends VirtualizationState {
   value: readonly string[];
   inputValue: string;
   isOpen: boolean;
