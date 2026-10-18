@@ -27,6 +27,7 @@ const entries = {
   '@uniaria/core/listbox': () => import('./components/listbox/index'),
   '@uniaria/core/select': () => import('./components/select/index'),
   '@uniaria/core/combobox': () => import('./components/combobox/index'),
+  '@uniaria/core/virtual': () => import('./virtual/index'),
 };
 
 describe('SSR safety', () => {

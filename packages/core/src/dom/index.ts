@@ -88,3 +88,9 @@ export type {
 export { supportsAnchorPositioning, supportsPopover } from './support';
 export { elementEffect, mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';
+export type {
+  VirtualRowRange,
+  VirtualRows,
+  VirtualRowsOptions,
+  Virtualizer,
+} from './virtual';

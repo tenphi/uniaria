@@ -491,6 +491,39 @@ describe('item parts', () => {
     expect(row(element, 'c').getAttribute('aria-selected')).toBe('true');
   });
 
+  it('hands the binder the rows a commit of their own attaches, in one flush', async () => {
+    let setKeys: (keys: readonly string[]) => void = () => undefined;
+    let handle: ComponentHandle<typeof rows> | undefined;
+    function RowList({ ui }: { readonly ui: ComponentHandle<typeof rows> }) {
+      const [keys, set] = useState<readonly string[]>(['a']);
+      setKeys = set;
+      return keys.map((key) => (
+        <div key={key} {...ui.getItemProps('row', key)}>
+          {key}
+        </div>
+      ));
+    }
+    function Owner() {
+      const ui = useComponent(rows, {});
+      handle = ui;
+      return (
+        <div {...ui.parts.list}>
+          <RowList ui={ui} />
+        </div>
+      );
+    }
+    render(<Owner />);
+    const { instance } = handle!;
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    flushSync(() => setKeys(['b', 'c', 'd', 'e']));
+    expect(listener).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(instance.itemElement('row', 'a')).toBeNull();
+    expect(instance.itemElement('row', 'e')).not.toBeNull();
+  });
+
   it('detaches an item that unmounts', () => {
     const handles: ComponentHandle<typeof rows>[] = [];
     render(<Rows onHandle={(ui) => handles.push(ui)} />);

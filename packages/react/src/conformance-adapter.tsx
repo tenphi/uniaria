@@ -23,13 +23,15 @@ import { select } from '@uniaria/core/select';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
 import { tooltip } from '@uniaria/core/tooltip';
+import { virtualizer } from '@uniaria/core/virtual';
 import type {
   ConformanceAdapter,
   TemplateComponent,
   TemplateElement,
   TemplateNode,
+  TemplateRows,
 } from '@uniaria/testing';
-import { isNested } from '@uniaria/testing';
+import { VIRTUALIZER, isNested, isRows } from '@uniaria/testing';
 import type { ReactNode } from 'react';
 import { StrictMode, createElement, useContext } from 'react';
 import { flushSync } from 'react-dom';
@@ -38,7 +40,7 @@ import { createRoot } from 'react-dom/client';
 import { OwnerContext, OwnerProvider } from './owner';
 import { reactPropName, reactPropValue } from './props';
 import type { ComponentHandle } from './use-component';
-import { useComponent } from './use-component';
+import { useComponent, useComponentState } from './use-component';
 
 /** Definitions by component name, as conformance suites name them. */
 const definitions: Readonly<Record<string, AnyDefinition>> = {
@@ -76,21 +78,38 @@ function templateProps(node: TemplateElement): Record<string, unknown> {
   return props;
 }
 
+/** Props with `VIRTUALIZER` replaced by the virtualizer it stands for. */
+function resolveProps(
+  props: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    result[key] = value === VIRTUALIZER ? virtualizer : value;
+  }
+  return result;
+}
+
 /**
  * Spreads part props onto part elements: `ui.parts.<name>`, or for an item
  * part `ui.getItemProps(part, key)` with the key the template gives as
- * `data-key`, as a consumer mapping its items would.
+ * `data-key`, as a consumer mapping its items would. Rows rendered from
+ * state are keyed by part and `data-key`, so a row that stays keeps its
+ * element.
  */
 function renderNodes(
   nodes: readonly TemplateNode[],
   ui: ComponentHandle<AnyDefinition>,
+  isKeyed = false,
 ): ReactNode[] {
   const itemParts: readonly string[] = ui.instance.definition.itemParts ?? [];
   return nodes.map((node, index) => {
     if (typeof node === 'string') return node;
     if (isNested(node)) return createElement(Nested, { key: index, node });
+    if (isRows(node)) return createElement(Rows, { key: index, node, ui });
+    const dataKey = node.attrs['data-key'];
     const props: Record<string, unknown> = {
-      key: index,
+      key:
+        isKeyed && dataKey !== undefined ? `${node.part}\n${dataKey}` : index,
       ...templateProps(node),
     };
     if (node.part !== undefined) {
@@ -102,8 +121,38 @@ function renderNodes(
           : (ui.parts as Readonly<Record<string, unknown>>)[node.part],
       );
     }
-    return createElement(node.tag, props, ...renderNodes(node.children, ui));
+    return createElement(
+      node.tag,
+      props,
+      ...renderNodes(node.children, ui, isKeyed),
+    );
   });
+}
+
+const NONE: readonly string[] = [];
+
+/**
+ * Rows from the component's `renderedKeys` and `renderedSections`, in a
+ * component of their own, as the virtualization spec's consumer writes
+ * them: a change of the rendered set renders this, never the owner.
+ */
+function Rows({
+  node,
+  ui,
+}: {
+  readonly node: TemplateRows;
+  readonly ui: ComponentHandle<AnyDefinition>;
+}) {
+  const keys = useComponentState(
+    ui,
+    (state: { renderedKeys?: readonly string[] }) => state.renderedKeys ?? NONE,
+  );
+  const sections = useComponentState(
+    ui,
+    (state: { renderedSections?: readonly string[] }) =>
+      state.renderedSections ?? NONE,
+  );
+  return renderNodes(node.rows({ keys, sections }), ui, true);
 }
 
 function definitionOf(component: string): AnyDefinition {
@@ -167,7 +216,7 @@ export const reactAdapter: ConformanceAdapter = {
     const definition = definitionOf(component);
     let renders = 0;
     let instance: Instance | undefined;
-    let current = { ...props };
+    let current = resolveProps(props);
     const callbacks: Record<string, (detail: unknown) => void> = {};
     for (const name of events) {
       callbacks[callbackName(name)] = (detail) => record(name, detail);
@@ -194,7 +243,7 @@ export const reactAdapter: ConformanceAdapter = {
 
     return {
       async setProps(next) {
-        current = { ...current, ...next };
+        current = { ...current, ...resolveProps(next) };
         render();
       },
       state: () => instance!.getState() as Readonly<Record<string, unknown>>,

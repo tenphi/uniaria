@@ -31,8 +31,29 @@ export interface TemplateComponent {
   readonly children: readonly TemplateNode[];
 }
 
-/** An element, a nested component or a text node. */
-export type TemplateNode = TemplateElement | TemplateComponent | string;
+/** What a `rows()` node renders from (Listbox virtualization spec). */
+export interface RenderedRows {
+  /** The component's `renderedKeys`: the options to render, in list order. */
+  readonly keys: readonly string[];
+  /** Its `renderedSections`: the groups to render, in list order. */
+  readonly sections: readonly string[];
+}
+
+/**
+ * Rows the consumer renders from the component's public state rather than
+ * from every item, as a virtualized list's consumer does. React renders
+ * them in a child component that selects `renderedKeys` and
+ * `renderedSections`, so the owner never renders again for them; custom
+ * elements render them again on `renderedkeyschange`, synchronously,
+ * keeping each element whose `data-part` and `data-key` stay.
+ */
+export interface TemplateRows {
+  readonly rows: (rendered: RenderedRows) => readonly TemplateNode[];
+}
+
+/** An element, a nested component, rows or a text node. */
+export type TemplateNode =
+  TemplateElement | TemplateComponent | TemplateRows | string;
 
 export type TemplateAttrs = Readonly<Record<string, string>> & {
   readonly part?: string;
@@ -66,14 +87,39 @@ export function nested(
   return { component, props: props ?? {}, children };
 }
 
+/**
+ * Rows rendered from the component's `renderedKeys` and `renderedSections`:
+ * `rows(({ keys }) => keys.map((key) => h('li', { part: 'option', 'data-key': key }, key)))`.
+ * Each row's top element carries `data-key`, as a consumer's keyed list does.
+ */
+export function rows(
+  render: (rendered: RenderedRows) => readonly TemplateNode[],
+): TemplateRows {
+  return { rows: render };
+}
+
 /** Whether a node is a nested component. */
 export function isNested(node: TemplateNode): node is TemplateComponent {
   return typeof node !== 'string' && 'component' in node;
 }
 
+/** Whether a node is rows rendered from the component's state. */
+export function isRows(node: TemplateNode): node is TemplateRows {
+  return typeof node !== 'string' && 'rows' in node;
+}
+
+/**
+ * Stands for `virtualizer` from `@uniaria/core/virtual` in a scenario's
+ * props: scenarios never import the implementation, so each adapter passes
+ * the real one in its place.
+ */
+export const VIRTUALIZER: unique symbol = Symbol.for(
+  'uniaria.conformance.virtualizer',
+);
+
 /**
  * The component's part elements in document order, for adapters that render
- * templates; nested components' parts are left out.
+ * templates; nested components' parts and rows are left out.
  */
 export function templateParts(
   nodes: readonly TemplateNode[],
@@ -81,7 +127,7 @@ export function templateParts(
   const found: TemplateElement[] = [];
   const walk = (list: readonly TemplateNode[]) => {
     for (const node of list) {
-      if (typeof node === 'string' || isNested(node)) continue;
+      if (typeof node === 'string' || isNested(node) || isRows(node)) continue;
       if (node.part !== undefined) found.push(node);
       walk(node.children);
     }
@@ -94,19 +140,28 @@ export function templateParts(
  * Renders a template to real DOM, writing `data-part` on part elements the way
  * a consumer of the custom elements would. `decorate` lets an adapter add
  * attributes to part elements as they are created; `host` creates the
- * element for a nested component, which its children go into.
+ * element for a nested component, which its children go into; `rowsIn` is
+ * told where a `rows()` node goes, and renders it there itself.
  */
 export function renderTemplate(
   nodes: readonly TemplateNode[],
   doc: Document,
   decorate?: (element: HTMLElement, node: TemplateElement) => void,
   host?: (node: TemplateComponent) => HTMLElement,
+  rowsIn?: (node: TemplateRows, parent: ParentNode) => void,
 ): DocumentFragment {
   const fragment = doc.createDocumentFragment();
-  const append = (parent: Node, list: readonly TemplateNode[]) => {
+  const append = (parent: ParentNode, list: readonly TemplateNode[]) => {
     for (const node of list) {
       if (typeof node === 'string') {
         parent.appendChild(doc.createTextNode(node));
+        continue;
+      }
+      if (isRows(node)) {
+        if (!rowsIn) {
+          throw new Error('The template has rows, which need the component.');
+        }
+        rowsIn(node, parent);
         continue;
       }
       if (isNested(node)) {

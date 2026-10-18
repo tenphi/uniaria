@@ -41,8 +41,12 @@ export interface PartProps {
   readonly attrs: Readonly<Record<string, string | undefined>>;
   /** Handlers keyed by DOM event name: `click`, `keydown`, `focusin`. */
   readonly on?: Readonly<Record<string, PartHandler | undefined>>;
-  /** CSS custom properties only. */
-  readonly style?: Readonly<Record<`--${string}`, string | undefined>>;
+  /**
+   * CSS custom properties, and the kebab-case properties a definition lays
+   * its parts out with (a virtualized list's rows: `position`, `translate`).
+   * `undefined` removes one.
+   */
+  readonly style?: Readonly<Record<string, string | undefined>>;
   /**
    * Live DOM properties no attribute holds once the user acts: an input's
    * `value`, a checkbox's `checked` and `indeterminate`. The binder sets each
@@ -160,6 +164,16 @@ export interface SetupContext<
    * item's key, or `null`.
    */
   itemElement(part: string, key: string): unknown;
+  /**
+   * Runs `effect` with each element rendered for one of the definition's
+   * `itemParts`, as it attaches, while the instance is started; the
+   * returned cleanup runs when the element detaches or the instance stops.
+   * The element is opaque here: `dom/` helpers type it.
+   */
+  itemEffect(
+    part: string,
+    effect: (key: string, element: unknown) => void | (() => void),
+  ): void;
   /**
    * Marks the items whose `connectItem()` props changed, so only they are
    * written again after the flush; with no keys, every item. A change of

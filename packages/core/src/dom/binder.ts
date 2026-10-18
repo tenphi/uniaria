@@ -4,8 +4,8 @@
  *
  * An adapter renders each part once and hands the binder the element. From
  * then on the binder subscribes to the instance's store, re-runs `connect()`
- * after every flush and writes only the attributes and CSS variables that
- * differ from the element, so internal state never re-renders a framework
+ * after every flush and writes only the attributes and styles that differ
+ * from the element, so internal state never re-renders a framework
  * component.
  *
  * The binder owns every attribute `connect()` has ever returned for a part:
@@ -156,7 +156,7 @@ export function createBinder<D extends AnyDefinition>(
     if (style) {
       for (const name of Object.keys(props.style ?? {})) entry.style.add(name);
       for (const name of entry.style) {
-        const value = props.style?.[name as `--${string}`];
+        const value = props.style?.[name];
         if (value === undefined) style.removeProperty(name);
         else if (style.getPropertyValue(name) !== value) {
           style.setProperty(name, value);
@@ -225,10 +225,13 @@ export function createBinder<D extends AnyDefinition>(
         siblings.add(entry);
         targets.set(element, { part, key });
       }
-      // Invalidates the key, so its other parts are written on the flush.
-      instance.attachItem(part as never, key, element);
+      // Written before the instance hears of it, so its item effects see
+      // the element with its attributes (a row focused as it attaches needs
+      // its tabindex).
       const entry = items.get(itemEntryId(part, key));
       if (unsubscribe && entry) writeItem(entry);
+      // Invalidates the key, so its other parts are written on the flush.
+      instance.attachItem(part as never, key, element);
     },
     itemOf(element) {
       const target = targets.get(element);

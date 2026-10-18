@@ -32,15 +32,20 @@ export type {
   TouchInput,
 } from './conformance/scenario';
 export {
+  VIRTUALIZER,
   h,
   isNested,
+  isRows,
   nested,
   renderTemplate,
+  rows,
   templateParts,
 } from './conformance/template';
 export type {
+  RenderedRows,
   TemplateAttrs,
   TemplateComponent,
   TemplateElement,
   TemplateNode,
+  TemplateRows,
 } from './conformance/template';

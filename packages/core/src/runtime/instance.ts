@@ -74,10 +74,17 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    * `connectItem()`, with `data-scope` and `data-part` added and every
    * handler run in a batch; cached per part and key until the key is
    * invalidated (`ctx.invalidateItems()`, a change of props, or one of the
-   * key's item parts attached or detached).
+   * key's item parts attached or detached). A key whose last element
+   * detaches drops its cache, so a long list scrolled end to end keeps
+   * entries only for the rows rendered.
    */
   connectItem(part: ItemPartOf<D>, key: string): PartProps;
-  /** Registers (or with `null`, removes) the element for an item part. */
+  /**
+   * Registers (or with `null`, removes) the element for an item part. While
+   * started it counts as a change of state, so `connect()` runs again for
+   * named parts that refer to an item (an input's active descendant), and
+   * the definition's item effects run for it.
+   */
   attachItem(part: ItemPartOf<D>, key: string, element: unknown): void;
   itemElement(part: ItemPartOf<D>, key: string): unknown;
   /**
@@ -105,6 +112,13 @@ interface Watcher {
   read(): unknown;
   callback(value: unknown, previous: unknown): void;
   value: unknown;
+}
+
+/** `ctx.itemEffect()`: its part, and the cleanup per key it ran for. */
+interface ItemEffect {
+  readonly part: string;
+  readonly effect: (key: string, element: unknown) => void | (() => void);
+  readonly cleanups: Map<string, () => void>;
 }
 
 type Callback = ((value: unknown) => void) | undefined;
@@ -230,6 +244,22 @@ export function createInstance<D extends AnyDefinition>(
     if (typeof cleanup === 'function') cleanups.push(cleanup);
   };
 
+  const itemEffects: ItemEffect[] = [];
+  /** Ends an item effect's run for `key`, then starts one for `element`. */
+  const runItemEffect = (entry: ItemEffect, key: string, element: unknown) => {
+    const cleanup = entry.cleanups.get(key);
+    entry.cleanups.delete(key);
+    cleanup?.();
+    if (element == null) return;
+    const next = entry.effect(key, element);
+    if (typeof next === 'function') entry.cleanups.set(key, next);
+  };
+  const runItemEffects = (entry: ItemEffect) => {
+    for (const [key, element] of itemElements.get(entry.part) ?? []) {
+      runItemEffect(entry, key, element);
+    }
+  };
+
   const state = <T>(initial: T): Cell<T> => {
     let value = initial;
     return {
@@ -346,6 +376,11 @@ export function createInstance<D extends AnyDefinition>(
         return own === null ? null : (elements.get(own) ?? null);
       },
       itemElement: (part, key) => itemElements.get(part)?.get(key) ?? null,
+      itemEffect(part, effect) {
+        const entry: ItemEffect = { part, effect, cleanups: new Map() };
+        itemEffects.push(entry);
+        if (isStarted) store.batch(() => runItemEffects(entry));
+      },
       invalidateItems,
       batch: store.batch,
       owner(ownerDefinition) {
@@ -465,6 +500,7 @@ export function createInstance<D extends AnyDefinition>(
       store.batch(() => {
         for (const watcher of watchers) watcher.value = watcher.read();
         for (const effect of effects) runEffect(effect);
+        for (const entry of itemEffects) runItemEffects(entry);
       });
     },
     stop() {
@@ -474,6 +510,11 @@ export function createInstance<D extends AnyDefinition>(
       const list = cleanups;
       cleanups = [];
       store.batch(() => {
+        for (const entry of itemEffects) {
+          for (const key of Array.from(entry.cleanups.keys())) {
+            runItemEffect(entry, key, null);
+          }
+        }
         for (let index = list.length - 1; index >= 0; index--) list[index]!();
       });
     },
@@ -548,7 +589,24 @@ export function createInstance<D extends AnyDefinition>(
       // The key's other parts may point at this one (an option at its
       // label), so all of them are written again.
       markItems([key]);
-      if (isStarted) store.notify();
+      // A key no part renders any more drops its cached props and version
+      // together, so a later version can't match a stale entry.
+      if (
+        element == null &&
+        definition.itemParts!.every((each) => !itemElements.get(each)?.has(key))
+      ) {
+        keyVersions.delete(key);
+        for (const each of definition.itemParts!) {
+          itemCache.delete(`${each}\n${key}`);
+        }
+      }
+      if (!isStarted) return;
+      store.batch(() => {
+        for (const entry of itemEffects) {
+          if (entry.part === part) runItemEffect(entry, key, element);
+        }
+        changed();
+      });
     },
     itemElement: (part, key) => itemElements.get(part)?.get(key) ?? null,
     subscribeItems(listener) {

@@ -100,6 +100,11 @@
       "types": "./dist/switch/index.d.ts",
       "default": "./dist/switch/index.js"
     },
+    "./virtual": {
+      "uniaria-source": "./src/virtual/index.ts",
+      "types": "./dist/virtual/index.d.ts",
+      "default": "./dist/virtual/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -137,5 +142,8 @@
   },
   "dependencies": {
     "@internationalized/number": "^3.6.8"
+  },
+  "devDependencies": {
+    "@tanstack/virtual-core": "3.19.6"
   }
 }

@@ -87,6 +87,15 @@ interface Internal<D extends AnyDefinition> {
     }
   >;
   readonly getItemProps: (part: string, key: string) => ReactPartProps;
+  /**
+   * Item elements React attached or detached since the last flush, per part
+   * and key: each row has its own ref, so a commit that swaps a range of
+   * rows reaches the binder as one batch, in a microtask.
+   */
+  readonly attaching: Map<
+    string,
+    { readonly part: string; readonly key: string; element: Element | null }
+  >;
   /** Default props from the first render, kept stable after it. */
   readonly defaults: Map<string, Readonly<Record<string, unknown>>>;
   /** Elements whose attributes were checked against the render. */
@@ -138,6 +147,15 @@ function checkOwnership<D extends AnyDefinition>(
   }
 }
 
+/**
+ * A style property as React names it: custom properties as they are,
+ * others in camelCase (`inset-block-start` → `insetBlockStart`).
+ */
+const reactStyleName = (name: string): string =>
+  name.startsWith('--')
+    ? name
+    : name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+
 /** Attributes and style as React props. */
 function toReactAttrs(
   props: PartProps,
@@ -151,11 +169,28 @@ function toReactAttrs(
   if (props.style) {
     const style: Record<string, string> = {};
     for (const [name, value] of Object.entries(props.style)) {
-      if (value !== undefined) style[name] = value;
+      if (value !== undefined) style[reactStyleName(name)] = value;
     }
     result.style = style;
   }
   return result;
+}
+
+/**
+ * Hands the binder every item element attached or detached since the last
+ * flush: in a microtask, or before the owner's layout effects when the
+ * owner rendered in the same commit, so its instance starts and syncs with
+ * its items attached.
+ */
+function flushAttaching<D extends AnyDefinition>(internal: Internal<D>): void {
+  if (internal.attaching.size === 0) return;
+  const list = Array.from(internal.attaching.values());
+  internal.attaching.clear();
+  internal.instance.batch(() => {
+    for (const { part, key, element } of list) {
+      internal.binder.attachItem(part, key, element);
+    }
+  });
 }
 
 /**
@@ -179,7 +214,14 @@ function createGetItemProps<D extends AnyDefinition>(
           current.checked.add(element);
           checkOwnership(current, part, element, entry?.rendered?.props);
         }
-        current.binder.attachItem(part, key, element);
+        const pending = current.attaching.get(id);
+        if (pending) pending.element = element;
+        else {
+          if (current.attaching.size === 0) {
+            queueMicrotask(() => flushAttaching(current));
+          }
+          current.attaching.set(id, { part, key, element });
+        }
         // An item that unmounts takes its cache with it; a remount gets a
         // new ref.
         if (!element && entry?.ref === ref) current.items.delete(id);
@@ -287,6 +329,7 @@ export function useComponent<D extends AnyDefinition>(
       itemHandlers: new Map(),
       items: new Map(),
       getItemProps: createGetItemProps(() => ref.current!),
+      attaching: new Map(),
       defaults: new Map(),
       checked: new WeakSet(),
       isLinkedByContext: false,
@@ -317,6 +360,7 @@ export function useComponent<D extends AnyDefinition>(
     (props as { owner?: unknown }).owner === undefined;
 
   useIsomorphicLayoutEffect(() => {
+    flushAttaching(internal);
     instance.start();
     binder.start();
     // Answers owner requests from custom elements and React components that
@@ -359,6 +403,7 @@ export function useComponent<D extends AnyDefinition>(
   }, [instance, isLinkedByDom]);
 
   useIsomorphicLayoutEffect(() => {
+    flushAttaching(internal);
     syncing.add(instance);
     try {
       instance.sync();

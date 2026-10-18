@@ -6,3 +6,7 @@ packages:
 minimumReleaseAge: 20160 # 14 days, in minutes
 minimumReleaseAgeStrict: true
 minimumReleaseAgeIgnoreMissingTime: false
+# One-time owner exception (2026-10-18): the virtualizer's pinned engine.
+# Remove once 3.19.6 is 14 days old (2026-10-30).
+minimumReleaseAgeExclude:
+  - '@tanstack/virtual-core@3.19.6'

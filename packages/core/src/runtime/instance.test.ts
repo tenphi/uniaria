@@ -1044,6 +1044,65 @@ describe('item parts', () => {
     instance.stop();
   });
 
+  it('re-runs connect() and expose() when an item element attaches or detaches while started', () => {
+    const instance = createInstance(rows);
+    instance.start();
+    const connected = instance.connect();
+    const state = instance.getState();
+    instance.attachItem('row', 'a', {});
+    const attached = instance.connect();
+    expect(attached).not.toBe(connected);
+    expect(instance.getState()).not.toBe(state);
+    instance.attachItem('row', 'a', null);
+    expect(instance.connect()).not.toBe(attached);
+    instance.stop();
+  });
+
+  it('runs item effects for each element as it attaches, and cleans up as it detaches or the instance stops', () => {
+    const log: string[] = [];
+    const tracked = defineComponent({
+      name: 'tracked',
+      parts: ['root'],
+      itemParts: ['row'],
+      props: {},
+      setup(ctx) {
+        ctx.itemEffect('row', (key, element) => {
+          log.push(`on ${key} ${String(element)}`);
+          return () => log.push(`off ${key} ${String(element)}`);
+        });
+        return {};
+      },
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+      connectItem: () => ({ attrs: {} }),
+    });
+    const instance = createInstance(tracked);
+    instance.attachItem('row', 'a', 'A');
+    expect(log).toEqual([]);
+    instance.start();
+    expect(log).toEqual(['on a A']);
+    instance.attachItem('row', 'b', 'B');
+    instance.attachItem('row', 'a', 'A2');
+    instance.attachItem('row', 'b', null);
+    expect(log).toEqual(['on a A', 'on b B', 'off a A', 'on a A2', 'off b B']);
+    log.length = 0;
+    instance.stop();
+    expect(log).toEqual(['off a A2']);
+    instance.attachItem('row', 'c', 'C');
+    expect(log).toEqual(['off a A2']);
+  });
+
+  it('drops a key’s cached props once no part renders it', () => {
+    const instance = createInstance(rows);
+    instance.attachItem('row', 'a', {});
+    const row = instance.connectItem('row', 'a');
+    expect(instance.connectItem('row', 'a')).toBe(row);
+    instance.attachItem('row', 'a', null);
+    instance.api.computed.length = 0;
+    instance.connectItem('row', 'a');
+    expect(instance.api.computed).toEqual(['row:a']);
+  });
+
   it('forwards connectItem through ctx.use', () => {
     const outer = defineComponent({
       name: 'outer',
