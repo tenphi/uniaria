@@ -23,19 +23,19 @@ parity with a React Aria button. The screen-reader matrix moved to the last
 gate. What is still unbuilt below waits for the component that needs it, and
 the items marked for a real device or screen reader stay open.
 
-| Area                   | Status                            | Where                                                       |
-| ---------------------- | --------------------------------- | ----------------------------------------------------------- |
-| 1. Press               | Built, except as noted            | `dom/press.ts`; Button conformance                          |
-| 2. Hover               | Built                             | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
-| 3. Focus-visible       | Built                             | `dom/modality.ts`, `dom/focus.ts`, their tests              |
-| 4. Focus-within        | Built                             | `dom/focus-within.ts`, its tests                            |
-| 5. Focus scope         | Built, except as noted            | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
-| 6. Interact outside    | Built                             | `dom/interact-outside.ts`, layer tests                      |
-| 7. Dismissable layers  | Built                             | `dom/layers.ts`, its tests; Dialog and Popover conformance  |
-| 8. Scroll lock         | Built; iOS unverified on a device | `dom/scroll-lock.ts`, its tests                             |
-| 9. aria-hidden outside | Built, except shadow DOM          | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
-| 10. Live announcer     | Built                             | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built, wired by Listbox           | `collections/typeahead.ts`; Listbox conformance             |
+| Area                   | Status                             | Where                                                       |
+| ---------------------- | ---------------------------------- | ----------------------------------------------------------- |
+| 1. Press               | Built, except as noted             | `dom/press.ts`; Button conformance                          |
+| 2. Hover               | Built                              | `dom/hover.ts`, `hover.browser.test.ts`; Button conformance |
+| 3. Focus-visible       | Built                              | `dom/modality.ts`, `dom/focus.ts`, their tests              |
+| 4. Focus-within        | Built                              | `dom/focus-within.ts`, its tests                            |
+| 5. Focus scope         | Built, except as noted             | `dom/focus-scope.ts`, `dom/focusable.ts`, their tests       |
+| 6. Interact outside    | Built                              | `dom/interact-outside.ts`, layer tests                      |
+| 7. Dismissable layers  | Built                              | `dom/layers.ts`, its tests; Dialog and Popover conformance  |
+| 8. Scroll lock         | Built; iOS unverified on a device  | `dom/scroll-lock.ts`, its tests                             |
+| 9. aria-hidden outside | Built, except shadow DOM           | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
+| 10. Live announcer     | Built                              | `dom/announcer.ts`, `announcer.browser.test.ts`             |
+| 11. Typeahead          | Built, wired by Listbox and Select | `collections/typeahead.ts`; Listbox and Select conformance  |
 
 Press is complete. Button's touch scenarios use real touch input, which only
 Chromium takes in the harness (DevTools `Input.dispatchTouchEvent`), so
@@ -63,6 +63,9 @@ inside an item (§11.12: React Aria's row stops their propagation, UniAria check
 the target instead); making sure an earlier Space handler, such as an item's
 press, leaves Space alone while `isSearching(event.timeStamp)` (§11.7); and
 not calling `handleKey` at all when typeahead is turned off (§11.14).
+Select's closed trigger wires it the same way, searching from the selected
+key and selecting the match instead of focusing it, as a native `<select>`
+does.
 
 Hide outside (`hideOutside`, `keepVisible`), still to build: shadow DOM
 (§9.20). Containment and the observer stop at shadow boundaries, so a target
