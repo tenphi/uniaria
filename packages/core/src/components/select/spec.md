@@ -61,7 +61,6 @@ Not part of Select:
   anchor, which Popover doesn't have. A later addition.
 - **A tray on small screens.** A design system's choice (Popover's
   `mobileType`); React Spectrum 2 dropped it.
-- **Virtualization**: Listbox's follow-up.
 - **Links in options** (React Aria's `linkBehavior: 'selection'`): an option is
   for selecting (Listbox).
 - **Looks.** The chevron, the checkmark on the selected option, sizes, the
@@ -216,7 +215,7 @@ in multiple mode the range keys. Besides them:
 | always           | trigger        | `type="button"`, `role="combobox"`, `aria-haspopup="listbox"`, `aria-controls` = the list's id, `aria-labelledby` = the label (or `labelledBy`), `aria-describedby` while rendered |
 |                  | popover        | `id`, `popover="manual"`; no `role`, no `tabindex`, no name                                                                                                                        |
 |                  | list           | Listbox's: `role="listbox"`, `id`, `aria-labelledby` = the label, `aria-orientation="vertical"`                                                                                    |
-|                  | hiddenSelect   | `aria-hidden="true"`, `tabindex="-1"`, one `<option value="">` and one `<option value={key}>{text}</option>` per option                                                            |
+|                  | hiddenSelect   | `aria-hidden="true"`, `tabindex="-1"`, one `<option value="">`, then one `<optgroup>` holding an `<option value={key}>{text}</option>` per option                                  |
 | closed           | trigger        | `aria-expanded="false"`                                                                                                                                                            |
 |                  | popover        | hidden (Popover's)                                                                                                                                                                 |
 | open             | trigger        | `aria-expanded="true"`; every named part + `data-open`                                                                                                                             |
@@ -561,7 +560,8 @@ Decided by @tenphi on 2026-10-18, each as recommended.
     no autofill, no `required`, and multiple mode would need one input per
     key, which the element can't create. Decided: (a), and the AGENTS.md
     exception recorded. React Aria switches to hidden inputs above 300 items
-    for speed; UniAria keeps the `<select>` until virtualization.
+    for speed; UniAria keeps the `<select>` at every size (Listbox
+    virtualization spec, Resolved questions 9).
 12. **Empty and read-only.** (a) An empty list opens and shows Listbox's empty
     part, which describes it; a read-only select opens and moves focus, but
     nothing selects, and the closed trigger's typing and arrows change

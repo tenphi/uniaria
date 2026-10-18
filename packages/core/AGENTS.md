@@ -26,7 +26,13 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   `ctx.effect()` that reads the element once: a custom element connects
   before the parser adds its children, so parts often attach after
   `start()`. Several interactions on one part combine with
-  `mergeHandlers()`; spreading handler objects drops handlers.
+  `mergeHandlers()`; spreading handler objects drops handlers. An item
+  part's elements come and go with the rows a list renders: anything that
+  needs one goes through `ctx.itemEffect()`, which runs per key as each
+  attaches.
+- `src/virtual/` is the `./virtual` entry: the only code that imports
+  `@tanstack/virtual-core`, which the build bundles into it. Everything else
+  sees the engine through the `Virtualizer` interface in `dom/virtual.ts`.
 - A new subpath needs three edits: an entry in `tsdown.config.ts`, an
   `exports` entry in `package.json` (with the `uniaria-source` condition first),
   and a line in `src/ssr-safety.test.ts`.

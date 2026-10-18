@@ -43,8 +43,9 @@ reviewed.
 - **Custom element:** yes, `<uni-combobox>`, hosting consumer markup. As
   `<uni-listbox>`, it reads its items from the options in the popover when
   `items` isn't set, and hides the options the filter leaves out with
-  `hidden` (root design doc, Scope). Async or very large option lists need
-  the native adapter (rendered from state), or React.
+  `hidden` (root design doc, Scope). Very large option lists virtualize, as
+  Listbox's ([virtualization spec](../listbox/virtualization.md)): `items`
+  set as a property, and the options rendered from `renderedKeys`.
 
 Not part of Combobox:
 
@@ -63,7 +64,6 @@ Not part of Combobox:
   the consumer orders the items.
 - **A tray on small screens** (React Spectrum's `MobileComboBox`): a design
   system's choice.
-- **Virtualization**: Listbox's follow-up.
 - **Looks.** The chevron, highlight colors, the popup's width and height: the
   design system's, with the tokens in [Styling tokens](#styling-tokens).
 
@@ -427,7 +427,7 @@ the same subpath of `@uniaria/elements`. Attributes: `disabled-keys`,
 | `onFocus` / `onBlur` over the field and popover                         | `focusChange`                                                                                 |
 | `onKeyDown` first, `preventDefault()` skipping the built-in handling    | the consumer's handler on the input; a prevented keydown is left alone, as every UniAria part |
 | `isLoading`, `icon`, `prefix`, `suffix`, sizes, styles                  | the consumer's markup and CSS                                                                 |
-| Virtualized flat lists                                                  | every option rendered (Listbox's follow-up)                                                   |
+| Virtualized flat lists                                                  | `virtualizer`, forwarded to the list (Listbox virtualization spec)                            |
 | Placement `bottom start`, width ≥ the field, ≤ 50vw                     | `positionArea`, `--anchor-width` for the consumer's CSS                                       |
 
 Rough edges in UI Kit's ComboBox (its source, tests and changelog), which

@@ -32,13 +32,13 @@ whole file before changing anything; it is the binding summary of the design.
 
 ## Packages
 
-| Package                | Path                | Contents                                                                                                                            | Published |
-| ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), one subpath per component (`./button`, …)  | Yes       |
-| `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                            | Yes       |
-| `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`) | Yes       |
-| `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                | Yes       |
-| `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                  | No        |
+| Package                | Path                | Contents                                                                                                                                                          | Published |
+| ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), the virtualizer (`./virtual`), one subpath per component (`./button`, …) | Yes       |
+| `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                                                          | Yes       |
+| `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
+| `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
+| `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                                                | No        |
 
 All published packages share one version (Changesets `fixed` group). Each
 package has its own short `AGENTS.md` with local rules.
@@ -357,8 +357,13 @@ handler with its event.
   `getItemProps(part, key)`), never for every row at once. After a flush only
   the keys the definition invalidates are rewritten. Custom elements find
   them by `data-part` and the consumer's `data-key`.
-- Virtualization reuses `@tanstack/virtual-core` if it works with lazy item
-  props in both adapters; otherwise ask the owner before building one.
+- Virtualization is opt-in through the `virtualizer` prop (Listbox
+  virtualization spec): `@uniaria/core/virtual` wraps `@tanstack/virtual-core`
+  behind the `Virtualizer` interface in `dom/virtual.ts`, so only lists that
+  virtualize load it. The consumer renders the `renderedKeys` and
+  `renderedSections` state, never every item; the core positions rows with
+  styles through the binder. A custom element takes `items` as a property and
+  renders on `renderedkeyschange`.
 
 ### Custom elements (light DOM)
 
@@ -401,7 +406,15 @@ reused. The approved runtime dependencies are:
 | --------------------------- | -------------------------------------------------------- |
 | `@internationalized/number` | Locale-aware number parsing and formatting (NumberField) |
 | `@internationalized/date`   | Calendars and date math (later date components)          |
-| `@tanstack/virtual-core`    | Virtualization, if it fits (see Collections)             |
+| `@tanstack/virtual-core`    | Virtualization (see Collections)                         |
+
+`@tanstack/virtual-core` is a development dependency bundled into
+`@uniaria/core/virtual`, with `process.env.NODE_ENV` compiled out of its
+files only, and pinned to one exact version (3.19.6). Upgrade it by hand
+once a newer release passes the 14-day release-age policy and the
+virtualization scenarios. 3.19.6 itself was a one-time owner exception to
+that policy (2026-10-18): its `minimumReleaseAgeExclude` entry in
+`pnpm-workspace.yaml` goes once it is 14 days old, on 2026-10-30.
 
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
 `@guidepup/guidepup`, `@guidepup/playwright`, and `react-aria` in

@@ -373,7 +373,7 @@ cleanup)`: focus a target when it attaches, observe a measured row. Named
 3. **Item attaches batched per commit**: React attaches each row through its
    own ref, one store notification each; a range swap of 20 rows is 40
    flushes today.
-4. **Per-key caches pruned** for keys no longer in the collection: scrolling
+4. **Per-key caches pruned** once no element renders the key: scrolling
    10,000 rows end to end leaves 10,000 entries today.
 5. **The conformance harness renders rows from `renderedKeys`**, in both
    adapters (in React from a child component, so the owner's render count
@@ -461,7 +461,9 @@ type="module">` with an import map throws), and a pin needs a new
    upgrades are deliberate. (b) virtual-core as a normal dependency, with a
    documented `process` shim for unbundled pages. (c) An in-house engine
    for exact sizes only (about 1 kB, inferred), measuring later: root
-   AGENTS.md asks the owner before building one. Decided: (a).
+   AGENTS.md asks the owner before building one. Decided: (a), pinned to
+   3.19.6 (the owner's one-time exception to the 14-day release-age policy,
+   2026-10-18).
 3. **Sizes.** (a) Exact `itemSize` (a number, or per key) by default, with
    measuring opt-in: exact scrolling, no observers, nothing breaks in a
    hidden popover; Cube UI Kit's per-token and per-description heights fit a
@@ -500,7 +502,14 @@ type="module">` with an import map throws), and a pin needs a new
    at every size: one `<option>` per item is cheap next to rendered rows,
    and autofill needs the options. (b) Hidden inputs above 300 items, as
    React Aria. Decided: (a), measured during implementation, with (b)
-   if 10,000 items cost more than a frame.
+   if 10,000 items cost more than a frame. Measured on 2026-10-18 (10,000
+   items, the median of 35 changes and 7 mounts): WebKit lays out a
+   rendered `<select>` again for each `<option>` inserted as its child,
+   8.3 s to mount, so the options go in one `<optgroup>` filled before it
+   is inserted (Select spec, ARIA), which forms treat the same. A value
+   change then costs 3–9 ms with the `<select>` and 1–4 ms without it, and
+   a mount 71–94 ms and 12–54 ms, in Chromium, WebKit and Firefox. (a)
+   stands.
 10. **Loading more.** (a) A later spec on async collections: `onLoadMore`
     with a sentinel one view ahead, a loading row, `aria-busy` and
     `aria-setsize="-1"` for an unknown total, with Combobox's server
