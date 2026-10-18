@@ -1,6 +1,6 @@
 # Listbox virtualization spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-18
 
 ## Summary
 
@@ -32,7 +32,7 @@ where most of its bugs are (Mapping from Cube UI Kit). React Aria's
 virtualizer is the reference for behavior (it keeps the focused option
 rendered, numbers options, scrolls by layout), and
 `@tanstack/virtual-core`, which root AGENTS.md approves "if it fits", is the
-engine (Open questions 2).
+engine (Resolved questions 2).
 
 - **WAI-ARIA pattern:** [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/):
   "If the complete set of available options is not present in the DOM due to
@@ -41,21 +41,21 @@ engine (Open questions 2).
   (`references/aria-practices/content/patterns/listbox/listbox-pattern.html:229`).
 - **Builds on:** Listbox, which gains the props, part and state below; Select
   and Combobox, which forward them to their list; `@tanstack/virtual-core`
-  behind a small interface, imported only by lists that virtualize (Open
+  behind a small interface, imported only by lists that virtualize (Resolved
   questions 1 and 2). New in the runtime: an effect per item element and
   `connect()` re-run when an item element comes or goes (Runtime and
   harness changes).
 - **Owner:** none.
 - **Custom element:** yes, with `items` set as a property: the markup can't
   hold the items, because only the rendered ones are in it. The consumer
-  renders the rows when the element reports new `renderedKeys` (Open
+  renders the rows when the element reports new `renderedKeys` (Resolved
   questions 8).
 
 Not part of virtualization:
 
 - **Loading more** (`onLoadMore`, a loading row, `aria-busy`): an async
   collections spec, with Combobox's server filtering. No Cloud dropdown loads
-  more today (Open questions 10).
+  more today (Resolved questions 10).
 - **Sticky group labels.** The consumer's CSS: a group is a box as tall as
   its section, so `position: sticky` on its label works (Layout).
 - **The popup's width.** Absolutely positioned rows have no intrinsic width,
@@ -100,7 +100,7 @@ state (`renderedKeys`, `renderedSections`) and an event.
 
 **Before the scroller has a size** (on the server, under jsdom, in a popover
 that hasn't opened), the rendered set is the first `initialItemCount`
-options plus the pins (Open questions 7). So the server renders the top of
+options plus the pins (Resolved questions 7). So the server renders the top of
 the list, and tests see options without mocking a viewport.
 
 ## Anatomy
@@ -121,11 +121,11 @@ On Listbox; Select and Combobox forward each to their list.
 
 | Prop               | Type                                  | Default     | Bindable | Change event | Notes                                                                                                                                                                                                           |
 | ------------------ | ------------------------------------- | ----------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| virtualizer        | `Virtualizer \| undefined`            | `undefined` | no       | —            | `virtualizer` from `@uniaria/core/virtual`. Set, the list virtualizes; unset, nothing below applies and the module isn't loaded (Open questions 1). Property only.                                              |
+| virtualizer        | `Virtualizer \| undefined`            | `undefined` | no       | —            | `virtualizer` from `@uniaria/core/virtual`. Set, the list virtualizes; unset, nothing below applies and the module isn't loaded (Resolved questions 1). Property only.                                          |
 | itemSize           | `number \| ((key: string) => number)` | `undefined` | no       | —            | A row's size along the list's axis in px: an option's, or a section's label row (Groups). Exact unless `shouldMeasureItems`. Unset, every row is measured, estimated at 32. Attribute `item-size` for a number. |
 | shouldMeasureItems | `boolean`                             | `false`     | no       | —            | `itemSize` is an estimate and each rendered row is measured (Sizes). Attribute `measure-items`.                                                                                                                 |
 | overscan           | `number`                              | `10`        | no       | —            | Options rendered beyond each edge of the view. Cube UI Kit renders 10, Zag's examples 12; virtual-core's default of 1 is thin for a held arrow key.                                                             |
-| initialItemCount   | `number`                              | `20`        | no       | —            | Options rendered before the scroller has a size (Open questions 7).                                                                                                                                             |
+| initialItemCount   | `number`                              | `20`        | no       | —            | Options rendered before the scroller has a size (Resolved questions 7).                                                                                                                                         |
 
 ## Events
 
@@ -148,7 +148,7 @@ them by identity.
 
 Written through the binder, only while virtualized. Positions are along the
 list's axis (`orientation`); the table shows vertical, and horizontal swaps
-block for inline (Open questions 4).
+block for inline (Resolved questions 4).
 
 | Part                    | Style UniAria writes                                                                                                                         |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -188,7 +188,7 @@ from `itemSize` (its rows overlap or leave gaps).
 ## Groups
 
 ARIA lets an option be a child of the listbox or of a `group` in it, so a
-virtualized group is still one element around its options (Open questions
+virtualized group is still one element around its options (Resolved questions
 5):
 
 - A section is a box at its section's start, as long as its label row plus
@@ -205,10 +205,10 @@ virtualized group is still one element around its options (Open questions
 
 While virtualized, each option also has:
 
-| Attribute       | Value                                                                    |
-| --------------- | ------------------------------------------------------------------------ |
-| `aria-posinset` | its position among all options, from 1, across groups (Open questions 6) |
-| `aria-setsize`  | the number of options                                                    |
+| Attribute       | Value                                                                        |
+| --------------- | ---------------------------------------------------------------------------- |
+| `aria-posinset` | its position among all options, from 1, across groups (Resolved questions 6) |
+| `aria-setsize`  | the number of options                                                        |
 
 Without them a browser counts only the rendered options ("3 of 15" for
 option 503 of 10,000; Core-AAM: authors who set one must set both on every
@@ -381,7 +381,7 @@ cleanup)`: focus a target when it attaches, observe a measured row. Named
 6. **AGENTS.md**, Collections: virtualization through the `virtualizer` prop;
    the consumer renders `renderedKeys`; custom elements need `items` as a
    property and render on `renderedkeyschange`. Dependencies: how
-   virtual-core ships (Open questions 2).
+   virtual-core ships (Resolved questions 2).
 
 ## Mapping from Cube UI Kit
 
@@ -434,7 +434,9 @@ probed: CDP doesn't expose the numbers). The Listbox spec's sentence is
 corrected with this change, and a real screen reader check joins gate 5's
 matrix.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-18, each as recommended.
 
 1. **Where virtualization lives.** (a) In Listbox, turned on by a
    `virtualizer` prop the consumer imports from a new
@@ -446,7 +448,7 @@ matrix.
    7 kB brotli. (c) Zag's way: Listbox exposes a scroll-to-key callback and
    the keys to keep rendered, and the consumer brings any virtualizer: no
    dependency, but every consumer rebuilds pins, scrolling, paging and
-   measuring, and conformance can't test it. Recommended: (a).
+   measuring, and conformance can't test it. Decided: (a).
 2. **The engine and how it ships.** `@tanstack/virtual-core` 3.19 is one
    framework-free class, 7.0 kB brotli, SSR-safe, with exact sizes,
    measuring and scroll anchoring; but it has churned (ten `scrollToIndex`
@@ -459,11 +461,11 @@ type="module">` with an import map throws), and a pin needs a new
    upgrades are deliberate. (b) virtual-core as a normal dependency, with a
    documented `process` shim for unbundled pages. (c) An in-house engine
    for exact sizes only (about 1 kB, inferred), measuring later: root
-   AGENTS.md asks the owner before building one. Recommended: (a).
+   AGENTS.md asks the owner before building one. Decided: (a).
 3. **Sizes.** (a) Exact `itemSize` (a number, or per key) by default, with
    measuring opt-in: exact scrolling, no observers, nothing breaks in a
    hidden popover; Cube UI Kit's per-token and per-description heights fit a
-   function. (b) Always measure, as Cube UI Kit. Recommended: (a).
+   function. (b) Always measure, as Cube UI Kit. Decided: (a).
 4. **Layout.** (a) A `scroller` part around the list; the list is sized to
    the whole list and UniAria positions rows absolutely with `translate`:
    React Aria's and TanStack's layout, which a pinned row far from the view
@@ -471,36 +473,40 @@ type="module">` with an import map throws), and a pin needs a new
    intrinsic width, but a consumer's margins and `gap` conflict, and
    measuring is harder to keep exact. (c) The list scrolls and an un-parted
    sizer inside it holds the rows: no new part, but a `div` inside a `ul`
-   is invalid HTML. Recommended: (a).
+   is invalid HTML. Decided: (a).
 5. **Groups.** (a) Virtualized: a rendered group is a box at its section's
    position holding its rendered options, with its label always rendered
    (Groups); Cloud's sectioned member pickers need it. (b) Flat lists only
    for now: a grouped list with a `virtualizer` renders everything and warns
-   in development. Recommended: (a).
+   in development. Decided: (a).
 6. **Numbering across groups.** (a) Positions across the whole list
    (`option 41 of 10000`): Chromium's own numbering for a grouped listbox,
    React Aria's set size, and one number per option however the list is
    grouped. (b) Per group, as the virtual screen reader counts an
-   unvirtualized list today. Recommended: (a).
+   unvirtualized list today. Decided: (a).
 7. **Before the scroller has a size.** (a) The first `initialItemCount`
    options (default 20) plus the pins: the server renders the top of the
    list, and tests find options without a viewport. (b) Every option
    (React Aria under jsdom): tests see everything, but a server renders
    10,000 rows. (c) Only the pins (Cube UI Kit renders nothing).
-   Recommended: (a).
+   Decided: (a).
 8. **Custom elements.** (a) Supported: `items` set as a property (the
    markup can't list them), the consumer renders the rows on
    `renderedkeyschange`, synchronously; the element never creates them.
-   (b) The React adapter only, for now. Recommended: (a): the behavior is
+   (b) The React adapter only, for now. Decided: (a): the behavior is
    the definition's either way, and conformance runs in both adapters.
 9. **Select's hidden `<select>`.** It holds one `<option>` per item (Select
    spec); React Aria switches to hidden inputs above 300 items. (a) Keep it
    at every size: one `<option>` per item is cheap next to rendered rows,
    and autofill needs the options. (b) Hidden inputs above 300 items, as
-   React Aria. Recommended: (a), measured during implementation, with (b)
+   React Aria. Decided: (a), measured during implementation, with (b)
    if 10,000 items cost more than a frame.
 10. **Loading more.** (a) A later spec on async collections: `onLoadMore`
     with a sentinel one view ahead, a loading row, `aria-busy` and
     `aria-setsize="-1"` for an unknown total, with Combobox's server
-    filtering. (b) In this spec. Recommended: (a): no Cloud dropdown loads
+    filtering. (b) In this spec. Decided: (a): no Cloud dropdown loads
     more, and it is independent of rendering.
+
+## Open questions
+
+None.

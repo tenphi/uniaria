@@ -43,7 +43,8 @@ Not part of Listbox:
 
 - **Virtualization.** Listbox works with every option rendered. Rendering only
   the visible ones (`@tanstack/virtual-core`, which root AGENTS.md approves if
-  it fits) is a follow-up spec (Resolved questions 12). The item parts are built
+  it fits) is its own spec, [virtualization.md](./virtualization.md)
+  (Resolved questions 12). The item parts are built
   for it: props are lazy, items are data, and the collection knows positions
   without the DOM.
 - **Actions and links.** React Aria's `onAction` modes (a press runs an
@@ -291,8 +292,9 @@ RadioGroup):
 `aria-selected="false"` is explicit on every unselected option: the APG
 requires it for options that can be selected, and React Aria and Zag write
 it. `aria-setsize` and `aria-posinset` are not written: with every option in
-the DOM browsers count them, per group (probed below). Virtualization will
-write them.
+the DOM the browser counts them (Chromium across the list's groups, the
+virtual screen reader per group, probed below). Virtualization writes them
+([virtualization spec](./virtualization.md), ARIA).
 
 ## Focus
 
@@ -390,7 +392,9 @@ Confirmed with `@guidepup/virtual-screen-reader` in Chromium, on a list
 | an empty list with an empty part         | `listbox, Fruit, No fruit, orientated vertically`                                |
 | read-only                                | `listbox, Fruit, orientated vertically, read only`                               |
 
-Position and set size are counted by the browser, per group. Probed for the
+Position and set size are counted per group by the virtual screen reader;
+Chromium numbers the options across a listbox's groups (virtualization spec,
+Corrections). Probed for the
 open questions: an option with `aria-checked` instead reads
 `option, Apple, not selected, checked, position 1, set size 2` (Open
 questions 8); an option standing in for the empty state reads
