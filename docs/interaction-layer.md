@@ -35,7 +35,7 @@ the items marked for a real device or screen reader stay open.
 | 8. Scroll lock         | Built; iOS unverified on a device | `dom/scroll-lock.ts`, its tests                             |
 | 9. aria-hidden outside | Built, except shadow DOM          | `dom/hide-outside.ts`, `hide-outside.browser.test.ts`       |
 | 10. Live announcer     | Built                             | `dom/announcer.ts`, `announcer.browser.test.ts`             |
-| 11. Typeahead          | Built (core), not wired yet       | `collections/typeahead.ts`, `typeahead.test.ts`             |
+| 11. Typeahead          | Built, wired by Listbox           | `collections/typeahead.ts`; Listbox conformance             |
 
 Press is complete. Button's touch scenarios use real touch input, which only
 Chromium takes in the harness (DevTools `Input.dispatchTouchEvent`), so
@@ -53,8 +53,8 @@ waiting for CSS transitions before restoring in virtual modality (§5.25),
 the top-layer exception (§5.11) and shadow DOM (§5.49). Focus-within doesn't
 watch for a focused control becoming disabled in Firefox (§4.7).
 
-Typeahead is the DOM-free core only (`createTypeahead`, `findByText`); the
-first collection component (Listbox) wires `keydown`. That wiring owns:
+Typeahead is a DOM-free core (`createTypeahead`, `findByText`) that each
+collection component wires to `keydown`, Listbox first. That wiring owns:
 calling `handleKey(event, search)` with a `findByText` search from the
 focused key over the item keys; focusing the returned key without selecting
 it (§11.13) and calling `preventDefault` when `isHandled`; ignoring keydowns
