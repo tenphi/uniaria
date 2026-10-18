@@ -18,6 +18,7 @@ import { listboxConformance } from './listbox/listbox.conformance';
 import { numberFieldConformance } from './number-field/number-field.conformance';
 import { popoverConformance } from './popover/popover.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
+import { selectConformance } from './select/select.conformance';
 import { switchConformance } from './switch/switch.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
@@ -33,6 +34,7 @@ export {
   numberFieldConformance,
   popoverConformance,
   radioGroupConformance,
+  selectConformance,
   switchConformance,
   textFieldConformance,
   toggleButtonConformance,
@@ -59,6 +61,7 @@ export type {
   PopoverState,
 } from './popover/types';
 export type { RadioGroupProps, RadioGroupState } from './radio-group/types';
+export type { SelectItem, SelectProps, SelectState } from './select/types';
 export type { SwitchProps, SwitchState } from './switch/types';
 export type { TextFieldProps, TextFieldState } from './text-field/types';
 export type {
@@ -82,4 +85,5 @@ export const suites = [
   tooltipConformance,
   numberFieldConformance,
   listboxConformance,
+  selectConformance,
 ];
