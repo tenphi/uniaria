@@ -18,6 +18,7 @@ import { toggleSwitch } from '@uniaria/core/switch';
 import { field } from '@uniaria/core/field';
 import { listbox } from '@uniaria/core/listbox';
 import { numberField } from '@uniaria/core/number-field';
+import { select } from '@uniaria/core/select';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
 import { tooltip } from '@uniaria/core/tooltip';
@@ -54,6 +55,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   tooltip,
   'number-field': numberField,
   listbox,
+  select,
 };
 
 /** Form values a consumer would pass as defaults in React. */

@@ -75,6 +75,11 @@
       "types": "./dist/listbox/index.d.ts",
       "default": "./dist/listbox/index.js"
     },
+    "./select": {
+      "uniaria-source": "./src/components/select/index.ts",
+      "types": "./dist/select/index.d.ts",
+      "default": "./dist/select/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

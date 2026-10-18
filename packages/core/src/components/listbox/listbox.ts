@@ -641,6 +641,10 @@ export const listbox = defineComponent({
       isFocusWithin: focusWithin.isFocusWithin,
       isFocusVisible: focusWithin.isFocusVisible,
       hasEmpty: () => hasEmpty.get(),
+      /** Where focus goes when the list next takes it (Select's open). */
+      setTabStop: (key: string | null) => lastFocused.set(key),
+      /** Chooses an option as a press would (Select's press and release). */
+      activate,
       optionHandlers,
       listHandlers: { keydown: onListKeyDown, focusin: onListFocusIn },
       isRendered: (part: string, key: string) =>

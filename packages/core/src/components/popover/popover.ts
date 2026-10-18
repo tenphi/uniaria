@@ -230,9 +230,6 @@ export const popover = defineComponent({
         if (!view || !root.isConnected) return;
         const before = document.activeElement as HTMLElement | null;
         const isNative = supportsPopover(view);
-        // The element adapter attaches a part before the binder writes its
-        // attributes, and the popover must be one and take focus now.
-        if (!root.hasAttribute('tabindex')) root.tabIndex = -1;
         if (isNative) {
           if (root.popover !== 'manual') root.popover = 'manual';
           if (!root.matches(':popover-open')) {
@@ -242,7 +239,14 @@ export const popover = defineComponent({
         } else {
           root.hidden = false;
         }
-        initialFocus(root).focus();
+        // The element adapter attaches a part before the binder writes its
+        // attributes, and a popover that takes focus itself must be able to
+        // now. One that hands it to a marked element, as Select's, needn't.
+        const target = initialFocus(root);
+        if (target === root && !root.hasAttribute('tabindex')) {
+          root.tabIndex = -1;
+        }
+        target.focus();
         // A custom element may get its title after its root: check later.
         const checks = isDevelopment()
           ? setTimeout(() => checkOpen(root))

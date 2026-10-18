@@ -6,6 +6,7 @@ import { listbox } from '@uniaria/core/listbox';
 import { popover } from '@uniaria/core/popover';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
+import { select } from '@uniaria/core/select';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { textField } from '@uniaria/core/text-field';
 import { renderToString } from 'react-dom/server';
@@ -278,5 +279,57 @@ describe('Listbox on the server', () => {
     expect(list).toContain('id="fruit"');
     expect(list).toContain('tabindex="-1"');
     expect(html.match(/<p[^>]*>/)![0]).toMatch(/\shidden[\s=>]/);
+  });
+});
+
+function FruitSelect() {
+  const ui = useComponent(select, {
+    items: FRUIT,
+    defaultValue: ['banana'],
+    triggerId: 'pick',
+    listId: 'fruit',
+  });
+  return (
+    <div {...ui.parts.root}>
+      <span {...ui.parts.label}>Fruit</span>
+      <button {...ui.parts.trigger}>
+        <span {...ui.parts.value} />
+      </button>
+      <div {...ui.parts.popover}>
+        <ul {...ui.parts.list}>
+          {FRUIT.map((item) => (
+            <li
+              key={item.key}
+              data-key={item.key}
+              {...ui.getItemProps('option', item.key)}
+            >
+              {item.textValue}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <select {...ui.parts.hiddenSelect} name="fruit" />
+    </div>
+  );
+}
+
+describe('Select on the server', () => {
+  it('renders the trigger, the hidden popover with its options and the hidden select', () => {
+    const html = renderToString(<FruitSelect />);
+    const trigger = html.match(/<button[^>]*>/)![0];
+    expect(trigger).toContain('id="pick"');
+    expect(trigger).toContain('role="combobox"');
+    expect(trigger).toContain('aria-haspopup="listbox"');
+    expect(trigger).toContain('aria-expanded="false"');
+    expect(trigger).toContain('aria-controls="fruit"');
+    const popover = html.match(/<div[^>]*popover[^>]*>/)![0];
+    expect(popover).toContain('popover="manual"');
+    expect(popover).not.toContain('role=');
+    expect(popover).not.toContain('tabindex=');
+    const [, banana] = html.match(/<li[^>]*>/g)!;
+    expect(banana).toContain('aria-selected="true"');
+    const hidden = html.match(/<select[^>]*>/)![0];
+    expect(hidden).toContain('aria-hidden="true"');
+    expect(hidden).toContain('tabindex="-1"');
   });
 });

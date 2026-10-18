@@ -21,6 +21,7 @@ export default defineConfig({
     'radio-group/index': 'src/components/radio-group/index.ts',
     'number-field/index': 'src/components/number-field/index.ts',
     'listbox/index': 'src/components/listbox/index.ts',
+    'select/index': 'src/components/select/index.ts',
   },
   format: 'esm',
   platform: 'neutral',

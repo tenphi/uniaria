@@ -24,6 +24,7 @@ import './popover';
 import './tooltip';
 import './number-field';
 import './listbox';
+import './select';
 import type { UniElement } from './define-element';
 
 /**

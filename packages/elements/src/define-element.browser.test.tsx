@@ -5,6 +5,7 @@ import type { listbox } from '@uniaria/core/listbox';
 import { announce, destroyAnnouncer } from '@uniaria/core/dom';
 import { field } from '@uniaria/core/field';
 import type { popover } from '@uniaria/core/popover';
+import type { select } from '@uniaria/core/select';
 import type { tooltip } from '@uniaria/core/tooltip';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
@@ -25,6 +26,7 @@ import './popover';
 import './tooltip';
 import './number-field';
 import './listbox';
+import './select';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
 
@@ -1612,5 +1614,71 @@ describe('<uni-listbox>', () => {
     expect(part('list').getAttribute('aria-describedby')).toBe(
       part('empty').id,
     );
+  });
+});
+
+describe('<uni-select>', () => {
+  const FRUIT = `
+    <uni-select placeholder="Pick a fruit" required>
+      <span data-part="label">Fruit</span>
+      <button data-part="trigger" id="pick">
+        <span data-part="value"></span>
+      </button>
+      <div data-part="popover">
+        <div data-part="list" id="fruit">
+          <div data-part="option" data-key="apple">Apple</div>
+          <div data-part="group" data-key="citrus">
+            <span data-part="groupLabel" data-key="citrus">Citrus</span>
+            <div data-part="option" data-key="lemon">Lemon</div>
+          </div>
+        </div>
+      </div>
+      <select data-part="hiddenSelect" name="fruit"></select>
+    </uni-select>`;
+
+  const selectIn = (container: HTMLElement) => {
+    const host =
+      container.querySelector<UniElement<typeof select>>('uni-select')!;
+    const part = (name: string) =>
+      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+    const option = (key: string) =>
+      host.querySelector<HTMLElement>(
+        `[data-part="option"][data-key="${key}"]`,
+      )!;
+    return { host, part, option };
+  };
+
+  it('reads its options from the markup and adopts the trigger and list ids', () => {
+    const { host, part, option } = selectIn(mount(FRUIT));
+    expect(host.triggerId).toBe('pick');
+    expect(host.listId).toBe('fruit');
+    const trigger = part('trigger');
+    expect(trigger.getAttribute('role')).toBe('combobox');
+    expect(trigger.getAttribute('aria-controls')).toBe('fruit');
+    expect(trigger.getAttribute('aria-required')).toBe('true');
+    expect(part('value').textContent).toBe('Pick a fruit');
+    expect(option('lemon').id).toBe('fruit-option-lemon');
+    const hidden = part('hiddenSelect') as HTMLSelectElement;
+    expect(Array.from(hidden.options, (each) => each.value)).toEqual([
+      '',
+      'apple',
+      'lemon',
+    ]);
+    expect(hidden.required).toBe(true);
+  });
+
+  it('opens on a click and writes the option chosen', async () => {
+    const { host, part, option } = selectIn(mount(FRUIT));
+    part('trigger').click();
+    await expect
+      .poll(() => part('popover').matches(':popover-open'))
+      .toBe(true);
+    option('lemon').click();
+    expect(host.instance.getState().value).toEqual(['lemon']);
+    expect(part('value').textContent).toBe('Lemon');
+    expect((part('hiddenSelect') as HTMLSelectElement).value).toBe('lemon');
+    await expect
+      .poll(() => part('popover').matches(':popover-open'))
+      .toBe(false);
   });
 });
