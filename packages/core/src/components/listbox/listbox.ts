@@ -14,6 +14,13 @@
  * Item props are cached per key, so every change an option shows is
  * reported with `ctx.invalidateItems()`: the watches below name the keys
  * whose focus, tab stop, hover, press or selection changed.
+ *
+ * With a `virtualizer` (`./virtualization.md`) only `renderedKeys` are
+ * rendered: the options in and near the view, and the pins (the focused
+ * option, the tab stop, the highlighted and pressed options, and the
+ * target of a move), which `./virtual-list.ts` lays out. A move to an
+ * option outside the view pins it, scrolls to its position, and focuses it
+ * once its element attaches.
  */
 
 import {
@@ -38,6 +45,11 @@ import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
 import { field } from '../field/field';
+import {
+  createVirtualList,
+  renderedKeysChange,
+  virtualProps,
+} from './virtual-list';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -102,7 +114,7 @@ function scrollerOf(
 
 export const listbox = defineComponent({
   name: 'listbox',
-  parts: ['root', 'label', 'list', 'description', 'error', 'empty'],
+  parts: ['root', 'label', 'scroller', 'list', 'description', 'error', 'empty'],
   itemParts: [
     'option',
     'optionLabel',
@@ -154,10 +166,13 @@ export const listbox = defineComponent({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    // Virtualization (`./virtualization.md`, Props).
+    ...virtualProps,
   },
   events: {
     action: event<string>(),
     focusChange: event<boolean>(),
+    renderedKeysChange,
   },
   setup(ctx) {
     const { props } = ctx;
@@ -242,6 +257,11 @@ export const listbox = defineComponent({
     let rangeEnd: string | null = null;
     /** The option focused before a pointer press moved focus. */
     let focusBeforePress: string | null = null;
+    /**
+     * Virtualized: the option a move went to before it was rendered, pinned
+     * until its element attaches and takes focus (Focus).
+     */
+    const target = ctx.state<string | null>(null);
 
     // Tab enters at the option focused last, else the first selected, else
     // the first enabled one (the APG); none when nothing can take focus.
@@ -269,6 +289,40 @@ export const listbox = defineComponent({
     const base = () => props.listId() ?? ctx.ids.list;
     const optionElement = (key: string) =>
       ctx.itemElement('option', key) as HTMLElement | null;
+
+    const virtual = createVirtualList(ctx, {
+      collection,
+      virtualizer: props.virtualizer,
+      itemSize: props.itemSize,
+      shouldMeasureItems: props.shouldMeasureItems,
+      overscan: props.overscan,
+      initialItemCount: props.initialItemCount,
+      isVertical,
+      pins: () => [
+        focusedKey.get(),
+        tabStop(),
+        highlightedKey.get(),
+        press.pressedKey(),
+        target.get(),
+      ],
+    });
+    ctx.watch(virtual.renderedKeys, (keys) => {
+      ctx.emit('renderedKeysChange', {
+        keys,
+        sections: virtual.renderedSections(),
+      });
+    });
+
+    /** Scrolls an option into view: by its position while virtualized. */
+    const reveal = (key: string) => {
+      if (virtual.isOn()) virtual.scrollTo(key);
+      else {
+        optionElement(key)?.scrollIntoView({
+          block: 'nearest',
+          inline: 'nearest',
+        });
+      }
+    };
 
     // Each change an option shows names its keys (see the module notes).
     const invalidate = (...keys: (string | null)[]) => {
@@ -351,14 +405,32 @@ export const listbox = defineComponent({
       ]);
     };
 
-    /** Moves focus after a key, scrolling the option into view (Focus). */
+    /**
+     * Moves focus after a key, scrolling the option into view (Focus).
+     * Virtualized, an option not rendered yet is pinned and takes focus
+     * when its element attaches.
+     */
     const moveTo = (key: string | null) => {
       if (key === null) return;
       const element = optionElement(key);
-      if (!element) return;
-      element.focus({ preventScroll: true });
-      element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      if (virtual.isOn()) target.set(element ? null : key);
+      if (!element && !virtual.isOn()) return;
+      element?.focus({ preventScroll: true });
+      reveal(key);
     };
+
+    ctx.itemEffect('option', (key, element) => {
+      if (key === target.get()) {
+        target.set(null);
+        if (focusWithin.isFocusWithin()) {
+          (element as HTMLElement).focus({ preventScroll: true });
+        }
+      }
+      // A row that unmounts under a resting pointer gets no pointerleave.
+      return () => {
+        if (hoveredKey.get() === key) hoveredKey.set(null);
+      };
+    });
 
     /**
      * Virtual focus: highlights `key`, or nothing. Moved by the keyboard, the
@@ -370,18 +442,18 @@ export const listbox = defineComponent({
       highlightedKey.set(target);
       isHighlightVisible.set(target !== null && isKeyboard);
       if (target === null || !isKeyboard) return;
-      optionElement(target)?.scrollIntoView({
-        block: 'nearest',
-        inline: 'nearest',
-      });
+      reveal(target);
     };
 
     /**
      * Page Up and Page Down: the farthest option within one visible height of
      * the list's scroll container from the focused one, as React Aria
-     * measures; without one, the first or last option.
+     * measures; without one, the first or last option. Virtualized, from
+     * the rows' positions, so it works off screen.
      */
     const pageFrom = (key: string, step: 1 | -1): string | null => {
+      const paged = virtual.pageFrom(key, step);
+      if (paged !== undefined) return paged;
       const list = collection();
       const element = optionElement(key);
       const isAlong = isVertical();
@@ -629,6 +701,10 @@ export const listbox = defineComponent({
         previous.options.slice(0, option.index).reverse().find(isLeft);
       focusedKey.set(null);
       queueMicrotask(() => {
+        if (target && virtual.isOn()) {
+          moveTo(target.key);
+          return;
+        }
         const element =
           (target ? optionElement(target.key) : null) ??
           partElement(ctx, 'list');
@@ -673,6 +749,7 @@ export const listbox = defineComponent({
 
     return {
       field: labelling,
+      virtual,
       collection,
       selected,
       tabStop,
@@ -692,6 +769,8 @@ export const listbox = defineComponent({
       highlight,
       /** The option a page key moves to from `key` (Combobox's). */
       pageFrom,
+      /** Scrolls an option into view without moving focus (Combobox's open). */
+      reveal,
       optionHandlers,
       listHandlers: { keydown: onListKeyDown, focusin: onListFocusIn },
       isRendered: (part: string, key: string) =>
@@ -713,6 +792,9 @@ export const listbox = defineComponent({
       isErrorShown: api.field.state().isErrorShown,
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
+      isVirtualized: api.virtual.isOn(),
+      renderedKeys: api.virtual.renderedKeys(),
+      renderedSections: api.virtual.renderedSections(),
     };
   },
   connect({ props, ids, api }) {
@@ -737,10 +819,12 @@ export const listbox = defineComponent({
       [control.attrs['aria-describedby'], isEmptyShown ? ids.empty : undefined]
         .filter(Boolean)
         .join(' ') || undefined;
+    const isVirtualized = api.virtual.isOn();
     const list: DomPartProps = {
       attrs: {
         ...control.attrs,
         ...state,
+        'data-virtualized': flag(isVirtualized),
         role: 'listbox',
         'aria-describedby': describedBy,
         'aria-orientation': props.orientation(),
@@ -757,10 +841,24 @@ export const listbox = defineComponent({
             : '-1',
       },
       on: api.listHandlers,
+      style: api.virtual.listStyle(),
     };
+    const rootProps = withState(root);
     return {
-      root: withState(root),
+      root: {
+        ...rootProps,
+        attrs: { ...rootProps.attrs, 'data-virtualized': flag(isVirtualized) },
+      },
       label: withState(label),
+      // The box that scrolls, around the list (Anatomy): no tab stop of its
+      // own, and no scroll anchoring on top of the engine's.
+      scroller: {
+        attrs: {
+          tabindex: isVirtualized ? '-1' : undefined,
+          'data-virtualized': flag(isVirtualized),
+        },
+        style: api.virtual.scrollerStyle(),
+      },
       list,
       description: withState(description),
       error: withState(error),
@@ -804,6 +902,7 @@ export const listbox = defineComponent({
               : undefined,
             ...common,
           },
+          style: api.virtual.groupStyle(key),
         };
     }
     const option = api.collection().get(key);
@@ -825,6 +924,9 @@ export const listbox = defineComponent({
             : '-1',
       'aria-selected': String(isSelected),
       'aria-disabled': isDisabled ? 'true' : undefined,
+      // Virtualized, where it sits in the whole list (ARIA).
+      'aria-posinset': api.virtual.position(key)?.toString(),
+      'aria-setsize': api.virtual.setSize()?.toString(),
       'aria-labelledby': api.isRendered('optionLabel', key)
         ? itemId(base, 'optionLabel', key)
         : undefined,
@@ -839,7 +941,11 @@ export const listbox = defineComponent({
       ...common,
       'data-disabled': flag(isDisabled),
     };
-    const result: DomPartProps = { attrs, on: api.optionHandlers(key) };
+    const result: DomPartProps = {
+      attrs,
+      on: api.optionHandlers(key),
+      style: api.virtual.optionStyle(key),
+    };
     return result as PartProps;
   },
 });

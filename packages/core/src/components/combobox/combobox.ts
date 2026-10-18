@@ -33,6 +33,7 @@ import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
 import { button } from '../button/button';
 import { field } from '../field/field';
 import { listbox } from '../listbox/listbox';
+import { renderedKeysChange, virtualProps } from '../listbox/virtual-list';
 import { popover } from '../popover/popover';
 
 /** What opens the list besides the button and the arrows (Props). */
@@ -106,6 +107,7 @@ export const combobox = defineComponent({
     'button',
     'popover',
     'arrow',
+    'scroller',
     'list',
     'empty',
     'description',
@@ -183,9 +185,12 @@ export const combobox = defineComponent({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    // Listbox's virtualization, forwarded to the list.
+    ...virtualProps,
   },
   events: {
     focusChange: event<boolean>(),
+    renderedKeysChange,
   },
   setup(ctx) {
     const { props } = ctx;
@@ -381,6 +386,15 @@ export const combobox = defineComponent({
         shouldFocusOnHover: true,
         shouldUseVirtualFocus: true,
         listId: props.listId(),
+        virtualizer: props.virtualizer(),
+        itemSize: props.itemSize(),
+        shouldMeasureItems: props.shouldMeasureItems(),
+        overscan: props.overscan(),
+        initialItemCount: props.initialItemCount(),
+        onRenderedKeysChange: (detail: {
+          keys: readonly string[];
+          sections: readonly string[];
+        }) => ctx.emit('renderedKeysChange', detail),
         onAction: (key: string) => onChosen(key),
       }),
       { parts: { root: null, label: null, description: null, error: null } },
@@ -428,12 +442,6 @@ export const combobox = defineComponent({
       if (isOpen.get()) isOpen.set(false);
     };
 
-    /** Scrolls an option into view without highlighting it by keyboard. */
-    const reveal = (key: string) => {
-      const element = ctx.itemElement('option', key) as HTMLElement | null;
-      element?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    };
-
     // After Popover's, so the popover is shown before an option scrolls
     // into view.
     ctx.watch(
@@ -460,7 +468,8 @@ export const combobox = defineComponent({
           case 'button':
             if (selected === null) return;
             list.api.highlight(selected, false);
-            reveal(selected);
+            // Scrolled into view without highlighting it by keyboard.
+            list.api.reveal(selected);
             return;
         }
       },
@@ -818,6 +827,9 @@ export const combobox = defineComponent({
       isErrorShown: api.field.state().isErrorShown,
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
+      isVirtualized: list.isVirtualized,
+      renderedKeys: list.renderedKeys,
+      renderedSections: list.renderedSections,
     };
   },
   connect({ props, ids, api }) {
@@ -858,8 +870,12 @@ export const combobox = defineComponent({
         'aria-autocomplete': 'list',
         'aria-expanded': String(isOpen),
         'aria-controls': listId,
+        // Only once the option's element exists: an id that resolves to
+        // nothing is non-conforming, and Chromium drops the relation
+        // (virtualization spec, ARIA).
         'aria-activedescendant':
-          highlighted === null
+          highlighted === null ||
+          !api.list.api.isRendered('option', highlighted)
             ? undefined
             : itemId(api.list.api.base(), 'option', highlighted),
         autocomplete: 'off',
@@ -919,6 +935,7 @@ export const combobox = defineComponent({
         on: { mousedown: api.onPopoverMouseDown },
       },
       arrow: withState(layerParts.arrow),
+      scroller: listParts.scroller,
       list: {
         ...listRoot,
         attrs: {

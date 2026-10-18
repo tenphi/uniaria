@@ -9,6 +9,7 @@ import type { PropsOf, StateOf } from '../../runtime';
 import type { listbox } from './listbox';
 
 export { listbox } from './listbox';
+export type { ItemSize, RenderedKeys } from './virtual-list';
 
 export type ListboxProps = PropsOf<typeof listbox>;
 export type ListboxState = StateOf<typeof listbox>;

@@ -31,6 +31,7 @@ import { bindable, defineComponent, event, prop } from '../../runtime';
 import { button } from '../button/button';
 import { field } from '../field/field';
 import { listbox } from '../listbox/listbox';
+import { renderedKeysChange, virtualProps } from '../listbox/virtual-list';
 import { popover } from '../popover/popover';
 
 type SelectionMode = 'single' | 'multiple';
@@ -75,6 +76,7 @@ export const select = defineComponent({
     'anchor',
     'popover',
     'arrow',
+    'scroller',
     'list',
     'empty',
     'close',
@@ -137,9 +139,12 @@ export const select = defineComponent({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    // Listbox's virtualization, forwarded to the list.
+    ...virtualProps,
   },
   events: {
     focusChange: event<boolean>(),
+    renderedKeysChange,
   },
   setup(ctx) {
     const { props } = ctx;
@@ -181,6 +186,15 @@ export const select = defineComponent({
         shouldFocusWrap: props.shouldFocusWrap(),
         shouldFocusOnHover: true,
         listId: props.listId(),
+        virtualizer: props.virtualizer(),
+        itemSize: props.itemSize(),
+        shouldMeasureItems: props.shouldMeasureItems(),
+        overscan: props.overscan(),
+        initialItemCount: props.initialItemCount(),
+        onRenderedKeysChange: (detail: {
+          keys: readonly string[];
+          sections: readonly string[];
+        }) => ctx.emit('renderedKeysChange', detail),
         // Choosing an option closes the list in single mode (Selection).
         onAction: () => {
           if (!isMultiple()) close();
@@ -448,13 +462,21 @@ export const select = defineComponent({
     // The hidden <select> (Resolved questions 11): its options, the
     // selection, autofill, form reset and validation.
     let initial: readonly string[] | undefined;
-    const syncHiddenSelect = (element: HTMLSelectElement) => {
-      const options = collection();
-      const isMany = isMultiple();
-      if (element.multiple !== isMany) element.multiple = isMany;
+    /** The collection's options the hidden <select> was last written from. */
+    let written: readonly unknown[] | undefined;
+    /** The placeholder and one option per item, unless they're there. */
+    const writeOptions = (
+      element: HTMLSelectElement,
+      options: ReturnType<typeof collection>['options'],
+    ) => {
+      // Comparing 10,000 options on each value change costs more than the
+      // change itself, so an unchanged collection is checked by count only.
+      if (options === written && element.options.length === options.length + 1)
+        return;
+      written = options;
       const wanted: [string, string][] = [
         ['', ''],
-        ...options.options.map((option): [string, string] => [
+        ...options.map((option): [string, string] => [
           option.key,
           option.textValue,
         ]),
@@ -467,17 +489,28 @@ export const select = defineComponent({
             option.value === wanted[index]![0] &&
             option.text === wanted[index]![1],
         );
-      if (!isSame) {
-        const document = element.ownerDocument;
-        element.replaceChildren(
-          ...wanted.map(([key, text]) => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = text;
-            return option;
-          }),
-        );
-      }
+      if (isSame) return;
+      const document = element.ownerDocument;
+      const toOption = ([key, text]: [string, string]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = text;
+        return option;
+      };
+      // The placeholder stays a child of the <select>, which `required`
+      // needs; the items go in one <optgroup>, filled before it is inserted:
+      // WebKit lays out a rendered <select> again for each <option> inserted
+      // as its child, 8 s for 10,000 (Listbox virtualization spec, Resolved
+      // questions 9).
+      const group = document.createElement('optgroup');
+      group.append(...wanted.slice(1).map(toOption));
+      element.replaceChildren(toOption(wanted[0]!), group);
+    };
+    const syncHiddenSelect = (element: HTMLSelectElement) => {
+      const { options } = collection();
+      const isMany = isMultiple();
+      if (element.multiple !== isMany) element.multiple = isMany;
+      writeOptions(element, options);
       // The attribute too, which a form reset goes back to.
       const keys = new Set(value.get());
       for (const option of element.options) {
@@ -606,6 +639,9 @@ export const select = defineComponent({
       isErrorShown: api.field.state().isErrorShown,
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
+      isVirtualized: list.isVirtualized,
+      renderedKeys: list.renderedKeys,
+      renderedSections: list.renderedSections,
     };
   },
   connect({ props, api }) {
@@ -692,6 +728,7 @@ export const select = defineComponent({
         on: { keydown: api.onPopoverKeyDown },
       },
       arrow: withState(layerParts.arrow),
+      scroller: listParts.scroller,
       list: {
         ...listRoot,
         attrs: {
