@@ -450,6 +450,11 @@ export interface ItemPressOptions {
   /** The element of a pressable item, from its key. */
   element(key: string): HTMLElement | null;
   isDisabled(key: string): boolean;
+  /**
+   * Leaves focus where it is: the item takes none, and its `mousedown` is
+   * prevented (a list in virtual focus, whose input keeps focus).
+   */
+  shouldPreventFocusOnPress?(): boolean;
   onPressStart?(key: string, event: PressEvent): void;
   onPressEnd?(key: string, event: PressEvent): void;
   onPress?(key: string, event: PressEvent): void;
@@ -467,7 +472,8 @@ export interface ItemPress {
  * press at a time across every item, for mouse, pen, touch and virtual
  * clicks, activating when it ends on the item it started on. The collection
  * handles keys itself, so there is no keyboard press. A pointer press
- * focuses the item, which needs a `tabindex`.
+ * focuses the item, which needs a `tabindex`, unless focus is to stay where
+ * it is.
  */
 export function createItemPress(
   ctx: InteractionContext,
@@ -595,7 +601,10 @@ export function createItemPress(
           return;
         }
         if (options.isDisabled(key) || active) return;
-        if (target.ownerDocument.activeElement !== target) {
+        if (
+          !options.shouldPreventFocusOnPress?.() &&
+          target.ownerDocument.activeElement !== target
+        ) {
           target.focus({ preventScroll: true });
         }
         const origin = event.target as Element;
@@ -636,6 +645,13 @@ export function createItemPress(
           key,
           pressEvent('pressend', active.target, active.pointerType, event),
         );
+      },
+      mousedown(event) {
+        const target = options.element(key);
+        if (!target || !isOwnEvent(event, target)) return;
+        if (event.button === 0 && options.shouldPreventFocusOnPress?.()) {
+          event.preventDefault();
+        }
       },
       dragstart() {
         if (active?.key === key) finish(false);
