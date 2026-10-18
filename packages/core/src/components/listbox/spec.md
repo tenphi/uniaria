@@ -68,14 +68,14 @@ Not part of Listbox:
 
 Named parts, one element each:
 
-| Part        | Element                                                   | Attributes UniAria owns                                                                                                                                                                                                                  | Notes                                                                                                                                                                                                   |
-| ----------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`                                        | as Field: state attributes                                                                                                                                                                                                               | Optional wrapper around label, list, description and error.                                                                                                                                             |
-| label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                                                                                                                                         | No `for`: a listbox is not labelable.                                                                                                                                                                   |
-| list        | any; usually `ul` or `div`                                | `role="listbox"`, `aria-orientation`, `aria-multiselectable`, `aria-disabled`, `aria-readonly`, `tabindex` while no option takes focus; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` | Holds the options and groups. Never left out when it is empty: a combobox's `aria-controls` points at it.                                                                                               |
-| description | any                                                       | as Field                                                                                                                                                                                                                                 | Read when focus enters the list.                                                                                                                                                                        |
-| error       | any                                                       | as Field                                                                                                                                                                                                                                 | Announced by Field when it appears.                                                                                                                                                                     |
-| empty       | any; outside the list                                     | `id`, `hidden` while there are items                                                                                                                                                                                                     | The consumer's "No items" text. While the list is empty it describes it, so focus on the list reads it (Resolved questions 10). Outside the list because a listbox may only contain options and groups. |
+| Part        | Element                                                   | Attributes UniAria owns                                                                                                                                                                                                                                   | Notes                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`                                        | as Field: state attributes                                                                                                                                                                                                                                | Optional wrapper around label, list, description and error.                                                                                                                                             |
+| label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                                                                                                                                                          | No `for`: a listbox is not labelable.                                                                                                                                                                   |
+| list        | any; usually `ul` or `div`                                | `role="listbox"`, `aria-orientation`, `aria-multiselectable`, `aria-disabled`, `aria-readonly`, `tabindex` (`0` while no option takes focus, else `-1`); as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` | Holds the options and groups. Never left out when it is empty: a combobox's `aria-controls` points at it.                                                                                               |
+| description | any                                                       | as Field                                                                                                                                                                                                                                                  | Read when focus enters the list.                                                                                                                                                                        |
+| error       | any                                                       | as Field                                                                                                                                                                                                                                                  | Announced by Field when it appears.                                                                                                                                                                     |
+| empty       | any; outside the list                                     | `id`, `hidden` while there are items                                                                                                                                                                                                                      | The consumer's "No items" text. While the list is empty it describes it, so focus on the list reads it (Resolved questions 10). Outside the list because a listbox may only contain options and groups. |
 
 Item parts, one element per item and part, keyed by the item's key (in
 custom elements, the consumer's `data-key` on the element):
@@ -278,14 +278,14 @@ RadioGroup):
 | hovered             | option           | + `data-hovered` (a mouse, not touch; never on a disabled option)                                                                                      |
 | pressed             | option           | + `data-pressed`                                                                                                                                       |
 | disabled option     | option           | + `aria-disabled="true"`, + `data-disabled`; no `tabindex`                                                                                             |
-| disabled list       | list             | + `aria-disabled="true"`; no `tabindex` anywhere; every part + `data-disabled`; the error hidden (Field)                                               |
+| disabled list       | list             | + `aria-disabled="true"`; no option `tabindex`; every part + `data-disabled`; the error hidden (Field)                                                 |
 |                     | option           | + `aria-disabled="true"`                                                                                                                               |
 | read-only           | list             | + `aria-readonly="true"`; every part + `data-readonly`                                                                                                 |
 | required            | list             | + `aria-required="true"`; every named part + `data-required`                                                                                           |
 | invalid             | list             | + `aria-invalid="true"`; every named part + `data-invalid`                                                                                             |
 | empty               | list             | + `tabindex="0"`, `aria-describedby` gains the empty part's id; every named part + `data-empty`                                                        |
 |                     | empty            | no `hidden`                                                                                                                                            |
-| no focusable option | list             | + `tabindex="0"` (all disabled, or no option rendered yet)                                                                                             |
+| no focusable option | list             | `tabindex="0"` (every option disabled)                                                                                                                 |
 
 `aria-selected="false"` is explicit on every unselected option: the APG
 requires it for options that can be selected, and React Aria and Zag write
@@ -297,7 +297,10 @@ write them.
 
 Roving tabindex (Resolved questions 4): DOM focus moves to the option, which has
 `tabindex="0"` while it is the tab stop and `-1` otherwise. The list holds no
-`aria-activedescendant`.
+`aria-activedescendant`. While an option is the tab stop the list has
+`tabindex="-1"`, as React Aria writes: Firefox makes an element that scrolls a
+tab stop of its own. Focus on the list itself, from a click or a script, goes
+on to the tab stop.
 
 - **Moving** calls `focus({ preventScroll: true })` on the option. After a
   key, Listbox then scrolls it into view with
@@ -374,6 +377,8 @@ Confirmed with `@guidepup/virtual-screen-reader` in Chromium, on a list
 | an option with an `optionDescription`    | `option, Apple, Red and sweet, not selected, position 1, set size 1`             |
 | a group, then its label, then its option | `group, Citrus`, `Citrus`, `option, Lemon, not selected, position 1, set size 1` |
 | an empty list without an empty part      | `listbox, Fruit, orientated vertically`                                          |
+| an empty list with an empty part         | `listbox, Fruit, No fruit, orientated vertically`                                |
+| read-only                                | `listbox, Fruit, orientated vertically, read only`                               |
 
 Position and set size are counted by the browser, per group. Probed for the
 open questions: an option with `aria-checked` instead reads
@@ -382,7 +387,6 @@ questions 8); an option standing in for the empty state reads
 `option, No fruit, not selected, position 1, set size 1` (Resolved questions 10);
 with `aria-posinset="42"` and `aria-setsize="100"` an option reads
 `option, Kiwi, not selected, position 42, set size 100` (Resolved questions 12).
-The empty part and read-only phrases are confirmed with the scenarios.
 
 ## Adapter surface
 
