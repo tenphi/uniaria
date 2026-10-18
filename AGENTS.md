@@ -302,7 +302,9 @@ handler with its event.
 - Nothing touches `document` or `window` at module scope. Every entry has a
   Node import test (`ssr-safety.test.ts`).
 - ARIA relationships use stable ids from the adapter (`useId` in React).
-  Consumers can override every id.
+  Consumers can override every id, except an item part's, which is made from
+  its component's id and the item's key and moves with them (Listbox spec,
+  Resolved questions 1).
 - Document, window and root node come from `ctx.env`, so components work in
   shadow roots and iframes.
 - Global singletons (layer stack, focus-visible modality) are keyed on
@@ -346,10 +348,15 @@ handler with its event.
 
 ### Collections
 
-- Items are data: `items` plus `getKey`, `getTextValue`, `isDisabled`. Never
-  derive collections from children in the core.
-- Item part props are computed lazily per item (`getItemProps(key)`), never
-  for every row at once.
+- Items are data: `items` plus `getKey`, `getTextValue`, `isItemDisabled`
+  (and `disabledKeys`). Never derive collections from children in the core;
+  a custom element may read its items from its markup, as it adopts props
+  (Listbox spec, Resolved questions 2 and 3).
+- Item parts repeat per item: a definition's `itemParts` get their props from
+  `connectItem(part, key)`, computed lazily per rendered item (React
+  `getItemProps(part, key)`), never for every row at once. After a flush only
+  the keys the definition invalidates are rewritten. Custom elements find
+  them by `data-part` and the consumer's `data-key`.
 - Virtualization reuses `@tanstack/virtual-core` if it works with lazy item
   props in both adapters; otherwise ask the owner before building one.
 

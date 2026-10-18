@@ -1,6 +1,6 @@
 # Listbox spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-18
 
 ## Summary
 
@@ -23,7 +23,7 @@ behavior.
 Listbox needs one thing the runtime doesn't have: parts repeated per item,
 with props computed for one item at a time. That is a runtime and
 custom-element contract change, specified in [Item parts](#item-parts) and
-asked in Open questions 1.
+decided in Resolved questions 1.
 
 - **WAI-ARIA pattern:** [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)
   (`references/aria-practices/content/patterns/listbox/`, the scrollable,
@@ -37,13 +37,13 @@ asked in Open questions 1.
 - **Owner:** none. Select and ComboBox will compose it rather than own it.
 - **Custom element:** yes, `<uni-listbox>`, hosting consumer markup. Its
   options are the consumer's elements, found by `data-part` and keyed by the
-  consumer's `data-key` (Open questions 3).
+  consumer's `data-key` (Resolved questions 3).
 
 Not part of Listbox:
 
 - **Virtualization.** Listbox works with every option rendered. Rendering only
   the visible ones (`@tanstack/virtual-core`, which root AGENTS.md approves if
-  it fits) is a follow-up spec (Open questions 12). The item parts are built
+  it fits) is a follow-up spec (Resolved questions 12). The item parts are built
   for it: props are lazy, items are data, and the collection knows positions
   without the DOM.
 - **Actions and links.** React Aria's `onAction` modes (a press runs an
@@ -51,7 +51,7 @@ Not part of Listbox:
   that are links belong to Menu and GridList. An option is for selecting.
 - **Select all as an option.** UI Kit's select-all row sits outside the
   listbox and the arrow keys never reach it. The APG recommends separate
-  buttons; Ctrl+A (Cmd+A on Apple platforms) selects all (Open questions 11).
+  buttons; Ctrl+A (Cmd+A on Apple platforms) selects all (Resolved questions 11).
 - **Filtering, loading more and custom values**: ComboBox's. The consumer
   passes the items to show.
 - **Reordering** (UI Kit's `isReorderable`, Alt+Arrow): a later addition.
@@ -68,14 +68,14 @@ Not part of Listbox:
 
 Named parts, one element each:
 
-| Part        | Element                                                   | Attributes UniAria owns                                                                                                                                                                                                                  | Notes                                                                                                                                                                                               |
-| ----------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`                                        | as Field: state attributes                                                                                                                                                                                                               | Optional wrapper around label, list, description and error.                                                                                                                                         |
-| label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                                                                                                                                         | No `for`: a listbox is not labelable.                                                                                                                                                               |
-| list        | any; usually `ul` or `div`                                | `role="listbox"`, `aria-orientation`, `aria-multiselectable`, `aria-disabled`, `aria-readonly`, `tabindex` while no option takes focus; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` | Holds the options and groups. Never left out when it is empty: a combobox's `aria-controls` points at it.                                                                                           |
-| description | any                                                       | as Field                                                                                                                                                                                                                                 | Read when focus enters the list.                                                                                                                                                                    |
-| error       | any                                                       | as Field                                                                                                                                                                                                                                 | Announced by Field when it appears.                                                                                                                                                                 |
-| empty       | any; outside the list                                     | `id`, `hidden` while there are items                                                                                                                                                                                                     | The consumer's "No items" text. While the list is empty it describes it, so focus on the list reads it (Open questions 10). Outside the list because a listbox may only contain options and groups. |
+| Part        | Element                                                   | Attributes UniAria owns                                                                                                                                                                                                                  | Notes                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`                                        | as Field: state attributes                                                                                                                                                                                                               | Optional wrapper around label, list, description and error.                                                                                                                                             |
+| label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                                                                                                                                         | No `for`: a listbox is not labelable.                                                                                                                                                                   |
+| list        | any; usually `ul` or `div`                                | `role="listbox"`, `aria-orientation`, `aria-multiselectable`, `aria-disabled`, `aria-readonly`, `tabindex` while no option takes focus; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required` | Holds the options and groups. Never left out when it is empty: a combobox's `aria-controls` points at it.                                                                                               |
+| description | any                                                       | as Field                                                                                                                                                                                                                                 | Read when focus enters the list.                                                                                                                                                                        |
+| error       | any                                                       | as Field                                                                                                                                                                                                                                 | Announced by Field when it appears.                                                                                                                                                                     |
+| empty       | any; outside the list                                     | `id`, `hidden` while there are items                                                                                                                                                                                                     | The consumer's "No items" text. While the list is empty it describes it, so focus on the list reads it (Resolved questions 10). Outside the list because a listbox may only contain options and groups. |
 
 Item parts, one element per item and part, keyed by the item's key (in
 custom elements, the consumer's `data-key` on the element):
@@ -98,13 +98,13 @@ Boolean props read as predicates. Keys are strings.
 
 | Prop               | Type                                           | Default                    | Bindable | Change event  | Notes                                                                                                                                                            |
 | ------------------ | ---------------------------------------------- | -------------------------- | -------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items              | `readonly Item[]`                              | `[]`                       | no       | —             | The options and groups, in order. A property on the element; without it the element reads them from its markup (Open questions 3).                               |
+| items              | `readonly Item[]`                              | `[]`                       | no       | —             | The options and groups, in order. A property on the element; without it the element reads them from its markup (Resolved questions 3).                           |
 | getKey             | `(item: Item) => string`                       | `item.key`                 | no       | —             | Unique per list; development warns about duplicates.                                                                                                             |
 | getTextValue       | `(item: Item) => string`                       | `item.textValue`           | no       | —             | What typeahead matches. Development warns when an option has none.                                                                                               |
 | isItemDisabled     | `(item: Item) => boolean`                      | `item.isDisabled === true` | no       | —             | Root AGENTS.md's `isDisabled` accessor, renamed so it doesn't collide with the list's own `isDisabled`.                                                          |
 | getChildren        | `(item: Item) => readonly Item[] \| undefined` | `item.items`               | no       | —             | An item with children is a group; its children are its options. Groups don't nest.                                                                               |
 | disabledKeys       | `readonly string[]`                            | `[]`                       | no       | —             | Disabled too, besides `isItemDisabled`: React Aria's and UI Kit's prop, and how markup says it (attribute `disabled-keys`, JSON).                                |
-| value              | `readonly string[]`                            | `[]`                       | yes      | `valueChange` | The selected keys, in the order they were selected; at most one in single mode (Open questions 5). Keys with no item stay in it.                                 |
+| value              | `readonly string[]`                            | `[]`                       | yes      | `valueChange` | The selected keys, in the order they were selected; at most one in single mode (Resolved questions 5). Keys with no item stay in it.                             |
 | selectionMode      | `'single' \| 'multiple'`                       | `'single'`                 | no       | —             | `aria-multiselectable="true"` in multiple mode.                                                                                                                  |
 | isDisabled         | `boolean`                                      | `false`                    | no       | —             | `aria-disabled="true"` on the list and every option; no tab stop.                                                                                                |
 | isReadOnly         | `boolean`                                      | `false`                    | no       | —             | `aria-readonly="true"` on the list; focus moves, nothing is selected. Attribute `readonly`. As RadioGroup and CheckboxGroup; React Aria's ListBox has none.      |
@@ -132,11 +132,11 @@ Development warns when the list has no name: no label part, no
 
 ## Events
 
-| Event         | Detail              | When                                                                                                                                                                                                                           |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `valueChange` | `readonly string[]` | The user changed the selection: a press, Enter, Space, a range key or Ctrl+A. Never for a value the consumer sets.                                                                                                             |
-| `action`      | `string`            | The user chose an option by a press, Enter or Space, after any `valueChange`, also when the selection didn't change (single mode, the selected option again). Select will close on it (Open questions 6). Not while read-only. |
-| `focusChange` | `boolean`           | Focus entered or left the list, for a form that validates on blur.                                                                                                                                                             |
+| Event         | Detail              | When                                                                                                                                                                                                                               |
+| ------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valueChange` | `readonly string[]` | The user changed the selection: a press, Enter, Space, a range key or Ctrl+A. Never for a value the consumer sets.                                                                                                                 |
+| `action`      | `string`            | The user chose an option by a press, Enter or Space, after any `valueChange`, also when the selection didn't change (single mode, the selected option again). Select will close on it (Resolved questions 6). Not while read-only. |
+| `focusChange` | `boolean`           | Focus entered or left the list, for a form that validates on blur.                                                                                                                                                                 |
 
 ## Public state
 
@@ -160,7 +160,7 @@ option's state attributes.
 
 ## Item parts
 
-The runtime change Listbox needs (Open questions 1). Today a definition has
+The runtime change Listbox needs (Resolved questions 1). Today a definition has
 named parts, one element each, and `connect()` returns props for all of them
 at once, re-run after every flush. Item parts add, beside them:
 
@@ -203,13 +203,13 @@ at once, re-run after every flush. Item parts add, beside them:
 
 - **Single mode.** A press, Enter or Space on an option selects it, replacing
   the selection. On the selected option they change nothing and report
-  `action` (Open questions 6). The user can't empty the selection: neither
+  `action` (Resolved questions 6). The user can't empty the selection: neither
   re-picking nor Escape clears it, as in `<select>` and RadioGroup.
 - **Multiple mode.** A press, Enter or Space toggles the option, as React
   Aria's default `selectionBehavior: 'toggle'` and the APG's recommended
   model: no key needs a modifier held. Modifiers add ranges:
   - Shift+ArrowDown and Shift+ArrowUp (Left and Right when horizontal) move
-    focus and select from the anchor to the new option (Open questions 9).
+    focus and select from the anchor to the new option (Resolved questions 9).
   - Shift+Space and a Shift+click select from the anchor to the option.
   - Ctrl+Shift+Home and Ctrl+Shift+End (Cmd on Apple platforms) select from
     the anchor to the first or last option and move focus there.
@@ -260,7 +260,7 @@ RadioGroup):
 | Printable characters             | Typeahead (`collections/typeahead`, interaction layer §11 and its differences): focuses the next enabled option whose text starts with what was typed in the last second; selects nothing.                                                         |
 | Shift, Ctrl+Shift, Ctrl/Cmd+A    | Multiple mode: ranges and select all (Selection). Single mode: Shift and Ctrl+Shift act as the key alone (React Aria), and Ctrl+A passes.                                                                                                          |
 | Alt, Ctrl or Meta with an arrow  | Not handled: they pass (Alt+ArrowLeft is Back on Windows).                                                                                                                                                                                         |
-| Escape                           | Not handled, so a popover around the list closes (Open questions 7). React Aria clears the selection.                                                                                                                                              |
+| Escape                           | Not handled, so a popover around the list closes (Resolved questions 7). React Aria clears the selection.                                                                                                                                          |
 
 ## ARIA and state attributes per state
 
@@ -295,7 +295,7 @@ write them.
 
 ## Focus
 
-Roving tabindex (Open questions 4): DOM focus moves to the option, which has
+Roving tabindex (Resolved questions 4): DOM focus moves to the option, which has
 `tabindex="0"` while it is the tab stop and `-1` otherwise. The list holds no
 `aria-activedescendant`.
 
@@ -379,9 +379,9 @@ Position and set size are counted by the browser, per group. Probed for the
 open questions: an option with `aria-checked` instead reads
 `option, Apple, not selected, checked, position 1, set size 2` (Open
 questions 8); an option standing in for the empty state reads
-`option, No fruit, not selected, position 1, set size 1` (Open questions 10);
+`option, No fruit, not selected, position 1, set size 1` (Resolved questions 10);
 with `aria-posinset="42"` and `aria-setsize="100"` an option reads
-`option, Kiwi, not selected, position 42, set size 100` (Open questions 12).
+`option, Kiwi, not selected, position 42, set size 100` (Resolved questions 12).
 The empty part and read-only phrases are confirmed with the scenarios.
 
 ## Adapter surface
@@ -410,7 +410,7 @@ return (
 ```
 
 ```html
-<!-- Custom elements: items read from the markup (Open questions 3) -->
+<!-- Custom elements: items read from the markup (Resolved questions 3) -->
 <uni-listbox selection-mode="multiple" disabled-keys='["cherry"]'>
   <span data-part="label">Fruit</span>
   <div data-part="list">
@@ -462,7 +462,7 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
 - `isCheckable`, `size`, `shape`, `listGap`, `header`, `footer`,
   `optionHighlight` and the style props are the design system's.
   `emptyLabel` is the empty part's text.
-- `showSelectAll` goes (Open questions 11); `isReorderable` waits;
+- `showSelectAll` goes (Resolved questions 11); `isReorderable` waits;
   `shouldUseVirtualFocus` comes with ComboBox; `filter` is the consumer
   passing fewer items.
 - **Fixes.** The list stays rendered when empty, and its empty state is read.
@@ -473,7 +473,7 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
 
 ## Differences from React Aria, Zag and native behavior
 
-| #   | Topic                           | Cube UI Kit and React Aria                                                        | APG, Zag, native `<select>`                                                     | Proposed                                        |
+| #   | Topic                           | Cube UI Kit and React Aria                                                        | APG, Zag, native `<select>`                                                     | Decided                                         |
 | --- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
 | 1   | Focus                           | Roving tabindex; virtual focus for ComboBox                                       | APG examples, Zag: `aria-activedescendant` on the list                          | Roving; virtual focus with ComboBox (Q4)        |
 | 2   | Value                           | React Aria: a `Set` or `'all'`; UI Kit: a key in single mode, an array or `'all'` | Zag: `string[]` in every mode                                                   | `string[]` in every mode, no `'all'` (Q5)       |
@@ -496,13 +496,15 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
 
 ## Deviations from the WAI-ARIA pattern
 
-Pending Open questions 9: Shift+ArrowDown and Shift+ArrowUp extend a range
+Resolved questions 9: Shift+ArrowDown and Shift+ArrowUp extend a range
 from the anchor instead of toggling the next option, as the APG's own
 multi-select example, React Aria, UI Kit, Zag and `<select multiple>` do.
 The rest follows the pattern; the APG's optional keys are all present except
 Ctrl+A deselecting.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-18, each as recommended.
 
 1. **Item parts in the runtime.** The contract in [Item parts](#item-parts):
    `itemParts` and `connectItem` in definitions, `ctx.itemId`,
@@ -512,12 +514,11 @@ Ctrl+A deselecting.
    unlike root AGENTS.md's "consumers can override every id". The
    alternative, each option its own instance (RadioGroup's radios), doesn't
    scale to long lists, can't virtualize and makes options components.
-   Recommended: approve the contract, landing as its own runtime commit
-   before Listbox.
+   Decided: approved, landing as its own runtime commit before Listbox.
 2. **Accessors and `disabledKeys`.** Root AGENTS.md names `getKey`,
    `getTextValue` and `isDisabled`; the last becomes `isItemDisabled` so the
    list keeps `isDisabled`, and `disabledKeys` sits beside it for markup and
-   for UI Kit (React Aria Components has both too). Recommended: as written.
+   for UI Kit (React Aria Components has both too). Decided: as written.
 3. **Items from markup in custom elements.** Root AGENTS.md: the core never
    derives a collection from children. May the element adapter, as it adopts
    props from markup? (a) Yes: without an `items` property, the element reads
@@ -525,47 +526,51 @@ Ctrl+A deselecting.
    text from `data-text-value` or else the option's text, disabled from
    `disabled-keys`, and reads them again when the markup changes. (b) No: the
    element needs its `items` property, so static HTML can't build a listbox.
-   Recommended: (a).
+   Decided: (a).
 4. **Focus model.** (a) Roving tabindex standalone, as React Aria and UI Kit:
    real focus, `:focus-visible` in consumer CSS works, and mobile screen
    readers follow it. Virtual focus (`aria-activedescendant` on ComboBox's
    input) is added with ComboBox, which drives the list through its api.
    (b) `aria-activedescendant` on the list always, as the APG's examples and
    Zag: one focus model, but the option's focus look is all data attributes,
-   and the APG warns the script must scroll every move. Recommended: (a).
+   and the APG warns the script must scroll every move. Decided: (a).
 5. **The value.** (a) `value: readonly string[]` in both modes (Zag; UniAria's
    CheckboxGroup), so the type never changes with the mode; Select will
    expose a single key. (b) UI Kit's split: `selectedKey` in single mode,
    `selectedKeys` in multiple. Either way no `'all'`: it hides which keys are
    selected, and React Aria needs `fullCollection` tricks for it.
-   Recommended: (a).
+   Decided: (a).
 6. **Choosing the selected option again** in single mode. UI Kit has three
    behaviors today (Picker clears, FilterPicker closes without an event,
    ComboBox likely clears). (a) Nothing changes and `action` reports the
-   choice, so Select closes; (b) React Aria's: it deselects. Recommended: (a).
+   choice, so Select closes; (b) React Aria's: it deselects. Decided: (a).
 7. **Escape.** (a) Not handled, so it reaches a popover or dialog around the
    list in one press; (b) React Aria's: the first Escape clears the selection
-   and the second closes the overlay. Recommended: (a); UI Kit already turns
+   and the second closes the overlay. Decided: (a); UI Kit already turns
    React Aria's off wherever it can.
 8. **The selected state in multiple mode.** The APG recommends `aria-checked`
    for multi-select listboxes; React Aria, UI Kit and Zag use `aria-selected`.
    Probed, `aria-checked` reads `not selected, checked`: the browser still
-   exposes a selected state, so the option says both. Recommended:
+   exposes a selected state, so the option says both. Decided:
    `aria-selected` in both modes.
 9. **Shift+Arrow.** (a) Extends a range from the anchor (React Aria, UI Kit,
    Zag, the APG's example, `<select multiple>`), an APG deviation; (b) the
-   APG text: moves and toggles the next option. Recommended: (a).
+   APG text: moves and toggles the next option. Decided: (a).
 10. **The empty state.** (a) An `empty` part, hidden while there are options;
     while empty, the list takes the tab stop and is described by it:
     `listbox, Fruit, No fruit, …`. (b) React Aria's: a `role="option"` in the
     list, read as an option (`option, No fruit, not selected, position 1,
-set size 1`), which isn't one. Recommended: (a).
+set size 1`), which isn't one. Decided: (a).
 11. **Select all.** Out of scope beyond Ctrl+A: the APG recommends separate
     buttons, which a consumer builds with a Button setting `value`. UI Kit's
-    `showSelectAll` row becomes such a button. Recommended: as written.
+    `showSelectAll` row becomes such a button. Decided: as written.
 12. **Virtualization.** Deferred to a follow-up spec: TanStack virtual-core
     (about 7 kB brotli) fits with a range that always keeps the focused
     option rendered, but the elements adapter can't render rows, so markup
     consumers must re-render from a range event, and React's rows must
     re-render when the range moves, which root AGENTS.md's render-count rule
-    needs to allow. Recommended: defer; Listbox v1 renders every option.
+    needs to allow. Decided: deferred; Listbox v1 renders every option.
+
+## Open questions
+
+None.
