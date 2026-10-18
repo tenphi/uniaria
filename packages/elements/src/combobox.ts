@@ -26,12 +26,15 @@
 
 import { combobox } from '@uniaria/core/combobox';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniComboboxElement = UniElement<typeof combobox>;
 
-export const UniCombobox = defineElement(combobox);
+// Annotated: inferred, its declaration has to name Popover's internal types,
+// which the declaration build can't always reach (TS2883 in CI).
+export const UniCombobox: UniElementConstructor<typeof combobox> | undefined =
+  defineElement(combobox);
 
 declare global {
   interface HTMLElementTagNameMap {

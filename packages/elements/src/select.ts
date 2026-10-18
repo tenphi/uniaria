@@ -26,12 +26,15 @@
 
 import { select } from '@uniaria/core/select';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniSelectElement = UniElement<typeof select>;
 
-export const UniSelect = defineElement(select);
+// Annotated: inferred, its declaration has to name Popover's internal types,
+// which the declaration build can't always reach (TS2883 in CI).
+export const UniSelect: UniElementConstructor<typeof select> | undefined =
+  defineElement(select);
 
 declare global {
   interface HTMLElementTagNameMap {
