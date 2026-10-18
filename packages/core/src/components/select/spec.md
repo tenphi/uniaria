@@ -309,17 +309,17 @@ No CSS variables of Select's own.
 Probed with `@guidepup/virtual-screen-reader` in Chromium, on a select "Fruit"
 with the trigger Resolved questions 1 recommends:
 
-| State                           | Spoken phrase                                                                                                                                                                     |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| closed                          | `combobox, Fruit, has popup listbox, not expanded, 1 control`, then its text `Apple`                                                                                              |
-| closed, nothing selected        | the same, then `Pick a fruit`                                                                                                                                                     |
-| described, invalid and required | `combobox, Fruit, Pick some Pick one, has popup listbox, not expanded, 1 control, invalid, required`                                                                              |
-| read-only                       | `combobox, Fruit, has popup listbox, not expanded, 1 control, read only`                                                                                                          |
-| disabled                        | `combobox, Fruit, has popup listbox, not expanded, 1 control, disabled`                                                                                                           |
-| open                            | `combobox, Fruit, has popup listbox, expanded, 1 control`, then `listbox, Fruit, orientated vertically` and Listbox's options (`option, Apple, selected, position 1, set size 2`) |
-| open, multiple                  | the list: `listbox, Fruit, orientated vertically, multi-selectable`                                                                                                               |
-| open, empty                     | the list: `listbox, Fruit, No fruit, orientated vertically`                                                                                                                       |
-| the hidden `<select>`           | nothing                                                                                                                                                                           |
+| State                           | Spoken phrase                                                                                                                                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| closed                          | `combobox, Fruit, has popup listbox, not expanded, 1 control`, then its text `Apple`                                                                                                           |
+| closed, nothing selected        | the same, then `Pick a fruit`                                                                                                                                                                  |
+| described, invalid and required | `combobox, Fruit, Pick some Pick one, has popup listbox, not expanded, 1 control, invalid, required`                                                                                           |
+| read-only                       | `combobox, Fruit, has popup listbox, not expanded, 1 control, read only`                                                                                                                       |
+| disabled                        | `combobox, Fruit, has popup listbox, not expanded, 1 control, disabled`                                                                                                                        |
+| open                            | `listbox, Fruit, orientated vertically` and Listbox's options (`option, Apple, selected, position 1, set size 2`); not the trigger, which Popover's modal mode hides with the rest of the page |
+| open, multiple                  | the list: `listbox, Fruit, orientated vertically, multi-selectable`                                                                                                                            |
+| open, empty                     | the list: `listbox, Fruit, No fruit, orientated vertically`                                                                                                                                    |
+| the hidden `<select>`           | nothing                                                                                                                                                                                        |
 
 The virtual screen reader doesn't compute a combobox's value: it reads the
 trigger's text as content after the role. Whether real screen readers read
