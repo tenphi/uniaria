@@ -55,8 +55,8 @@ Not part of Listbox:
 - **Filtering, loading more and custom values**: ComboBox's. The consumer
   passes the items to show.
 - **Reordering** (UI Kit's `isReorderable`, Alt+Arrow): a later addition.
-- **Form submission.** A listbox has no native form value; Select will carry a
-  hidden input. A consumer form reads `value`.
+- **Form submission.** A listbox has no native form value; Select carries a
+  hidden `<select>`. A consumer form reads `value`.
 - **Interactive content in options.** The APG: a listbox option can't hold
   buttons, links or checkboxes; that is a grid.
 - **Looks.** Checkmarks, checkboxes drawn in multiple mode (UI Kit's

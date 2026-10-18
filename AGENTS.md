@@ -370,8 +370,10 @@ handler with its event.
   because the page outside it is inert.
 - Attribute ownership is per part: the element owns ARIA state and
   `data-state`; the consumer owns content, classes and every other attribute.
-  A part can be declared element-owned (Select's displayed value): the
-  consumer leaves it empty and the element writes its text.
+  A part can be declared element-owned: the consumer leaves it empty and
+  UniAria writes its content, in both adapters. Select's displayed value
+  (its text) and its hidden `<select>` (its `<option>`s) are the two (Select
+  spec, Resolved questions 10 and 11).
 - Parts are found by a query that stops at nested UniAria elements of any
   kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
