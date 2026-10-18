@@ -17,7 +17,7 @@ Styling stays with your design system: every part exposes `data-scope`,
 
 The first release covers Button, ToggleButton, Field, TextField (inputs and
 textareas), Checkbox, CheckboxGroup, Switch, RadioGroup, Dialog, Popover,
-Tooltip, NumberField, Listbox, Select and ComboBox, at React Aria-level
+Tooltip, NumberField, Listbox, Select and Combobox, at React Aria-level
 accessibility.
 
 UniAria is part of the same family as [Tasty](https://tasty.style) and

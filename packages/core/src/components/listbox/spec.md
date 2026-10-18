@@ -8,7 +8,7 @@ A listbox is a list of options from which the user selects one or, in
 multiple mode, several: `role="listbox"` on the list and `role="option"` on
 each option, with arrow keys, Home and End, Page Up and Page Down, typeahead
 and, in multiple mode, range selection. It is used on its own, as a form
-control, and later as the list inside Select and ComboBox, which compose it
+control, and later as the list inside Select and Combobox, which compose it
 (`ctx.use`). There is no native element underneath: `<select size>` can't
 hold styled options, groups with markup or descriptions.
 
@@ -34,7 +34,7 @@ decided in Resolved questions 1.
   focus-within from `dom/`. New in the runtime: item parts. New in
   `collections/`: a DOM-free list collection (key to index maps, the next
   and previous enabled key, ranges), built once per `items`.
-- **Owner:** none. Select and ComboBox will compose it rather than own it.
+- **Owner:** none. Select and Combobox will compose it rather than own it.
 - **Custom element:** yes, `<uni-listbox>`, hosting consumer markup. Its
   options are the consumer's elements, found by `data-part` and keyed by the
   consumer's `data-key` (Resolved questions 3).
@@ -52,7 +52,7 @@ Not part of Listbox:
 - **Select all as an option.** UI Kit's select-all row sits outside the
   listbox and the arrow keys never reach it. The APG recommends separate
   buttons; Ctrl+A (Cmd+A on Apple platforms) selects all (Resolved questions 11).
-- **Filtering, loading more and custom values**: ComboBox's. The consumer
+- **Filtering, loading more and custom values**: Combobox's. The consumer
   passes the items to show.
 - **Reordering** (UI Kit's `isReorderable`, Alt+Arrow): a later addition.
 - **Form submission.** A listbox has no native form value; Select carries a
@@ -467,7 +467,7 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
   `optionHighlight` and the style props are the design system's.
   `emptyLabel` is the empty part's text.
 - `showSelectAll` goes (Resolved questions 11); `isReorderable` waits;
-  `shouldUseVirtualFocus` comes with ComboBox; `filter` is the consumer
+  `shouldUseVirtualFocus` comes with Combobox; `filter` is the consumer
   passing fewer items.
 - **Fixes.** The list stays rendered when empty, and its empty state is read.
   No option outside the listbox (select-all), no `separator` inside it, no
@@ -479,7 +479,7 @@ FilterListBox (UI Kit's Select has a second listbox of its own today).
 
 | #   | Topic                           | Cube UI Kit and React Aria                                                        | APG, Zag, native `<select>`                                                     | Decided                                         |
 | --- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
-| 1   | Focus                           | Roving tabindex; virtual focus for ComboBox                                       | APG examples, Zag: `aria-activedescendant` on the list                          | Roving; virtual focus with ComboBox (Q4)        |
+| 1   | Focus                           | Roving tabindex; virtual focus for Combobox                                       | APG examples, Zag: `aria-activedescendant` on the list                          | Roving; virtual focus with Combobox (Q4)        |
 | 2   | Value                           | React Aria: a `Set` or `'all'`; UI Kit: a key in single mode, an array or `'all'` | Zag: `string[]` in every mode                                                   | `string[]` in every mode, no `'all'` (Q5)       |
 | 3   | The selected option again       | React Aria: deselects (single); UI Kit: two flags                                 | Zag: deselects with `deselectable`; `<select>`: stays selected                  | Stays selected, `action` reported (Q6)          |
 | 4   | Escape                          | React Aria: clears the selection; UI Kit: `onEscape` instead                      | Zag: clears with `deselectable`; APG: nothing                                   | Not handled (Q7)                                |
@@ -533,8 +533,8 @@ Decided by @tenphi on 2026-10-18, each as recommended.
    Decided: (a).
 4. **Focus model.** (a) Roving tabindex standalone, as React Aria and UI Kit:
    real focus, `:focus-visible` in consumer CSS works, and mobile screen
-   readers follow it. Virtual focus (`aria-activedescendant` on ComboBox's
-   input) is added with ComboBox, which drives the list through its api.
+   readers follow it. Virtual focus (`aria-activedescendant` on Combobox's
+   input) is added with Combobox, which drives the list through its api.
    (b) `aria-activedescendant` on the list always, as the APG's examples and
    Zag: one focus model, but the option's focus look is all data attributes,
    and the APG warns the script must scroll every move. Decided: (a).
@@ -546,7 +546,7 @@ Decided by @tenphi on 2026-10-18, each as recommended.
    Decided: (a).
 6. **Choosing the selected option again** in single mode. UI Kit has three
    behaviors today (Picker clears, FilterPicker closes without an event,
-   ComboBox likely clears). (a) Nothing changes and `action` reports the
+   Combobox likely clears). (a) Nothing changes and `action` reports the
    choice, so Select closes; (b) React Aria's: it deselects. Decided: (a).
 7. **Escape.** (a) Not handled, so it reaches a popover or dialog around the
    list in one press; (b) React Aria's: the first Escape clears the selection

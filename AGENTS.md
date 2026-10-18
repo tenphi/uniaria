@@ -176,7 +176,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `@uniaria/elements` contain no component-specific behavior, only optional thin sugar
   (`@uniaria/elements` also has one registering entry per component).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
-  is Listbox + Popover + trigger and ComboBox is Listbox + Popover + input, so
+  is Listbox + Popover + trigger and Combobox is Listbox + Popover + input, so
   there is exactly one Listbox implementation. ToggleButton is Button plus
   selection. The composed definition runs on the same instance (store,
   lifecycle, elements), reads its props from the `props` function on every
@@ -431,7 +431,7 @@ One component per task, small commits, in this order:
    the owner sets its status to `approved`.
 
    Complex components (overlays and collections: Dialog, Popover, Tooltip,
-   Listbox, Select, ComboBox) start from Cube UI Kit, not React Aria (owner, 2026-10-15). UI
+   Listbox, Select, Combobox) start from Cube UI Kit, not React Aria (owner, 2026-10-15). UI
    Kit replaced React Aria patterns that hurt its users: its ComboBox is its
    own implementation, and one click outside a popover acts. Read the
    component's source, tests and docs in `references/cube-ui-kit`, and list
@@ -458,7 +458,7 @@ descriptive names.
 
 First scope, in roadmap order: Button, ToggleButton, Field, TextField,
 Checkbox, CheckboxGroup, Switch, RadioGroup → Dialog, Popover, Tooltip,
-NumberField → Listbox, Select, ComboBox. Dialog and Tooltip joined on
+NumberField → Listbox, Select, Combobox. Dialog and Tooltip joined on
 2026-10-16 (owner): Dialog first, since it needs no positioning and settles
 the overlay contract Popover reuses; Tooltip after Popover, whose
 positioning and top-layer fallback it reuses.

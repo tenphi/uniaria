@@ -1,6 +1,6 @@
-# ComboBox spec
+# Combobox spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-18
 
 ## Summary
 
@@ -8,10 +8,10 @@ A combo box is a text input with a list of suggestions under it: typing
 filters the options, and choosing one puts its text in the input and makes
 it the value. It replaces `<input list>` with `<datalist>` where the options
 need markup, groups, a styled popup, or a value separate from the text.
-ComboBox is Field, Listbox and Popover composed (`ctx.use`), as root
+Combobox is Field, Listbox and Popover composed (`ctx.use`), as root
 AGENTS.md says: Field names and describes the input; Listbox is the list
 with its options and selection; Popover holds the list over the page,
-places it and dismisses it. ComboBox adds the input: filtering, which keys
+places it and dismisses it. Combobox adds the input: filtering, which keys
 and presses open the list, the highlighted option (focus stays in the
 input), and how the typed text settles into a value.
 
@@ -20,8 +20,8 @@ implementation, not React Aria's `useComboBox`: UI Kit replaced it because
 React Aria's patterns hurt its users (root AGENTS.md). Where UI Kit, React
 Aria, the APG, Zag and the browser's `<datalist>` disagree, the difference
 is in [Differences](#differences-from-ui-kit-react-aria-the-apg-and-zag)
-and the choice is in [Open questions](#open-questions). UI Kit's rough edges
-that UniAria doesn't copy are listed in
+and the choice is in [Resolved questions](#resolved-questions). UI Kit's
+rough edges that UniAria doesn't copy are listed in
 [Mapping from Cube UI Kit](#mapping-from-cube-ui-kit), to file there once
 reviewed.
 
@@ -34,21 +34,22 @@ reviewed.
   `tabindex="-1"` button that opens the list.
 - **Builds on:** Field (`ctx.use`, its `control` part as `input`); Listbox
   (`ctx.use`: `list`, `empty` and the item parts, without its label,
-  description and error), with a new virtual focus mode (Open questions 1);
+  description and error), with a new virtual focus mode (Resolved questions 1);
   Popover (`ctx.use`: its `root` as `popover`, its `trigger` as the input,
   `anchor` and `arrow`), non-modal, with a new prop to leave focus where it
-  is on open (Open questions 10); `createPress` for the button;
+  is on open (Resolved questions 10); `createPress` for the button;
   `findByText`'s collator for the default filter; the live announcer.
 - **Owner:** none.
-- **Custom element:** yes, `<uni-combo-box>`, hosting consumer markup. As
+- **Custom element:** yes, `<uni-combobox>`, hosting consumer markup. As
   `<uni-listbox>`, it reads its items from the options in the popover when
   `items` isn't set, and hides the options the filter leaves out with
   `hidden` (root design doc, Scope). Async or very large option lists need
   the native adapter (rendered from state), or React.
 
-Not part of ComboBox:
+Not part of Combobox:
 
-- **Multiple selection** (tags in the field): a later TagField. Open questions 16.
+- **Multiple selection** (tags in the field): a later TagField. Resolved
+  questions 16.
 - **A clear button.** The consumer's button: clearing sets `value` to `[]`
   and `inputValue` to `''`, as Select.
 - **Loading and async options.** The consumer passes the items to show and
@@ -74,14 +75,14 @@ Not part of ComboBox:
 | label       | `label` by default         | `id`, `for`; state attributes                                                                                                                                                                                                                                                           | Field's. Names the input and the list.                                                                                                                                                 |
 | anchor      | any; usually `div`         | state attributes                                                                                                                                                                                                                                                                        | Optional. The box around the input and the button (UI Kit's wrapper, Zag's control): the popup is placed against it and takes `--anchor-width` from it. Without it, the input is used. |
 | input       | `input`                    | `id`, `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`, Field's control attributes, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `required`, `readonly`, `disabled`; the `value` property; state attributes | The text the user types, and the selected option's text once chosen. `type` is the consumer's (`text` or `search`).                                                                    |
-| button      | `button`                   | Button's; `tabindex="-1"`, `aria-label`, `aria-labelledby`, `aria-haspopup="listbox"`, `aria-expanded`, `aria-controls`, `disabled`; state attributes                                                                                                                                   | Optional. Opens and closes the list without taking focus (Open questions 11). Its icon is the consumer's, hidden from assistive technology.                                            |
+| button      | `button`                   | Button's; `tabindex="-1"`, `aria-label`, `aria-labelledby`, `aria-haspopup="listbox"`, `aria-expanded`, `aria-controls`, `disabled`; state attributes                                                                                                                                   | Optional. Opens and closes the list without taking focus (Resolved questions 11). Its icon is the consumer's, hidden from assistive technology.                                        |
 | popover     | any; usually `div`         | Popover's root attributes except `role`, `tabindex` and the name: `id`, `popover="manual"`, `data-placement`, positioning styles; state attributes                                                                                                                                      | Render it always, after the input; hidden while closed. Not a dialog: the list inside is the popup.                                                                                    |
 | arrow       | any                        | Popover's                                                                                                                                                                                                                                                                               | Optional.                                                                                                                                                                              |
 | list        | any; usually `ul` or `div` | Listbox's list attributes in virtual focus mode (no `tabindex`), with `aria-labelledby` = the label (or `labelledBy`)                                                                                                                                                                   | Inside the popover.                                                                                                                                                                    |
-| empty       | any                        | Listbox's                                                                                                                                                                                                                                                                               | Optional, inside the popover. Shown while no option matches; rendering it keeps the popup open then (Open questions 9).                                                                |
+| empty       | any                        | Listbox's                                                                                                                                                                                                                                                                               | Optional, inside the popover. Shown while no option matches; rendering it keeps the popup open then (Resolved questions 9).                                                            |
 | description | any                        | `id`; state attributes                                                                                                                                                                                                                                                                  | Field's, describing the input.                                                                                                                                                         |
 | error       | any                        | `id`, `hidden` while not shown; state attributes                                                                                                                                                                                                                                        | Field's.                                                                                                                                                                               |
-| hiddenInput | `input`                    | `type="hidden"`, `disabled`; the `value` property                                                                                                                                                                                                                                       | Optional, as NumberField's: the consumer puts `name` and `form` here. Its value is the selected key, or the custom text (Open questions 13).                                           |
+| hiddenInput | `input`                    | `type="hidden"`, `disabled`; the `value` property                                                                                                                                                                                                                                       | Optional, as NumberField's: the consumer puts `name` and `form` here. Its value is the selected key, or the custom text (Resolved questions 13).                                       |
 
 Item parts, as Listbox's and inside its list: `option`, `optionLabel`,
 `optionDescription`, `group` and `groupLabel`, keyed by the consumer's
@@ -112,12 +113,12 @@ Boolean props read as predicates. Keys are strings.
 | value                   | `readonly string[]`                                            | `[]`                                            | yes      | `valueChange` | The selected key, at most one; with `allowsCustomValue`, the custom text. Changes only when the text settles (Selection), never per keystroke.                              |
 | inputValue              | `string`                                                       | the selected option's text                      | yes      | `inputChange` | The input's text. `defaultInputValue` seeds it, else `defaultValue`'s option text.                                                                                          |
 | isOpen                  | `boolean`                                                      | `false`                                         | yes      | `openChange`  | Popover's. A controlled combo box that refuses to close stays open.                                                                                                         |
-| popoverTrigger          | `'input' \| 'focus' \| 'manual'`                               | `'input'`                                       | no       | —             | What opens the list besides the button and the arrow keys: typing (UI Kit's default), focus too, or neither (Open questions 8). React Aria's `menuTrigger`.                 |
+| popoverTrigger          | `'input' \| 'focus' \| 'manual'`                               | `'input'`                                       | no       | —             | What opens the list besides the button and the arrow keys: typing (UI Kit's default), focus too, or neither (Resolved questions 8). React Aria's `menuTrigger`.             |
 | filter                  | `((textValue: string, inputValue: string) => boolean) \| null` | contains                                        | no       | —             | Which options match the typed text. The default: the text contains the trimmed input, ignoring case and accents, in the field's language. `null` shows every item as given. |
-| allowsCustomValue       | `boolean`                                                      | `false`                                         | no       | —             | Text that matches no option becomes the value when it settles (Open questions 4).                                                                                           |
+| allowsCustomValue       | `boolean`                                                      | `false`                                         | no       | —             | Text that matches no option becomes the value when it settles (Resolved questions 4).                                                                                       |
 | isDisabled              | `boolean`                                                      | `false`                                         | no       | —             | Field's. The input and the button are natively `disabled`.                                                                                                                  |
-| isReadOnly              | `boolean`                                                      | `false`                                         | no       | —             | The input is natively `readonly`; the list opens from the button and the arrows and the highlight moves, but nothing selects (Open questions 17). Attribute `readonly`.     |
-| isRequired              | `boolean`                                                      | `false`                                         | no       | —             | Field's `aria-required`, and the input's native `required` (Open questions 13).                                                                                             |
+| isReadOnly              | `boolean`                                                      | `false`                                         | no       | —             | The input is natively `readonly`; the list opens from the button and the arrows and the highlight moves, but nothing selects (Resolved questions 17). Attribute `readonly`. |
+| isRequired              | `boolean`                                                      | `false`                                         | no       | —             | Field's `aria-required`, and the input's native `required` (Resolved questions 13).                                                                                         |
 | isInvalid               | `boolean`                                                      | `false`                                         | no       | —             | Field's.                                                                                                                                                                    |
 | shouldFocusWrap         | `boolean`                                                      | `false`                                         | no       | —             | Listbox's: the arrows wrap from the last option to the first. Attribute `focus-wrap`.                                                                                       |
 | positionArea            | `PositionArea`                                                 | `'block-end span-inline-end'`                   | no       | —             | Popover's: below the field, aligned to its start edge, as Select and UI Kit.                                                                                                |
@@ -133,7 +134,7 @@ Boolean props read as predicates. Keys are strings.
 
 Fixed rather than props: the list is in Listbox's virtual focus mode with
 `shouldFocusOnHover` on and vertical orientation; the popover is non-modal
-and dismissable and doesn't take focus on open (Open questions 10).
+and dismissable and doesn't take focus on open (Resolved questions 10).
 
 `Item` is Listbox's. Development warns when the input has no name, and when
 the button has no `aria-label` of its own besides `buttonLabel`.
@@ -176,7 +177,7 @@ Listbox's `action` closes the list and isn't reported.
   last settled (UI Kit's rule). The text a chosen option wrote, or the
   reverted text, filters nothing, so opening the list after choosing shows
   every option. After typing, opening again shows the matches, or every
-  option when none match (UI Kit, Open questions 8).
+  option when none match (UI Kit, Resolved questions 8).
 - **What it hides.** Options and groups the filter leaves out get `hidden`;
   the arrows skip them, `aria-activedescendant` never points at them, and the
   list's option count leaves them out. React consumers may also render only
@@ -184,11 +185,11 @@ Listbox's `action` closes the list and isn't reported.
   `items` as they are.
 - **No matches.** `isEmpty` and `data-empty`. With an empty part rendered,
   the list stays open and the empty part describes it ("No fruit"); without
-  one, the list closes until something matches (Open questions 9).
+  one, the list closes until something matches (Resolved questions 9).
 
 ## Selection
 
-ComboBox has one selected key at most. The text and the value settle
+Combobox has one selected key at most. The text and the value settle
 together, so a committed text is the selected option's text, the custom
 text, or empty.
 
@@ -197,9 +198,9 @@ text, or empty.
   focus in the input. Choosing the selected option again closes the list with
   no `valueChange` (Listbox's `action`; UI Kit clears it, Mapping).
 - **Typing** changes the text only. The value stays until the text settles,
-  in both modes (Open questions 3 and 4).
+  in both modes (Resolved questions 3 and 4).
 - **The text settles** on Enter with nothing highlighted, and when focus
-  leaves the combo box (Open questions 3):
+  leaves the combo box (Resolved questions 3):
   1. Text matching an enabled option's text exactly (ignoring case and
      accents, in the field's language) selects that option.
   2. Otherwise, with the filter applying and exactly one enabled option
@@ -217,19 +218,19 @@ text, or empty.
 On the input. Keys with Ctrl or Meta, and every key during IME composition,
 are left to the browser.
 
-| Key                                 | Closed                                                                                                                                                  | Open                                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| ArrowDown                           | Open, highlighting the selected option, else the first.                                                                                                 | Highlight the next option; from none, the first. Wraps with `shouldFocusWrap`.        |
-| ArrowUp                             | Open, highlighting the selected option, else the last.                                                                                                  | Highlight the previous option; from none, the last.                                   |
-| Alt+ArrowDown                       | Open with nothing highlighted (APG).                                                                                                                    | Nothing.                                                                              |
-| Alt+ArrowUp                         | Nothing.                                                                                                                                                | Close, keeping the text (APG).                                                        |
-| PageDown, PageUp                    | Left to the browser.                                                                                                                                    | With an option highlighted, move it by the list's visible height (Listbox's).         |
-| Home, End                           | Left to the browser: the caret moves.                                                                                                                   | The same, and the highlight clears (APG; Open questions 5).                           |
-| ArrowLeft, Right                    | Left to the browser.                                                                                                                                    | The caret moves and the highlight clears (React Aria's NVDA fix).                     |
-| Enter                               | Settle the text (Selection). Not prevented, so a form submits.                                                                                          | With an option highlighted: choose it, prevented. Otherwise as closed, and close.     |
-| Escape                              | If the text differs from the settled text, revert it; prevented. Otherwise not handled, so it reaches a dialog around the combo box (Open questions 6). | Close, keeping the text; prevented.                                                   |
-| Tab, Shift+Tab                      | Left to the browser; the text settles as focus leaves.                                                                                                  | The same: the list closes without choosing the highlighted option (Open questions 7). |
-| Printable, Backspace, Delete, paste | Edit the text; with `popoverTrigger: 'input'` and non-blank text, open the list.                                                                        | Edit the text; the filter follows it and the highlight clears (Open questions 2).     |
+| Key                                 | Closed                                                                                                                                                      | Open                                                                                      |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| ArrowDown                           | Open, highlighting the selected option, else the first.                                                                                                     | Highlight the next option; from none, the first. Wraps with `shouldFocusWrap`.            |
+| ArrowUp                             | Open, highlighting the selected option, else the last.                                                                                                      | Highlight the previous option; from none, the last.                                       |
+| Alt+ArrowDown                       | Open with nothing highlighted (APG).                                                                                                                        | Nothing.                                                                                  |
+| Alt+ArrowUp                         | Nothing.                                                                                                                                                    | Close, keeping the text (APG).                                                            |
+| PageDown, PageUp                    | Left to the browser.                                                                                                                                        | With an option highlighted, move it by the list's visible height (Listbox's).             |
+| Home, End                           | Left to the browser: the caret moves.                                                                                                                       | The same, and the highlight clears (APG; Resolved questions 5).                           |
+| ArrowLeft, Right                    | Left to the browser.                                                                                                                                        | The caret moves and the highlight clears (React Aria's NVDA fix).                         |
+| Enter                               | Settle the text (Selection). Not prevented, so a form submits.                                                                                              | With an option highlighted: choose it, prevented. Otherwise as closed, and close.         |
+| Escape                              | If the text differs from the settled text, revert it; prevented. Otherwise not handled, so it reaches a dialog around the combo box (Resolved questions 6). | Close, keeping the text; prevented.                                                       |
+| Tab, Shift+Tab                      | Left to the browser; the text settles as focus leaves.                                                                                                      | The same: the list closes without choosing the highlighted option (Resolved questions 7). |
+| Printable, Backspace, Delete, paste | Edit the text; with `popoverTrigger: 'input'` and non-blank text, open the list.                                                                            | Edit the text; the filter follows it and the highlight clears (Resolved questions 2).     |
 
 ## ARIA and state attributes per state
 
@@ -260,12 +261,12 @@ it. React Aria and UI Kit write it only while open.
 
 ## Focus
 
-- **DOM focus stays in the input** throughout (Open questions 1). The
+- **DOM focus stays in the input** throughout (Resolved questions 1). The
   highlighted option is virtual: `aria-activedescendant` on the input,
   `data-focused` on the option. Options and the list never take focus; a
   press on an option keeps focus in the input.
 - **The highlight** moves with the arrows and the page keys, and with a
-  hovering mouse (Open questions 12). It clears when the text changes, on
+  hovering mouse (Resolved questions 12). It clears when the text changes, on
   ArrowLeft, ArrowRight, Home and End, and on close. Moved by the keyboard,
   the option is scrolled into view (`block: 'nearest'`), as browsers don't do
   it for `aria-activedescendant`; not under a screen reader's virtual cursor,
@@ -274,7 +275,7 @@ it. React Aria and UI Kit write it only while open.
   or ArrowUp highlights the selected option, else the first or last; by
   typing, Alt+ArrowDown, a mouse or touch press on the button, or focus,
   nothing is highlighted except the selected option when opened by the button
-  (Open questions 2 and 11).
+  (Resolved questions 2 and 11).
 - **The button** never takes focus: a press focuses the input (React Aria,
   the APG; UI Kit's is a tab stop).
 - **Focus leaving** the combo box (the input, the button and the popup)
@@ -282,7 +283,7 @@ it. React Aria and UI Kit write it only while open.
   moved it acts (UI Kit's composite blur). Focus returning nowhere (the page
   hidden, the window losing focus) settles nothing.
 - **A form submitted without a required value**: the input is the invalid
-  element, so the browser focuses it and shows its message (Open questions
+  element, so the browser focuses it and shows its message (Resolved questions
   13).
 
 ## Pointer and touch
@@ -304,7 +305,7 @@ it. React Aria and UI Kit write it only while open.
 
 ## Live announcements
 
-Through the live announcer, politely (Open questions 14):
+Through the live announcer, politely (Resolved questions 14):
 
 - **The option count** when the list opens, and when typing changes it while
   open: "3 options available", from `optionCountAnnouncement(count)` (English
@@ -324,7 +325,7 @@ Through the live announcer, politely (Open questions 14):
 | `--anchor-width`, `--available-width`, `--available-height`                                            | popover        | Popover's: for `min-width: var(--anchor-width)` and a `max-height`. |
 | `hidden`                                                                                               | option, group  | Filtered out.                                                       |
 
-No CSS variables of ComboBox's own.
+No CSS variables of Combobox's own.
 
 ## Expected spoken output
 
@@ -355,7 +356,7 @@ ones at gate 5.
 
 ```tsx
 // React
-const fruit = useComponent(comboBox, {
+const fruit = useComponent(combobox, {
   items, // [{ key: 'apple', textValue: 'Apple' }, …]
   defaultValue: ['banana'],
   onValueChange,
@@ -387,7 +388,7 @@ return (
 
 ```html
 <!-- Custom elements: items read from the options -->
-<uni-combo-box required>
+<uni-combobox required>
   <label data-part="label">Fruit</label>
   <div data-part="anchor">
     <input data-part="input" />
@@ -401,10 +402,10 @@ return (
     <p data-part="empty">No fruit</p>
   </div>
   <input data-part="hiddenInput" name="fruit" />
-</uni-combo-box>
+</uni-combobox>
 ```
 
-`@uniaria/core/combo-box` exports `comboBox`, and the element registers from
+`@uniaria/core/combobox` exports `combobox`, and the element registers from
 the same subpath of `@uniaria/elements`. Attributes: `disabled-keys`,
 `popover-trigger`, `allows-custom-value`, `disabled`, `readonly`,
 `required`, `invalid`, `focus-wrap`, `position-area`,
@@ -421,7 +422,7 @@ the same subpath of `@uniaria/elements`. Attributes: `disabled-keys`,
 | `selectedKey` / `defaultSelectedKey` / `onSelectionChange(key \| null)` | `value` / `defaultValue` / `valueChange` with `[]` or `[key]` (Select's type)                 |
 | `inputValue` / `defaultInputValue` / `onInputChange`                    | the same names; `inputChange` fires only when the text changed                                |
 | `popoverTrigger`, `filter` (function or `false`), `allowsCustomValue`   | the same; `filter: null` for no filtering                                                     |
-| `shouldCommitOnBlur`, `clearOnBlur`, `isClearable`, `sortSelectedToTop` | not included (Open questions 16)                                                              |
+| `shouldCommitOnBlur`, `clearOnBlur`, `isClearable`, `sortSelectedToTop` | not included (Resolved questions 16)                                                          |
 | `onOpenChange` (internal open state)                                    | `isOpen` / `defaultOpen` / `openChange`, as Select                                            |
 | `onFocus` / `onBlur` over the field and popover                         | `focusChange`                                                                                 |
 | `onKeyDown` first, `preventDefault()` skipping the built-in handling    | the consumer's handler on the input; a prevented keydown is left alone, as every UniAria part |
@@ -484,15 +485,17 @@ UniAria doesn't copy; to file on cube-js/cube-ui-kit once reviewed:
 
 ## Deviations from the WAI-ARIA pattern
 
-- **Tab doesn't select the highlighted option** (Open questions 7). The APG
+- **Tab doesn't select the highlighted option** (Resolved questions 7). The APG
   example's script commits it; UniAria closes, and the text settles, so
   arrowing through and leaving doesn't change the value, as Select.
 - **Enter with nothing highlighted settles the text and submits the form**
-  (Open questions 3). The APG example prevents Enter always.
-- **Escape on a closed combo box reverts rather than clears** (Open
+  (Resolved questions 3). The APG example prevents Enter always.
+- **Escape on a closed combo box reverts rather than clears** (Resolved
   questions 6). The APG makes clearing optional.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-18, each as recommended.
 
 1. **Focus model.** (a) DOM focus stays in the input and the highlighted
    option is `aria-activedescendant` (UI Kit, React Aria, the APG, Zag,
@@ -502,7 +505,7 @@ UniAria doesn't copy; to file on cube-js/cube-ui-kit once reviewed:
    rather than DOM focus, hover highlights, a press keeps focus where it is,
    and the composing component moves the highlight from its input's keys.
    A change to the approved Listbox. (b) Real focus into the list, as
-   Select: impossible while typing. Recommended: (a).
+   Select: impossible while typing. Decided: (a).
 2. **The highlight while typing.** (a) None: typing clears it, and Enter
    settles the text (question 3); ArrowDown highlights. React Aria, the
    APG's list example and Zag's default; React Aria found NVDA stops reading
@@ -510,7 +513,7 @@ UniAria doesn't copy; to file on cube-js/cube-ui-kit once reviewed:
    (b) UI Kit: the first match (or the selected option) is highlighted as you
    type, so Enter picks it (UI Kit #886). It makes typing a custom value
    that is part of an option impossible to commit by Enter (Mapping 9).
-   Recommended: (a); question 3's rule 2 keeps "type a unique part, press
+   Decided: (a); question 3's rule 2 keeps "type a unique part, press
    Enter" working.
 3. **Settling the text** (Enter with nothing highlighted, and blur). (a) UI
    Kit's rule (Selection): an exact text match selects, else the only
@@ -519,13 +522,13 @@ UniAria doesn't copy; to file on cube-js/cube-ui-kit once reviewed:
    matching uses the filter's collator). (b) The exact match only, then the
    rest. (c) React Aria: revert, or commit custom text; text never selects.
    Enter is never prevented here, so a form submits after the text settles.
-   Recommended: (a).
+   Decided: (a).
 4. **Custom values** (`allowsCustomValue`). (a) UI Kit: the settled text
    becomes the value (`value: ['Mango']`), which the hidden input submits;
    text matching an option's text selects the option instead (UI Kit's
    TagInput rule). (b) React Aria: the value stays `[]` and the text is the
    value, read from `inputValue`; the form submits the text (`formValue:
-'text'`). Recommended: (a): one value to read, and a form gets it.
+'text'`). Decided: (a): one value to read, and a form gets it.
 5. **Keys besides the APG's core.** (a) ArrowUp opens on the last option
    (React Aria, the APG, Select); Alt+ArrowDown opens without a highlight and
    Alt+ArrowUp closes (APG); Home and End move the caret and clear the
@@ -533,71 +536,71 @@ UniAria doesn't copy; to file on cube-js/cube-ui-kit once reviewed:
    ArrowLeft and ArrowRight clear the highlight (React Aria); PageUp and
    PageDown move a present highlight by a page. (b) UI Kit: ArrowUp opens on
    the first, Alt is ignored, Home and End move the highlight. (c) React Aria:
-   Home and End move the highlight while open. Recommended: (a).
+   Home and End move the highlight while open. Decided: (a).
 6. **Escape.** (a) Open: close and keep the text (UI Kit). Closed: revert
    typed text to the settled text, else leave Escape alone so it reaches a
    dialog around the combo box (fixing Mapping 8). (b) UI Kit: closed, clear
    only with `isClearable`. (c) React Aria: revert in both. (d) The APG:
-   closed, clear. Recommended: (a).
+   closed, clear. Decided: (a).
 7. **Tab while open.** (a) Close without choosing the highlight; the text
    settles as focus leaves (UI Kit, Zag, Select's resolved question 5).
-   (b) Choose the highlight (React Aria, the APG's script). Recommended: (a).
+   (b) Choose the highlight (React Aria, the APG's script). Decided: (a).
 8. **Opening.** (a) `popoverTrigger`, as UI Kit (React Aria's
    `menuTrigger`): `'input'` opens on typing non-blank text, `'focus'` on
    focus too, `'manual'` only from the button and the arrows. Opening shows
    every option until the user types, and the matches after, or every option
    when none match (UI Kit). (b) React Aria: opening from the button or the
-   arrows always shows every option. Recommended: (a).
+   arrows always shows every option. Decided: (a).
 9. **No matches.** (a) With an empty part rendered, the list stays open and
    the empty part describes it ("No fruit"), as Listbox; without one, it
    closes until something matches, and `openChange` doesn't flap. (b) UI Kit:
    always close. (c) React Aria: close, unless `allowsEmptyCollection`.
-   Recommended: (a).
+   Decided: (a).
 10. **The popup.** (a) Popover non-modal: the page stays exposed, a press
     outside closes and acts, the list closes when the field scrolls out of
     view; the popover has no role, tabindex or name. Popover gains a prop,
-    `shouldFocusOnOpen` (default `true`), which ComboBox sets `false` so focus
+    `shouldFocusOnOpen` (default `true`), which Combobox sets `false` so focus
     stays in the input; a change to the approved Popover. The popover sits
     right after the input in the page, so swiping from the input reaches the
     options next. (b) React Aria: also hide everything but the field and the
     popup from assistive technology while open (its popover is portaled to
     the end of the page; Zag removed the same). (c) UI Kit: outside presses
-    close without acting. Recommended: (a).
+    close without acting. Decided: (a).
 11. **The button.** (a) React Aria's and the APG's: not a tab stop, never
     takes focus (the input does), named by `buttonLabel` ("Show
     suggestions") and the label as NumberField's buttons; a mouse opens it
     on press start, touch on release, as Select; it shows every option, or
     the matches after typing, highlighting the selected one. (b) UI Kit's: a
-    tab stop that takes focus, named "Show options". Recommended: (a).
+    tab stop that takes focus, named "Show options". Decided: (a).
 12. **Hover.** (a) Hover highlights the option (React Aria, Zag, Select), so
     there is one highlight. (b) UI Kit: hover is a separate style, and two
-    options can look highlighted. Recommended: (a).
+    options can look highlighted. Decided: (a).
 13. **Forms.** (a) A `hiddenInput` part, as NumberField: `type="hidden"`, the
     selected key or the custom text; native `required` on the visible input,
     since the settled text is empty exactly when the value is, so the browser
     blocks an empty submit and focuses the input; a form reset restores the
     default value and text. (b) No native validation: `aria-required` only,
-    as Field. (c) React Aria's `formValue: 'key' | 'text'`. Recommended: (a).
+    as Field. (c) React Aria's `formValue: 'key' | 'text'`. Decided: (a).
 14. **Announcements.** (a) The option count when the list opens and when
     typing changes it, politely, on every platform, from a translatable
     `optionCountAnnouncement` (React Aria announces it assertively; GitHub's
     auto-complete politely). (b) Also React Aria's Apple-only messages (the
     group entered, "Apple, selected") or Zag's (the highlighted option),
     which their authors disagree on. (c) None until real screen readers are
-    tested at gate 5. Recommended: (a); (b) waits for gate 5.
-15. **The statechart runtime.** The design doc (decision 3) names ComboBox
-    the first user of `ctx.machine()`. ComboBox has no timers: its state is
+    tested at gate 5. Decided: (a); (b) waits for gate 5.
+15. **The statechart runtime.** The design doc (decision 3) names Combobox
+    the first user of `ctx.machine()`. Combobox has no timers: its state is
     the open flag, the text, the value, the highlight and whether the filter
     applies, each a bindable or a cell, as Select and Tooltip (which has
     timers) are built. (a) No machine: cells and watches; `ctx.machine()`
     waits for a component that needs it (Menu's submenus, Toast). (b) Build
-    `ctx.machine()` now, as decided then. Recommended: (a), and the design
+    `ctx.machine()` now, as decided then. Decided: (a), and the design
     doc updated.
 16. **Scope.** (a) Single selection; no clear part, `shouldCommitOnBlur`,
     `clearOnBlur`, `isClearable` or `sortSelectedToTop` (UI Kit's): the
     consumer's button clears, and the consumer orders the items. Multiple
     selection is a later TagField. (b) Include UI Kit's props.
-    Recommended: (a).
+    Decided: (a).
 17. **Read-only.** (a) As Select: the input is `readonly`, the list opens from
     the button and the arrows and the highlight moves, but nothing selects.
-    (b) React Aria: a read-only combo box doesn't open. Recommended: (a).
+    (b) React Aria: a read-only combo box doesn't open. Decided: (a).

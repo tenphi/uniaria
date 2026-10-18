@@ -45,9 +45,9 @@ the choice is in [Resolved questions](#resolved-questions).
 
 Not part of Select:
 
-- **Searching or filtering** the options, and typing a value: ComboBox's. A
+- **Searching or filtering** the options, and typing a value: Combobox's. A
   searchable select (React Aria's Autocomplete in a Select popover) is a
-  ComboBox use.
+  Combobox use.
 - **Picker.** UI Kit's richer picker (a dialog popup with checkboxes, select
   all, a summary renderer, selected options sorted first) is another
   composite. Select's multiple mode (Resolved questions 9) covers the selection
@@ -479,7 +479,7 @@ Decided by @tenphi on 2026-10-18, each as recommended.
    screen reader reads (Expected spoken output), and ARIA in HTML allows
    `role="combobox"` on a `<button>`. (b) The APG exactly: focus stays on
    the trigger and `aria-activedescendant` moves. That needs Listbox's
-   virtual focus now rather than with ComboBox, and mobile screen readers
+   virtual focus now rather than with Combobox, and mobile screen readers
    ignore it. (c) React Aria and UI Kit: `aria-haspopup="listbox"` on a plain
    button named "value label". Required, invalid and read-only can't be
    expressed: the error text in `aria-describedby` is all that is read

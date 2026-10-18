@@ -41,8 +41,8 @@ an optional arrow, its title and description, and a close button.
 
 Not part of Popover:
 
-- **Menus, Select and ComboBox lists.** They compose Popover with `ctx.use`
-  and decide their own trigger ARIA, focus and keys in their specs. ComboBox
+- **Menus, Select and Combobox lists.** They compose Popover with `ctx.use`
+  and decide their own trigger ARIA, focus and keys in their specs. Combobox
   keeps focus in its input and anchors to its field group, which is why
   Popover has an `anchor` part and a non-modal mode.
 - **Tooltip** (next): hover and focus triggers, no focus inside. It reuses the

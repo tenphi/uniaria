@@ -217,7 +217,7 @@ Decided by @tenphi on 2026-10-15.
 
 1. **`ctx.use()` joins the runtime now.** ToggleButton composes Button with
    `ctx.use(button, props)` (decision 9), so there is one Button
-   implementation. Select and ComboBox will use the same mechanism.
+   implementation. Select and Combobox will use the same mechanism.
 2. **Cube UI Kit's other uses of `isSelected`** are not toggles. A link to
    the current page gets `aria-current` through a later Button prop, when a
    consumer needs it. Tabs and options wait for Tabs and Listbox. Until then
