@@ -120,7 +120,8 @@ more names from it:
 - `default<Name>`, which seeds the uncontrolled value: `defaultOpen` for
   `isOpen`, `defaultValue` for `value`. It applies until the first
   uncontrolled change, so a default that arrives late (an element attribute
-  set after the element connected) still seeds it.
+  set after the element connected) still seeds it, and again after a
+  [reset](#resetting-a-bindable).
 - The change event `<name>Change` (`openChange`, `valueChange`), which the
   consumer receives as `onOpenChange` in React and `openchange` on an element.
 
@@ -238,7 +239,7 @@ and the few members the definition lists as [actions](#actions). Everything
 
 ### Bindables in setup
 
-A bindable reads as `{ get(), set(value), isControlled() }`.
+A bindable reads as `{ get(), set(value), isControlled(), reset(options?) }`.
 
 - **Uncontrolled**, `set()` commits the value, notifies, and calls the
   consumer's change callback.
@@ -254,6 +255,45 @@ setup(ctx) {
     open: () => isOpen.set(true),
     close: () => isOpen.set(false),
   };
+},
+```
+
+### Resetting a bindable
+
+`reset(options?)` puts the value back as a form's reset does a native
+control's, and returns the value it goes back to. Call it from a form's
+`reset` listener.
+
+- **Uncontrolled**, the value follows `default<Name>` again, as before its
+  first change, and goes on following it: a default set after the reset
+  applies too. Without `default<Name>`, the schema's default.
+- **Controlled**, the value stays the consumer's; the callback asks for
+  `default<Name>`, or without one `options.fallback`, typically the value the
+  component mounted with.
+- Either way, the change callback gets the value it goes back to, unless
+  that is the value now.
+
+| Option         | Type                      | Description                                                                                                                                                           |
+| -------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fallback`     | `T`                       | What a controlled value without `default<Name>` goes back to. Without it, the schema's default.                                                                       |
+| `isEqual`      | `(a: T, b: T) => boolean` | Whether the value now and the value it goes back to are the same, so nothing is reported. `Object.is` by default; pass one for arrays.                                |
+| `beforeReport` | `(value: T) => void`      | Runs right before the change callback with the value it gets: write a hidden form field here, so a change listener's `FormData` already holds it.                     |
+| `readDefault`  | `(value: T) => T`         | How the component reads a default, when not as it is: a number field parses text taken from the markup. Applied to the value it goes back to and to an unchanged one. |
+
+```ts
+setup(ctx) {
+  const { value } = ctx.props;
+  let mounted: string | undefined;
+  partEffect(ctx, 'input', (input) => {
+    mounted ??= value.get();
+    const form = (input as HTMLInputElement).form;
+    const onReset = (event: Event) => {
+      if (!event.defaultPrevented) value.reset({ fallback: mounted });
+    };
+    form?.addEventListener('reset', onReset);
+    return () => form?.removeEventListener('reset', onReset);
+  });
+  // …
 },
 ```
 
@@ -554,6 +594,7 @@ browser. See [Testing](./testing.md).
 | `PartProps`                                     | Framework-neutral part props.                                                                              |
 | `SetupContext`, `ViewContext`                   | What `setup()` and `expose()` or `connect()` receive.                                                      |
 | `Bindable<T>`, `Cell<T>`                        | A bindable as `setup()` reads it, and a piece of internal state.                                           |
+| `ResetOptions<T>`                               | The options of a bindable's [`reset()`](#resetting-a-bindable).                                            |
 | `LinkKey<Name, Api>`, `Linked<Api>`, `Owned<D>` | A link key, and what `ctx.link()` and `ctx.owner()` return.                                                |
 
 Each component subpath also exports `<Name>Props` and `<Name>State`, which are

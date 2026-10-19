@@ -97,7 +97,11 @@ export interface Cell<T> {
   set(value: T): void;
 }
 
-/** A bindable prop as `setup()` sees it (design decision 1). */
+/**
+ * A bindable prop as `setup()` sees it (design decision 1). Like a form
+ * control's value: while uncontrolled, `default<Name>` applies until the
+ * first change, and `reset()` makes it apply again.
+ */
 export interface Bindable<T> {
   get(): T;
   /**
@@ -106,6 +110,41 @@ export interface Bindable<T> {
    */
   set(value: T): void;
   isControlled(): boolean;
+  /**
+   * Puts the value back as a form's reset does a control's (owner,
+   * 2026-10-19), and returns the value it goes back to. Uncontrolled, the
+   * value follows `default<Name>` again, as before its first change, so a
+   * default set later still applies. Controlled, it only asks for
+   * `default<Name>`, or without one `options.fallback`. Either way the
+   * change callback gets the value it goes back to, unless that is the
+   * value now.
+   */
+  reset(options?: ResetOptions<T>): T;
+}
+
+/** How `Bindable.reset()` puts a value back. */
+export interface ResetOptions<T> {
+  /**
+   * What a controlled value without `default<Name>` goes back to: the value
+   * the component mounted with. Without it, the schema's default.
+   */
+  readonly fallback?: T;
+  /**
+   * How the component reads a default (`default<Name>` or the schema's),
+   * when it reads one otherwise than as it is: NumberField parses text
+   * adopted from the markup, and a group without a default takes the values
+   * its controls adopted. Applied to the value the reset goes back to, and
+   * to the value now while it is still the default.
+   */
+  readonly readDefault?: (value: T) => T;
+  /** Whether two values are the same, so nothing is reported. `Object.is` by default. */
+  readonly isEqual?: (a: T, b: T) => boolean;
+  /**
+   * Runs right before the change callback, with the value it gets: a
+   * component writes its form field here, so a listener's `FormData` holds
+   * the value, as a native control's does in its `change`.
+   */
+  readonly beforeReport?: (value: T) => void;
 }
 
 type ValueOf<Spec> =

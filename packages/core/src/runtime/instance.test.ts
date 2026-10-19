@@ -7,7 +7,13 @@ import {
   partElement,
   rootClass,
 } from './define';
-import type { ItemPartOf, LinkKey, PropsOf, StateOf } from './define';
+import type {
+  ItemPartOf,
+  LinkKey,
+  PropsOf,
+  ResetOptions,
+  StateOf,
+} from './define';
 import { createInstance } from './instance';
 import { bindable, event, prop } from './schema';
 
@@ -322,6 +328,190 @@ describe('createInstance', () => {
       instance.api.setOpen(true);
       instance.api.setOpen(true);
       expect(onOpenChange.mock.calls).toEqual([[true]]);
+    });
+  });
+
+  describe('bindable reset', () => {
+    /** A field whose `api.reset()` calls the bindable's. */
+    const resettable = defineComponent({
+      name: 'resettable',
+      parts: ['root'],
+      props: {
+        value: bindable<readonly string[]>([]),
+        text: bindable(''),
+      },
+      setup(ctx) {
+        return {
+          set: (value: readonly string[]) => ctx.props.value.set(value),
+          setText: (text: string) => ctx.props.text.set(text),
+          reset: (options?: ResetOptions<readonly string[]>) =>
+            ctx.props.value.reset(options),
+          resetText: (options?: ResetOptions<string>) =>
+            ctx.props.text.reset(options),
+        };
+      },
+      expose: ({ props }) => ({
+        value: props.value.get(),
+        text: props.text.get(),
+      }),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+
+    it('follows a default set after mount, reporting nothing when unchanged', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { onTextChange },
+      });
+      instance.setProps({ defaultText: 'late', onTextChange });
+
+      expect(instance.api.resetText()).toBe('late');
+      expect(instance.getState().text).toBe('late');
+      expect(onTextChange).not.toHaveBeenCalled();
+    });
+
+    it('puts an uncontrolled value back on its default and reports it', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { defaultText: 'a', onTextChange },
+      });
+      instance.api.setText('typed');
+      onTextChange.mockClear();
+      const version = instance.getSnapshot();
+
+      expect(instance.api.resetText({ fallback: 'ignored' })).toBe('a');
+
+      expect(instance.getState().text).toBe('a');
+      expect(onTextChange.mock.calls).toEqual([['a']]);
+      expect(instance.getSnapshot()).toBe(version + 1);
+    });
+
+    it('follows a default set after a change, and one changed after the reset', () => {
+      const instance = createInstance(resettable);
+      instance.api.setText('typed');
+      instance.setProps({ defaultText: 'late' });
+      expect(instance.getState().text).toBe('typed');
+
+      instance.api.resetText();
+      expect(instance.getState().text).toBe('late');
+
+      instance.setProps({ defaultText: 'later' });
+      expect(instance.getState().text).toBe('later');
+    });
+
+    it('goes back to the schema default without default<Name>', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, { props: { onTextChange } });
+      instance.api.setText('typed');
+      onTextChange.mockClear();
+
+      expect(instance.api.resetText()).toBe('');
+      expect(onTextChange.mock.calls).toEqual([['']]);
+    });
+
+    it('only asks a controlled value for its default, else the fallback', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { text: 'mine', onTextChange },
+      });
+
+      expect(instance.api.resetText({ fallback: 'mounted' })).toBe('mounted');
+      expect(onTextChange.mock.calls).toEqual([['mounted']]);
+      expect(instance.getState().text).toBe('mine');
+
+      instance.setProps({ text: 'mine', defaultText: 'default', onTextChange });
+      onTextChange.mockClear();
+      instance.api.resetText({ fallback: 'mounted' });
+      expect(onTextChange.mock.calls).toEqual([['default']]);
+
+      instance.setProps({ text: 'mine', onTextChange });
+      onTextChange.mockClear();
+      instance.api.resetText();
+      expect(onTextChange.mock.calls).toEqual([['']]);
+      expect(instance.getState().text).toBe('mine');
+    });
+
+    it('asks a controlled value for nothing when it is already there', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { text: 'mounted', onTextChange },
+      });
+      instance.api.resetText({ fallback: 'mounted' });
+      expect(onTextChange).not.toHaveBeenCalled();
+    });
+
+    it('compares with isEqual, so an equal value reports nothing', () => {
+      const onValueChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { value: ['a'], onValueChange },
+      });
+      const isEqual = (a: readonly string[], b: readonly string[]) =>
+        a.join() === b.join();
+
+      instance.api.reset({ fallback: ['a'] });
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+
+      onValueChange.mockClear();
+      instance.api.reset({ fallback: ['a'], isEqual });
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      instance.setProps({ onValueChange });
+      instance.api.set(['b']);
+      instance.api.set([]);
+      onValueChange.mockClear();
+      instance.api.reset({ isEqual });
+      expect(onValueChange).not.toHaveBeenCalled();
+      // Still back on its default, so a later one applies.
+      instance.setProps({ defaultValue: ['c'], onValueChange });
+      expect(instance.getState().value).toEqual(['c']);
+    });
+
+    it('reads defaults through readDefault, never the value changed', () => {
+      const onTextChange = vi.fn();
+      const instance = createInstance(resettable, {
+        props: { defaultText: ' a ', onTextChange },
+      });
+      const readDefault = (text: string) => text.trim();
+
+      // The default as read is the value now, so nothing changes.
+      expect(instance.api.resetText({ readDefault })).toBe('a');
+      expect(onTextChange).not.toHaveBeenCalled();
+
+      // A changed value is read as it is.
+      instance.api.setText('b');
+      instance.api.setText(' a ');
+      onTextChange.mockClear();
+      expect(instance.api.resetText({ readDefault })).toBe('a');
+      expect(onTextChange.mock.calls).toEqual([['a']]);
+      expect(instance.getState().text).toBe(' a ');
+
+      // A controlled value's default too, but not the fallback.
+      instance.setProps({ text: 'x', defaultText: ' a ', onTextChange });
+      onTextChange.mockClear();
+      instance.api.resetText({ fallback: ' f ', readDefault });
+      expect(onTextChange.mock.calls).toEqual([['a']]);
+      instance.setProps({ text: 'x', onTextChange });
+      onTextChange.mockClear();
+      instance.api.resetText({ fallback: ' f ', readDefault });
+      expect(onTextChange.mock.calls).toEqual([[' f ']]);
+    });
+
+    it('runs beforeReport right before the change callback, and only then', () => {
+      const calls: string[] = [];
+      const instance = createInstance(resettable, {
+        props: {
+          defaultText: 'a',
+          onTextChange: (text: string) => calls.push(`report ${text}`),
+        },
+      });
+      const beforeReport = (text: string) => calls.push(`before ${text}`);
+
+      instance.api.resetText({ beforeReport });
+      expect(calls).toEqual([]);
+
+      instance.api.setText('b');
+      calls.length = 0;
+      instance.api.resetText({ beforeReport });
+      expect(calls).toEqual(['before a', 'report a']);
     });
   });
 

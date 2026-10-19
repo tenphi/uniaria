@@ -177,8 +177,8 @@ with the DOM anyway.
 ### Bindables
 
 A bindable is a value that is controlled when the consumer passes it and
-uncontrolled otherwise. `setup()` sees it as `get()`, `set(value)` and
-`isControlled()`.
+uncontrolled otherwise. `setup()` sees it as `get()`, `set(value)`,
+`isControlled()` and `reset(options?)`.
 
 - **Uncontrolled:** `set()` commits the value, notifies and calls the change
   callback. `default<Name>` seeds the value until the first uncontrolled
@@ -188,6 +188,12 @@ uncontrolled otherwise. `setup()` sees it as `get()`, `set(value)` and
 - **Controlled:** `set()` only calls the change callback. The value changes
   when the consumer passes a new prop. Never assume a requested change took
   effect.
+- **Form reset** goes through `reset()` in every form component, as a native
+  reset does: an uncontrolled value forgets its changes and follows
+  `default<Name>` again; a controlled one asks for `default<Name>`, or
+  without one the value it mounted with. Never put back a value captured at
+  mount on an uncontrolled bindable: a custom element's default often
+  arrives after it connects.
 - The runtime reads props only through getters and never keeps a copy.
 
 ### `setProps()` and `sync()`

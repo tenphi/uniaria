@@ -24,6 +24,7 @@ import type {
   PartOf,
   PartProps,
   PropsOf,
+  ResetOptions,
   SetupContext,
   StateOf,
   ViewContext,
@@ -324,7 +325,8 @@ export function createInstance<D extends AnyDefinition>(
       }
       // Like a form control's value attribute, the default applies until the
       // first uncontrolled change ("dirty"), so a default that arrives late
-      // (an element's attribute after construction) still seeds the value.
+      // (an element's attribute after construction) still seeds the value,
+      // and again after a reset.
       const defaultKey = info.defaultKey!;
       let isDirty = false;
       let inner: unknown;
@@ -347,6 +349,36 @@ export function createInstance<D extends AnyDefinition>(
               changed();
             }
             (readProps()[onChange] as Callback)?.(value);
+          });
+        },
+        reset({
+          fallback,
+          readDefault = (value) => value,
+          isEqual = Object.is,
+          beforeReport,
+        }: ResetOptions<unknown> = {}) {
+          const isControlledNow = isControlled();
+          // A null default reads as none, as in `get()`.
+          const own = readProps()[defaultKey] ?? undefined;
+          const previous =
+            isControlledNow || isDirty ? get() : readDefault(get());
+          const next =
+            own !== undefined
+              ? readDefault(own)
+              : isControlledNow && fallback !== undefined
+                ? fallback
+                : readDefault(defaultValue);
+          return store.batch(() => {
+            if (!isControlledNow && isDirty) {
+              isDirty = false;
+              inner = undefined;
+              changed();
+            }
+            if (!isEqual(previous, next)) {
+              beforeReport?.(next);
+              (readProps()[onChange] as Callback)?.(next);
+            }
+            return next;
           });
         },
       };

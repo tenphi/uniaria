@@ -62,6 +62,7 @@ export type {
   PartProps,
   PropReaders,
   PropsOf,
+  ResetOptions,
   SetupContext,
   StateOf,
   ViewContext,
