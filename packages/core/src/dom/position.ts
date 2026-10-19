@@ -593,6 +593,23 @@ function sideFrom(part: Rect, anchor: Rect): PlacementSide {
   );
 }
 
+/**
+ * An element's size before its own transform and `zoom`. An SVG element has
+ * no offset size: its box on screen, scaled back by its part's factor.
+ */
+function layoutSize(
+  element: Element,
+  scaleX: number,
+  scaleY: number,
+): { readonly width: number; readonly height: number } {
+  if ('offsetWidth' in element) {
+    const { offsetWidth, offsetHeight } = element as HTMLElement;
+    return { width: offsetWidth, height: offsetHeight };
+  }
+  const box = element.getBoundingClientRect();
+  return { width: box.width / scaleX, height: box.height / scaleY };
+}
+
 interface Placed {
   readonly floating: HTMLElement;
   readonly anchor: HTMLElement;
@@ -645,20 +662,35 @@ export function createPosition(
     };
 
     // Along the edge facing the anchor, measured in the part's padding box.
-    const placeArrow = (placedSide: PlacementSide) => {
+    // False when the part can't be measured now.
+    const placeArrow = (placedSide: PlacementSide): boolean => {
       const next = arrowElement();
       if (next !== arrow) {
         arrowStyles?.restore();
         arrow = next;
         arrowStyles = next ? inlineStyles(next) : null;
       }
-      if (!arrow || !arrowStyles) return;
+      if (!arrow || !arrowStyles) return true;
       const target = anchor.getBoundingClientRect();
       const box = floating.getBoundingClientRect();
-      const size = arrow.getBoundingClientRect();
+      // `left` and `top` work in the part's own pixels, before its transform
+      // (a scale animating it in) and `zoom`: its box on screen is scaled
+      // back by their factor. The arrow's own transform (a square turned
+      // into a diamond) turns it about its centre, so its size is taken
+      // before it.
+      const scaleX = floating.offsetWidth
+        ? box.width / floating.offsetWidth
+        : 1;
+      const scaleY = floating.offsetHeight
+        ? box.height / floating.offsetHeight
+        : 1;
+      // Scaled to nothing, as an animation may start it.
+      if (!scaleX || !scaleY) return false;
+      const size = layoutSize(arrow, scaleX, scaleY);
       if (isVertical(placedSide)) {
         const centre = target.left + target.width / 2;
-        const left = centre - box.left - floating.clientLeft - size.width / 2;
+        const left =
+          (centre - box.left) / scaleX - floating.clientLeft - size.width / 2;
         arrowStyles.reset('top');
         arrowStyles.set(
           'left',
@@ -666,18 +698,22 @@ export function createPosition(
         );
       } else {
         const centre = target.top + target.height / 2;
-        const top = centre - box.top - floating.clientTop - size.height / 2;
+        const top =
+          (centre - box.top) / scaleY - floating.clientTop - size.height / 2;
         arrowStyles.reset('left');
         arrowStyles.set(
           'top',
           `${clamp(top, 0, floating.clientHeight - size.height)}px`,
         );
       }
+      return true;
     };
 
     const report = (placedSide: PlacementSide) => {
       side.set(placedSide);
-      placeArrow(placedSide);
+      // Unmeasured, it is placed again next frame: a scale animating the
+      // part changes nothing the frames compare.
+      if (!placeArrow(placedSide)) measured = '';
     };
 
     let frame = 0;

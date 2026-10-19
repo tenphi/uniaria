@@ -55,7 +55,8 @@ afterEach(() => {
 
 /**
  * A fixed 80×30 anchor at `anchorStyle` and a shown 160×100 popover with a
- * 10×10 arrow, the consumer's `margin` and `css`, placed by the wrapper.
+ * 10×10 arrow, the consumer's `margin`, `css` and `arrowCss`, placed by the
+ * wrapper.
  */
 function render(
   props: FloatingProps = {},
@@ -65,6 +66,7 @@ function render(
     margin = '8px 12px 12px',
     height = '100px',
     css = '',
+    arrowCss = '',
   } = {},
 ) {
   const host = document.createElement('div');
@@ -72,7 +74,7 @@ function render(
   host.innerHTML = `
     <button id="anchor" style="position: fixed; width: 80px; height: 30px; margin: 0; padding: 0; ${anchorStyle}">A</button>
     <div id="root" popover="manual" style="width: 160px; height: ${height}; margin: ${margin}; padding: 0; border: 0; box-sizing: border-box; ${css}">
-      <div id="arrow" style="position: absolute; width: 10px; height: 10px"></div>
+      <div id="arrow" style="position: absolute; width: 10px; height: 10px; ${arrowCss}"></div>
     </div>`;
   document.body.append(host);
   const anchor = host.querySelector<HTMLElement>('#anchor')!;
@@ -279,6 +281,41 @@ describe('createPosition in script mode', () => {
     expect(beside.arrow.style.left).toBe('');
   });
 
+  it('points the arrow at the anchor’s centre while the part is scaled or the arrow turned', async () => {
+    // A scale animating the part in, and a square turned into a diamond:
+    // `left` and `top` work in sizes before transforms.
+    const scaled = start({}, { css: 'transform: scale(0.5)' });
+    const turned = start(
+      { positionArea: 'right span-bottom' },
+      { arrowCss: 'transform: rotate(45deg)' },
+    );
+    await vi.waitFor(() => {
+      const a = rect(scaled.anchor);
+      const arrow = rect(scaled.arrow);
+      expectNear(arrow.left + arrow.width / 2, a.left + a.width / 2);
+    });
+    await vi.waitFor(() => {
+      const a = rect(turned.anchor);
+      const arrow = rect(turned.arrow);
+      expectNear(arrow.top + arrow.height / 2, a.top + a.height / 2);
+    });
+  });
+
+  it('places the arrow once a part scaled to nothing grows', async () => {
+    const { anchor, root, arrow, side } = start(
+      {},
+      { css: 'transform: scale(0)' },
+    );
+    await vi.waitFor(() => expect(side()).toBe('bottom'));
+    await frames(2);
+    root.style.removeProperty('transform');
+    await vi.waitFor(() => {
+      const a = rect(anchor);
+      const placed = rect(arrow);
+      expectNear(placed.left + placed.width / 2, a.left + a.width / 2);
+    });
+  });
+
   it('follows its props', async () => {
     const { anchor, root, set, side } = start({}, { margin: '20px' });
     await vi.waitFor(() => expect(side()).toBe('bottom'));
@@ -451,6 +488,21 @@ describe.runIf(supportsAnchorPositioning(window))(
       await vi.waitFor(() => {
         const a = rect(beside.anchor);
         const arrow = rect(beside.arrow);
+        expectNear(arrow.top + arrow.height / 2, a.top + a.height / 2);
+      });
+    });
+
+    it('points the arrow at the anchor’s centre while the part is zoomed or scaled', async () => {
+      const zoomed = start({}, { area: 'bottom span-right', css: 'zoom: 2' });
+      const scaled = start({}, { area: 'right', css: 'transform: scale(0.5)' });
+      await vi.waitFor(() => {
+        const a = rect(zoomed.anchor);
+        const arrow = rect(zoomed.arrow);
+        expectNear(arrow.left + arrow.width / 2, a.left + a.width / 2);
+      });
+      await vi.waitFor(() => {
+        const a = rect(scaled.anchor);
+        const arrow = rect(scaled.arrow);
         expectNear(arrow.top + arrow.height / 2, a.top + a.height / 2);
       });
     });
