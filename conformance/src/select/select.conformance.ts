@@ -96,6 +96,8 @@ interface FruitOptions {
   readonly inForm?: boolean;
   /** Markup before the page, such as a stylesheet. */
   readonly head?: readonly TemplateNode[];
+  /** Render the root around the parts; it is optional. */
+  readonly hasRoot?: boolean;
 }
 
 /**
@@ -111,6 +113,7 @@ function fruit({
   listClass = '',
   inForm = false,
   head = [],
+  hasRoot = true,
 }: FruitOptions = {}): TemplateNode[] {
   const isGrouped = items.some((item) => item.items);
   const tag = isGrouped ? 'div' : 'li';
@@ -131,9 +134,7 @@ function fruit({
           { part: 'option', 'data-key': item.key, class: 'sc-option' },
           item.textValue ?? item.key,
         );
-  const select = h(
-    'div',
-    { part: 'root', class: 'sc-root' },
+  const parts = [
     h('span', { part: 'label', class: 'sc-label' }, 'Fruit'),
     h(
       'button',
@@ -154,12 +155,15 @@ function fruit({
       h('p', { part: 'empty' }, 'No fruit'),
     ),
     h('select', { part: 'hiddenSelect', name: 'fruit' }),
-  );
+  ];
+  const select = hasRoot
+    ? [h('div', { part: 'root', class: 'sc-root' }, ...parts)]
+    : parts;
   return [
     LAYOUT,
     ...head,
     h('input', { id: 'before', class: 'sc-before', 'aria-label': 'Before' }),
-    inForm ? h('form', { id: 'form' }, select) : select,
+    ...(inForm ? [h('form', { id: 'form' }, ...select)] : select),
     h('input', { id: 'after', class: 'sc-after', 'aria-label': 'After' }),
     h('button', { id: 'other', class: 'sc-other' }, 'Other'),
   ];
@@ -1602,6 +1606,29 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
           byId(mounted, 'after').focus();
           expect(details(mounted, 'focusChange')).toEqual([true, false]);
           expectOnEveryPart(mounted, 'data-focus-within', false);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'focus within needs no root: the trigger and the popup are the select',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: fruit({ hasRoot: false }),
+            props: { items: FRUIT },
+            events: EVENTS,
+          });
+          await openWith(mounted, keyboard);
+          expect(mounted.state().isFocusWithin).toBe(true);
+          expect(trigger(mounted).hasAttribute('data-focus-within')).toBe(true);
+          await keyboard.press('ArrowDown');
+          await keyboard.press('Enter');
+          await closed(mounted);
+          byId(mounted, 'after').focus();
+          expect(details(mounted, 'focusChange')).toEqual([true, false]);
+          expect(trigger(mounted).hasAttribute('data-focus-within')).toBe(
+            false,
+          );
         },
         PHASE,
       );

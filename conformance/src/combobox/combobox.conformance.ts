@@ -119,6 +119,8 @@ interface FruitOptions {
   readonly listClass?: string;
   /** Wrap the combo box in `<form id="form">`. */
   readonly inForm?: boolean;
+  /** Render the root around the parts; it is optional. */
+  readonly hasRoot?: boolean;
 }
 
 /**
@@ -133,6 +135,7 @@ function fruit({
   hasEmpty = true,
   listClass = '',
   inForm = false,
+  hasRoot = true,
 }: FruitOptions = {}): TemplateNode[] {
   const isGrouped = items.some((item) => item.items);
   const tag = isGrouped ? 'div' : 'li';
@@ -153,9 +156,7 @@ function fruit({
           { part: 'option', 'data-key': item.key, class: 'sc-option' },
           item.textValue ?? item.key,
         );
-  const combo = h(
-    'div',
-    { part: 'root', class: 'sc-root' },
+  const parts = [
     h('label', { part: 'label', class: 'sc-label' }, 'Fruit'),
     h(
       'div',
@@ -180,11 +181,14 @@ function fruit({
       ...(hasEmpty ? [h('p', { part: 'empty' }, 'No fruit')] : []),
     ),
     h('input', { part: 'hiddenInput', name: 'fruit' }),
-  );
+  ];
+  const combo = hasRoot
+    ? [h('div', { part: 'root', class: 'sc-root' }, ...parts)]
+    : parts;
   return [
     LAYOUT,
     h('input', { id: 'before', class: 'sc-before', 'aria-label': 'Before' }),
-    inForm ? h('form', { id: 'form' }, combo) : combo,
+    ...(inForm ? [h('form', { id: 'form' }, ...combo)] : combo),
     h('input', { id: 'after', class: 'sc-after', 'aria-label': 'After' }),
     h('button', { id: 'other', class: 'sc-other' }, 'Other'),
   ];
@@ -1450,6 +1454,27 @@ export const comboboxConformance = defineConformance<
         expect(seen).toEqual([['cherry']]);
         expect(input(mounted).value).toBe('Cherry');
         expect(changes(mounted)).toEqual([['cherry']]);
+      },
+      PHASE,
+    );
+
+    scenario(
+      'focus leaving settles the text and closes the list with no root rendered',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: fruit({ hasRoot: false }),
+          props: { items: FRUIT },
+          events: EVENTS,
+        });
+        input(mounted).focus();
+        expect(input(mounted).hasAttribute('data-focus-within')).toBe(true);
+        await typeText(keyboard, 'che');
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        byId(mounted, 'after').focus();
+        await closed(mounted);
+        expect(input(mounted).value).toBe('Cherry');
+        expect(changes(mounted)).toEqual([['cherry']]);
+        expect(details(mounted, 'focusChange')).toEqual([true, false]);
       },
       PHASE,
     );
