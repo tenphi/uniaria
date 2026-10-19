@@ -522,7 +522,9 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   lowercase (`pressstart`) and the React prop is `onPressStart`.
 - **Scenarios** get `mount`, real `pointer` and `keyboard` input through
   Playwright (they can hold a button or key), `spoken()` for the virtual
-  screen reader, and `listen()` to hear what live regions announce. `mounted.part(name)` finds
+  screen reader, `listen()` to hear what live regions announce, and
+  `screenReader` for a real one in scenarios that declare
+  `needs: ['screenReader']`. `mounted.part(name)` finds
   `[data-scope][data-part]` and fails loudly when either is missing.
 - **Phases.** A scenario declares the roadmap phase whose features it needs
   (`{ phase: 2 }`); an adapter run declares the phase it has reached
@@ -538,8 +540,16 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
 - React tests count renders: an internal interaction (hover, press, focus,
   highlight, opening an overlay) re-renders the owning component zero times.
 - Spoken output is checked with `@guidepup/virtual-screen-reader` in CI on
-  every push. Real screen readers (VoiceOver, NVDA through Guidepup) run in
-  a nightly workflow that is not set up yet.
+  every push. Real screen readers run nightly
+  (`.github/workflows/screen-readers.yml`): VoiceOver on macOS and NVDA on
+  Windows, both with Chromium, driven through `@guidepup/guidepup` in the
+  `screen-readers` Vitest project, which exists only when
+  `UNIARIA_SCREEN_READERS` is set. It runs the scenarios that declare
+  `needs: ['screenReader']`, and only those. Running it locally would change
+  the machine's privacy settings, so check a change with a manual run of the
+  workflow; its `discover` input logs what the reader holds for the focus
+  after each key, for writing a new scenario. A night with no new commit on
+  `main` skips it.
 - If one engine fails to launch locally, run the others by project name
   (`browser (chromium)`, `browser (webkit)`) and rely on CI for the rest.
 
@@ -635,8 +645,7 @@ its latest default branch and discards local changes, so never edit them.
 
 Planned by the design, added when the owner asks: public API reports (API
 Extractor), size budgets per subpath (size-limit), the release workflow (npm
-trusted publishing), the nightly real-screen-reader workflow, Custom Elements
-Manifest generation, and demo pages.
+trusted publishing), Custom Elements Manifest generation, and demo pages.
 
 ## Before pushing changes
 

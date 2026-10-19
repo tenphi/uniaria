@@ -25,6 +25,8 @@ contract". Local rules:
   fixture adapter in every browser. Keep it passing; every adapter's
   conformance run depends on it.
 - Screen-reader helpers wrap `@guidepup/virtual-screen-reader` (every push)
-  and, later, `@guidepup/guidepup` with `@guidepup/playwright` (nightly).
-  These are the only screen-reader dependencies; MCP kits stay out of the
-  repo.
+  and `@guidepup/guidepup` (nightly), an optional peer that only the
+  screen-reader commands load (`src/screen-reader-commands.ts`). They do
+  what `@guidepup/playwright` does without it, since it needs
+  `@playwright/test`. These are the only screen-reader dependencies; MCP kits
+  stay out of the repo.
