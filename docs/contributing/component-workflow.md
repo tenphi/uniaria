@@ -126,9 +126,10 @@ decision it implements.
 | ------------------------------ | ------------------------------------------- | --------------------------------------------------------------- |
 | Folder and subpath             | kebab-case                                  | `checkbox-group`, `@uniaria/core/checkbox-group`                |
 | Definition export              | camelCase                                   | `checkboxGroup`                                                 |
-| Definition `name`              | kebab-case; becomes `data-scope`            | `name: 'checkbox-group'`                                        |
+| Definition `name`              | kebab-case                                  | `name: 'checkbox-group'`                                        |
 | Element                        | `uni-` plus the name                        | `<uni-checkbox-group>`                                          |
-| Root part's class              | `uni-` plus the name                        | `class="uni-checkbox-group"`                                    |
+| Root part's marker             | `data-uni` with the name                    | `data-uni="checkbox-group"`                                     |
+| A part outside the root        | `data-uni-part` with the name and the part  | `data-uni-part="popover-trigger"`                               |
 | Part names                     | camelCase; `data-element` capitalizes them  | `hiddenInput`, `data-element="HiddenInput"`                     |
 | A name that is a reserved word | A descriptive export instead                | `toggleSwitch` for `name: 'switch'`                             |
 | Booleans                       | Predicates                                  | `isDisabled`, `isOpen`, `shouldPreventFocusOnPress`, `hasArrow` |

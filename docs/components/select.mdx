@@ -82,7 +82,7 @@ export function FruitSelect() {
 
 ```html
 <uni-select placeholder="Pick a fruit" required>
-  <div class="uni-select">
+  <div data-uni="select">
     <span data-element="Label">Fruit</span>
     <button data-element="Trigger">
       <span data-element="Value"></span>
@@ -254,7 +254,7 @@ follows it; UniAria writes an `id` only on a part that has none (see
 
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
 `group` and `groupLabel`, inside the list and keyed by the item's key (see
-[Listbox](./listbox.mdx#anatomy)). They carry `data-scope="select"`.
+[Listbox](./listbox.mdx#anatomy)).
 
 ## Props
 
@@ -335,8 +335,8 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute                                                                                              | On               | When                                                                                    |
 | ------------------------------------------------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `class="uni-select"`                                                                                   | root             | Always.                                                                                 |
-| `data-scope="select"`, `data-element`                                                                  | every other part | Always.                                                                                 |
+| `data-uni="select"`                                                                                    | root             | Always.                                                                                 |
+| `data-element`                                                                                         | every other part | Always.                                                                                 |
 | `data-open`                                                                                            | named parts      | The list is open.                                                                       |
 | `data-entering`, `data-exiting`                                                                        | named parts      | The first frames after opening; closing, until your exit animations on the popover end. |
 | `data-placeholder`                                                                                     | named parts      | Nothing is selected.                                                                    |
@@ -360,7 +360,7 @@ State attributes are present or absent, never `"false"`.
 They resolve on the popover, so use them there:
 
 ```css
-[data-scope='select'][data-element='Popover'] {
+[data-uni='select'] [data-element='Popover'] {
   min-width: var(--anchor-width);
   max-height: min(16rem, var(--available-height));
   margin: 4px 0; /* the gap from the trigger */

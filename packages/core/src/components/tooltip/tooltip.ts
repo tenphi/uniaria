@@ -83,6 +83,8 @@ function isHoverPointer(event: PointerEvent): boolean {
 export const tooltip = defineComponent({
   name: 'tooltip',
   parts: ['trigger', 'anchor', 'root', 'arrow'],
+  // They sit outside the tooltip (root AGENTS.md → Part markers).
+  outsideParts: ['trigger', 'anchor'],
   provides: [tooltipLink],
   // The only members of setup()'s result consumers may call (spec,
   // Actions).

@@ -30,7 +30,7 @@ describe('server rendering without a DOM', () => {
   it('renders the attributes UniAria owns and no handlers', () => {
     const html = renderToString(<Docs />);
     expect(html).toBe(
-      '<a href="/docs" tabindex="0" class="uni-button">Docs</a>',
+      '<a href="/docs" tabindex="0" data-uni="button">Docs</a>',
     );
   });
 
@@ -130,7 +130,7 @@ describe('Switch on the server', () => {
     expect(html).toMatch(/<input[^>]*role="switch"/);
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('checked=""');
-    expect(html).toContain('data-scope="switch"');
+    expect(html).toContain('data-uni="switch"');
     expect(html).not.toContain('aria-checked');
   });
 });
@@ -273,7 +273,6 @@ describe('Listbox on the server', () => {
     expect(apple).toContain('role="option"');
     expect(apple).toContain('aria-selected="false"');
     expect(apple).toContain('tabindex="-1"');
-    expect(apple).toContain('data-scope="listbox"');
     expect(apple).toContain('data-element="Option"');
     expect(banana).toContain('aria-selected="true"');
     expect(banana).toContain('tabindex="0"');
@@ -283,8 +282,7 @@ describe('Listbox on the server', () => {
     expect(list).toContain('tabindex="-1"');
     expect(list).toContain('data-element="List"');
     const root = html.match(/<div[^>]*>/)![0];
-    expect(root).toContain('class="uni-listbox"');
-    expect(root).not.toContain('data-scope');
+    expect(root).toContain('data-uni="listbox"');
     expect(root).not.toContain('data-element');
     expect(html.match(/<p[^>]*>/)![0]).toMatch(/\shidden[\s=>]/);
   });

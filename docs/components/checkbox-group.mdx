@@ -82,17 +82,17 @@ function Channel(props: { value: string; children: ReactNode }) {
 
 ```html
 <uni-checkbox-group id="notify" name="notify" required>
-  <div class="uni-checkbox-group">
+  <div data-uni="checkbox-group">
     <span data-element="Label">Notifications</span>
     <uni-checkbox value="email">
-      <label class="uni-checkbox">
+      <label data-uni="checkbox">
         <input data-element="Input" type="checkbox" checked />
         <span data-element="Indicator"></span>
         <span data-element="Label">Email</span>
       </label>
     </uni-checkbox>
     <uni-checkbox value="sms">
-      <label class="uni-checkbox">
+      <label data-uni="checkbox">
         <input data-element="Input" type="checkbox" />
         <span data-element="Indicator"></span>
         <span data-element="Label">SMS</span>
@@ -259,16 +259,16 @@ property holds only the value you set, not the current state. See
 
 ## Styling
 
-| Attribute                                              | When                                                  |
-| ------------------------------------------------------ | ----------------------------------------------------- |
-| `class="uni-checkbox-group"`                           | On the root, always.                                  |
-| `data-scope="checkbox-group"`, `data-element="<Part>"` | On every other part, always.                          |
-| `data-disabled`                                        | The group is disabled.                                |
-| `data-readonly`                                        | The group is read-only.                               |
-| `data-invalid`                                         | The group is invalid.                                 |
-| `data-required`                                        | The group is required.                                |
-| `data-focus-within`                                    | A checkbox in the group has focus.                    |
-| `data-focus-visible`                                   | Focus within came from a keyboard or a screen reader. |
+| Attribute                   | When                                                  |
+| --------------------------- | ----------------------------------------------------- |
+| `data-uni="checkbox-group"` | On the root, always.                                  |
+| `data-element="<Part>"`     | On every other part, always.                          |
+| `data-disabled`             | The group is disabled.                                |
+| `data-readonly`             | The group is read-only.                               |
+| `data-invalid`              | The group is invalid.                                 |
+| `data-required`             | The group is required.                                |
+| `data-focus-within`         | A checkbox in the group has focus.                    |
+| `data-focus-visible`        | Focus within came from a keyboard or a screen reader. |
 
 Every part of the group carries them, so you can draw a ring around the whole
 group with `data-focus-within` and limit it to keyboard focus with

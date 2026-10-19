@@ -2,7 +2,8 @@
  * `defineComponent` (design decision 9): a component is one definition, and
  * both adapters are generic over it.
  *
- * - `parts` — the named parts the component exposes.
+ * - `parts` — the named parts the component exposes; `outsideParts` — those
+ *   rendered outside the root, as an overlay's trigger is.
  * - `props` / `events` — the schema (`./schema`).
  * - `setup(ctx)` — runs once per instance; returns the definition's internal
  *   API (`api`): the actions and readers `expose()`, `connect()`, composing
@@ -28,7 +29,7 @@ import type {
   ResolvedSchema,
   StateName,
 } from './schema';
-import { capitalize, resolveSchema } from './schema';
+import { capitalize, kebabCase, resolveSchema } from './schema';
 import type { Instance } from './instance';
 
 /**
@@ -60,20 +61,24 @@ export interface PartProps {
   readonly properties?: Readonly<
     Record<string, string | number | boolean | undefined>
   >;
-  /**
-   * The class the root carries besides the consumer's own: `uni-<name>`.
-   * React renders it in `className`; a custom element finds its root by it,
-   * so the markup already has it. The binder never writes `class`.
-   */
-  readonly className?: string;
 }
 
 /**
- * The class that marks a component's root, for styles and for a custom
- * element to find it: `uni-checkbox` (root AGENTS.md → Part markers).
+ * The attribute and value that mark a part of the component `name` (root
+ * AGENTS.md → Part markers): the root `data-uni="<name>"`, a part outside
+ * the root `data-uni-part="<name>-<part>"` (`dialog-trigger`, `hiddenInput`
+ * → `hidden-input`), any other part `data-element` with its name
+ * capitalized, as Tasty names a sub-element. A custom element finds its
+ * parts by them, so its markup has them already.
  */
-export function rootClass(name: string): string {
-  return `uni-${name}`;
+export function partMarker(
+  name: string,
+  part: string,
+  isOutside = false,
+): readonly [attribute: string, value: string] {
+  if (part === 'root') return ['data-uni', name];
+  if (isOutside) return ['data-uni-part', `${name}-${kebabCase(part)}`];
+  return ['data-element', partElement(part)];
 }
 
 /**
@@ -323,11 +328,17 @@ export interface ComponentConfig<
   State,
 > {
   /**
-   * kebab-case; becomes `data-scope`, the root's `uni-<name>` class and the
-   * element name.
+   * kebab-case; becomes the root's `data-uni`, the start of each outside
+   * part's `data-uni-part`, and the element name.
    */
   readonly name: string;
   readonly parts: readonly Part[];
+  /**
+   * Parts rendered outside the root, as an overlay's trigger is. Each is
+   * marked by `data-uni-part="<name>-<part>"` instead of `data-element`, so
+   * styles reach it without the root.
+   */
+  readonly outsideParts?: readonly Part[];
   readonly props: P;
   readonly events?: E;
   /** The instance this component works inside, when it has one. */
@@ -559,6 +570,16 @@ export function defineComponent<
   }
   for (const key of config.links ?? []) callback(key.name);
   for (const action of config.actions ?? []) callback(action);
+  for (const part of config.outsideParts ?? []) {
+    if (
+      part === 'root' ||
+      !(config.parts as readonly string[]).includes(part)
+    ) {
+      throw new Error(
+        `[uniaria] ${config.name}: outside part "${part}" must be one of its parts, other than the root.`,
+      );
+    }
+  }
   if (config.itemParts && !config.connectItem) {
     throw new Error(`[uniaria] ${config.name}: item parts need connectItem().`);
   }

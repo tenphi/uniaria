@@ -66,17 +66,18 @@ component as its own subpath (`./button`).
 Each component is one `defineComponent()` call in
 `packages/core/src/components/<name>/`:
 
-| Field                        | What it holds                                                                                                                          |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                       | The kebab-case name. It becomes the element name and the root's class, both `uni-<name>`, and `data-scope` on every other part.        |
-| `parts`                      | The named parts the consumer renders. Each but `root` is marked with its name capitalized as `data-element`.                           |
-| `props`                      | The schema: `prop(default, options?)` for plain values, `bindable(default, { event? })` for stateful ones.                             |
-| `events`                     | `event<Detail>()` for each event the component reports.                                                                                |
-| `setup(ctx)`                 | Runs once per instance. Creates state, interactions, watchers and effects, and returns the actions and readers consumers see as `api`. |
-| `expose(view)`               | The public state that selectors read. It is public API, and the spec documents it.                                                     |
-| `connect(view)`              | A pure function of the current state that returns the props of every part. It runs after every flush, so it stays cheap.               |
-| `owner`, `links`, `provides` | How the component finds other instances. See [Owners and links](#owners-and-links).                                                    |
-| `itemParts`, `connectItem`   | Parts repeated per collection item. See [Collections and item parts](#collections-and-item-parts).                                     |
+| Field                        | What it holds                                                                                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                       | The kebab-case name. It becomes the element name, `<uni-<name>>`, the root's `data-uni` and the start of each outside part's `data-uni-part`. |
+| `parts`                      | The named parts the consumer renders. Each but `root` and `outsideParts` is marked with its name capitalized as `data-element`.               |
+| `outsideParts`               | The parts rendered outside the root, as an overlay's trigger and anchor are, marked `data-uni-part="<name>-<part>"`.                          |
+| `props`                      | The schema: `prop(default, options?)` for plain values, `bindable(default, { event? })` for stateful ones.                                    |
+| `events`                     | `event<Detail>()` for each event the component reports.                                                                                       |
+| `setup(ctx)`                 | Runs once per instance. Creates state, interactions, watchers and effects, and returns the actions and readers consumers see as `api`.        |
+| `expose(view)`               | The public state that selectors read. It is public API, and the spec documents it.                                                            |
+| `connect(view)`              | A pure function of the current state that returns the props of every part. It runs after every flush, so it stays cheap.                      |
+| `owner`, `links`, `provides` | How the component finds other instances. See [Owners and links](#owners-and-links).                                                           |
+| `itemParts`, `connectItem`   | Parts repeated per collection item. See [Collections and item parts](#collections-and-item-parts).                                            |
 
 The schema is the one source for the React adapter's props, the element's
 attributes and properties, and the events. The adapters derive every name from it:
@@ -249,15 +250,15 @@ interface PartProps {
   on?: Record<string, (event: Event) => void>; // keyed by DOM event name
   style?: Record<string, string | undefined>; // custom properties, layout styles
   properties?: Record<string, string | number | boolean | undefined>;
-  className?: string; // the root's uni-<name>, added by the instance
 }
 ```
 
 - **`attrs`.** ARIA values are strings: `'true'` and `'false'`, never
   booleans. State attributes such as `data-pressed` are present (`''`) or
-  absent, never `"false"`. The instance adds the part markers: the root
-  gets `className: 'uni-<name>'`, and every other part `data-scope` and
-  `data-element` (its name capitalized, as Tasty names a sub-element).
+  absent, never `"false"`. The instance adds the part markers
+  (`partMarker()`): the root gets `data-uni="<name>"`, an outside part
+  `data-uni-part="<name>-<part>"`, and every other part `data-element` (its
+  name capitalized, as Tasty names a sub-element).
 - **`on`.** DOM event names: `click`, `keydown`, `focusin`, `focusout`,
   `input`. Use `focusin` and `focusout` for focus entering or leaving a
   subtree. Handlers read only native events.
@@ -632,11 +633,12 @@ any framework around it see plain DOM.
   adapters. Select's displayed value and the `<option>`s of its hidden
   `<select>` are the two.
 - **Attribute ownership is per part.** UniAria owns ARIA state, `data-state`
-  and the other state attributes, and the part markers: `data-scope`,
-  `data-element` and the root's one class, `uni-<name>`. The consumer owns
-  content, the rest of `class` and every other attribute.
-- **Part discovery** (`dom/parts.ts`) finds the root by its `uni-<name>`
-  class and the other parts by `data-element` inside the host, minus those
+  and the other state attributes, and the part markers: `data-uni`,
+  `data-uni-part` and `data-element`. The consumer owns content, `class` and
+  every other attribute.
+- **Part discovery** (`dom/parts.ts`) finds the root by `data-uni`, an
+  outside part by `data-uni-part` and the other parts by `data-element`
+  inside the host, minus those
   inside a nested UniAria host of any kind (a nested host can still be a part
   itself), and a `MutationObserver` picks up parts added later. A custom
   element connects before the parser adds its children, so parts often

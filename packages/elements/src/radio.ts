@@ -7,7 +7,7 @@
  *
  * ```html
  * <uni-radio value="pro">
- *   <label class="uni-radio">
+ *   <label data-uni="radio">
  *     <input data-element="Input" type="radio" />
  *     <span data-element="Indicator"></span>
  *     <span data-element="Label">Pro</span>

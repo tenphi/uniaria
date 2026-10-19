@@ -25,7 +25,7 @@ underneath by default. Every press toggles the state and reports
   attribute naming one's id. As Button's, on the root. The Button
   it composes doesn't link: a link belongs to the component itself.
 - **Custom element:** yes. `<uni-toggle-button>` hosts one native
-  `<button class="uni-toggle-button">` written by the consumer, as
+  `<button data-uni="toggle-button">` written by the consumer, as
   `<uni-button>` does. The host has no role and never takes focus.
 
 Not part of ToggleButton:
@@ -45,9 +45,9 @@ Not part of ToggleButton:
 
 ## Anatomy
 
-| Part | Element                                                | Attributes UniAria owns                                                                                                                                                                                                        | Notes                                                                                                               |
-| ---- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| root | `button` by default; any element through `elementType` | Button's (`type`, `disabled`, `aria-disabled`, `role`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`), plus `aria-pressed`, `data-selected`, the `uni-toggle-button` class | The consumer owns content, `id`, other classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). |
+| Part | Element                                                | Attributes UniAria owns                                                                                                                                                                                                     | Notes                                                                                                         |
+| ---- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| root | `button` by default; any element through `elementType` | Button's (`type`, `disabled`, `aria-disabled`, `role`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`), plus `aria-pressed`, `data-selected`, `data-uni="toggle-button"` | The consumer owns content, `id`, classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). |
 
 No element-owned parts. `data-pressed` keeps Button's meaning: a pointer or
 key is down on the root. The selected state is `data-selected`, as in React
@@ -119,13 +119,13 @@ without it the root would be announced as a plain button. Unlike
 `aria-disabled`, `"false"` is the meaningful value here ("not pressed").
 `data-selected` is a presence attribute, removed when not selected.
 
-| State                     | Part | Attributes                                                                                                                                         |
-| ------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| off                       | root | Button's idle attributes, `type="button"` on a native root, `aria-pressed="false"`, the `uni-toggle-button` class instead of Button's `uni-button` |
-| on                        | root | `aria-pressed="true"`, `data-selected`                                                                                                             |
-| non-native root           | root | `role="button"` and `aria-pressed` as above                                                                                                        |
-| hovered, pressed, focused | root | As in Button (`data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`)                                                                |
-| disabled                  | root | As in Button, and `aria-pressed` and `data-selected` keep the current state                                                                        |
+| State                     | Part | Attributes                                                                                                                                             |
+| ------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| off                       | root | Button's idle attributes, `type="button"` on a native root, `aria-pressed="false"`, `data-uni="toggle-button"` instead of Button's `data-uni="button"` |
+| on                        | root | `aria-pressed="true"`, `data-selected`                                                                                                                 |
+| non-native root           | root | `role="button"` and `aria-pressed` as above                                                                                                            |
+| hovered, pressed, focused | root | As in Button (`data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`)                                                                    |
+| disabled                  | root | As in Button, and `aria-pressed` and `data-selected` keep the current state                                                                            |
 
 ## Focus
 
@@ -176,7 +176,7 @@ const mute = useComponent(toggleButton, { defaultSelected: true });
 ```html
 <!-- Custom element -->
 <uni-toggle-button default-selected>
-  <button class="uni-toggle-button">Mute</button>
+  <button data-uni="toggle-button">Mute</button>
 </uni-toggle-button>
 <script>
   document

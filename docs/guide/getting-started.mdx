@@ -56,11 +56,10 @@ export function SaveButton({ onSave }: { onSave(): void }) {
 ```
 
 `save.parts.root` carries the attributes, event handlers, a `ref` and the
-class `uni-button`, which your CSS can select. Add your own attributes next to
-it, and keep UniAria's class when you add yours:
-``className={`${save.parts.root.className} primary`}``. Leave ARIA state and
-the `data-*` state attributes to UniAria: it writes them itself, and warns in
-development when you pass one.
+marker `data-uni="button"`, which your CSS can select. Add your own
+attributes next to it, `className` included: `class` is all yours. Leave ARIA
+state and the `data-*` attributes to UniAria: it writes them itself, and
+warns in development when you pass one.
 
 A component with several parts gives you one set of props per part:
 
@@ -92,12 +91,12 @@ a value, select it with `useComponentState`. See [State](./state.md).
 
 Import a component's registering entry once, anywhere on the page. It defines
 the element, `<uni-` plus the component name, and wraps your markup. Mark the
-root part with the class `uni-` plus the component name, and every other part
-with `data-element`, its name capitalized (`Input`, `Indicator`):
+root part with `data-uni` and the component name, and every other part with
+`data-element`, its name capitalized (`Input`, `Indicator`):
 
 ```html
 <uni-button id="save">
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 
 <script type="module">
@@ -141,7 +140,7 @@ properties:
 ```html
 <!-- Vue -->
 <uni-switch :isSelected="wifi" @selectedchange="wifi = $event.detail">
-  <label class="uni-switch">
+  <label data-uni="switch">
     <input data-element="Input" type="checkbox" />
     <span data-element="Indicator"></span>
     <span data-element="Label">Wi-Fi</span>

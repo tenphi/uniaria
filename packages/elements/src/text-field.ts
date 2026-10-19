@@ -6,7 +6,7 @@
  *
  * ```html
  * <uni-text-field required>
- *   <div class="uni-text-field">
+ *   <div data-uni="text-field">
  *     <label data-element="Label">Email</label>
  *     <div data-element="Wrapper">
  *       <input data-element="Input" name="email" type="email" />

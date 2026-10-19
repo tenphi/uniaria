@@ -21,10 +21,10 @@ uni-listbox {
   width: 13rem;
 }
 
-[data-scope='listbox'][data-element='Label'] {
+[data-uni='listbox'] [data-element='Label'] {
   font-weight: 600;
 }
-[data-scope='listbox'][data-element='List'] {
+[data-uni='listbox'] [data-element='List'] {
   max-height: 15rem;
   overflow: auto;
   padding: 0.25rem;
@@ -32,17 +32,17 @@ uni-listbox {
   border-radius: 0.5rem;
   outline: none;
 }
-[data-scope='listbox'][data-element='List'][data-focus-visible] {
+[data-uni='listbox'] [data-element='List'][data-focus-visible] {
   border-color: Highlight;
 }
-[data-scope='listbox'][data-element='GroupLabel'] {
+[data-uni='listbox'] [data-element='GroupLabel'] {
   display: block;
   padding: 0.5rem 0.5rem 0.125rem;
   color: GrayText;
   font-size: 0.8em;
   text-transform: uppercase;
 }
-[data-scope='listbox'][data-element='Option'] {
+[data-uni='listbox'] [data-element='Option'] {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -52,12 +52,12 @@ uni-listbox {
   outline: none;
 }
 /* A checkmark in single mode, a checkbox in multiple mode. */
-[data-scope='listbox'][data-element='Option']::before {
+[data-uni='listbox'] [data-element='Option']::before {
   content: '';
   width: 1em;
   text-align: center;
 }
-[data-scope='listbox'][data-element='Option'][data-selected]::before {
+[data-uni='listbox'] [data-element='Option'][data-selected]::before {
   content: '✓';
 }
 [data-multiple] > [data-element='Option']::before {
@@ -72,23 +72,23 @@ uni-listbox {
   background: Highlight;
   color: HighlightText;
 }
-[data-scope='listbox'][data-element='Option'][data-hovered] {
+[data-uni='listbox'] [data-element='Option'][data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-[data-scope='listbox'][data-element='Option'][data-selected] {
+[data-uni='listbox'] [data-element='Option'][data-selected] {
   background: color-mix(in srgb, Highlight 30%, Canvas);
 }
-[data-scope='listbox'][data-element='Option'][data-pressed] {
+[data-uni='listbox'] [data-element='Option'][data-pressed] {
   background: color-mix(in srgb, Highlight 50%, Canvas);
 }
-[data-scope='listbox'][data-element='Option'][data-focus-visible] {
+[data-uni='listbox'] [data-element='Option'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: -2px;
 }
-[data-scope='listbox'][data-element='Option'][data-disabled] {
+[data-uni='listbox'] [data-element='Option'][data-disabled] {
   color: GrayText;
 }
-[data-scope='listbox'][data-element='Empty'] {
+[data-uni='listbox'] [data-element='Empty'] {
   margin: 0;
   color: GrayText;
 }

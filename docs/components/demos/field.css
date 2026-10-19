@@ -15,14 +15,14 @@ form {
   max-inline-size: 20rem;
 }
 
-.uni-field {
+[data-uni='field'] {
   display: grid;
   gap: 0.25rem;
 }
-.uni-field [data-element='Label'] {
+[data-uni='field'] [data-element='Label'] {
   font-weight: 600;
 }
-.uni-field [data-element='Control'] {
+[data-uni='field'] [data-element='Control'] {
   padding: 0.5rem 0.75rem;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
   border-radius: 0.5rem;
@@ -30,24 +30,24 @@ form {
   color: CanvasText;
   font: inherit;
 }
-.uni-field [data-element='Control']:focus-visible {
+[data-uni='field'] [data-element='Control']:focus-visible {
   outline: 2px solid Highlight;
   outline-offset: 1px;
 }
-.uni-field [data-element='Description'] {
+[data-uni='field'] [data-element='Description'] {
   margin: 0;
   color: GrayText;
   font-size: 0.875rem;
 }
 
 /* The label around the checkbox; the error stays outside it. */
-[data-scope='checkbox'][data-element='Wrapper'] {
+[data-uni='checkbox'] [data-element='Wrapper'] {
   display: inline-flex;
   gap: 0.5rem;
   align-items: center;
   cursor: pointer;
 }
-.uni-checkbox [data-element='Input'] {
+[data-uni='checkbox'] [data-element='Input'] {
   margin: 0;
   inline-size: 1rem;
   block-size: 1rem;
@@ -60,10 +60,10 @@ form {
   color: color-mix(in srgb, red 70%, CanvasText);
   font-size: 0.875rem;
 }
-.uni-field [data-element='Control'][data-invalid] {
+[data-uni='field'] [data-element='Control'][data-invalid] {
   border-color: color-mix(in srgb, red 70%, CanvasText);
 }
-.uni-checkbox [data-element='Label'][data-invalid] {
+[data-uni='checkbox'] [data-element='Label'][data-invalid] {
   color: color-mix(in srgb, red 70%, CanvasText);
 }
 

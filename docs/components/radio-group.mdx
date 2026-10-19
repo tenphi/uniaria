@@ -86,17 +86,17 @@ function Option(props: { value: string; children: ReactNode }) {
 
 ```html
 <uni-radio-group id="plan" name="plan">
-  <div class="uni-radio-group">
+  <div data-uni="radio-group">
     <span data-element="Label">Plan</span>
     <uni-radio value="free">
-      <label class="uni-radio">
+      <label data-uni="radio">
         <input data-element="Input" type="radio" />
         <span data-element="Indicator"></span>
         <span data-element="Label">Free</span>
       </label>
     </uni-radio>
     <uni-radio value="pro">
-      <label class="uni-radio">
+      <label data-uni="radio">
         <input data-element="Input" type="radio" checked />
         <span data-element="Indicator"></span>
         <span data-element="Label">Pro</span>
@@ -310,23 +310,23 @@ On the custom elements, read `element.instance.getState()`. The group's
 
 ## Styling
 
-| Attribute                                           | On                       | When                                                                             |
-| --------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
-| `class="uni-radio-group"`                           | The group's root         | Always.                                                                          |
-| `data-scope="radio-group"`, `data-element="<Part>"` | Other group parts        | Always.                                                                          |
-| `class="uni-radio"`                                 | A radio's root           | Always.                                                                          |
-| `data-scope="radio"`, `data-element="<Part>"`       | Other radio parts        | Always.                                                                          |
-| `data-selected`                                     | Radio parts              | The radio is selected.                                                           |
-| `data-hovered`                                      | Radio parts              | A mouse or pen is over the radio's wrapper (without one, its root) or its input. |
-| `data-focused`                                      | Radio parts              | The radio's input has focus.                                                     |
-| `data-focus-visible`                                | Radio parts              | The input has focus from a keyboard or screen reader.                            |
-| `data-focus-within`                                 | Group parts              | A radio in the group has focus.                                                  |
-| `data-focus-visible`                                | Group parts              | Focus within came from a keyboard or screen reader.                              |
-| `data-disabled`                                     | Group parts, radio parts | The group is disabled; on a radio, it or the group.                              |
-| `data-readonly`                                     | Group parts, radio parts | The group is read-only.                                                          |
-| `data-invalid`                                      | Group parts, radio parts | The group is invalid.                                                            |
-| `data-required`                                     | Group parts              | The group is required.                                                           |
-| `data-orientation`                                  | Group parts              | `orientation` is set; its value.                                                 |
+| Attribute                | On                       | When                                                                             |
+| ------------------------ | ------------------------ | -------------------------------------------------------------------------------- |
+| `data-uni="radio-group"` | The group's root         | Always.                                                                          |
+| `data-element="<Part>"`  | Other group parts        | Always.                                                                          |
+| `data-uni="radio"`       | A radio's root           | Always.                                                                          |
+| `data-element="<Part>"`  | Other radio parts        | Always.                                                                          |
+| `data-selected`          | Radio parts              | The radio is selected.                                                           |
+| `data-hovered`           | Radio parts              | A mouse or pen is over the radio's wrapper (without one, its root) or its input. |
+| `data-focused`           | Radio parts              | The radio's input has focus.                                                     |
+| `data-focus-visible`     | Radio parts              | The input has focus from a keyboard or screen reader.                            |
+| `data-focus-within`      | Group parts              | A radio in the group has focus.                                                  |
+| `data-focus-visible`     | Group parts              | Focus within came from a keyboard or screen reader.                              |
+| `data-disabled`          | Group parts, radio parts | The group is disabled; on a radio, it or the group.                              |
+| `data-readonly`          | Group parts, radio parts | The group is read-only.                                                          |
+| `data-invalid`           | Group parts, radio parts | The group is invalid.                                                            |
+| `data-required`          | Group parts              | The group is required.                                                           |
+| `data-orientation`       | Group parts              | `orientation` is set; its value.                                                 |
 
 Every part carries its component's state attributes, so the circle, the
 labels and the messages can be styled without reading state. The group's

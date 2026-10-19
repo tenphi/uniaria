@@ -16,7 +16,7 @@ body {
   align-items: center;
 }
 
-.uni-button {
+[data-uni='button'] {
   padding: 0.5rem 1rem;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
   border-radius: 0.5rem;
@@ -30,18 +30,18 @@ body {
     transform 80ms,
     background-color 80ms;
 }
-.uni-button[data-hovered] {
+[data-uni='button'][data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-.uni-button[data-pressed] {
+[data-uni='button'][data-pressed] {
   background: color-mix(in srgb, CanvasText 12%, Canvas);
   transform: scale(0.97);
 }
-.uni-button[data-focus-visible] {
+[data-uni='button'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-button[data-disabled] {
+[data-uni='button'][data-disabled] {
   opacity: 0.5;
   cursor: not-allowed;
 }

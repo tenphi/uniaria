@@ -7,10 +7,10 @@
  *
  * ```html
  * <uni-radio-group name="plan" required>
- *   <div class="uni-radio-group">
+ *   <div data-uni="radio-group">
  *     <span data-element="Label">Plan</span>
  *     <uni-radio value="free">
- *       <label class="uni-radio">
+ *       <label data-uni="radio">
  *         <input data-element="Input" type="radio" />
  *         <span data-element="Label">Free</span>
  *       </label>

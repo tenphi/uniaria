@@ -27,14 +27,14 @@ button {
   font: inherit;
 }
 
-.uni-select {
+[data-uni='select'] {
   display: grid;
   gap: 0.375rem;
 }
-[data-scope='select'][data-element='Label'] {
+[data-uni='select'] [data-element='Label'] {
   font-weight: 600;
 }
-[data-scope='select'][data-element='Trigger'] {
+[data-uni='select'] [data-element='Trigger'] {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -43,22 +43,22 @@ button {
   text-align: start;
   outline: none;
 }
-[data-scope='select'][data-element='Trigger'][data-hovered] {
+[data-uni='select'] [data-element='Trigger'][data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-[data-scope='select'][data-element='Trigger'][data-focus-visible] {
+[data-uni='select'] [data-element='Trigger'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-[data-scope='select'][data-element='Trigger'][data-open] svg {
+[data-uni='select'] [data-element='Trigger'][data-open] svg {
   rotate: 180deg;
 }
-[data-scope='select'][data-element='Value'][data-placeholder] {
+[data-uni='select'] [data-element='Value'][data-placeholder] {
   color: GrayText;
 }
 
 /* The popover: a gap from the trigger, its width, and the room it has. */
-[data-scope='select'][data-element='Popover'] {
+[data-uni='select'] [data-element='Popover'] {
   box-sizing: border-box;
   min-width: var(--anchor-width);
   max-height: min(16rem, var(--available-height));
@@ -71,17 +71,17 @@ button {
   color: CanvasText;
   box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
 }
-[data-scope='select'][data-element='List'] {
+[data-uni='select'] [data-element='List'] {
   outline: none;
 }
-[data-scope='select'][data-element='GroupLabel'] {
+[data-uni='select'] [data-element='GroupLabel'] {
   display: block;
   padding: 0.5rem 0.5rem 0.125rem 2rem;
   color: GrayText;
   font-size: 0.8em;
   text-transform: uppercase;
 }
-[data-scope='select'][data-element='Option'] {
+[data-uni='select'] [data-element='Option'] {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -90,18 +90,18 @@ button {
   cursor: default;
   outline: none;
 }
-[data-scope='select'][data-element='Option']::before {
+[data-uni='select'] [data-element='Option']::before {
   content: '';
   width: 1em;
   text-align: center;
 }
-[data-scope='select'][data-element='Option'][data-selected]::before {
+[data-uni='select'] [data-element='Option'][data-selected]::before {
   content: '✓';
 }
 /* Hovering moves focus, so one style covers the mouse and the keys. */
-[data-scope='select'][data-element='Option'][data-focused] {
+[data-uni='select'] [data-element='Option'][data-focused] {
   background: color-mix(in srgb, Highlight 30%, Canvas);
 }
-[data-scope='select'][data-element='Option'][data-disabled] {
+[data-uni='select'] [data-element='Option'][data-disabled] {
   color: GrayText;
 }

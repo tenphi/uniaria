@@ -70,7 +70,7 @@ export function QuantityField(props: {
 
 ```html
 <uni-number-field id="quantity" min-value="1" max-value="99" default-value="1">
-  <div class="uni-number-field">
+  <div data-uni="number-field">
     <label data-element="Label">Quantity</label>
     <div data-element="Wrapper">
       <button data-element="Decrement">−</button>
@@ -367,8 +367,8 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute                                                                                                               | On                                              | When                                                                                          |
 | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `class="uni-number-field"`                                                                                              | root                                            | Always.                                                                                       |
-| `data-scope="number-field"`, `data-element`                                                                             | every other part                                | Always.                                                                                       |
+| `data-uni="number-field"`                                                                                               | root                                            | Always.                                                                                       |
+| `data-element`                                                                                                          | every other part                                | Always.                                                                                       |
 | `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, wrapper, label, input, description, error | As [TextField](./text-field.mdx#styling): the input's hover and focus, and the field's state. |
 | `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`                                                    | increment, decrement                            | The button's own, as [Button](./button.mdx#styling)'s.                                        |
 | `data-disabled`                                                                                                         | increment, decrement                            | The button can't step: at a bound, read-only or disabled.                                     |

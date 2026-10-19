@@ -7,7 +7,7 @@
  *
  * ```html
  * <uni-number-field min-value="0" max-value="99" lang="de">
- *   <div class="uni-number-field">
+ *   <div data-uni="number-field">
  *     <label data-element="Label">Menge</label>
  *     <div data-element="Wrapper">
  *       <input data-element="Input" value="5" />

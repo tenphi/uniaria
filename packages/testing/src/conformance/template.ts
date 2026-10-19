@@ -7,7 +7,7 @@
  * before the implementation exists.
  */
 
-import { partElement, rootClass } from '@uniaria/core';
+import { partMarker } from '@uniaria/core';
 
 export interface TemplateElement {
   /** Tag name, as the consumer would write it (`button`, `a`, `div`). */
@@ -138,15 +138,30 @@ export function templateParts(
   return found;
 }
 
+/** `[attribute="value"]` for a part's marker. */
+function markerSelector(component: string, part: string, isOutside = false) {
+  const [attribute, value] = partMarker(component, part, isOutside);
+  return `[${attribute}="${value}"]`;
+}
+
 /**
  * The CSS selector for a part of `component` (root AGENTS.md → Part
- * markers): the root by its `uni-<name>` class, any other part by
- * `data-scope` and `data-element`.
+ * markers): the root by `data-uni`, a part outside the root by
+ * `data-uni-part`, any other part by its `data-element` inside the root,
+ * minus those inside another component's root. A part no root is around
+ * counts too, as in a component rendered without its root, which has nothing
+ * else to scope its parts by. One compound, so `[data-key="…"]` can follow
+ * it.
  */
 export function partSelector(component: string, part: string): string {
-  return part === 'root'
-    ? `.${rootClass(component)}`
-    : `[data-scope="${component}"][data-element="${partElement(part)}"]`;
+  const root = markerSelector(component, 'root');
+  if (part === 'root') return root;
+  const marker = markerSelector(component, part);
+  return (
+    `:is(${markerSelector(component, part, true)}, ` +
+    `${root} ${marker}:not(${root} [data-uni]:not(${root}) *), ` +
+    `${marker}:not([data-uni] *))`
+  );
 }
 
 /** Which part of `component` an element is, by its markers. */
@@ -154,27 +169,42 @@ export function partName(
   element: Element,
   component: string,
 ): string | undefined {
-  if (element.classList.contains(rootClass(component))) return 'root';
-  if (element.getAttribute('data-scope') !== component) return undefined;
-  const name = element.getAttribute('data-element');
-  return name ? name.charAt(0).toLowerCase() + name.slice(1) : undefined;
+  if (element.getAttribute('data-uni') === component) return 'root';
+  const outside = element.getAttribute('data-uni-part');
+  if (outside?.startsWith(`${component}-`)) {
+    return outside
+      .slice(component.length + 1)
+      .replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase());
+  }
+  const marker = element.getAttribute('data-element');
+  if (!marker) return undefined;
+  const part = marker.charAt(0).toLowerCase() + marker.slice(1);
+  return element.matches(partSelector(component, part)) ? part : undefined;
+}
+
+/** How `renderTemplate()` renders what only the adapter knows. */
+export interface RenderTemplateOptions {
+  /** Adds attributes to part elements as they are created. */
+  readonly decorate?: (element: HTMLElement, node: TemplateElement) => void;
+  /** Creates the element for a nested component; its children go into it. */
+  readonly host?: (node: TemplateComponent) => HTMLElement;
+  /** Is told where a `rows()` node goes, and renders it there itself. */
+  readonly rowsIn?: (node: TemplateRows, parent: ParentNode) => void;
+  /** A component's parts outside its root: its definition's `outsideParts`. */
+  readonly outsideParts?: (component: string) => readonly string[];
 }
 
 /**
  * Renders a template of the component `component` to real DOM, marking part
- * elements the way a consumer of the custom elements would: the root with
- * its `uni-<name>` class, the others with `data-element`. `decorate` lets an
- * adapter add attributes to part elements as they are created; `host`
- * creates the element for a nested component, which its children go into;
- * `rowsIn` is told where a `rows()` node goes, and renders it there itself.
+ * elements the way a consumer of the custom elements would (`partMarker()`):
+ * the root with `data-uni`, a part outside the root with `data-uni-part`,
+ * the others with `data-element`.
  */
 export function renderTemplate(
   nodes: readonly TemplateNode[],
   doc: Document,
   component: string,
-  decorate?: (element: HTMLElement, node: TemplateElement) => void,
-  host?: (node: TemplateComponent) => HTMLElement,
-  rowsIn?: (node: TemplateRows, parent: ParentNode) => void,
+  { decorate, host, rowsIn, outsideParts }: RenderTemplateOptions = {},
 ): DocumentFragment {
   const fragment = doc.createDocumentFragment();
   const append = (
@@ -209,12 +239,12 @@ export function renderTemplate(
       for (const [name, value] of Object.entries(node.attrs)) {
         element.setAttribute(name, value);
       }
-      if (node.part === 'root') {
-        element.classList.add(rootClass(owner));
-      } else if (node.part !== undefined) {
-        element.setAttribute('data-element', partElement(node.part));
+      const { part } = node;
+      if (part !== undefined) {
+        const isOutside = outsideParts?.(owner).includes(part) ?? false;
+        element.setAttribute(...partMarker(owner, part, isOutside));
       }
-      if (node.part !== undefined) decorate?.(element, node);
+      if (part !== undefined) decorate?.(element, node);
       append(element, node.children, owner);
       parent.appendChild(element);
     }

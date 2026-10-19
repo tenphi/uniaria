@@ -20,21 +20,21 @@ body {
 }
 
 /* The label root takes every click; the input lies over it, transparent. */
-.uni-checkbox {
+[data-uni='checkbox'] {
   position: relative;
   display: inline-flex;
   gap: 0.625rem;
   align-items: center;
   cursor: pointer;
 }
-.uni-checkbox [data-element='Input'] {
+[data-uni='checkbox'] [data-element='Input'] {
   position: absolute;
   inset: 0;
   margin: 0;
   opacity: 0;
   cursor: inherit;
 }
-.uni-checkbox [data-element='Indicator'] {
+[data-uni='checkbox'] [data-element='Indicator'] {
   display: grid;
   place-items: center;
   width: 1.125rem;
@@ -44,19 +44,19 @@ body {
   border-radius: 0.3rem;
   background: Canvas;
 }
-.uni-checkbox [data-element='Indicator']::after {
+[data-uni='checkbox'] [data-element='Indicator']::after {
   content: '';
 }
-.uni-checkbox [data-element='Indicator'][data-hovered] {
+[data-uni='checkbox'] [data-element='Indicator'][data-hovered] {
   border-color: CanvasText;
 }
-.uni-checkbox
+[data-uni='checkbox']
   [data-element='Indicator']:is([data-selected], [data-indeterminate]) {
   border-color: CanvasText;
   background: CanvasText;
 }
 /* A check, drawn with two borders. */
-.uni-checkbox [data-element='Indicator'][data-selected]::after {
+[data-uni='checkbox'] [data-element='Indicator'][data-selected]::after {
   width: 0.3rem;
   height: 0.6rem;
   margin-top: -0.15rem;
@@ -65,7 +65,7 @@ body {
   rotate: 45deg;
 }
 /* A dash, which wins over the check. */
-.uni-checkbox [data-element='Indicator'][data-indeterminate]::after {
+[data-uni='checkbox'] [data-element='Indicator'][data-indeterminate]::after {
   width: 0.55rem;
   height: 2px;
   margin: 0;
@@ -73,11 +73,11 @@ body {
   rotate: none;
   background: Canvas;
 }
-.uni-checkbox [data-element='Indicator'][data-focus-visible] {
+[data-uni='checkbox'] [data-element='Indicator'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-checkbox[data-disabled] {
+[data-uni='checkbox'][data-disabled] {
   color: GrayText;
   cursor: not-allowed;
 }

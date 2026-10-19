@@ -5,7 +5,7 @@ import {
   isOwnerDefinition,
   itemId,
   partElement,
-  rootClass,
+  partMarker,
 } from './define';
 import type {
   ItemPartOf,
@@ -200,10 +200,26 @@ describe('defineComponent', () => {
       }),
     ).toThrow(/defined twice/);
   });
+
+  it('rejects an outside part that is the root or no part', () => {
+    for (const part of ['root', 'missing']) {
+      expect(() =>
+        defineComponent({
+          name: 'overlay',
+          parts: ['root', 'trigger'],
+          outsideParts: [part as 'trigger'],
+          props: {},
+          setup: () => ({}),
+          expose: () => ({}),
+          connect: () => ({ root: { attrs: {} }, trigger: { attrs: {} } }),
+        }),
+      ).toThrow(/outside part/);
+    }
+  });
 });
 
 describe('createInstance', () => {
-  it('connects parts with data-scope, data-element and stable ids', () => {
+  it('connects parts with data-element and stable ids', () => {
     const instance = createInstance(disclosure, { id: 'd' });
     const { trigger, panel } = instance.connect();
     expect(trigger.attrs).toEqual({
@@ -211,10 +227,8 @@ describe('createInstance', () => {
       'aria-expanded': 'false',
       'aria-controls': 'd-panel',
       'aria-label': undefined,
-      'data-scope': 'disclosure',
       'data-element': 'Trigger',
     });
-    expect(trigger).not.toHaveProperty('className');
     expect(panel.attrs).toMatchObject({
       id: 'd-panel',
       hidden: '',
@@ -224,29 +238,49 @@ describe('createInstance', () => {
     expect(instance.ids).toEqual({ trigger: 'd-trigger', panel: 'd-panel' });
   });
 
-  it('marks the root by its uni-<name> class and no attributes, other parts by data-element', () => {
-    expect(rootClass('toggle-button')).toBe('uni-toggle-button');
+  it('marks the root by data-uni, a part outside it by data-uni-part, others by data-element', () => {
+    expect(partMarker('toggle-button', 'root')).toEqual([
+      'data-uni',
+      'toggle-button',
+    ]);
+    expect(partMarker('dialog', 'trigger', true)).toEqual([
+      'data-uni-part',
+      'dialog-trigger',
+    ]);
+    expect(partMarker('pop-up', 'hiddenInput', true)).toEqual([
+      'data-uni-part',
+      'pop-up-hidden-input',
+    ]);
+    expect(partMarker('pop-up', 'hiddenInput')).toEqual([
+      'data-element',
+      'HiddenInput',
+    ]);
     expect(partElement('hiddenInput')).toBe('HiddenInput');
-    const box = defineComponent({
-      name: 'text-box',
-      parts: ['root', 'hiddenInput'],
+    const overlay = defineComponent({
+      name: 'pop-up',
+      parts: ['trigger', 'root', 'hiddenInput'],
+      outsideParts: ['trigger'],
       props: {},
       setup: () => ({}),
       expose: () => ({}),
       connect: ({ ids }) => ({
+        trigger: { attrs: { type: 'button' } },
         root: { attrs: { id: ids.root } },
         hiddenInput: { attrs: { type: 'hidden' } },
       }),
     });
-    const { root, hiddenInput } = createInstance(box, { id: 't' }).connect();
-    expect(root.className).toBe('uni-text-box');
-    expect(root.attrs).toEqual({ id: 't-root' });
+    const { trigger, root, hiddenInput } = createInstance(overlay, {
+      id: 't',
+    }).connect();
+    expect(root.attrs).toEqual({ id: 't-root', 'data-uni': 'pop-up' });
+    expect(trigger.attrs).toEqual({
+      type: 'button',
+      'data-uni-part': 'pop-up-trigger',
+    });
     expect(hiddenInput.attrs).toEqual({
       type: 'hidden',
-      'data-scope': 'text-box',
       'data-element': 'HiddenInput',
     });
-    expect(hiddenInput).not.toHaveProperty('className');
   });
 
   it('generates an id when the adapter gives none', () => {
@@ -842,7 +876,6 @@ describe('ctx.use', () => {
     });
     const { trigger, body } = instance.connect();
     expect(trigger.attrs['aria-controls']).toBe('item-body');
-    expect(trigger.attrs['data-scope']).toBe('accordion-item');
     expect(trigger.attrs['data-element']).toBe('Trigger');
     // Marked as the composing component's own part, by its own name.
     expect(body.attrs).toMatchObject({
@@ -1437,20 +1470,17 @@ describe('item parts', () => {
     expect(itemId('list', 'option', 'a%20b')).toBe('list-option-a%2520b');
   });
 
-  it('connects an item part with data-scope and data-element, cached per part and key', () => {
+  it('connects an item part with data-element, cached per part and key', () => {
     const instance = createInstance(rows);
     const row = instance.connectItem('row', 'a');
     expect(row.attrs).toMatchObject({
-      'data-scope': 'rows',
       'data-element': 'Row',
       'data-tone': 'plain',
     });
-    expect(row).not.toHaveProperty('className');
     expect(instance.connectItem('row', 'a')).toBe(row);
     expect(instance.connectItem('row', 'b')).not.toBe(row);
     expect(instance.api.computed).toEqual(['row:a', 'row:b']);
     expect(instance.connectItem('rowLabel', 'a').attrs).toMatchObject({
-      'data-scope': 'rows',
       'data-element': 'RowLabel',
     });
   });
@@ -1619,10 +1649,9 @@ describe('item parts', () => {
     });
     const instance = createInstance(outer);
     expect(instance.connectItem('row', 'a').attrs).toMatchObject({
-      'data-scope': 'outer',
       'data-element': 'Row',
       'data-tone': 'quiet',
     });
-    expect(instance.connect().root.className).toBe('uni-outer');
+    expect(instance.connect().root.attrs['data-uni']).toBe('outer');
   });
 });

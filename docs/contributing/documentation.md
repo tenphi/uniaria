@@ -137,11 +137,9 @@ import javascript from './demos/button.js?raw';
 
 The CSS is self-contained and small, since it doubles as a styling example:
 `color-scheme: light dark`, system colors (`Canvas`, `CanvasText`,
-`GrayText`, `Highlight`, `color-mix(in srgb, …)`), the root selected by its
-class (`.uni-checkbox`) and the other parts by `data-element` inside it, or
-with `data-scope` when they sit outside the root or a nested component could
-match (`[data-scope='popover'][data-element='Trigger']`), and state
-attributes. Start from the Button demo's `:root` and `body` rules. No
+`GrayText`, `Highlight`, `color-mix(in srgb, …)`), the root selected by `data-uni` (`[data-uni='checkbox']`), the other parts
+by `data-element` inside it, a part outside the root by `data-uni-part`
+(`[data-uni-part='popover-trigger']`), and state attributes. Start from the Button demo's `:root` and `body` rules. No
 external resources and no frameworks. The JavaScript does only what the demo
 needs to show, such as logging events into an `<output>`, in plain modern
 browser JavaScript; ESLint checks `docs/**/*.js` with browser globals.

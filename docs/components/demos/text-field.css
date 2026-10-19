@@ -14,14 +14,14 @@ body {
   gap: 1rem;
   max-inline-size: 20rem;
 }
-[data-scope='text-field'][data-element='Label'] {
+[data-uni='text-field'] [data-element='Label'] {
   display: block;
   margin-block-end: 0.25rem;
   font-weight: 600;
 }
 /* The wrapper draws the box; a press on it, the "@" included, focuses the
    input. */
-[data-scope='text-field'][data-element='Wrapper'] {
+[data-uni='text-field'] [data-element='Wrapper'] {
   display: flex;
   gap: 0.25rem;
   align-items: baseline;
@@ -32,14 +32,14 @@ body {
   color: GrayText;
   cursor: text;
 }
-[data-scope='text-field'][data-element='Wrapper'][data-hovered] {
+[data-uni='text-field'] [data-element='Wrapper'][data-hovered] {
   border-color: color-mix(in srgb, CanvasText 55%, transparent);
 }
-[data-scope='text-field'][data-element='Wrapper'][data-focused] {
+[data-uni='text-field'] [data-element='Wrapper'][data-focused] {
   border-color: Highlight;
   box-shadow: 0 0 0 1px Highlight;
 }
-.uni-text-field [data-element='Input'] {
+[data-uni='text-field'] [data-element='Input'] {
   flex: 1;
   min-inline-size: 0;
   padding: 0;
@@ -50,20 +50,20 @@ body {
   font: inherit;
   resize: vertical;
 }
-[data-scope='text-field'][data-element='Description'],
-[data-scope='text-field'][data-element='Error'] {
+[data-uni='text-field'] [data-element='Description'],
+[data-uni='text-field'] [data-element='Error'] {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   color: GrayText;
 }
 
-[data-scope='text-field'][data-element='Label'][data-invalid],
-[data-scope='text-field'][data-element='Error'] {
+[data-uni='text-field'] [data-element='Label'][data-invalid],
+[data-uni='text-field'] [data-element='Error'] {
   color: color-mix(in srgb, red 70%, CanvasText);
 }
-[data-scope='text-field'][data-element='Wrapper'][data-invalid] {
+[data-uni='text-field'] [data-element='Wrapper'][data-invalid] {
   border-color: color-mix(in srgb, red 70%, CanvasText);
 }
-[data-scope='text-field'][data-element='Wrapper'][data-invalid][data-focused] {
+[data-uni='text-field'] [data-element='Wrapper'][data-invalid][data-focused] {
   box-shadow: 0 0 0 1px color-mix(in srgb, red 70%, CanvasText);
 }

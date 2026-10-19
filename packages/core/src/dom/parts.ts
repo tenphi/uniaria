@@ -1,7 +1,9 @@
 /**
  * Finding part elements inside a custom-element host (design decision 8) by
- * their markers (root AGENTS.md → Part markers): the root by its
- * `uni-<name>` class, every other part by its `data-element`. Only elements
+ * their markers (root AGENTS.md → Part markers): the root by
+ * `data-uni="<name>"`, a part outside the root by
+ * `data-uni-part="<name>-<part>"`, every other part by its `data-element`.
+ * Only elements
  * with no other host between them and this one count, so a nested instance
  * keeps its own parts. Another host is a nested UniAria element of any kind,
  * or one of the same tag. A nested UniAria element can itself be a part of
@@ -9,7 +11,11 @@
  * are parts a nested element takes over once its tag is defined.
  */
 
-import { partElement, rootClass } from '../runtime';
+import type { AnyDefinition } from '../runtime';
+import { partElement, partMarker } from '../runtime';
+
+/** What finding a component's parts needs from its definition. */
+export type PartsOf = Pick<AnyDefinition, 'name' | 'parts' | 'outsideParts'>;
 
 /**
  * Marks a custom-element class as a UniAria host, so hosts around its elements
@@ -86,27 +92,47 @@ function byElement(parts: readonly string[]): Map<string, string> {
   return new Map(parts.map((part) => [partElement(part), part]));
 }
 
+/** The attributes that mark parts. */
+const MARKERS = ['data-uni', 'data-uni-part', 'data-element'] as const;
+
+/** Each part of `component` by its marker, `<attribute>=<value>`. */
+function byMarker({
+  name,
+  parts,
+  outsideParts = [],
+}: PartsOf): Map<string, string> {
+  return new Map(
+    parts.map((part) => {
+      const [attribute, value] = partMarker(
+        name,
+        part,
+        outsideParts.includes(part),
+      );
+      return [`${attribute}=${value}`, part];
+    }),
+  );
+}
+
 /**
- * The first element for each of `parts` that belongs to `host`, the
- * component `name`.
+ * The first element for each part of `component` that belongs to `host`.
+ * One element can be several parts, a nested element's root among them.
  */
 export function queryParts(
   host: Element,
-  name: string,
-  parts: readonly string[],
+  component: PartsOf,
 ): Map<string, HTMLElement> {
   const found = new Map<string, HTMLElement>();
-  const named = byElement(parts.filter((part) => part !== 'root'));
-  const root = parts.includes('root') ? rootClass(name) : undefined;
-  const selector = root ? `[data-element], .${root}` : '[data-element]';
+  const marked = byMarker(component);
+  const selector = MARKERS.map((each) => `[${each}]`).join(', ');
   for (const element of host.querySelectorAll<HTMLElement>(selector)) {
-    const part =
-      root && element.classList.contains(root)
-        ? 'root'
-        : named.get(element.getAttribute('data-element') ?? '');
-    if (part === undefined || found.has(part)) continue;
-    if (!belongsTo(element, host)) continue;
-    found.set(part, element);
+    for (const attribute of MARKERS) {
+      const value = element.getAttribute(attribute);
+      const part =
+        value === null ? undefined : marked.get(`${attribute}=${value}`);
+      if (part === undefined || found.has(part)) continue;
+      if (!belongsTo(element, host)) break;
+      found.set(part, element);
+    }
   }
   return found;
 }
@@ -145,35 +171,21 @@ export function queryItemParts(
 }
 
 /**
- * Calls `callback` whenever parts of the component `name` may have been
- * added, removed or renamed, an item's text value may have changed (its text
- * or `data-text-value`), or a nested element's tag was defined as a host. A
- * change of `class` counts only when it adds or removes the root's class,
- * and a change of text only inside one of the host's items, so a consumer's
- * class toggles and other text cost no rescan.
+ * Calls `callback` whenever parts of `component` may have been added,
+ * removed or renamed, an item's text value may have changed (its text or
+ * `data-text-value`), or a nested element's tag was defined as a host. A
+ * change of text counts only inside one of the host's items, and classes
+ * never do, so a consumer's class toggles and other text cost no rescan.
  */
-export function observeParts(
-  host: Element,
-  name: string,
-  callback: () => void,
-): () => void {
+export function observeParts(host: Element, callback: () => void): () => void {
   const view = host.ownerDocument.defaultView;
   if (!view) return () => undefined;
-  const root = rootClass(name);
-  const hadRoot = (value: string | null) =>
-    value !== null && value.split(/\s+/).includes(root);
   const isRelevant = (record: MutationRecord): boolean => {
-    if (record.type === 'characterData') {
-      // Text matters only as an item's text value: inside one of its items.
-      const item = record.target.parentElement?.closest('[data-key]');
-      return (
-        !!item && item !== host && host.contains(item) && belongsTo(item, host)
-      );
-    }
+    if (record.type !== 'characterData') return true;
+    // Text matters only as an item's text value: inside one of its items.
+    const item = record.target.parentElement?.closest('[data-key]');
     return (
-      record.attributeName !== 'class' ||
-      hadRoot(record.oldValue) !==
-        (record.target as Element).classList.contains(root)
+      !!item && item !== host && host.contains(item) && belongsTo(item, host)
     );
   };
   // A host upgraded before a nested element's tag was defined took the parts
@@ -209,8 +221,7 @@ export function observeParts(
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeOldValue: true,
-    attributeFilter: ['data-element', 'data-key', 'data-text-value', 'class'],
+    attributeFilter: [...MARKERS, 'data-key', 'data-text-value'],
   });
   for (const each of host.querySelectorAll(':not(:defined)')) wait(each);
   return () => {

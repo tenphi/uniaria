@@ -76,7 +76,7 @@ export function FruitCombobox() {
 
 ```html
 <uni-combobox>
-  <div class="uni-combobox">
+  <div data-uni="combobox">
     <label data-element="Label">Fruit</label>
     <div data-element="Anchor">
       <input data-element="Input" />
@@ -298,7 +298,7 @@ follows it; UniAria writes an `id` only on a part that has none (see
 
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
 `group` and `groupLabel`, inside the list and keyed by the item's key (see
-[Listbox](./listbox.mdx#anatomy)). They carry `data-scope="combobox"` and no
+[Listbox](./listbox.mdx#anatomy)). They carry no
 `tabindex`, since they never take focus.
 
 ## Props
@@ -385,8 +385,8 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute                                                         | On               | When                                                                                    |
 | ----------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `class="uni-combobox"`                                            | root             | Always.                                                                                 |
-| `data-scope="combobox"`, `data-element`                           | every other part | Always.                                                                                 |
+| `data-uni="combobox"`                                             | root             | Always.                                                                                 |
+| `data-element`                                                    | every other part | Always.                                                                                 |
 | `data-open`                                                       | named parts      | The list is open.                                                                       |
 | `data-entering`, `data-exiting`                                   | named parts      | The first frames after opening; closing, until your exit animations on the popover end. |
 | `data-empty`                                                      | named parts      | No option matches the text.                                                             |
@@ -410,7 +410,7 @@ input's), `--available-width` and `--available-height`. Use them on the
 popover:
 
 ```css
-[data-scope='combobox'][data-element='Popover'] {
+[data-uni='combobox'] [data-element='Popover'] {
   min-width: var(--anchor-width);
   max-height: min(15rem, var(--available-height));
   margin: 4px 0; /* the gap from the field */

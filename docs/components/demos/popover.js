@@ -1,6 +1,6 @@
 const log = document.getElementById('log');
 const nameOf = (event) =>
-  event.target.querySelector('[data-element="Trigger"]').textContent;
+  event.target.querySelector('[data-uni-part="popover-trigger"]').textContent;
 
 document.addEventListener('openchange', (event) => {
   if (event.detail) log.textContent = `${nameOf(event)}: open`;

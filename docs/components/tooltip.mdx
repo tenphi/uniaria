@@ -62,9 +62,9 @@ export function SaveButton(props: { onSave(): void }) {
 ```html
 <uni-tooltip>
   <uni-button>
-    <button class="uni-button">Save</button>
+    <button data-uni="button">Save</button>
   </uni-button>
-  <div class="uni-tooltip">
+  <div data-uni="tooltip">
     Saves the file
     <div data-element="Arrow"></div>
   </div>
@@ -101,11 +101,11 @@ its focusable part, and is the tooltip's anchor.
 
 ```html
 <uni-button tooltip="save-hint">
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 
 <uni-tooltip id="save-hint">
-  <div class="uni-tooltip">Saves the file</div>
+  <div data-uni="tooltip">Saves the file</div>
 </uni-tooltip>
 ```
 
@@ -149,8 +149,8 @@ return (
 
 ```html
 <uni-tooltip>
-  <a data-element="Trigger" href="/pricing">Pricing</a>
-  <div class="uni-tooltip">Plans and billing</div>
+  <a data-uni-part="tooltip-trigger" href="/pricing">Pricing</a>
+  <div data-uni="tooltip">Plans and billing</div>
 </uni-tooltip>
 ```
 
@@ -199,9 +199,9 @@ return (
 ```html
 <uni-tooltip relation="label">
   <uni-toggle-button>
-    <button class="uni-toggle-button"><svg aria-hidden="true">…</svg></button>
+    <button data-uni="toggle-button"><svg aria-hidden="true">…</svg></button>
   </uni-toggle-button>
-  <div class="uni-tooltip">Bold</div>
+  <div data-uni="tooltip">Bold</div>
 </uni-tooltip>
 ```
 
@@ -304,7 +304,7 @@ The root gets no `tabindex`, and the trigger no `aria-expanded`,
 | `positionTryFallbacks` | `position-try-fallbacks`                     | `string`                   | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                         |
 
 On the element, the `trigger` property is this prop; the trigger part is the
-element marked `data-element="Trigger"`.
+element marked `data-uni-part="tooltip-trigger"`.
 
 ## Events
 
@@ -346,15 +346,16 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                              | On               | When                                                                                    |
-| -------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `class="uni-tooltip"`                  | root             | Always.                                                                                 |
-| `data-scope="tooltip"`, `data-element` | every other part | Always.                                                                                 |
-| `data-open`                            | root, arrow      | The tooltip is open.                                                                    |
-| `data-entering`                        | root, arrow      | The first frames after opening.                                                         |
-| `data-exiting`                         | root, arrow      | It is closing, until its exit animations end. Skipped when another tooltip replaces it. |
-| `data-instant`                         | root, arrow      | It opened without its delay: skip the entrance.                                         |
-| `data-placement`                       | root, arrow      | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.             |
+| Attribute                                                           | On               | When                                                                                    |
+| ------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
+| `data-uni="tooltip"`                                                | root             | Always.                                                                                 |
+| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor  | Always.                                                                                 |
+| `data-element`                                                      | every other part | Always.                                                                                 |
+| `data-open`                                                         | root, arrow      | The tooltip is open.                                                                    |
+| `data-entering`                                                     | root, arrow      | The first frames after opening.                                                         |
+| `data-exiting`                                                      | root, arrow      | It is closing, until its exit animations end. Skipped when another tooltip replaces it. |
+| `data-instant`                                                      | root, arrow      | It opened without its delay: skip the entrance.                                         |
+| `data-placement`                                                    | root, arrow      | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.             |
 
 The root also gets `--anchor-width`, `--available-width` and
 `--available-height`, as a [Popover](./popover.mdx#styling)'s does, and the
@@ -362,7 +363,7 @@ same inline position styles, put back when it closes. Keep pointer events on
 the root: the pointer can move onto the tooltip and keep it open.
 
 ```css
-.uni-tooltip {
+[data-uni='tooltip'] {
   margin: 8px; /* the gap, and the room from the viewport's edges */
   padding: 0.25rem 0.5rem;
   border: 0;
@@ -374,11 +375,11 @@ the root: the pointer can move onto the tooltip and keep it open.
     opacity 150ms,
     translate 150ms;
 }
-.uni-tooltip:is([data-entering], [data-exiting]) {
+[data-uni='tooltip']:is([data-entering], [data-exiting]) {
   opacity: 0;
   translate: 0 2px;
 }
-.uni-tooltip[data-instant] {
+[data-uni='tooltip'][data-instant] {
   transition: none;
 }
 ```

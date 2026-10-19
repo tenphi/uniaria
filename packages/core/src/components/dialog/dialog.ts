@@ -65,6 +65,8 @@ function methodOf(form: HTMLFormElement, submitter: HTMLElement | null) {
 export const dialog = defineComponent({
   name: 'dialog',
   parts: ['trigger', 'root', 'title', 'description', 'close'],
+  // The trigger sits outside the dialog (root AGENTS.md → Part markers).
+  outsideParts: ['trigger'],
   // The trigger takes a tooltip (Tooltip spec, Resolved questions 2).
   links: [tooltipLink],
   // The only members of setup()'s result consumers may call (spec,

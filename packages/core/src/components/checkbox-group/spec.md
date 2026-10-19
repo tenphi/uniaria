@@ -250,10 +250,10 @@ function Option({ value, children }) {
 ```html
 <!-- Custom element -->
 <uni-checkbox-group name="notifications" required>
-  <div class="uni-checkbox-group">
+  <div data-uni="checkbox-group">
     <span data-element="Label">Notifications</span>
     <uni-checkbox value="email">
-      <label class="uni-checkbox">
+      <label data-uni="checkbox">
         <input data-element="Input" type="checkbox" checked />
         <span data-element="Label">Email</span>
       </label>

@@ -65,7 +65,7 @@ export function TermsCheckbox(props: {
 
 ```html
 <uni-checkbox id="terms" required>
-  <div class="uni-checkbox">
+  <div data-uni="checkbox">
     <label data-element="Wrapper">
       <input data-element="Input" type="checkbox" name="terms" />
       <span data-element="Indicator"></span>
@@ -129,7 +129,7 @@ return (
 
 ```html
 <uni-checkbox>
-  <div class="uni-checkbox">
+  <div data-uni="checkbox">
     <input data-element="Input" type="checkbox" name="newsletter" checked />
     <label data-element="Label">Subscribe to the newsletter</label>
     <p data-element="Description">One email a month.</p>
@@ -297,19 +297,19 @@ property holds only the value you set, not the current state. See
 Every part carries the state attributes, so the box, the label and the
 messages can be styled without reading state.
 
-| Attribute                                        | When                                                                     |
-| ------------------------------------------------ | ------------------------------------------------------------------------ |
-| `class="uni-checkbox"`                           | On the root, always.                                                     |
-| `data-scope="checkbox"`, `data-element="<Part>"` | On every other part, always.                                             |
-| `data-selected`                                  | The checkbox is selected.                                                |
-| `data-indeterminate`                             | `isIndeterminate` is true.                                               |
-| `data-hovered`                                   | A mouse or pen is over the wrapper (without one, the root) or the input. |
-| `data-focused`                                   | The input has focus.                                                     |
-| `data-focus-visible`                             | The input has focus from a keyboard or a screen reader.                  |
-| `data-disabled`                                  | The checkbox is disabled.                                                |
-| `data-readonly`                                  | The checkbox is read-only.                                               |
-| `data-invalid`                                   | The checkbox is invalid.                                                 |
-| `data-required`                                  | The checkbox is required.                                                |
+| Attribute               | When                                                                     |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `data-uni="checkbox"`   | On the root, always.                                                     |
+| `data-element="<Part>"` | On every other part, always.                                             |
+| `data-selected`         | The checkbox is selected.                                                |
+| `data-indeterminate`    | `isIndeterminate` is true.                                               |
+| `data-hovered`          | A mouse or pen is over the wrapper (without one, the root) or the input. |
+| `data-focused`          | The input has focus.                                                     |
+| `data-focus-visible`    | The input has focus from a keyboard or a screen reader.                  |
+| `data-disabled`         | The checkbox is disabled.                                                |
+| `data-readonly`         | The checkbox is read-only.                                               |
+| `data-invalid`          | The checkbox is invalid.                                                 |
+| `data-required`         | The checkbox is required.                                                |
 
 A checkbox can be both selected and indeterminate: put the dash's rules after
 the check's so the dash wins. State attributes are present or absent, never

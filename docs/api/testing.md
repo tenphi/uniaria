@@ -136,16 +136,16 @@ Each scenario receives:
 
 `Mounted` is what a scenario asserts on:
 
-| Member                                    | Description                                                                                                                                                                                              |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `container`                               | The element the adapter rendered into.                                                                                                                                                                   |
-| `part(name = 'root')`                     | The element of a part of the mounted component: the root by its `uni-<name>` class, any other part by `[data-scope][data-element]`. Throws unless exactly one matches, so a missing marker fails loudly. |
-| `parts(name)`                             | Every element of a part, for item parts.                                                                                                                                                                 |
-| `events`, `eventNames()`, `clearEvents()` | The recorded events, in order: `{ name, detail }`.                                                                                                                                                       |
-| `state()`                                 | What the definition's `expose()` returns now.                                                                                                                                                            |
-| `setProps(props)`                         | Merges new props, the way the adapter's consumers pass them; resolves once the DOM shows them.                                                                                                           |
-| `call(action)`                            | Calls one of the component's public [actions](./core.md#actions), such as `'open'`, the way the adapter's consumers do; resolves once the DOM shows the result.                                          |
-| `renderCount()`                           | How many times the framework rendered the owning component. `0` for custom elements.                                                                                                                     |
+| Member                                    | Description                                                                                                                                                                                                                                                     |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `container`                               | The element the adapter rendered into.                                                                                                                                                                                                                          |
+| `part(name = 'root')`                     | The element of a part of the mounted component, by `partSelector()`: the root by `data-uni`, a part outside the root by `data-uni-part`, any other part by `data-element` inside the root. Throws unless exactly one matches, so a missing marker fails loudly. |
+| `parts(name)`                             | Every element of a part, for item parts.                                                                                                                                                                                                                        |
+| `events`, `eventNames()`, `clearEvents()` | The recorded events, in order: `{ name, detail }`.                                                                                                                                                                                                              |
+| `state()`                                 | What the definition's `expose()` returns now.                                                                                                                                                                                                                   |
+| `setProps(props)`                         | Merges new props, the way the adapter's consumers pass them; resolves once the DOM shows them.                                                                                                                                                                  |
+| `call(action)`                            | Calls one of the component's public [actions](./core.md#actions), such as `'open'`, the way the adapter's consumers do; resolves once the DOM shows the result.                                                                                                 |
+| `renderCount()`                           | How many times the framework rendered the owning component. `0` for custom elements.                                                                                                                                                                            |
 
 The runner cleans up after every scenario: it releases held buttons, keys and
 fingers, unmounts, removes the container, blurs the focused element and empties
@@ -186,14 +186,18 @@ resolves, since scenarios assert right after an awaited input. The shared
 [binder](./dom.md#for-adapter-authors) writes synchronously after each flush,
 so an adapter built on it gets this for free.
 
-`renderTemplate(nodes, document, component, decorate?, host?, rowsIn?)` turns
-a template of `component` into real DOM, for adapters that render plain
-markup. It marks the parts as you would for the custom elements: the root
-with its `uni-<name>` class, the others with `data-element`. `host` creates
-the element for a nested component, and `rowsIn` places `rows()`.
-`templateParts(nodes)` lists a template's own part elements.
-`partSelector(component, part)` is a part's CSS selector, and
-`partName(element, component)` the part an element is, if any. `isNested` and
+`renderTemplate(nodes, document, component, options?)` turns a template of
+`component` into real DOM, for adapters that render plain markup. It marks
+the parts as you would for the custom elements: the root with `data-uni`, a
+part outside the root with `data-uni-part`, the others with `data-element`.
+Its options: `outsideParts(component)` names a component's parts outside its
+root (its definition's `outsideParts`), `host` creates the element for a
+nested component, `rowsIn` places `rows()`, and `decorate` adds attributes
+to part elements. `templateParts(nodes)` lists a template's own part
+elements. `partSelector(component, part)` is a part's CSS selector: inside
+the component's root, minus nested roots, or anywhere no root is around it,
+as in a component rendered without its root. `partName(element, component)`
+is the part an element is, if any. `isNested` and
 `isRows` tell node kinds apart.
 
 ### A minimal adapter
@@ -225,7 +229,12 @@ export const acmeElements: ConformanceAdapter = {
         if (event.target === host) record(name, (event as CustomEvent).detail);
       });
     }
-    host.append(renderTemplate(template, document, component));
+    const { outsideParts = [] } = host.instance.definition;
+    host.append(
+      renderTemplate(template, document, component, {
+        outsideParts: () => outsideParts,
+      }),
+    );
     container.append(host);
     return {
       async setProps(next) {

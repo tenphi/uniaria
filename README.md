@@ -3,8 +3,8 @@
 Framework-agnostic headless UI behavior. Each component's state, keyboard
 handling, focus management and ARIA are written once in plain TypeScript, then
 bound to React or to light-DOM custom elements by thin generic adapters.
-Styling stays with your design system: every part exposes `data-scope`,
-`data-part` and state attributes.
+Styling stays with your design system: every part carries a marker
+(`data-uni` on the root, `data-element` on the others) and state attributes.
 
 > **Status:** pre-alpha. Nothing is published yet.
 

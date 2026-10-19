@@ -9,8 +9,8 @@
  *
  * ```html
  * <uni-popover position-area="bottom span-right">
- *   <button data-element="Trigger">Size</button>
- *   <div class="uni-popover">
+ *   <button data-uni-part="popover-trigger">Size</button>
+ *   <div data-uni="popover">
  *     <div data-element="Arrow"></div>
  *     <label>Width <input /></label>
  *     <button data-element="Close">Apply</button>

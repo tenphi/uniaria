@@ -86,9 +86,11 @@ export interface Mounted<Props, State> {
   readonly container: HTMLElement;
   /**
    * The element of a part of the mounted component (`root` by default)
-   * inside the container: the root by its `uni-<component>` class, any other
-   * part by `[data-scope="<component>"][data-element="<Name>"]`. Throws when
-   * there is none or more than one, so a missing marker fails loudly.
+   * inside the container, found by `partSelector()`: the root by
+   * `data-uni="<component>"`, a part outside the root by
+   * `data-uni-part="<component>-<part>"`, any other part by its
+   * `data-element` inside the root. Throws when there is none or more than one, so a
+   * missing marker fails loudly.
    */
   part(name?: string): HTMLElement;
   parts(name: string): HTMLElement[];

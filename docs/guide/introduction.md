@@ -31,9 +31,10 @@ their accessibility drifts apart. With UniAria, a fix lands in one place.
 **Your markup, your CSS.** UniAria adds no elements to your markup, with two
 exceptions: a live region for announcements, and the options of Select's
 hidden native `<select>`. It writes attributes to the elements you mark as
-parts: ARIA attributes, `data-scope` and `data-element`, and state attributes
-such as `data-pressed` or `data-open`. Your CSS targets those and the root's
-`uni-<name>` class. See [Styling](./styling.md).
+parts: ARIA attributes, the part markers (`data-uni` on the root,
+`data-element` on the other parts), and state attributes such as
+`data-pressed` or `data-open`. Your CSS targets those. See
+[Styling](./styling.md).
 
 **No re-renders for internal state.** Hovering a button, pressing it, moving
 the highlight through a long list or opening a popover changes no React state

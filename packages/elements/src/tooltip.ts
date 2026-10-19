@@ -8,8 +8,8 @@
  *
  * ```html
  * <uni-tooltip position-area="top">
- *   <uni-button><button class="uni-button">Save</button></uni-button>
- *   <div class="uni-tooltip">
+ *   <uni-button><button data-uni="button">Save</button></uni-button>
+ *   <div data-uni="tooltip">
  *     Saves the file
  *     <div data-element="Arrow"></div>
  *   </div>

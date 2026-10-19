@@ -19,7 +19,7 @@ body {
    the root of a plain switch, and the wrapper of one with a description,
    which stays outside it. */
 label.uni-switch,
-[data-scope='switch'][data-element='Wrapper'] {
+[data-uni='switch'] [data-element='Wrapper'] {
   position: relative;
   display: flex;
   gap: 1rem;
@@ -27,21 +27,21 @@ label.uni-switch,
   justify-content: space-between;
   cursor: pointer;
 }
-.uni-switch [data-element='Input'] {
+[data-uni='switch'] [data-element='Input'] {
   position: absolute;
   inset: 0;
   margin: 0;
   opacity: 0;
   cursor: inherit;
 }
-[data-scope='switch'][data-element='Description'] {
+[data-uni='switch'] [data-element='Description'] {
   margin: 0.125rem 0 0;
   color: GrayText;
   font-size: 0.875rem;
 }
 
 /* The track; the thumb is your own markup inside it. */
-.uni-switch [data-element='Indicator'] {
+[data-uni='switch'] [data-element='Indicator'] {
   display: flex;
   flex: none;
   width: 2.25rem;
@@ -52,33 +52,33 @@ label.uni-switch,
   background: color-mix(in srgb, CanvasText 25%, Canvas);
   transition: background-color 120ms;
 }
-.uni-switch [data-element='Indicator'][data-hovered] {
+[data-uni='switch'] [data-element='Indicator'][data-hovered] {
   background: color-mix(in srgb, CanvasText 35%, Canvas);
 }
-.uni-switch [data-element='Indicator'][data-selected] {
+[data-uni='switch'] [data-element='Indicator'][data-selected] {
   background: CanvasText;
 }
-.uni-switch [data-element='Indicator'][data-focus-visible] {
+[data-uni='switch'] [data-element='Indicator'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-switch [data-element='Thumb'] {
+[data-uni='switch'] [data-element='Thumb'] {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
   background: Canvas;
   transition: translate 120ms;
 }
-.uni-switch [data-selected] > [data-element='Thumb'] {
+[data-uni='switch'] [data-selected] > [data-element='Thumb'] {
   translate: 1rem 0;
 }
-.uni-switch[data-disabled] {
+[data-uni='switch'][data-disabled] {
   color: GrayText;
 }
 label.uni-switch[data-disabled],
-[data-scope='switch'][data-element='Wrapper'][data-disabled] {
+[data-uni='switch'] [data-element='Wrapper'][data-disabled] {
   cursor: not-allowed;
 }
-.uni-switch [data-element='Indicator'][data-disabled] {
+[data-uni='switch'] [data-element='Indicator'][data-disabled] {
   opacity: 0.5;
 }

@@ -39,10 +39,7 @@ export function WifiSwitch() {
     onSelectedChange: (isSelected) => console.log(isSelected),
   });
   return (
-    <label
-      {...wifi.parts.root}
-      className={`${wifi.parts.root.className} switch`}
-    >
+    <label {...wifi.parts.root} className="switch">
       <input {...wifi.parts.input} name="wifi" />
       <span {...wifi.parts.indicator} />
       <span {...wifi.parts.label}>Wi-Fi</span>
@@ -55,8 +52,8 @@ export function WifiSwitch() {
 definition: values, `default<Name>` for uncontrolled values, `on<Event>`
 callbacks, an `owner` for components that have one, and link props such as
 `tooltip`. Attributes you own (`id`, `name`, `aria-label`) go in the JSX,
-next to the spread. `parts.root` has a `className`, the root's `uni-<name>`
-class: keep it when you add classes of your own, as above.
+next to the spread, and so does `className`: UniAria marks parts with
+attributes and never sets a class.
 
 - **Every render** stores the new props without notifying, and syncs them
   after commit in a layout effect, so watchers run once per change and React
@@ -116,12 +113,10 @@ async function save(draft: string) {
 - **Handlers** are stable: each keeps its identity across renders and calls
   the handler from the latest state with `event.nativeEvent`. Definitions
   never see React's synthetic events.
-- **The root's class.** `parts.root.className` is `uni-<name>`
-  (`uni-switch`), the class your CSS and Tasty select the root by. A
-  `className` after the spread replaces it, so join yours to it. In
-  development, UniAria warns when the rendered root lacks it. The other
-  parts get `data-scope` and `data-element` instead. See
-  [Styling](../guide/styling.md#parts).
+- **Part markers** are attributes in the part props: `data-uni` on the
+  root (`data-uni="switch"`), `data-uni-part` on a part outside it, and
+  `data-element` on the other parts, which your CSS and Tasty select parts
+  by. See [Styling](../guide/styling.md#parts).
 - **Your own handlers** go next to the spread as usual. If you pass the same
   prop (`onKeyDown`) after the spread, it replaces UniAria's; call both
   yourself if you need both.
@@ -277,9 +272,9 @@ React checkbox group's part finds that group. See
 
 ## Attributes UniAria owns
 
-UniAria owns every attribute a part's props contain: ARIA state, `data-scope`,
-`data-element`, state attributes such as `data-pressed`, and the references
-it writes, plus the root's `uni-<name>` class. The rest of the element, other
+UniAria owns every attribute a part's props contain: ARIA state, the part
+markers (`data-uni`, `data-uni-part`, `data-element`), state attributes such
+as `data-pressed`, and the references it writes. The rest of the element,
 classes and a part's `id` included, is yours: an `id` after the spread is
 kept, and the references follow it. An option's `id`, made from its key, is
 UniAria's.
@@ -308,8 +303,7 @@ unmount.
 ## Server rendering
 
 `useComponent` renders complete HTML on the server: ids, ARIA attributes,
-state attributes, the root's `uni-<name>` class, `data-scope` and
-`data-element`, starting values of inputs and checkboxes, and state you
+state attributes, the part markers, starting values of inputs and checkboxes, and state you
 select with `useComponentState`. Owners found
 through `OwnerProvider` are part of it. Effects never run on the server, so
 no listener, focus change or measurement happens there, and layout effects

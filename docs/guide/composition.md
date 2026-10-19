@@ -112,10 +112,10 @@ tooltip's root by its id, yours if you give it one:
 
 ```html
 <uni-tooltip id="save-hint">
-  <div class="uni-tooltip">Saves the file</div>
+  <div data-uni="tooltip">Saves the file</div>
 </uni-tooltip>
 
 <uni-button tooltip="save-hint">
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 ```

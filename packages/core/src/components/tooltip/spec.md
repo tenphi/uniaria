@@ -70,6 +70,10 @@ Render the root always; it is hidden while closed. Render it next to the
 trigger: inside a modal Dialog or a modal Popover it must be inside their
 element, or it is inert or hidden from assistive technology.
 
+The trigger and the anchor sit outside the tooltip, so they are marked
+`data-uni-part="tooltip-trigger"` and `data-uni-part="tooltip-anchor"` rather
+than `data-element` (root AGENTS.md → Part markers).
+
 A part keeps an `id` the consumer gives its element, in both adapters, and
 every reference to the part follows it; UniAria writes an `id` only on a
 part that has none (root AGENTS.md → DOM, lifecycle and SSR).
@@ -277,16 +281,17 @@ CSS Anchor Positioning (owner, 2026-10-16; Resolved questions 1):
 UniAria is not a styling library: the consumer's CSS comes separately and binds
 to these tokens, so it can change with state. UniAria sets no look.
 
-| Token                                                         | On                                 | Meaning                                                                      |
-| ------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| The `uni-tooltip` class                                       | root                               | The root part.                                                               |
-| `data-scope="tooltip"`, `data-element`                        | its other parts                    | Which part an element is.                                                    |
-| `data-open`, `data-entering`, `data-exiting`                  | root, arrow                        | Open; the first frame after opening; closing until its animations end.       |
-| `data-instant`                                                | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
-| `data-placement`                                              | root, arrow                        | The side it was placed on, after fallbacks.                                  |
-| `--anchor-width`                                              | root                               | The anchor's width, in pixels.                                               |
-| `--available-width`, `--available-height`                     | root                               | The most room it could take, in pixels, on the larger side when it may flip. |
-| `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement` | public state (`useComponentState`) | The same, for a framework's own bindings.                                    |
+| Token                                                               | On                                 | Meaning                                                                      |
+| ------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| `data-uni="tooltip"`                                                | root                               | The root part.                                                               |
+| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor                    | Which part an element is: they sit outside the root.                         |
+| `data-element`                                                      | its other parts                    | Which part an element is.                                                    |
+| `data-open`, `data-entering`, `data-exiting`                        | root, arrow                        | Open; the first frame after opening; closing until its animations end.       |
+| `data-instant`                                                      | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
+| `data-placement`                                                    | root, arrow                        | The side it was placed on, after fallbacks.                                  |
+| `--anchor-width`                                                    | root                               | The anchor's width, in pixels.                                               |
+| `--available-width`, `--available-height`                           | root                               | The most room it could take, in pixels, on the larger side when it may flip. |
+| `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement`       | public state (`useComponentState`) | The same, for a framework's own bindings.                                    |
 
 The variables are written in both modes. CSS's own `anchor-size()` and
 percentage sizes against the area work only in CSS mode.
@@ -331,8 +336,8 @@ return (
 ```html
 <!-- Custom element: a UniAria component inside links itself -->
 <uni-tooltip position-area="top">
-  <uni-button><button class="uni-button">Save</button></uni-button>
-  <div class="uni-tooltip">
+  <uni-button><button data-uni="button">Save</button></uni-button>
+  <div data-uni="tooltip">
     Saves the file
     <div data-element="Arrow"></div>
   </div>
@@ -340,8 +345,8 @@ return (
 
 <!-- A plain element as the trigger -->
 <uni-tooltip>
-  <button data-element="Trigger">Save</button>
-  <div class="uni-tooltip">Saves the file</div>
+  <button data-uni-part="tooltip-trigger">Save</button>
+  <div data-uni="tooltip">Saves the file</div>
 </uni-tooltip>
 ```
 

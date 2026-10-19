@@ -64,21 +64,22 @@ export const disclosure = defineComponent({
 
 ### Config
 
-| Field         | Type                                | Description                                                                                                                                                                                                                |
-| ------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`        | `string`                            | Required. Kebab case (`checkbox-group`). The root part gets the class `uni-<name>` and every other part `data-scope="<name>"`; the custom element is named after it (`<uni-checkbox-group>`).                              |
-| `parts`       | `readonly string[]`                 | Required. The named parts, in camelCase. `connect()` returns props for each one; the consumer renders the ones it needs. Each part but `root` gets its name capitalized as `data-element` (`hiddenInput` → `HiddenInput`). |
-| `props`       | `Record<string, prop \| bindable>`  | Required. The [props schema](#props-schema): the one source for React props, element attributes and properties.                                                                                                            |
-| `events`      | `Record<string, event>`             | What the component reports, by camelCase name. See [`event`](#event).                                                                                                                                                      |
-| `setup`       | `(ctx) => Api`                      | Required. Runs once per instance with the [setup context](#setup-context). Returns the definition's internal API: the functions and readers its `expose()` and `connect()` use.                                            |
-| `expose`      | `(view) => State`                   | Required. The public state: what selectors and `getState()` read. See [expose and connect](#expose-and-connect).                                                                                                           |
-| `connect`     | `(view) => Record<Part, PartProps>` | Required. [Part props](#part-props) for every part, from current state.                                                                                                                                                    |
-| `actions`     | `readonly string[]`                 | Members of `setup()`'s result that consumers may call, such as an overlay's `open` and `close`. See [actions](#actions).                                                                                                   |
-| `itemParts`   | `readonly string[]`                 | Parts repeated once per item of a collection, keyed by the item's key (a Listbox's `option`). Needs `connectItem`. See [item parts](#item-parts).                                                                          |
-| `connectItem` | `(view, part, key) => PartProps`    | Part props for one item part of one item.                                                                                                                                                                                  |
-| `owner`       | `{ definition, attribute }`         | The component this one works inside, such as a checkbox's group. See [owners and links](#owners-and-links).                                                                                                                |
-| `links`       | `readonly LinkKey[]`                | Links this component takes, each through a prop named after the key, such as `tooltip`.                                                                                                                                    |
-| `provides`    | `readonly LinkKey[]`                | Links this component answers, such as Tooltip's `tooltipLink`.                                                                                                                                                             |
+| Field          | Type                                | Description                                                                                                                                                                                                                                   |
+| -------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`         | `string`                            | Required. Kebab case (`checkbox-group`). The root part gets `data-uni="<name>"`, and each of `outsideParts` `data-uni-part="<name>-<part>"`; the custom element is named after it (`<uni-checkbox-group>`).                                   |
+| `parts`        | `readonly string[]`                 | Required. The named parts, in camelCase. `connect()` returns props for each one; the consumer renders the ones it needs. Each part but `root` and `outsideParts` gets its name capitalized as `data-element` (`hiddenInput` → `HiddenInput`). |
+| `outsideParts` | `readonly string[]`                 | Parts rendered outside the root, as an overlay's trigger and anchor are: each is marked `data-uni-part="<name>-<part>"` (`popover-trigger`), so styles reach it without the root.                                                             |
+| `props`        | `Record<string, prop \| bindable>`  | Required. The [props schema](#props-schema): the one source for React props, element attributes and properties.                                                                                                                               |
+| `events`       | `Record<string, event>`             | What the component reports, by camelCase name. See [`event`](#event).                                                                                                                                                                         |
+| `setup`        | `(ctx) => Api`                      | Required. Runs once per instance with the [setup context](#setup-context). Returns the definition's internal API: the functions and readers its `expose()` and `connect()` use.                                                               |
+| `expose`       | `(view) => State`                   | Required. The public state: what selectors and `getState()` read. See [expose and connect](#expose-and-connect).                                                                                                                              |
+| `connect`      | `(view) => Record<Part, PartProps>` | Required. [Part props](#part-props) for every part, from current state.                                                                                                                                                                       |
+| `actions`      | `readonly string[]`                 | Members of `setup()`'s result that consumers may call, such as an overlay's `open` and `close`. See [actions](#actions).                                                                                                                      |
+| `itemParts`    | `readonly string[]`                 | Parts repeated once per item of a collection, keyed by the item's key (a Listbox's `option`). Needs `connectItem`. See [item parts](#item-parts).                                                                                             |
+| `connectItem`  | `(view, part, key) => PartProps`    | Part props for one item part of one item.                                                                                                                                                                                                     |
+| `owner`        | `{ definition, attribute }`         | The component this one works inside, such as a checkbox's group. See [owners and links](#owners-and-links).                                                                                                                                   |
+| `links`        | `readonly LinkKey[]`                | Links this component takes, each through a prop named after the key, such as `tooltip`.                                                                                                                                                       |
+| `provides`     | `readonly LinkKey[]`                | Links this component answers, such as Tooltip's `tooltipLink`.                                                                                                                                                                                |
 
 `defineComponent` throws when:
 
@@ -86,7 +87,8 @@ export const disclosure = defineComponent({
 - two of the names it derives collide: a prop, a bindable's `default<Name>`
   prop, an `on<Event>` callback, `owner`, a link's prop, or an action;
 - `itemParts` is set without `connectItem`, or a name is both a part and an
-  item part.
+  item part;
+- an outside part is `root` or not one of `parts`.
 
 The definition it returns is the config, with `events` defaulted to `{}`,
 plus `schema`: every prop resolved to its attribute, type, default prop and
@@ -419,8 +421,9 @@ until state or props change.
 **`connect(view)`** returns part props for every part in `parts`. It is a
 pure function of current state, re-run after every flush, so keep it cheap.
 The instance caches its result until state or props change, and adds the
-part markers: `className: 'uni-<name>'` to the root part, and `data-scope`
-and `data-element` to every other part.
+part markers to `attrs` (`partMarker()`): `data-uni` to the root,
+`data-uni-part` to each outside part, and `data-element` to every other
+part.
 
 ### Part props
 
@@ -430,7 +433,6 @@ interface PartProps {
   on?: Record<string, (event: never) => void>;
   style?: Record<string, string | undefined>;
   properties?: Record<string, string | number | boolean | undefined>;
-  className?: string;
 }
 ```
 
@@ -440,13 +442,12 @@ interface PartProps {
 | `on`         | Handlers by DOM event name: `click`, `keydown`, `focusin`, `focusout`, `input`. Each receives the native event, never a framework's, and runs in a batch. Use `focusin` and `focusout` for focus entering or leaving a subtree.                                                              |
 | `style`      | CSS custom properties (`--anchor-width`), and the kebab-case properties a definition lays its parts out with (a virtualized row's `translate`). `undefined` removes one.                                                                                                                     |
 | `properties` | Live DOM properties no attribute holds once the user acts: an input's `value`, a checkbox's `checked` and `indeterminate`. Each is set only when it differs from the element; `undefined` leaves it alone. React renders `value` and `checked` once, as `defaultValue` and `defaultChecked`. |
-| `className`  | The root part's class, `uni-<name>`, added by the instance; a definition doesn't return it. React renders it as `className`. The custom element never writes `class`: the class comes from the markup, where the element finds the root by it.                                               |
 
 The runtime types handlers as `(event: never) => void` because it has no DOM
 types. Write definitions with `DomPartProps` from
 [`@uniaria/core/dom`](./dom.md#parts-and-effects), which types each handler
-with its event. The consumer owns everything not in `attrs`: content, classes
-other than the root's `uni-<name>`, and other attributes.
+with its event. The consumer owns everything not in `attrs`: content, `class`, and other
+attributes.
 
 ### Item parts
 
@@ -607,7 +608,8 @@ Each component subpath also exports `<Name>Props` and `<Name>State`, which are
 ### For adapter authors
 
 The entry also exports what the two adapters are built from:
-`createStore` (the per-instance store), the naming helpers `callbackName`
+`createStore` (the per-instance store), `partMarker(name, part, isOutside)`
+(the attribute and value that mark a part), the naming helpers `callbackName`
 (`pressStart` → `onPressStart`), `domEventName` (`pressStart` →
 `pressstart`), `kebabCase` and `capitalize`, and `answers` and
 `isOwnerDefinition`, which tell whether an instance answers an owner or link

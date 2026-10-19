@@ -270,7 +270,7 @@ return (
 ```html
 <!-- Custom element -->
 <uni-checkbox required>
-  <div class="uni-checkbox">
+  <div data-uni="checkbox">
     <label data-element="Wrapper">
       <input data-element="Input" type="checkbox" name="terms" checked />
       <span data-element="Indicator"></span>
@@ -282,7 +282,7 @@ return (
 
 <!-- A plain checkbox: the label is the root, no wrapper. -->
 <uni-checkbox>
-  <label class="uni-checkbox">
+  <label data-uni="checkbox">
     <input data-element="Input" type="checkbox" name="remember" />
     <span data-element="Indicator"></span>
     <span data-element="Label">Remember me</span>

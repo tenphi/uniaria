@@ -221,7 +221,7 @@ return (
 ```html
 <!-- Custom element -->
 <uni-text-field required>
-  <div class="uni-text-field">
+  <div data-uni="text-field">
     <label data-element="Label">Email</label>
     <div data-element="Wrapper">
       <input

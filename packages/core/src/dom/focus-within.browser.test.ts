@@ -24,12 +24,12 @@ const group = defineComponent({
 function mount(props: { isDisabled?: boolean } = {}) {
   const host = document.createElement('div');
   host.innerHTML = `
-    <div class="uni-group" tabindex="-1">
+    <div data-uni="group" tabindex="-1">
       <button id="one">One</button><button id="two">Two</button>
     </div>
     <button id="outside">Outside</button>`;
   document.body.append(host);
-  const root = host.querySelector<HTMLElement>('.uni-group')!;
+  const root = host.querySelector<HTMLElement>('[data-uni="group"]')!;
   const instance = createInstance(group, { props });
   instance.attach('root', root);
   instance.start();

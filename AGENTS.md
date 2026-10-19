@@ -158,7 +158,8 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   unmount), the binder removes the attributes and styles it wrote there that
   still hold what it wrote, unless another part bound to the element writes
   them too. It never removes what it didn't write: the consumer's markers
-  (`data-element`, `data-key`, the root's class), the consumer's id, and
+  (`data-uni`, `data-uni-part`, `data-element`, `data-key`), the consumer's
+  id, and
   what React rendered from the part props.
 - Every render reads current state, so a parent re-render writes the values
   the binder already set.
@@ -310,7 +311,6 @@ type PartProps = {
   on?: Partial<Record<keyof HTMLElementEventMap, (event: Event) => void>>; // DOM event names
   style?: Record<string, string | undefined>; // CSS custom properties, and layout a definition owns (virtual rows)
   properties?: Record<string, string | number | boolean | undefined>; // live DOM properties
-  className?: string; // the root's `uni-<name>` (Part markers)
 };
 ```
 
@@ -337,31 +337,39 @@ handler with its event.
 ### Part markers
 
 Decided by the owner on 2026-10-19, so Tasty's sub-elements and plain CSS
-target parts the same way in every adapter (`runtime/define.ts`:
-`rootClass()`, `partElement()`):
+target parts the same way in every adapter. They are attributes (owner,
+2026-10-19), so React keeps them through any `className` and CSS tells a
+nested root apart exactly (`runtime/define.ts`: `partMarker()`):
 
-- **The root** (the part named `root`) carries the class `uni-<name>`, the
-  definition's name as in its element tag (`uni-checkbox`), and no
-  `data-scope` or `data-element`. React renders it in `className`; a custom
-  element finds its root by it, so the consumer's markup has it. The binder
-  never writes `class`: UniAria owns that one class and the consumer the
-  rest, and React warns in development when a rendered root lacks it. In
-  Tasty, the root is the component itself.
-- **Every other part**, item parts included, carries `data-scope="<name>"`
-  and `data-element` with the part's name capitalized (`trigger` →
-  `Trigger`), which is how Tasty names a sub-element. Custom elements find
-  these parts by `data-element`. Part names in code don't change
-  (`parts.trigger`).
+- **The root** (the part named `root`) carries `data-uni="<name>"`, the
+  definition's name as in its element tag (`data-uni="checkbox"`), and no
+  `data-element`. In Tasty, the root is the component itself.
+- **A part outside the root**, one of the definition's `outsideParts` (an
+  overlay's trigger and anchor), carries `data-uni-part="<name>-<part>"`
+  with the part's name in kebab case (`data-uni-part="popover-trigger"`), so
+  styles reach it without the root.
+- **Every other part**, item parts included, carries `data-element` with the
+  part's name capitalized (`trigger` → `Trigger`), which is how Tasty names
+  a sub-element. Part names in code don't change (`parts.trigger`).
+- Markers are attributes in the part props, so React spreads them with the
+  rest and warns when the JSX replaces one. A custom element finds its parts
+  by them, so the consumer's markup has them. Nothing writes `class`: it is
+  the consumer's. There is no `data-scope` (dropped by the owner on
+  2026-10-19).
 - **The root is the outermost element** of a component, around every other
-  part (owner, 2026-10-19), so a Tasty component or a `.uni-<name>` style
-  reaches them all. An inner box is a `wrapper` part: TextField's and
+  part (owner, 2026-10-19), so a Tasty component or a `[data-uni="<name>"]`
+  style reaches them all. An inner box is a `wrapper` part: TextField's and
   NumberField's box and the `label` area of Checkbox, Switch and Radio (the
   hovered area; without a wrapper, the root is). Groups keep their label,
   description and error inside the root. Overlays are the exception: the
-  panel is the root, and the trigger sits outside it.
+  panel is the root, and the trigger and the anchor sit outside it.
+- **Styles need the root** (owner, 2026-10-19). Most roots are optional, but
+  nothing else ties a part to its component in CSS, so a root-less
+  component gets no component styles. The testing helpers count a part no
+  root is around as the component's.
 - A composed definition's parts take the outer definition's markers:
   Select's panel is `data-element="Popover"`, ToggleButton's root is
-  `uni-toggle-button` only.
+  `data-uni="toggle-button"` only.
 
 ### DOM, lifecycle and SSR
 
@@ -467,8 +475,8 @@ target parts the same way in every adapter (`runtime/define.ts`:
   the one exception is the live announcer, which an open modal dialog hosts
   because the page outside it is inert.
 - Attribute ownership is per part: the element owns ARIA state, `data-state`
-  and the part markers; the consumer owns content, classes other than the
-  root's `uni-<name>`, and every other attribute, `id` included: UniAria
+  and the part markers; the consumer owns content, `class` and every other
+  attribute, `id` included: UniAria
   writes an id only on a part that has none.
   A part can be declared element-owned: the consumer leaves it empty and
   UniAria writes its content, in both adapters. Select's displayed value
@@ -637,8 +645,9 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   screen reader, `listen()` to hear what live regions announce, and
   `screenReader` for a real one in scenarios that declare
   `needs: ['screenReader']`. `mounted.part(name)` finds the part by its
-  markers (`partSelector()`: the root by its class, others by `data-scope`
-  and `data-element`) and fails loudly unless exactly one matches.
+  markers (`partSelector()`: the root by `data-uni`, a part outside it by
+  `data-uni-part`, others by `data-element` inside the root) and fails
+  loudly unless exactly one matches.
 - **Phases.** A scenario declares the roadmap phase whose features it needs
   (`{ phase: 2 }`); an adapter run declares the phase it has reached
   (`runConformance(adapter, suites, { phase: 1 })`) and later scenarios are

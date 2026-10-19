@@ -65,42 +65,37 @@ function Docs() {
 describe('useComponent', () => {
   it('renders part props for the first paint', () => {
     const element = render(<Save isDisabled />).querySelector('button')!;
-    expect(element.className).toBe('uni-button');
-    expect(element.hasAttribute('data-scope')).toBe(false);
+    expect(element.getAttribute('data-uni')).toBe('button');
+    expect(element.hasAttribute('class')).toBe(false);
     expect(element.hasAttribute('data-element')).toBe(false);
     expect(element.getAttribute('type')).toBe('button');
     expect(element.disabled).toBe(true);
     expect(element.hasAttribute('data-disabled')).toBe(true);
   });
 
-  it('puts uni-<name> in the root className, which a consumer class merges with', () => {
+  it('marks the root with data-uni, beside any className the consumer passes', () => {
     const warn = vi.spyOn(console, 'warn');
-    const classNames: (string | undefined)[] = [];
     function Primary() {
       const ui = useComponent(button, {});
-      classNames.push(ui.parts.root.className);
       return (
-        <button
-          {...ui.parts.root}
-          className={`${ui.parts.root.className} mine`}
-        >
+        <button {...ui.parts.root} className="mine">
           Save
         </button>
       );
     }
     const element = render(<Primary />).querySelector('button')!;
-    expect(classNames.at(-1)).toBe('uni-button');
-    expect(element.className).toBe('uni-button mine');
+    expect(element.getAttribute('data-uni')).toBe('button');
+    expect(element.className).toBe('mine');
     // The binder never writes `class`, so state changes leave it as React
     // rendered it.
     element.focus();
     expect(element.hasAttribute('data-focused')).toBe(true);
-    expect(element.className).toBe('uni-button mine');
+    expect(element.className).toBe('mine');
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 
-  it('marks other parts with data-scope and data-element, and no class', () => {
+  it('marks other parts with data-element, and no class', () => {
     let label: Record<string, unknown> = {};
     function Name() {
       const ui = useComponent(field, {});
@@ -113,15 +108,47 @@ describe('useComponent', () => {
       );
     }
     const element = render(<Name />);
-    expect(label.className).toBeUndefined();
+    expect(label['data-uni']).toBeUndefined();
     const control = element.querySelector('input')!;
-    expect(control.getAttribute('data-scope')).toBe('field');
     expect(control.getAttribute('data-element')).toBe('Control');
     expect(control.hasAttribute('class')).toBe(false);
     expect(element.querySelector('label')!.getAttribute('data-element')).toBe(
       'Label',
     );
-    expect(element.querySelector('.uni-field')).toBe(element.firstChild);
+    expect(element.querySelector('[data-uni="field"]')).toBe(
+      element.firstChild,
+    );
+  });
+
+  it('marks a part outside the root with data-uni-part', () => {
+    const warn = vi.spyOn(console, 'warn');
+    const overlay = defineComponent({
+      name: 'test-overlay',
+      parts: ['trigger', 'root'],
+      outsideParts: ['trigger'],
+      props: {},
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({
+        trigger: { attrs: { 'aria-haspopup': 'true' } },
+        root: { attrs: {} },
+      }),
+    });
+    function Overlay() {
+      const ui = useComponent(overlay, {});
+      return (
+        <>
+          <button {...ui.parts.trigger}>Open</button>
+          <div {...ui.parts.root} />
+        </>
+      );
+    }
+    const trigger = render(<Overlay />).querySelector('button')!;
+    expect(trigger.getAttribute('data-uni-part')).toBe('test-overlay-trigger');
+    expect(trigger.hasAttribute('data-element')).toBe(false);
+    expect(trigger.getAttribute('aria-haspopup')).toBe('true');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('keeps handler identity across renders', () => {
@@ -256,12 +283,12 @@ describe('development warnings', () => {
     );
   });
 
-  it('warns when the rendered root lacks its uni-<name> class', () => {
+  it('warns when the JSX replaces the data-uni of the root', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     function Replaced() {
       const ui = useComponent(button, {});
       return (
-        <button {...ui.parts.root} className="mine">
+        <button {...ui.parts.root} data-uni="mine">
           Save
         </button>
       );
@@ -269,13 +296,12 @@ describe('development warnings', () => {
     const element = render(<Replaced />).querySelector('button')!;
     const messages = warn.mock.calls.map(([message]) => String(message));
     warn.mockRestore();
-    expect(element.className).toBe('mine');
+    expect(element.getAttribute('data-uni')).toBe('button');
     expect(
-      messages.filter((message) => message.includes('"uni-button" class')),
+      messages.filter((message) =>
+        message.includes('"data-uni" on the root part'),
+      ),
     ).toHaveLength(1);
-    expect(
-      messages.some((message) => message.includes('parts.root.className')),
-    ).toBe(true);
   });
 
   it('warns when the root tag and elementType differ', () => {
@@ -669,7 +695,7 @@ describe('item parts', () => {
   it('renders item props, and links item parts once they attach', () => {
     const warn = vi.spyOn(console, 'warn');
     const element = render(<Rows />);
-    expect(row(element, 'a').getAttribute('data-scope')).toBe('rows');
+    expect(row(element, 'a').getAttribute('role')).toBe('option');
     expect(row(element, 'a').querySelector('span')!.dataset.element).toBe(
       'RowLabel',
     );

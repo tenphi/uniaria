@@ -24,18 +24,18 @@ button {
   font: inherit;
   cursor: pointer;
 }
-[data-scope='popover'][data-hovered] {
+button[data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-[data-scope='popover'][data-element='Trigger'][data-open] {
+[data-uni-part='popover-trigger'][data-open] {
   background: color-mix(in srgb, CanvasText 12%, Canvas);
 }
-[data-scope='popover'][data-focus-visible] {
+button[data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
 
-.uni-popover {
+[data-uni='popover'] {
   --line: color-mix(in srgb, CanvasText 20%, Canvas);
   /* The gap to the trigger: UniAria reads it and flips it with the side. */
   margin: 12px 0;
@@ -49,17 +49,17 @@ button {
   outline: none;
   transition: opacity 120ms;
 }
-.uni-popover:is([data-entering], [data-exiting]) {
+[data-uni='popover']:is([data-entering], [data-exiting]) {
   opacity: 0;
 }
 
 /* UniAria sets the arrow's offset along the edge; CSS puts it on the side. */
-.uni-popover [data-element='Arrow'] {
+[data-uni='popover'] [data-element='Arrow'] {
   position: absolute;
   width: 14px;
   height: 14px;
 }
-.uni-popover [data-element='Arrow']::before {
+[data-uni='popover'] [data-element='Arrow']::before {
   content: '';
   position: absolute;
   inset: 2px;
@@ -90,7 +90,7 @@ button {
   rotate: 135deg;
 }
 
-.uni-popover [data-element='Title'] {
+[data-uni='popover'] [data-element='Title'] {
   margin: 0 0 0.5rem;
   font-size: 1rem;
 }

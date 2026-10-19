@@ -89,9 +89,8 @@ custom elements, the consumer's `data-key` on the element):
 | group             | any; usually `div`         | `role="group"`, `aria-labelledby`, state attributes                                                                          | One per item with children (a section). Holds its label and its options. In a `ul`, the group's own list needs `role="presentation"`, so `div`s are easier. |
 | groupLabel        | any, first in the group    | `role="presentation"`, `id`                                                                                                  | Names the group. `presentation` because a listbox may not contain headings (React Aria, the APG's grouped example).                                         |
 
-The root carries the `uni-listbox` class; every other part, item parts
-included, carries `data-scope="listbox"` and `data-element`, the part name
-capitalized (`List`, `Option`, `GroupLabel`). UniAria writes nothing on an
+The root carries `data-uni="listbox"`; every other part, item parts
+included, carries `data-element`, the part name capitalized (`List`, `Option`, `GroupLabel`). UniAria writes nothing on an
 item part the consumer didn't render, and item ids are made from the list's
 id and the key (Item parts).
 

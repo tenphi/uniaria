@@ -76,6 +76,10 @@ the first frame after opening, `data-exiting` while closing, as Dialog.
 Render the root always; it is hidden while closed. Place it right after the
 trigger in the DOM when you can: older browsers order Tab by the DOM (Focus).
 
+The trigger and the anchor sit outside the popover, so they are marked
+`data-uni-part="popover-trigger"` and `data-uni-part="popover-anchor"` rather
+than `data-element` (root AGENTS.md → Part markers).
+
 A part keeps an `id` the consumer gives its element, in both adapters, and
 every reference to the part follows it; UniAria writes an `id` only on a
 part that has none (root AGENTS.md → DOM, lifecycle and SSR).
@@ -303,8 +307,9 @@ closes. Everything else on the root is the consumer's.
 
 | Token                                                                                          | On                                 | Meaning                                                                |
 | ---------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| The `uni-popover` class                                                                        | root                               | The root part.                                                         |
-| `data-scope="popover"`, `data-element`                                                         | its other parts                    | Which part an element is.                                              |
+| `data-uni="popover"`                                                                           | root                               | The root part.                                                         |
+| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                            | trigger, anchor                    | Which part an element is: they sit outside the root.                   |
+| `data-element`                                                                                 | its other parts                    | Which part an element is.                                              |
 | `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first frame after opening; closing until its animations end. |
 | `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                            |
 | Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                             |
@@ -356,8 +361,8 @@ return (
 ```html
 <!-- Custom element -->
 <uni-popover position-area="bottom span-right">
-  <button data-element="Trigger">Size</button>
-  <div class="uni-popover">
+  <button data-uni-part="popover-trigger">Size</button>
+  <div data-uni="popover">
     <div data-element="Arrow"></div>
     <label>Width <input /></label>
     <button data-element="Close">Apply</button>

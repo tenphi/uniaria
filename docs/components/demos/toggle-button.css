@@ -29,7 +29,7 @@ body {
   text-decoration: underline;
 }
 
-.uni-toggle-button {
+[data-uni='toggle-button'] {
   padding: 0.4rem 0.9rem;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
   border-radius: 0.5rem;
@@ -42,25 +42,25 @@ body {
     transform 80ms,
     background-color 80ms;
 }
-.uni-toggle-button[data-hovered] {
+[data-uni='toggle-button'][data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-.uni-toggle-button[data-selected] {
+[data-uni='toggle-button'][data-selected] {
   border-color: CanvasText;
   background: CanvasText;
   color: Canvas;
 }
-.uni-toggle-button[data-selected][data-hovered] {
+[data-uni='toggle-button'][data-selected][data-hovered] {
   background: color-mix(in srgb, CanvasText 85%, Canvas);
 }
-.uni-toggle-button[data-pressed] {
+[data-uni='toggle-button'][data-pressed] {
   transform: scale(0.97);
 }
-.uni-toggle-button[data-focus-visible] {
+[data-uni='toggle-button'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-toggle-button[data-disabled] {
+[data-uni='toggle-button'][data-disabled] {
   opacity: 0.5;
   cursor: not-allowed;
 }

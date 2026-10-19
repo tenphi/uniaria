@@ -12,7 +12,7 @@ HTML.
 
 ```html
 <uni-switch default-selected>
-  <label class="uni-switch">
+  <label data-uni="switch">
     <input data-element="Input" type="checkbox" name="wifi" />
     <span data-element="Indicator"></span>
     <span data-element="Label">Wi-Fi</span>
@@ -197,9 +197,10 @@ instance.
 
 ## Parts
 
-Mark the root part with the class `uni-<name>` (`uni-checkbox`), and every
-other part with `data-element`, its name capitalized (`Input`,
-`HiddenSelect`). The element finds the first element for each part inside it,
+Mark the root part with `data-uni="<name>"` (`data-uni="checkbox"`), a part
+outside the root with `data-uni-part="<name>-<part>"` (an overlay's
+`data-uni-part="popover-trigger"`), and every other part with
+`data-element`, its name capitalized (`Input`, `HiddenSelect`). The element finds the first element for each part inside it,
 then keeps watching its subtree with a `MutationObserver`, so parts added,
 removed or renamed later are picked up. Parts can sit at any depth and in any
 order.
@@ -225,12 +226,12 @@ order.
   a part that has none (see [Ids](../guide/accessibility.md#ids)). Option
   ids are made from the list's id and the key.
 
-The element writes only what it owns on each part: ARIA attributes,
-`data-scope` and `data-element`, state attributes, the references it needs,
-and an id where a part has none. When an element stops being a part (you
-rename its `data-element`, or a nested element defined later takes it), the
-element removes what it wrote there. It never writes `class`: the root's `uni-<name>` comes from your
-markup. Content, your own classes and every other attribute stay yours.
+The element writes only what it owns on each part: ARIA attributes, the
+part's marker, state attributes, the references it needs, and an id where a
+part has none. When an element stops being a part (you rename its
+`data-element`, or a nested element defined later takes it), the element
+removes what it wrote there. It never writes `class`. Content, classes and
+every other attribute stay yours.
 
 Event listeners for parts are delegated from the element's root node (the
 document, or the shadow root it sits in), never added to the host element.
@@ -252,14 +253,14 @@ Some elements work inside another: a `<uni-checkbox>` in its
 
 ```html
 <uni-checkbox-group id="contact">
-  <div class="uni-checkbox-group">
+  <div data-uni="checkbox-group">
     <span data-element="Label">Contact me by</span>
   </div>
 </uni-checkbox-group>
 
 <!-- Elsewhere on the page -->
 <uni-checkbox group="contact" value="email">
-  <label class="uni-checkbox">
+  <label data-uni="checkbox">
     <input data-element="Input" type="checkbox" />
     <span data-element="Label">Email</span>
   </label>
@@ -278,7 +279,7 @@ component that takes a tooltip links to the `<uni-tooltip>` whose id its
 ```html
 <uni-tooltip id="save-hint">…</uni-tooltip>
 <uni-button tooltip="save-hint">
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 ```
 

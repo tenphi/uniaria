@@ -6,8 +6,8 @@
  *
  * ```html
  * <uni-dialog>
- *   <button data-element="Trigger">Delete file</button>
- *   <dialog class="uni-dialog" role="alertdialog">
+ *   <button data-uni-part="dialog-trigger">Delete file</button>
+ *   <dialog data-uni="dialog" role="alertdialog">
  *     <h2 data-element="Title">Delete file</h2>
  *     <p data-element="Description">This can't be undone.</p>
  *     <form method="dialog">

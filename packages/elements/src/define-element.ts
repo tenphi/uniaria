@@ -19,9 +19,10 @@
  *   (`pressStart` → `pressstart`).
  * - Actions: one method per action the definition lists (`element.open()`),
  *   calling `instance.actions`.
- * - Parts: the element with the `uni-<name>` class is the root, and
- *   `data-element` marks the others (`data-element="Trigger"`), inside the
- *   host, minus those inside a nested UniAria element (of any kind) or a
+ * - Parts: the element with `data-uni="<name>"` is the root, one with
+ *   `data-uni-part="<name>-<part>"` a part outside it
+ *   (`data-uni-part="dialog-trigger"`), and `data-element` marks the others
+ *   (`data-element="Title"`), inside the host, minus those inside a nested UniAria element (of any kind) or a
  *   nested host of the same tag, re-scanned when the subtree changes or a
  *   nested element's tag is defined later. The DOM binder writes their
  *   attributes and delegates their listeners from the host's root. Item
@@ -329,9 +330,7 @@ export function defineElement<D extends AnyDefinition>(
 
     connectedCallback(): void {
       this.#scan();
-      this.#unobserve ??= observeParts(this, definition.name, () =>
-        this.#scan(),
-      );
+      this.#unobserve ??= observeParts(this, () => this.#scan());
       this.#unprovide ??= provideOwner(this.instance as Instance, this);
       // Linked before the first write, so a checkbox in a group starts with
       // the group's state.
@@ -433,7 +432,7 @@ export function defineElement<D extends AnyDefinition>(
     /** Finds parts, adopts props from new part elements, attaches them. */
     #scan(): void {
       this.instance.batch(() => {
-        const found = queryParts(this, definition.name, definition.parts);
+        const found = queryParts(this, definition);
         for (const part of definition.parts) {
           const element = found.get(part);
           if (element && element !== this.#parts.get(part)) {

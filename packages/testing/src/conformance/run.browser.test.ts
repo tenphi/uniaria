@@ -10,20 +10,20 @@ import { expect } from 'vitest';
 import type { ConformanceAdapter } from './contract';
 import { runConformance } from './run';
 import { defineConformance } from './scenario';
-import { h, renderTemplate } from './template';
+import { h, partName, renderTemplate } from './template';
 
 const fixtureAdapter: ConformanceAdapter = {
   name: 'fixture',
   async mount({ component, props, template, events, record, container }) {
     let current = { ...props };
     container.appendChild(
-      renderTemplate(template, document, component, (element) => {
-        if (element.hasAttribute('data-element')) {
-          element.setAttribute('data-scope', component);
-        }
+      renderTemplate(template, document, component, {
+        outsideParts: (owner) => (owner === 'fixture' ? ['trigger'] : []),
       }),
     );
-    const root = container.querySelector<HTMLElement>(`.uni-${component}`)!;
+    const root = container.querySelector<HTMLElement>(
+      `[data-uni="${component}"]`,
+    )!;
     const apply = () =>
       root.toggleAttribute('disabled', current.isDisabled === true);
     const onClick = (event: MouseEvent) => {
@@ -72,24 +72,44 @@ const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
   'fixture',
   ({ scenario, group }) => {
     scenario(
-      'finds the root by its class, and other parts by data-scope and data-element',
+      'finds the root by data-uni, outside parts by data-uni-part, and other parts by data-element',
       async ({ mount }) => {
         const mounted = await mount({
-          template: h(
-            'button',
-            { part: 'root' },
-            h('span', { part: 'label' }, 'Save'),
-          ),
+          template: [
+            h('button', { part: 'trigger' }, 'Open'),
+            h(
+              'button',
+              { part: 'root' },
+              h('span', { part: 'label' }, 'Save'),
+              h(
+                'span',
+                { 'data-uni': 'other' },
+                h('span', { 'data-element': 'Label' }, 'Nested'),
+              ),
+            ),
+            h('span', { part: 'hint' }, 'Outside'),
+          ],
         });
         const root = mounted.part();
         expect(root.tagName).toBe('BUTTON');
-        expect(root.className).toBe('uni-fixture');
+        expect(root.getAttribute('data-uni')).toBe('fixture');
+        expect(root.hasAttribute('class')).toBe(false);
         expect(root.hasAttribute('data-element')).toBe(false);
         expect(mounted.parts('root')).toHaveLength(1);
+        const trigger = mounted.part('trigger');
+        expect(trigger.getAttribute('data-uni-part')).toBe('fixture-trigger');
+        expect(trigger.hasAttribute('data-element')).toBe(false);
+        expect(partName(trigger, 'fixture')).toBe('trigger');
         const label = mounted.part('label');
-        expect(label.tagName).toBe('SPAN');
+        expect(label.textContent).toBe('Save');
         expect(label.getAttribute('data-element')).toBe('Label');
-        expect(label.getAttribute('data-scope')).toBe('fixture');
+        expect(partName(label, 'fixture')).toBe('label');
+        // A part no root is around counts, as a root-less component's.
+        expect(mounted.part('hint').textContent).toBe('Outside');
+        const nested = mounted.container.querySelector(
+          '[data-uni="other"] > span',
+        )!;
+        expect(partName(nested, 'fixture')).toBeUndefined();
         expect(() => mounted.part('missing')).toThrow(/found 0/);
       },
     );

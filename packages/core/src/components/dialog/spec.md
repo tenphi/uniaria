@@ -71,6 +71,10 @@ Render the `<dialog>` always; it is hidden while closed. A design system that
 wants to skip rendering heavy content while closed renders the content (not
 the dialog) from `isOpen || isExiting`.
 
+The trigger sits outside the dialog, so it is marked
+`data-uni-part="dialog-trigger"` rather than `data-element` (root AGENTS.md
+→ Part markers).
+
 A part keeps an `id` the consumer gives its element, in both adapters, and
 every reference to the part follows it; UniAria writes an `id` only on a
 part that has none (root AGENTS.md → DOM, lifecycle and SSR).
@@ -268,8 +272,8 @@ return (
 ```html
 <!-- Custom element -->
 <uni-dialog>
-  <button data-element="Trigger">Delete file</button>
-  <dialog class="uni-dialog" role="alertdialog">
+  <button data-uni-part="dialog-trigger">Delete file</button>
+  <dialog data-uni="dialog" role="alertdialog">
     <h2 data-element="Title">Delete file</h2>
     <p data-element="Description">This can't be undone.</p>
     <form method="dialog">

@@ -89,10 +89,13 @@ export const disclosure = defineComponent({
 What each piece does:
 
 - **`name`** is kebab case. It becomes the element name, `<uni-disclosure>`
-  by default, and marks the parts: each gets `data-scope="disclosure"` and its
-  name capitalized as `data-element` (`Trigger`, `Panel`). A part named
-  `root`, which this component doesn't have, gets the class `uni-disclosure`
-  instead.
+  by default. Each part gets its name capitalized as `data-element`
+  (`Trigger`, `Panel`); a part named `root`, which this component doesn't
+  have, gets `data-uni="disclosure"` instead. A part listed in
+  `outsideParts`, rendered outside the root as an overlay's trigger is, gets
+  `data-uni-part="disclosure-<part>"`. Without a root, as here, nothing ties
+  the parts to the component in CSS: give it a root to style it through
+  UniAria's markers.
 - **`props`** is the one schema both adapters read. From
   `isExpanded: bindable(false)` the consumer gets `isExpanded`,
   `defaultExpanded` and `onExpandedChange` in React, and the
@@ -197,8 +200,9 @@ returns `undefined` on a server, so the module is safe to import anywhere.
 </script>
 ```
 
-The element finds its parts by `data-element`, and a root part by its
-`uni-<name>` class, at any depth, and writes the same attributes React does.
+The element finds its parts by `data-element`, a root part by `data-uni`
+and a part outside the root by `data-uni-part`, at any depth, and writes the
+same attributes React does.
 The `hidden` in the markup keeps the panel shut before the script runs;
 UniAria removes it when the panel opens. Add `default-expanded` to start open,
 or set the `isExpanded` property to control it. See

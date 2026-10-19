@@ -174,8 +174,8 @@ the component's label names:
 | [Select](./select.mdx)                | `trigger`       | `span`                   |                                                                                                                                       |
 | [Combobox](./combobox.mdx)            | `input`         | `label`                  |                                                                                                                                       |
 
-The component's state attributes (`data-scope="text-field"` and so on) go on
-those parts, so style them through the component, not through `field`. Where
+The component's markers and state attributes go on those parts, so style
+them through the component (`[data-uni='text-field']`), not through `field`. Where
 you can name the control's id with a prop, the prop is named after the part:
 `inputId`, `triggerId`, `listId`. An `id` you write on the part itself wins.
 
@@ -254,14 +254,14 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                            | On               | When                   |
-| ------------------------------------ | ---------------- | ---------------------- |
-| `class="uni-field"`                  | root             | Always.                |
-| `data-scope="field"`, `data-element` | every other part | Always.                |
-| `data-invalid`                       | every part       | `isInvalid` is set.    |
-| `data-required`                      | every part       | `isRequired` is set.   |
-| `data-disabled`                      | every part       | `isDisabled` is set.   |
-| `hidden`                             | `error`          | The error isn't shown. |
+| Attribute          | On               | When                   |
+| ------------------ | ---------------- | ---------------------- |
+| `data-uni="field"` | root             | Always.                |
+| `data-element`     | every other part | Always.                |
+| `data-invalid`     | every part       | `isInvalid` is set.    |
+| `data-required`    | every part       | `isRequired` is set.   |
+| `data-disabled`    | every part       | `isDisabled` is set.   |
+| `hidden`           | `error`          | The error isn't shown. |
 
 The state attributes go on every part, so you can style the label and the
 messages from the field's state without reading it in JavaScript. A required

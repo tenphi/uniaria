@@ -6,7 +6,7 @@
  *
  * ```html
  * <uni-switch>
- *   <label class="uni-switch">
+ *   <label data-uni="switch">
  *     <input data-element="Input" type="checkbox" name="wifi" />
  *     <span data-element="Indicator"><span class="thumb"></span></span>
  *     <span data-element="Label">Wi-Fi</span>

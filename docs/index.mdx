@@ -46,8 +46,8 @@ import { Callout, Card } from '@tenphi/cookbook/components';
 - **Native elements first.** A real `<button>`, `<input>` or `<dialog>` sits
   under each component, and overlays open in the browser's top layer: no
   portals, no moved nodes.
-- **Headless, with hooks for your CSS.** A component's root carries the
-  class `uni-<name>` and its other parts `data-element`, all with state
+- **Headless, with hooks for your CSS.** A component's root carries
+  `data-uni="<name>"` and its other parts `data-element`, all with state
   attributes such as `data-pressed` and `data-focus-visible`. Style them with
   any CSS you like, or with Tasty. [Styling](./guide/styling.md).
 
@@ -82,7 +82,7 @@ function WifiSwitch() {
 </script>
 
 <uni-switch>
-  <label class="uni-switch">
+  <label data-uni="switch">
     <input data-element="Input" type="checkbox" name="wifi" checked />
     <span data-element="Indicator"><span data-element="Thumb"></span></span>
     <span data-element="Label">Wi-Fi</span>

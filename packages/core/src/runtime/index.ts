@@ -36,7 +36,7 @@ export {
   isOwnerDefinition,
   itemId,
   partElement,
-  rootClass,
+  partMarker,
 } from './define';
 export type {
   ActionsOf,

@@ -153,7 +153,7 @@ export function runConformance(
               if (found.length !== 1) {
                 throw new Error(
                   `Expected one "${name}" part of ${suite.component}, found ${found.length}. ` +
-                    "Check the root's uni-<name> class, or data-scope and data-element.",
+                    "Check the root's data-uni, an outside part's data-uni-part, or data-element inside the root.",
                 );
               }
               return found[0]!;

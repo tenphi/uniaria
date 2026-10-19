@@ -508,23 +508,23 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                              | On                   | When                                                           |
-| -------------------------------------- | -------------------- | -------------------------------------------------------------- |
-| `class="uni-listbox"`                  | root                 | Always.                                                        |
-| `data-scope="listbox"`, `data-element` | every other part     | Always.                                                        |
-| `data-selected`                        | option               | The option is selected.                                        |
-| `data-focused`                         | option               | The option has focus.                                          |
-| `data-focus-visible`                   | option, named parts  | The option, or the list, has focus from the keyboard.          |
-| `data-focus-within`                    | named parts          | Focus is on the list or an option.                             |
-| `data-hovered`                         | option               | A mouse or pen is over an enabled option.                      |
-| `data-pressed`                         | option               | The option is being pressed.                                   |
-| `data-disabled`                        | named and item parts | On an option: the option is disabled. Everywhere: the list is. |
-| `data-readonly`                        | named and item parts | The list is read-only.                                         |
-| `data-required`, `data-invalid`        | named parts          | The list is required, or invalid.                              |
-| `data-multiple`                        | named parts          | Multiple mode, for checkbox-like options.                      |
-| `data-orientation`                     | named parts          | `vertical` or `horizontal`. Always present.                    |
-| `data-empty`                           | named parts          | The list has no options.                                       |
-| `data-virtualized`                     | root, list, scroller | A `virtualizer` is set.                                        |
+| Attribute                       | On                   | When                                                           |
+| ------------------------------- | -------------------- | -------------------------------------------------------------- |
+| `data-uni="listbox"`            | root                 | Always.                                                        |
+| `data-element`                  | every other part     | Always.                                                        |
+| `data-selected`                 | option               | The option is selected.                                        |
+| `data-focused`                  | option               | The option has focus.                                          |
+| `data-focus-visible`            | option, named parts  | The option, or the list, has focus from the keyboard.          |
+| `data-focus-within`             | named parts          | Focus is on the list or an option.                             |
+| `data-hovered`                  | option               | A mouse or pen is over an enabled option.                      |
+| `data-pressed`                  | option               | The option is being pressed.                                   |
+| `data-disabled`                 | named and item parts | On an option: the option is disabled. Everywhere: the list is. |
+| `data-readonly`                 | named and item parts | The list is read-only.                                         |
+| `data-required`, `data-invalid` | named parts          | The list is required, or invalid.                              |
+| `data-multiple`                 | named parts          | Multiple mode, for checkbox-like options.                      |
+| `data-orientation`              | named parts          | `vertical` or `horizontal`. Always present.                    |
+| `data-empty`                    | named parts          | The list has no options.                                       |
+| `data-virtualized`              | root, list, scroller | A `virtualizer` is set.                                        |
 
 "Named parts" are `root`, `label`, `list`, `description`, `error` and `empty`;
 the scroller gets only `data-virtualized`. State attributes are present or

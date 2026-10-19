@@ -199,7 +199,7 @@ return (
 ```html
 <!-- Custom element -->
 <uni-switch>
-  <label class="uni-switch">
+  <label data-uni="switch">
     <input data-element="Input" type="checkbox" name="wifi" checked />
     <span data-element="Indicator"><span class="thumb"></span></span>
     <span data-element="Label">Wi-Fi</span>
@@ -208,8 +208,8 @@ return (
 ```
 
 The definition is exported from `@uniaria/core/switch` as `toggleSwitch`
-(Resolved questions 4); its name, `data-scope` and element stay `switch`,
-and its root class is `uni-switch`.
+(Resolved questions 4); its name, markers and element stay `switch`:
+`data-uni="switch"` on the root.
 
 Element attributes: `default-selected`, `disabled`,
 `focusable-when-disabled`, `readonly`, `required`,
@@ -266,7 +266,7 @@ Decided by @tenphi on 2026-10-16.
 4. **The export is `toggleSwitch`.** `switch` is a reserved word, so the
    definition can't be `export const switch` like `checkbox`.
    `toggleSwitch` is the control's common name and reads like
-   `toggleButton`. Its name, `data-scope` and element stay `switch`.
+   `toggleButton`. Its name, markers and element stay `switch`.
 5. **`isFocusableWhenDisabled`** (Tooltip spec, Resolved questions 12,
    decided by @tenphi on 2026-10-16): as Checkbox's, so a tooltip can
    explain a disabled switch to the keyboard. No automatic switch when a

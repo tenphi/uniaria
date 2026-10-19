@@ -51,7 +51,7 @@ export function SaveButton(props: { isSaving: boolean; onSave(): void }) {
 
 ```html
 <uni-button id="save">
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 
 <script type="module">
@@ -90,7 +90,7 @@ it for client-side routing.
 
 ```html
 <uni-button>
-  <a class="uni-button" href="/docs">Docs</a>
+  <a data-uni="button" href="/docs">Docs</a>
 </uni-button>
 ```
 
@@ -179,7 +179,7 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute            | When                                                   |
 | -------------------- | ------------------------------------------------------ |
-| `class="uni-button"` | Always.                                                |
+| `data-uni="button"`  | Always.                                                |
 | `data-hovered`       | A mouse or pen is over the root.                       |
 | `data-pressed`       | The button is pressed.                                 |
 | `data-focused`       | The root has focus.                                    |

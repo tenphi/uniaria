@@ -1,5 +1,5 @@
 import { bindable, defineComponent, prop } from '@uniaria/core';
-import type { LinkKey } from '@uniaria/core';
+import type { AnyDefinition, LinkKey } from '@uniaria/core';
 import type { combobox } from '@uniaria/core/combobox';
 import type { dialog } from '@uniaria/core/dialog';
 import type { listbox } from '@uniaria/core/listbox';
@@ -31,6 +31,11 @@ import './select';
 import './combobox';
 import { defineElement } from './define-element';
 import type { UniElement } from './define-element';
+
+/** The element the UniAria host `host` has for `part`. */
+function hostedBy(host: Element, part: string): unknown {
+  return (host as UniElement<AnyDefinition>).instance.element(part);
+}
 
 /** A disclosure with a bindable and props of every attribute type. */
 const disclosure = defineComponent({
@@ -144,7 +149,6 @@ describe('defineElement', () => {
     );
     const { host, trigger, panel } = disclosureIn(container);
     expect(host.shadowRoot).toBeNull();
-    expect(trigger.getAttribute('data-scope')).toBe('test-disclosure');
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(panel.hasAttribute('hidden')).toBe(true);
     expect(trigger.textContent).toBe('Details');
@@ -257,14 +261,14 @@ describe('defineElement', () => {
           <input data-element="Input" value="1.234,5" />
         </uni-number-field>
         <uni-radio-group>
-          <div class="uni-radio-group">
+          <div data-uni="radio-group">
             <uni-radio value="pro">
               <input data-element="Input" type="radio" checked />
             </uni-radio>
           </div>
         </uni-radio-group>
         <uni-checkbox-group>
-          <div class="uni-checkbox-group">
+          <div data-uni="checkbox-group">
             <uni-checkbox value="sms">
               <input data-element="Input" type="checkbox" checked />
             </uni-checkbox>
@@ -306,7 +310,7 @@ describe('defineElement', () => {
         }),
       });
       const container = mount(
-        '<uni-test-late-bindable><span class="uni-test-late-bindable"></span></uni-test-late-bindable>',
+        '<uni-test-late-bindable><span data-uni="test-late-bindable"></span></uni-test-late-bindable>',
       );
       const host = container.querySelector(
         'uni-test-late-bindable',
@@ -351,7 +355,7 @@ describe('defineElement', () => {
       }),
     });
     const container = mount(
-      '<uni-test-late><span class="uni-test-late"></span></uni-test-late>',
+      '<uni-test-late><span data-uni="test-late"></span></uni-test-late>',
     );
     const host = container.querySelector('uni-test-late')!;
     (host as unknown as { delay: number }).delay = 200;
@@ -403,9 +407,7 @@ describe('defineElement', () => {
     const [inner, panel] = host.querySelectorAll('uni-test-wrapper');
 
     expect(host.instance.element('trigger')).toBeNull();
-    expect(inner!.querySelector('button')!.getAttribute('data-scope')).toBe(
-      'test-wrapper',
-    );
+    expect(hostedBy(inner!, 'trigger')).toBe(inner!.querySelector('button'));
     // A nested UniAria element can still be one of the outer host's parts.
     expect(host.instance.element('panel')).toBe(panel);
   });
@@ -439,7 +441,7 @@ describe('defineElement', () => {
 
     // A custom element that is never defined is no boundary.
     expect(host.instance.element('trigger')).toBe(outer);
-    expect(inner!.getAttribute('data-scope')).toBe('test-late-wrapper');
+    expect(hostedBy(inner!.parentElement!, 'trigger')).toBe(inner);
     inner!.click();
     expect(host.instance.getState().isOpen).toBe(false);
     outer!.click();
@@ -471,7 +473,7 @@ describe('defineElement', () => {
 
     expect(host.instance.element('panel')).toBeNull();
     expect(inner.hasAttribute('hidden')).toBe(false);
-    expect(inner.getAttribute('data-scope')).toBe('test-late-panel');
+    expect(hostedBy(inner.parentElement!, 'panel')).toBe(inner);
     expect(inner.getAttribute('role')).toBe('region');
     expect(inner.getAttribute('data-element')).toBe('Panel');
     expect(inner.className).toBe('box');
@@ -486,7 +488,6 @@ describe('defineElement', () => {
     await new Promise((resolve) => setTimeout(resolve));
     expect(host.instance.element('trigger')).toBeNull();
     expect(trigger.hasAttribute('aria-expanded')).toBe(false);
-    expect(trigger.hasAttribute('data-scope')).toBe(false);
     expect(trigger.getAttribute('data-element')).toBe('Other');
   });
 
@@ -501,7 +502,7 @@ describe('defineElement', () => {
 
     await new Promise((resolve) => setTimeout(resolve));
 
-    expect(panel.getAttribute('data-scope')).toBe('test-disclosure');
+    expect(host.instance.element('panel')).toBe(panel);
     expect(panel.hasAttribute('hidden')).toBe(true);
   });
 
@@ -610,6 +611,25 @@ type Marked = UniElement<typeof marked>;
 
 defineElement(marked);
 
+/** An overlay whose trigger sits outside its root. */
+const overlay = defineComponent({
+  name: 'test-overlay',
+  parts: ['trigger', 'root', 'title'],
+  outsideParts: ['trigger'],
+  props: {},
+  setup: () => ({}),
+  expose: () => ({}),
+  connect: () => ({
+    trigger: { attrs: { 'aria-haspopup': 'true' } },
+    root: { attrs: { role: 'group' } },
+    title: { attrs: { role: 'heading' } },
+  }),
+});
+
+type Overlay = UniElement<typeof overlay>;
+
+defineElement(overlay);
+
 describe('part markers', () => {
   const tick = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -623,17 +643,17 @@ describe('part markers', () => {
 
   const MARKED = `
     <uni-test-marked>
-      <div id="root" class="card uni-test-marked">
+      <div id="root" data-uni="test-marked" class="card">
         <button data-element="Trigger">Go</button>
         <span>Other</span>
       </div>
     </uni-test-marked>`;
 
-  it('finds the root by its uni-<name> class and another part by its data-element', () => {
+  it('finds the root by data-uni and another part by its data-element', () => {
     const container = mount(`
       <uni-test-marked>
-        <div id="decoy" class="uni-other" data-element="Root">
-          <div id="root" class="card uni-test-marked">
+        <div id="decoy" data-uni="other" data-element="Root">
+          <div id="root" data-uni="test-marked" class="card">
             <button data-element="Trigger">Go</button>
             <span data-element="trigger">Lowercase</span>
           </div>
@@ -644,19 +664,17 @@ describe('part markers', () => {
     expect(host.instance.element('trigger')).toBe(button);
     expect(root.getAttribute('role')).toBe('group');
     // The root keeps its markup class and gets no other marker.
-    expect(root.getAttribute('class')).toBe('card uni-test-marked');
-    expect(root.hasAttribute('data-scope')).toBe(false);
+    expect(root.getAttribute('class')).toBe('card');
     expect(root.hasAttribute('data-element')).toBe(false);
     expect(button.getAttribute('aria-haspopup')).toBe('true');
-    expect(button.getAttribute('data-scope')).toBe('test-marked');
-    // Neither another component's class, data-element="Root" nor a part name
-    // in the wrong case marks a part.
+    // Neither another component's data-uni, data-element="Root" nor a part
+    // name in the wrong case marks a part.
     const decoy = host.querySelector('#decoy')!;
     expect(decoy.hasAttribute('role')).toBe(false);
     expect(span.hasAttribute('aria-haspopup')).toBe(false);
   });
 
-  it('scans again when a part’s data-element changes or the root loses its class', async () => {
+  it('scans again when a part’s data-element changes or the root loses its data-uni', async () => {
     const { host, root, button, span } = markedIn(mount(MARKED));
     expect(host.instance.element('trigger')).toBe(button);
 
@@ -668,18 +686,44 @@ describe('part markers', () => {
     await tick();
     expect(host.instance.element('trigger')).toBe(span);
     expect(span.getAttribute('aria-haspopup')).toBe('true');
-    expect(span.getAttribute('data-scope')).toBe('test-marked');
 
-    root.classList.remove('uni-test-marked');
+    root.removeAttribute('data-uni');
     await tick();
     expect(host.instance.element('root')).toBeNull();
 
-    root.classList.add('uni-test-marked');
+    root.setAttribute('data-uni', 'test-marked');
     await tick();
     expect(host.instance.element('root')).toBe(root);
   });
 
-  it('leaves its parts attached, with no scan, when other classes on the root change', async () => {
+  it('finds a part outside the root by data-uni-part, not by data-element', async () => {
+    const container = mount(`
+      <uni-test-overlay>
+        <button data-uni-part="test-overlay-trigger" class="primary">
+          Open
+        </button>
+        <span data-element="Trigger">Not it</span>
+        <div data-uni="test-overlay"><h2 data-element="Title">Hi</h2></div>
+      </uni-test-overlay>`);
+    const host = container.querySelector<Overlay>('uni-test-overlay')!;
+    const button = host.querySelector('button')!;
+    expect(host.instance.element('trigger')).toBe(button);
+    expect(button.getAttribute('aria-haspopup')).toBe('true');
+    expect(button.hasAttribute('data-element')).toBe(false);
+    expect(host.querySelector('span')!.hasAttribute('aria-haspopup')).toBe(
+      false,
+    );
+    expect(host.instance.element('title')).toBe(host.querySelector('h2'));
+
+    button.removeAttribute('data-uni-part');
+    await tick();
+    expect(host.instance.element('trigger')).toBeNull();
+    button.setAttribute('data-uni-part', 'test-overlay-trigger');
+    await tick();
+    expect(host.instance.element('trigger')).toBe(button);
+  });
+
+  it('leaves its parts attached, with no scan, when classes change', async () => {
     const { host, root, button } = markedIn(mount(MARKED));
     const scans = vi.spyOn(host, 'querySelectorAll');
 
@@ -692,7 +736,7 @@ describe('part markers', () => {
     expect(scans).not.toHaveBeenCalled();
     expect(host.instance.element('root')).toBe(root);
     expect(host.instance.element('trigger')).toBe(button);
-    expect(root.getAttribute('class')).toBe('uni-test-marked is-active other');
+    expect(root.getAttribute('class')).toBe('is-active other');
     expect(root.getAttribute('role')).toBe('group');
 
     // A change that can move a part scans.
@@ -770,7 +814,6 @@ describe('item parts', () => {
   it('writes every item part by its data-key and dispatches its events', () => {
     const { host, row } = rowsIn(mount(ROWS));
     expect(row('apple').getAttribute('role')).toBe('option');
-    expect(row('apple').getAttribute('data-scope')).toBe('test-rows');
     expect(row('apple').getAttribute('data-element')).toBe('Row');
     expect(row('citrus').getAttribute('role')).toBe('group');
     expect(row('lemon').getAttribute('aria-selected')).toBe('false');
@@ -920,9 +963,9 @@ describe('links', () => {
   it('links to the host it sits in directly, not through another host', () => {
     const container = mount(`
       <uni-test-hint>
-        <uni-test-linker id="direct"><span class="uni-test-linker"></span></uni-test-linker>
+        <uni-test-linker id="direct"><span data-uni="test-linker"></span></uni-test-linker>
         <uni-test-disclosure>
-          <uni-test-linker id="nested"><span class="uni-test-linker"></span></uni-test-linker>
+          <uni-test-linker id="nested"><span data-uni="test-linker"></span></uni-test-linker>
         </uni-test-disclosure>
       </uni-test-hint>`);
     const tip =
@@ -940,7 +983,7 @@ describe('links', () => {
 
   it('links by id through the attribute of the key’s name, and unlinks when moved', () => {
     const container = mount(`
-      <uni-test-linker hint="tip"><span class="uni-test-linker"></span></uni-test-linker>`);
+      <uni-test-linker hint="tip"><span data-uni="test-linker"></span></uni-test-linker>`);
     const host = container.querySelector<Host>('uni-test-linker')!;
     expect(host.instance.linked(hintLink)).toBeUndefined();
 
@@ -963,10 +1006,12 @@ describe('links', () => {
 describe('<uni-button>', () => {
   it('adopts the root tag and its href', () => {
     const container = mount(`
-      <uni-button id="div"><div class="uni-button">Save</div></uni-button>
-      <uni-button id="link"><a class="uni-button" href="/docs">Docs</a></uni-button>`);
-    const div = container.querySelector('#div .uni-button')!;
-    const link = container.querySelector<HTMLElement>('#link .uni-button')!;
+      <uni-button id="div"><div data-uni="button">Save</div></uni-button>
+      <uni-button id="link"><a data-uni="button" href="/docs">Docs</a></uni-button>`);
+    const div = container.querySelector('#div [data-uni="button"]')!;
+    const link = container.querySelector<HTMLElement>(
+      '#link [data-uni="button"]',
+    )!;
     const host = container.querySelector<UniElement<never>>('#link')!;
     expect(div.getAttribute('role')).toBe('button');
     expect(link.getAttribute('href')).toBe('/docs');
@@ -991,7 +1036,7 @@ describe('<uni-button>', () => {
             { isDisabled },
             createElement(
               'button',
-              { className: `uni-button ${label}` },
+              { 'data-uni': 'button', className: label },
               label,
             ),
           ),
@@ -1006,9 +1051,8 @@ describe('<uni-button>', () => {
 
     render('Saving', false);
     expect(button.textContent).toBe('Saving');
-    expect(button.className).toBe('uni-button Saving');
+    expect(button.className).toBe('Saving');
     expect(button.hasAttribute('disabled')).toBe(false);
-    expect(button.hasAttribute('data-scope')).toBe(false);
     expect(button.getAttribute('type')).toBe('button');
     expect(host.instance.element('root')).toBe(button);
     root.unmount();
@@ -1019,8 +1063,8 @@ describe('part ids', () => {
   it("keeps the ids of a dialog's root, title and description", () => {
     const container = mount(`
       <uni-dialog>
-        <button data-element="Trigger">Open</button>
-        <dialog class="uni-dialog" id="terms">
+        <button data-uni-part="dialog-trigger">Open</button>
+        <dialog data-uni="dialog" id="terms">
           <h2 data-element="Title" id="terms-title">Terms</h2>
           <p data-element="Description" id="terms-text">Read them.</p>
         </dialog>
@@ -1298,7 +1342,7 @@ describe('<uni-checkbox>', () => {
   it('takes the markup checked state as its default and reads the label tag', () => {
     const container = mount(`
       <uni-checkbox readonly>
-        <label class="uni-checkbox">
+        <label data-uni="checkbox">
           <input data-element="Input" type="checkbox" checked />
           <span data-element="Label">Accept terms</span>
         </label>
@@ -1346,7 +1390,7 @@ describe('<uni-checkbox>', () => {
   it('keeps a toggle when a click listener of theirs changes an attribute', async () => {
     const container = mount(`
       <uni-checkbox>
-        <label class="uni-checkbox">
+        <label data-uni="checkbox">
           <input data-element="Input" type="checkbox" />
           <span data-element="Label">News</span>
         </label>
@@ -1394,7 +1438,7 @@ describe('<uni-checkbox>', () => {
 describe('<uni-checkbox-group>', () => {
   const option = (value: string, extra = '') => `
     <uni-checkbox value="${value}" ${extra}>
-      <label class="uni-checkbox">
+      <label data-uni="checkbox">
         <input data-element="Input" type="checkbox" ${value === 'sms' ? 'checked' : ''} />
         <span data-element="Label">${value}</span>
       </label>
@@ -1403,7 +1447,7 @@ describe('<uni-checkbox-group>', () => {
   it('takes the checkboxes checked in the markup as its default', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div class="uni-checkbox-group">
+        <div data-uni="checkbox-group">
           <span data-element="Label">Notify</span>
           ${option('email')}${option('sms')}
         </div>
@@ -1431,7 +1475,7 @@ describe('<uni-checkbox-group>', () => {
     const group = document.createElement('uni-checkbox-group');
     group.id = 'notify';
     group.defaultValue = ['email'];
-    group.innerHTML = '<div class="uni-checkbox-group"></div>';
+    group.innerHTML = '<div data-uni="checkbox-group"></div>';
     container.append(group);
     expect(box.instance.owner()).toBe(group.instance);
     expect(box.querySelector('input')!.checked).toBe(true);
@@ -1443,7 +1487,7 @@ describe('<uni-checkbox-group>', () => {
   it('leaves the group when moved out of it', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div class="uni-checkbox-group">${option('email')}</div>
+        <div data-uni="checkbox-group">${option('email')}</div>
       </uni-checkbox-group>`);
     const box = container.querySelector('uni-checkbox')!;
     expect(box.instance.owner()).toBeDefined();
@@ -1455,7 +1499,7 @@ describe('<uni-checkbox-group>', () => {
     const container = mount(`
       <form>
         <uni-checkbox-group>
-          <div class="uni-checkbox-group">${option('email')}${option('sms')}</div>
+          <div data-uni="checkbox-group">${option('email')}${option('sms')}</div>
         </uni-checkbox-group>
       </form>`);
     const group = container.querySelector('uni-checkbox-group')!;
@@ -1480,7 +1524,7 @@ describe('<uni-checkbox-group>', () => {
     const container = mount(`
       <form>
         <uni-checkbox-group>
-          <div class="uni-checkbox-group">${option('email')}${option('sms')}</div>
+          <div data-uni="checkbox-group">${option('email')}${option('sms')}</div>
         </uni-checkbox-group>
       </form>`);
     const group = container.querySelector('uni-checkbox-group')!;
@@ -1503,7 +1547,7 @@ describe('<uni-switch>', () => {
   it('takes the markup checked state as its default and sets its role', () => {
     const container = mount(`
       <uni-switch readonly>
-        <label class="uni-switch">
+        <label data-uni="switch">
           <input data-element="Input" type="checkbox" checked />
           <span data-element="Indicator"><span class="thumb"></span></span>
           <span data-element="Label">Wi-Fi</span>
@@ -1529,9 +1573,9 @@ describe('<uni-switch>', () => {
   it('never joins a checkbox group around it', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div class="uni-checkbox-group">
+        <div data-uni="checkbox-group">
           <uni-switch>
-            <label class="uni-switch">
+            <label data-uni="switch">
               <input data-element="Input" type="checkbox" checked />
               <span data-element="Label">Wi-Fi</span>
             </label>
@@ -1551,7 +1595,7 @@ describe('<uni-switch>', () => {
 describe('<uni-radio-group>', () => {
   const option = (value: string, extra = '') => `
     <uni-radio value="${value}" ${extra}>
-      <label class="uni-radio">
+      <label data-uni="radio">
         <input data-element="Input" type="radio" ${value === 'pro' ? 'checked' : ''} />
         <span data-element="Label">${value}</span>
       </label>
@@ -1560,7 +1604,7 @@ describe('<uni-radio-group>', () => {
   it('takes the radio checked in the markup as its default and names its radios', () => {
     const container = mount(`
       <uni-radio-group name="plan">
-        <div class="uni-radio-group">
+        <div data-uni="radio-group">
           <span data-element="Label">Plan</span>
           ${option('free')}${option('pro')}
         </div>
@@ -1585,7 +1629,7 @@ describe('<uni-radio-group>', () => {
   it('gives each radio its own state and focuschange', () => {
     const container = mount(`
       <uni-radio-group>
-        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+        <div data-uni="radio-group">${option('free')}${option('pro')}</div>
       </uni-radio-group>`);
     const [free, pro] = Array.from(container.querySelectorAll('uni-radio'));
     expect(pro!.instance.getState()).toMatchObject({
@@ -1632,18 +1676,20 @@ describe('<uni-radio-group>', () => {
     const group = document.createElement('uni-radio-group');
     group.id = 'plan';
     group.defaultValue = 'free';
-    group.innerHTML = '<div class="uni-radio-group"></div>';
+    group.innerHTML = '<div data-uni="radio-group"></div>';
     container.append(group);
     expect(host.instance.owner()).toBe(group.instance);
     expect(input.checked).toBe(true);
     // No name prop: the group's root id, unique on the page.
-    expect(input.name).toBe(group.querySelector('.uni-radio-group')!.id);
+    expect(input.name).toBe(
+      group.querySelector('[data-uni="radio-group"]')!.id,
+    );
   });
 
   it('keeps a choice when a click listener of theirs changes an attribute', async () => {
     const container = mount(`
       <uni-radio-group>
-        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+        <div data-uni="radio-group">${option('free')}${option('pro')}</div>
       </uni-radio-group>`);
     const group = container.querySelector('uni-radio-group')!;
     const [free, pro] = Array.from(container.querySelectorAll('input'));
@@ -1658,7 +1704,7 @@ describe('<uni-radio-group>', () => {
     const container = mount(`
       <form>
         <uni-radio-group name="plan">
-          <div class="uni-radio-group">
+          <div data-uni="radio-group">
             ${option('free')}${option('pro', 'disabled focusable-when-disabled')}
           </div>
         </uni-radio-group>
@@ -1677,7 +1723,7 @@ describe('<uni-radio-group>', () => {
     const container = mount(`
       <form>
         <uni-radio-group>
-          <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+          <div data-uni="radio-group">${option('free')}${option('pro')}</div>
         </uni-radio-group>
       </form>`);
     const group = container.querySelector('uni-radio-group')!;
@@ -1702,7 +1748,7 @@ describe('<uni-radio-group>', () => {
     const container = mount(`
       <form>
         <uni-radio-group>
-          <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+          <div data-uni="radio-group">${option('free')}${option('pro')}</div>
         </uni-radio-group>
       </form>`);
     const group = container.querySelector('uni-radio-group')!;
@@ -1723,7 +1769,7 @@ describe('<uni-radio-group>', () => {
   it('moves by arrow keys through a radio linked by id from outside its root', async () => {
     const container = mount(`
       <uni-radio-group id="plan">
-        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+        <div data-uni="radio-group">${option('free')}${option('pro')}</div>
       </uni-radio-group>
       <p>Not in the group's root:</p>
       ${option('team', 'group="plan"')}`);
@@ -1754,8 +1800,8 @@ describe('<uni-radio-group>', () => {
 
 describe('<uni-dialog>', () => {
   const DIALOG = `
-    <button data-element="Trigger">Delete file</button>
-    <dialog class="uni-dialog" role="alertdialog">
+    <button data-uni-part="dialog-trigger">Delete file</button>
+    <dialog data-uni="dialog" role="alertdialog">
       <h2 data-element="Title">Delete file</h2>
       <p data-element="Description">This can't be undone.</p>
       <button data-element="Close">Cancel</button>
@@ -1764,7 +1810,7 @@ describe('<uni-dialog>', () => {
   function dialogIn(container: HTMLElement) {
     const host = container.querySelector('uni-dialog')!;
     const trigger = host.querySelector<HTMLElement>(
-      '[data-element="Trigger"]',
+      '[data-uni-part="dialog-trigger"]',
     )!;
     const modal = host.querySelector('dialog')!;
     const events: unknown[] = [];
@@ -1878,14 +1924,14 @@ describe('<uni-dialog>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-dialog id="unnamed">
-        <dialog class="uni-dialog"><button data-element="Close">Close</button></dialog>
+        <dialog data-uni="dialog"><button data-element="Close">Close</button></dialog>
       </uni-dialog>
       <uni-dialog id="alert">
-        <dialog class="uni-dialog" role="alertdialog">
+        <dialog data-uni="dialog" role="alertdialog">
           <h2 data-element="Title">Delete file</h2>
         </dialog>
       </uni-dialog>
-      <uni-dialog id="div"><div class="uni-dialog"></div></uni-dialog>`);
+      <uni-dialog id="div"><div data-uni="dialog"></div></uni-dialog>`);
     const messages = () => warn.mock.calls.map(([message]) => String(message));
     expect(messages().some((message) => message.includes('<div>'))).toBe(true);
 
@@ -1925,8 +1971,8 @@ describe('<uni-dialog>', () => {
 
 describe('<uni-popover>', () => {
   const POPOVER = `
-    <button data-element="Trigger">Size</button>
-    <div class="uni-popover">
+    <button data-uni-part="popover-trigger">Size</button>
+    <div data-uni="popover">
       <h2 data-element="Title">Size</h2>
       <input aria-label="Width" />
       <button data-element="Close">Apply</button>
@@ -1945,8 +1991,8 @@ describe('<uni-popover>', () => {
       });
     }
     return {
-      trigger: part(byElement('trigger')),
-      root: part('.uni-popover'),
+      trigger: part('[data-uni-part="popover-trigger"]'),
+      root: part('[data-uni="popover"]'),
       events,
     };
   }
@@ -2023,11 +2069,11 @@ describe('<uni-popover>', () => {
   it('closes a popover nested in it as it closes, with reason "parent"', async () => {
     const container = mount(`
       <uni-popover id="outer">
-        <button data-element="Trigger">Outer</button>
-        <div class="uni-popover" aria-label="Outer">
+        <button data-uni-part="popover-trigger">Outer</button>
+        <div data-uni="popover" aria-label="Outer">
           <uni-popover id="inner">
-            <button data-element="Trigger">Inner</button>
-            <div class="uni-popover" aria-label="Inner"><button>Deep</button></div>
+            <button data-uni-part="popover-trigger">Inner</button>
+            <div data-uni="popover" aria-label="Inner"><button>Deep</button></div>
           </uni-popover>
         </div>
       </uni-popover>`);
@@ -2050,15 +2096,15 @@ describe('<uni-popover>', () => {
     const warn = vi.spyOn(console, 'warn');
     const container = mount(`
       <uni-dialog>
-        <button data-element="Trigger">Settings</button>
-        <dialog class="uni-dialog" aria-label="Settings">
+        <button data-uni-part="dialog-trigger">Settings</button>
+        <dialog data-uni="dialog" aria-label="Settings">
           <uni-popover>${POPOVER}</uni-popover>
           <button data-element="Close">Done</button>
         </dialog>
       </uni-dialog>`);
     const modal = container.querySelector('dialog')!;
     container
-      .querySelector<HTMLElement>('uni-dialog > [data-element="Trigger"]')!
+      .querySelector<HTMLElement>('[data-uni-part="dialog-trigger"]')!
       .click();
     expect(modal.matches(':modal')).toBe(true);
 
@@ -2087,7 +2133,7 @@ describe('<uni-popover>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-popover id="unnamed">
-        <div class="uni-popover"><button>Go</button></div>
+        <div data-uni="popover"><button>Go</button></div>
       </uni-popover>
       <uni-popover id="outside">${POPOVER}</uni-popover>
       <dialog id="modal">Modal</dialog>`);
@@ -2128,8 +2174,8 @@ describe('<uni-tooltip>', () => {
   type Tooltip = UniElement<typeof tooltip>;
 
   const TOOLTIP = `
-    <button data-element="Trigger">Save</button>
-    <div class="uni-tooltip">Saves the file</div>`;
+    <button data-uni-part="tooltip-trigger">Save</button>
+    <div data-uni="tooltip">Saves the file</div>`;
 
   /** The tooltip's parts and its `openchange` details. */
   function tooltipIn(container: HTMLElement, selector = 'uni-tooltip') {
@@ -2142,8 +2188,8 @@ describe('<uni-tooltip>', () => {
     );
     return {
       host,
-      trigger: part(byElement('trigger')),
-      root: part('.uni-tooltip')!,
+      trigger: part('[data-uni-part="tooltip-trigger"]'),
+      root: part('[data-uni="tooltip"]')!,
       events,
     };
   }
@@ -2162,8 +2208,8 @@ describe('<uni-tooltip>', () => {
 
   it('links a component outside it by id through the tooltip attribute', async () => {
     const container = mount(`
-      <uni-button tooltip="save-tip"><button class="uni-button">Save</button></uni-button>
-      <uni-tooltip id="save-tip"><div class="uni-tooltip">Saves the file</div></uni-tooltip>`);
+      <uni-button tooltip="save-tip"><button data-uni="button">Save</button></uni-button>
+      <uni-tooltip id="save-tip"><div data-uni="tooltip">Saves the file</div></uni-tooltip>`);
     const button = container.querySelector('button')!;
     const { root, events } = tooltipIn(container);
     expect(button.getAttribute('aria-describedby')).toBe(root.id);
@@ -2192,8 +2238,8 @@ describe('<uni-tooltip>', () => {
     container.insertAdjacentHTML(
       'beforeend',
       `<uni-tooltip id="linked" default-open>
-        <uni-button><button class="uni-button">Open</button></uni-button>
-        <div class="uni-tooltip">Opens a file</div>
+        <uni-button><button data-uni="button">Open</button></uni-button>
+        <div data-uni="tooltip">Opens a file</div>
       </uni-tooltip>`,
     );
     const linked = tooltipIn(container, '#linked');
@@ -2225,8 +2271,8 @@ describe('<uni-tooltip>', () => {
     const container = mount(`
       <input aria-label="Before" />
       <uni-tooltip>
-        <button data-element="Trigger" tabindex="0">Save</button>
-        <div class="uni-tooltip">Saves the file</div>
+        <button data-uni-part="tooltip-trigger" tabindex="0">Save</button>
+        <div data-uni="tooltip">Saves the file</div>
       </uni-tooltip>`);
     const { trigger, root, events } = tooltipIn(container);
     container.querySelector('input')!.focus();
@@ -2250,14 +2296,14 @@ describe('<uni-tooltip>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-tooltip id="focusable">
-        <button data-element="Trigger">Help</button>
-        <div class="uni-tooltip">See <a href="#docs">the docs</a></div>
+        <button data-uni-part="tooltip-trigger">Help</button>
+        <div data-uni="tooltip">See <a href="#docs">the docs</a></div>
       </uni-tooltip>
       <uni-tooltip id="both">
-        <button data-element="Trigger">Save</button>
-        <uni-button><button class="uni-button">Open</button></uni-button>
-        <uni-button><button class="uni-button">Close</button></uni-button>
-        <div class="uni-tooltip">Opens a file</div>
+        <button data-uni-part="tooltip-trigger">Save</button>
+        <uni-button><button data-uni="button">Open</button></uni-button>
+        <uni-button><button data-uni="button">Close</button></uni-button>
+        <div data-uni="tooltip">Opens a file</div>
       </uni-tooltip>
       <uni-tooltip id="outside">${TOOLTIP}</uni-tooltip>
       <dialog id="modal">Modal</dialog>`);

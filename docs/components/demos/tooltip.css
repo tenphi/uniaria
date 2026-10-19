@@ -19,7 +19,7 @@ p {
   color: GrayText;
 }
 
-.uni-button {
+[data-uni='button'] {
   min-width: 2.5rem;
   padding: 0.375rem 0.75rem;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
@@ -30,19 +30,19 @@ p {
   cursor: pointer;
   outline: none;
 }
-.uni-button[data-hovered] {
+[data-uni='button'][data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-.uni-button[data-focus-visible] {
+[data-uni='button'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-button[data-disabled] {
+[data-uni='button'][data-disabled] {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.uni-tooltip {
+[data-uni='tooltip'] {
   /* The gap to the trigger, and the room it keeps from the frame's edges. */
   margin: 8px;
   padding: 0.25rem 0.5rem;
@@ -56,21 +56,21 @@ p {
     opacity 150ms,
     translate 150ms;
 }
-.uni-tooltip:is([data-entering], [data-exiting]) {
+[data-uni='tooltip']:is([data-entering], [data-exiting]) {
   opacity: 0;
   translate: 0 2px;
 }
 /* Opened at once because another one just showed: no entrance. */
-.uni-tooltip[data-instant] {
+[data-uni='tooltip'][data-instant] {
   transition: none;
 }
 
-.uni-tooltip [data-element='Arrow'] {
+[data-uni='tooltip'] [data-element='Arrow'] {
   position: absolute;
   width: 10px;
   height: 10px;
 }
-.uni-tooltip [data-element='Arrow']::before {
+[data-uni='tooltip'] [data-element='Arrow']::before {
   content: '';
   position: absolute;
   inset: 1px;

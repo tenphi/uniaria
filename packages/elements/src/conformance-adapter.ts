@@ -5,7 +5,7 @@
  * props as properties. Test support only; not exported.
  */
 
-import { answers, domEventName, rootClass } from '@uniaria/core';
+import { answers, domEventName } from '@uniaria/core';
 import type { AnyDefinition } from '@uniaria/core';
 import { virtualizer } from '@uniaria/core/virtual';
 import type {
@@ -96,6 +96,13 @@ function patch(parent: ParentNode, next: readonly Node[]): void {
   });
 }
 
+/** A registered component's parts outside its root, from its definition. */
+function outsideParts(component: string): readonly string[] {
+  const element = document.createElement(`uni-${component}`);
+  const { definition } = (element as UniElement<AnyDefinition>).instance;
+  return definition.outsideParts ?? [];
+}
+
 /** Props with `VIRTUALIZER` replaced by the virtualizer it stands for. */
 function resolveProps(
   props: Readonly<Record<string, unknown>>,
@@ -133,21 +140,20 @@ export const elementsAdapter: ConformanceAdapter = {
           node.rows(rendered),
           document,
           component,
-          undefined,
-          nestedHost,
+          {
+            host: nestedHost,
+            outsideParts,
+          },
         );
         patch(parent, Array.from(fragment.childNodes));
       }
     };
     container.appendChild(
-      renderTemplate(
-        template,
-        document,
-        component,
-        undefined,
-        nestedHost,
-        (node, parent) => rowSites.push({ node, parent }),
-      ),
+      renderTemplate(template, document, component, {
+        host: nestedHost,
+        rowsIn: (node, parent) => rowSites.push({ node, parent }),
+        outsideParts,
+      }),
     );
     const isOwn = (part: Element) => {
       for (let node = part.parentElement; node; node = node.parentElement) {
@@ -156,7 +162,7 @@ export const elementsAdapter: ConformanceAdapter = {
       return true;
     };
     const parts = Array.from(
-      container.querySelectorAll(`[data-element], .${rootClass(component)}`),
+      container.querySelectorAll('[data-element], [data-uni], [data-uni-part]'),
     ).filter(isOwn);
     if (parts.length === 0) throw new Error('The template has no parts.');
 

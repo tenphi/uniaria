@@ -46,6 +46,7 @@ export {
   templateParts,
 } from './conformance/template';
 export type {
+  RenderTemplateOptions,
   RenderedRows,
   TemplateAttrs,
   TemplateComponent,

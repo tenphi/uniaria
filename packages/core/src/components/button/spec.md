@@ -26,7 +26,7 @@ suite in both adapters.
   `relation: 'label'`) while the tooltip is enabled. Without a tooltip,
   the consumer's own `aria-describedby` on the root stays.
 - **Custom element:** yes. `<uni-button>` hosts one native
-  `<button class="uni-button">` (or `<a class="uni-button" href>`) written by
+  `<button data-uni="button">` (or `<a data-uni="button" href>`) written by
   the consumer. The inner element provides native semantics, form submission
   and link navigation, so the element needs no
   `ElementInternals` and no stand-in submit button (the workaround Spectrum
@@ -39,9 +39,9 @@ state. See Resolved questions.
 
 ## Anatomy
 
-| Part | Element                                                                  | Attributes UniAria owns                                                                                                                                                                       | Notes                                                                                                                                                                                                                                                                                              |
-| ---- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root | `button` by default; `a` in link mode; any element through `elementType` | `type`, `href` (link mode), `disabled`, `aria-disabled`, `role` and `tabindex`, the `uni-button` class, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | The consumer owns content, `id`, other classes, labelling (`aria-label`, `aria-labelledby`, `aria-describedby`), popup attributes (`aria-haspopup`, `aria-expanded`, `aria-controls`) form attributes (`name`, `value`, `form`, `formaction`, …) and link attributes (`target`, `rel`, `download`) |
+| Part | Element                                                                  | Attributes UniAria owns                                                                                                                                                                    | Notes                                                                                                                                                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root | `button` by default; `a` in link mode; any element through `elementType` | `type`, `href` (link mode), `disabled`, `aria-disabled`, `role` and `tabindex`, `data-uni="button"`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | The consumer owns content, `id`, classes, labelling (`aria-label`, `aria-labelledby`, `aria-describedby`), popup attributes (`aria-haspopup`, `aria-expanded`, `aria-controls`) form attributes (`name`, `value`, `form`, `formaction`, …) and link attributes (`target`, `rel`, `download`) |
 
 No element-owned parts.
 
@@ -134,8 +134,8 @@ when false. ARIA values are strings. UniAria never writes `aria-disabled="false"
 
 | State                                   | Part | Attributes                                                                                                                                                 |
 | --------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| idle, native                            | root | `type="button"` (or the `type` prop), `tabindex="0"`, the `uni-button` class                                                                               |
-| idle, non-native                        | root | `role="button"`, `tabindex="0"`, the `uni-button` class                                                                                                    |
+| idle, native                            | root | `type="button"` (or the `type` prop), `tabindex="0"`, `data-uni="button"`                                                                                  |
+| idle, non-native                        | root | `role="button"`, `tabindex="0"`, `data-uni="button"`                                                                                                       |
 | hovered                                 | root | + `data-hovered`                                                                                                                                           |
 | pressed                                 | root | + `data-pressed`                                                                                                                                           |
 | focused                                 | root | + `data-focused`; + `data-focus-visible` after keyboard or virtual interaction                                                                             |
@@ -143,7 +143,7 @@ when false. ARIA values are strings. UniAria never writes `aria-disabled="false"
 | disabled, native                        | root | `disabled`, `data-disabled`; no hover or press attributes                                                                                                  |
 | disabled, non-native                    | root | `aria-disabled="true"`, no `tabindex`, `data-disabled`                                                                                                     |
 | disabled with `isFocusableWhenDisabled` | root | `aria-disabled="true"`, `tabindex` kept, `data-disabled`; no `disabled` attribute                                                                          |
-| idle, link mode                         | root | `href`, `tabindex="0"`, the `uni-button` class; no `role` (a link is already a link)                                                                       |
+| idle, link mode                         | root | `href`, `tabindex="0"`, `data-uni="button"`; no `role` (a link is already a link)                                                                          |
 | disabled, link mode                     | root | `href` removed, `role="link"` (an `a` without `href` has no role), `aria-disabled="true"`, `data-disabled`; `tabindex` only with `isFocusableWhenDisabled` |
 
 `tabindex` is set on native buttons too: Safari and Firefox on macOS focus a
@@ -241,10 +241,10 @@ return <a {...docs.parts.root}>Docs</a>; // or the router's link component
 ```html
 <!-- Custom element -->
 <uni-button focusable-when-disabled>
-  <button class="uni-button">Save</button>
+  <button data-uni="button">Save</button>
 </uni-button>
 <uni-button>
-  <a class="uni-button" href="/docs">Docs</a>
+  <a data-uni="button" href="/docs">Docs</a>
 </uni-button>
 <script>
   document.querySelector('uni-button').addEventListener('press', save);

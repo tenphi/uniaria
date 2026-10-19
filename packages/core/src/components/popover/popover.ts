@@ -97,6 +97,8 @@ export const popover = defineComponent({
     'description',
     'close',
   ],
+  // They sit outside the popover (root AGENTS.md → Part markers).
+  outsideParts: ['trigger', 'anchor'],
   links: [tooltipLink],
   // The only members of setup()'s result consumers may call (spec,
   // Actions).

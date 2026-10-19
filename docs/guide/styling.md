@@ -10,78 +10,86 @@ works: plain CSS, CSS modules, Tailwind, a CSS-in-JS library, or
 
 ## Parts
 
-Every element a component manages is a _part_, and UniAria marks each one so
-your CSS can find it:
+Every element a component manages is a _part_, and UniAria marks each one
+with an attribute so your CSS can find it:
 
-| Part             | Marker                                                                           | Example                                          |
-| ---------------- | -------------------------------------------------------------------------------- | ------------------------------------------------ |
-| The root         | The class `uni-<name>`, with the component's name in kebab case                  | `class="uni-checkbox"`                           |
-| Every other part | `data-element` with the part's name, capitalized, and `data-scope` with `<name>` | `data-element="Indicator" data-scope="checkbox"` |
+| Part                    | Marker                                                                  | Example                           |
+| ----------------------- | ----------------------------------------------------------------------- | --------------------------------- |
+| The root                | `data-uni` with the component's name, in kebab case                     | `data-uni="checkbox"`             |
+| A part outside the root | `data-uni-part` with the component's name and the part's, in kebab case | `data-uni-part="popover-trigger"` |
+| Every other part        | `data-element` with the part's name, capitalized                        | `data-element="Indicator"`        |
 
 Each component page lists its parts by name; a part named `hiddenSelect` is
 `data-element="HiddenSelect"`, and stays `parts.hiddenSelect` in JavaScript.
 Item parts, such as options, also carry their `data-key`.
 
-The root is the component's outermost element, so a style on its class
-reaches every part, a field's label and messages included. A box inside it,
-such as a text field's around its input or a checkbox's `label`, is the
-`wrapper` part. Overlays are the exception: their root is the panel, and the
-trigger sits outside it.
+The root is the component's outermost element, so a style on it reaches
+every part, a field's label and messages included. A box inside it, such as
+a text field's around its input or a checkbox's `label`, is the `wrapper`
+part. Overlays are the exception: their root is the panel, and the trigger
+and the anchor sit outside it, which is why they carry `data-uni-part`.
 
-`uni-<name>` is the only class UniAria puts on a root; the rest of `class` is
-yours. In React, `parts.root` includes `className`, so keep it when you add
-your own, and UniAria warns in development when the root lacks it:
+Many components work without their root, but then nothing ties their parts
+to them: a root-less checkbox's input is a `[data-element='Input']` like any
+other. Render the root to style a component, or style its parts by your own
+classes.
 
-```tsx
-<label
-  {...wifi.parts.root}
-  className={`${wifi.parts.root.className} settings-row`}
->
-  …
-</label>
-```
-
-With the custom elements, you write the class on the root and `data-element`
-on the other parts; UniAria adds `data-scope`.
+The markers are attributes, so `class` is all yours. In React, spreading the
+part props is enough, and any `className` you pass sits beside them; UniAria
+warns in development when your JSX replaces a marker. With the custom
+elements, you write the markers in your markup, where the element finds its
+parts by them.
 
 Your own elements inside a component take `data-element` too, such as a
 switch's thumb: `<span data-element="Thumb">`. CSS and Tasty then treat them
 like parts (in Tasty, as sub-elements). Pick a name that isn't one of the
 component's parts, which UniAria would take as that part. UniAria leaves
-your elements alone, with no `data-scope` and no state attributes, so style
-them from the state of the part or root around them.
+your elements alone, with no state attributes, so style them from the state
+of the part or root around them.
 
 ### Plain CSS
 
-Select the root by its class and the other parts by `data-element` inside it.
-Add `data-scope` when a part is outside the root, as an overlay's trigger is,
-or when a component inside could match too, as the checkboxes in a
-CheckboxGroup do:
+Select the root by `data-uni` and the other parts by `data-element` inside
+it, and a part outside the root by `data-uni-part`:
 
 ```css
-.uni-switch {
+[data-uni='switch'] {
   display: flex;
   gap: 1rem;
 }
-.uni-switch [data-element='Indicator'] {
+[data-uni='switch'] [data-element='Indicator'] {
   inline-size: 2.5rem;
   block-size: 1.5rem;
   border-radius: 999px;
 }
-.uni-switch [data-element='Indicator'][data-selected] {
+[data-uni='switch'] [data-element='Indicator'][data-selected] {
   background: var(--accent);
 }
-[data-scope='popover'][data-element='Trigger'][data-open] {
+[data-uni-part='popover-trigger'][data-open] {
   background: var(--active);
+}
+```
+
+A component inside another one has parts of its own, which a descendant
+selector reaches too: the label of a checkbox in a CheckboxGroup matches
+`[data-uni='checkbox-group'] [data-element='Label']`. Leave out what is
+inside a nested root:
+
+```css
+[data-uni='checkbox-group']
+  [data-element='Label']:not(
+    [data-uni='checkbox-group'] [data-uni]:not([data-uni='checkbox-group']) *
+  ) {
+  font-weight: 600;
 }
 ```
 
 ### Tasty
 
 With [Tasty](https://tasty.style), the root is the Tasty component itself:
-spread `parts.root` on it, and it keeps the `uni-<name>` class next to its
-own. The other parts are sub-elements, styled under capitalized keys. A state
-in a sub-element's styles is the root's; `@own()` reads the part's own:
+spread `parts.root` on it, and it keeps `data-uni` next to its own class.
+The other parts are sub-elements, styled under capitalized keys. A state in
+a sub-element's styles is the root's; `@own()` reads the part's own:
 
 ```tsx
 import { tasty } from '@tenphi/tasty';
@@ -111,18 +119,18 @@ export function Terms() {
 }
 ```
 
-A parent styles a component inside it through the root's class, with Tasty's
-`$` selector affix, and narrows a part to its component with `data-scope`:
+A parent styles a component inside it through its root, with Tasty's `$`
+selector affix, and a part through the root it is in:
 
 ```tsx
 const Settings = tasty({
   styles: {
     display: 'grid',
     gap: '2x',
-    // Every checkbox inside, by its root's class.
-    Checkbox: { $: '.uni-checkbox', padding: '1x 0' },
+    // Every checkbox inside, by its root.
+    Checkbox: { $: '[data-uni="checkbox"]', padding: '1x 0' },
     // A Select's options, not a Listbox's.
-    Option: { $: '@[data-scope="select"]', radius: true },
+    Option: { $: '[data-uni="select"] @', radius: true },
   },
 });
 ```
@@ -185,12 +193,12 @@ stay mounted and move through three phases you can animate:
   from it:
 
   ```css
-  .uni-popover {
+  [data-uni='popover'] {
     transition:
       opacity 150ms,
       translate 150ms;
   }
-  .uni-popover[data-entering] {
+  [data-uni='popover'][data-entering] {
     opacity: 0;
     translate: 0 -4px;
   }
@@ -239,10 +247,10 @@ focusable:
 
 ```css
 label.uni-checkbox,
-[data-scope='checkbox'][data-element='Wrapper'] {
+[data-uni='checkbox'] [data-element='Wrapper'] {
   position: relative;
 }
-.uni-checkbox [data-element='Input'] {
+[data-uni='checkbox'] [data-element='Input'] {
   position: absolute;
   inset: 0;
   margin: 0;

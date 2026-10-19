@@ -343,8 +343,8 @@ to these tokens. UniAria sets no look.
 
 | Token                                                                                                                   | On                                              | Meaning                                                    |
 | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
-| The `uni-number-field` class                                                                                            | root                                            | The root part.                                             |
-| `data-scope="number-field"`, `data-element`                                                                             | every other part                                | Which part an element is.                                  |
+| `data-uni="number-field"`                                                                                               | root                                            | The root part.                                             |
+| `data-element`                                                                                                          | every other part                                | Which part an element is.                                  |
 | `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, wrapper, label, input, description, error | The field's state, as TextField's.                         |
 | `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                            | Button's own; `data-disabled` while the button can't step. |
 | `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)              | The same, for a framework's own bindings.                  |
@@ -400,7 +400,7 @@ return (
 ```html
 <!-- Custom element -->
 <uni-number-field min-value="0" max-value="99" lang="de">
-  <div class="uni-number-field">
+  <div data-uni="number-field">
     <label data-element="Label">Menge</label>
     <div data-element="Wrapper">
       <input data-element="Input" value="5" />

@@ -53,7 +53,7 @@ export function BoldButton(props: {
 
 ```html
 <uni-toggle-button id="mute" default-selected>
-  <button class="uni-toggle-button" aria-pressed="true">Mute</button>
+  <button data-uni="toggle-button" aria-pressed="true">Mute</button>
 </uni-toggle-button>
 
 <script type="module">
@@ -181,15 +181,15 @@ property holds only the value you set, not the current state. See
 
 ## Styling
 
-| Attribute                   | When                                                   |
-| --------------------------- | ------------------------------------------------------ |
-| `class="uni-toggle-button"` | Always.                                                |
-| `data-selected`             | The toggle is on.                                      |
-| `data-hovered`              | A mouse or pen is over the root.                       |
-| `data-pressed`              | A pointer or key is down on the root.                  |
-| `data-focused`              | The root has focus.                                    |
-| `data-focus-visible`        | The root has focus from a keyboard or a screen reader. |
-| `data-disabled`             | The toggle button is disabled.                         |
+| Attribute                  | When                                                   |
+| -------------------------- | ------------------------------------------------------ |
+| `data-uni="toggle-button"` | Always.                                                |
+| `data-selected`            | The toggle is on.                                      |
+| `data-hovered`             | A mouse or pen is over the root.                       |
+| `data-pressed`             | A pointer or key is down on the root.                  |
+| `data-focused`             | The root has focus.                                    |
+| `data-focus-visible`       | The root has focus from a keyboard or a screen reader. |
+| `data-disabled`            | The toggle button is disabled.                         |
 
 Style the on state with `data-selected`, not `data-pressed`, which only means
 a press is in progress. State attributes are present or absent, never

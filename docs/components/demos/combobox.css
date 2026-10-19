@@ -19,26 +19,26 @@ output {
   padding-block: 0.5rem;
 }
 
-.uni-combobox {
+[data-uni='combobox'] {
   display: grid;
   gap: 0.375rem;
   width: 16rem;
 }
-[data-scope='combobox'][data-element='Label'] {
+[data-uni='combobox'] [data-element='Label'] {
   font-weight: 600;
 }
 /* The input and the button share one box, which the popover aligns to. */
-[data-scope='combobox'][data-element='Anchor'] {
+[data-uni='combobox'] [data-element='Anchor'] {
   display: flex;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
   border-radius: 0.5rem;
   background: Canvas;
 }
-[data-scope='combobox'][data-element='Anchor'][data-focus-visible] {
+[data-uni='combobox'] [data-element='Anchor'][data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-[data-scope='combobox'][data-element='Input'] {
+[data-uni='combobox'] [data-element='Input'] {
   flex: 1;
   min-width: 0;
   padding: 0.5rem 0.75rem;
@@ -48,7 +48,7 @@ output {
   font: inherit;
   outline: none;
 }
-[data-scope='combobox'][data-element='Button'] {
+[data-uni='combobox'] [data-element='Button'] {
   display: grid;
   place-items: center;
   padding: 0 0.625rem;
@@ -56,11 +56,11 @@ output {
   background: none;
   color: inherit;
 }
-[data-scope='combobox'][data-element='Button'][data-open] svg {
+[data-uni='combobox'] [data-element='Button'][data-open] svg {
   rotate: 180deg;
 }
 
-[data-scope='combobox'][data-element='Popover'] {
+[data-uni='combobox'] [data-element='Popover'] {
   box-sizing: border-box;
   min-width: var(--anchor-width);
   max-height: min(15rem, var(--available-height));
@@ -73,22 +73,22 @@ output {
   color: CanvasText;
   box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
 }
-[data-scope='combobox'][data-element='Option'] {
+[data-uni='combobox'] [data-element='Option'] {
   padding: 0.25rem 0.75rem;
   border-radius: 0.375rem;
   cursor: default;
 }
 /* `data-focused` is the highlight: hover and the arrow keys move it. */
-[data-scope='combobox'][data-element='Option'][data-focused] {
+[data-uni='combobox'] [data-element='Option'][data-focused] {
   background: color-mix(in srgb, Highlight 30%, Canvas);
 }
-[data-scope='combobox'][data-element='Option'][data-selected] {
+[data-uni='combobox'] [data-element='Option'][data-selected] {
   font-weight: 600;
 }
-[data-scope='combobox'][data-element='Option'][data-disabled] {
+[data-uni='combobox'] [data-element='Option'][data-disabled] {
   color: GrayText;
 }
-[data-scope='combobox'][data-element='Empty'] {
+[data-uni='combobox'] [data-element='Empty'] {
   margin: 0;
   padding: 0.25rem 0.75rem;
   color: GrayText;

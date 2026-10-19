@@ -68,8 +68,8 @@ export function DeleteFile(props: { onDelete(): void }) {
 
 ```html
 <uni-dialog id="delete-file">
-  <button data-element="Trigger">Delete file…</button>
-  <dialog class="uni-dialog">
+  <button data-uni-part="dialog-trigger">Delete file…</button>
+  <dialog data-uni="dialog">
     <h2 data-element="Title">Delete “report.pdf”?</h2>
     <p data-element="Description">It stays in the trash for 30 days.</p>
     <form method="dialog">
@@ -159,8 +159,8 @@ mount, while the dialog is still closed), so mark the field with
 
 ```html
 <uni-dialog id="rename">
-  <button data-element="Trigger">Rename…</button>
-  <dialog class="uni-dialog">
+  <button data-uni-part="dialog-trigger">Rename…</button>
+  <dialog data-uni="dialog">
     <h2 data-element="Title">Rename file</h2>
     <form method="dialog">
       <label for="new-name">Name</label>
@@ -230,8 +230,8 @@ return (
 
 ```html
 <uni-dialog dismissable="false">
-  <button data-element="Trigger">Close editor</button>
-  <dialog class="uni-dialog" role="alertdialog">
+  <button data-uni-part="dialog-trigger">Close editor</button>
+  <dialog data-uni="dialog" role="alertdialog">
     <h2 data-element="Title">Discard changes?</h2>
     <p data-element="Description">Your edits to this page will be lost.</p>
     <form method="dialog">
@@ -395,8 +395,9 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute                                                                             | On               | When                                          |
 | ------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------- |
-| `class="uni-dialog"`                                                                  | root             | Always.                                       |
-| `data-scope="dialog"`, `data-element`                                                 | every other part | Always.                                       |
+| `data-uni="dialog"`                                                                   | root             | Always.                                       |
+| `data-uni-part="dialog-trigger"`                                                      | trigger          | Always.                                       |
+| `data-element`                                                                        | every other part | Always.                                       |
 | `data-open`                                                                           | every part       | The dialog is open.                           |
 | `data-entering`                                                                       | every part       | The first frames after opening.               |
 | `data-exiting`                                                                        | every part       | It is closing, until its exit animations end. |
@@ -412,20 +413,20 @@ a fixed time: a dialog with no running animation closes in the next frame, and
 opening it again while it exits cancels the exit.
 
 ```css
-.uni-dialog {
+[data-uni='dialog'] {
   transition:
     opacity 150ms,
     scale 150ms;
 }
-.uni-dialog::backdrop {
+[data-uni='dialog']::backdrop {
   background: rgb(0 0 0 / 0.4);
   transition: opacity 150ms;
 }
-.uni-dialog:is([data-entering], [data-exiting]) {
+[data-uni='dialog']:is([data-entering], [data-exiting]) {
   opacity: 0;
   scale: 0.96;
 }
-.uni-dialog:is([data-entering], [data-exiting])::backdrop {
+[data-uni='dialog']:is([data-entering], [data-exiting])::backdrop {
   opacity: 0;
 }
 ```

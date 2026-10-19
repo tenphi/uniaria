@@ -6,7 +6,7 @@
  *
  * ```html
  * <uni-checkbox required>
- *   <div class="uni-checkbox">
+ *   <div data-uni="checkbox">
  *     <label data-element="Wrapper">
  *       <input data-element="Input" type="checkbox" name="terms" />
  *       <span data-element="Indicator"></span>

@@ -81,7 +81,8 @@ it('composes into an input, whose own part is the control', () => {
   expect(label.getAttribute('for')).toBe(input.id);
   expect(input.getAttribute('aria-labelledby')).toBe(label.id);
   expect(input.getAttribute('aria-describedby')).toBe(error.id);
-  expect(input.getAttribute('data-scope')).toBe('test-text-input');
+  // Marked as the composing definition's part, by its own name.
+  expect(input.getAttribute('data-element')).toBe('Input');
   expect(instance.getState().isErrorShown).toBe(true);
 });
 

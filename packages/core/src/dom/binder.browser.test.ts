@@ -32,7 +32,7 @@ const toy = defineComponent({
 });
 
 function setup(
-  html = '<div class="uni-toy x"><span>Go</span></div><i data-element="Item"></i>',
+  html = '<div data-uni="toy" class="x"><span>Go</span></div><i data-element="Item"></i>',
 ) {
   const host = document.createElement('div');
   host.innerHTML = html;
@@ -63,17 +63,16 @@ describe('createBinder', () => {
     const binder = createBinder(instance);
     binder.attach('root', root);
     binder.attach('item', item);
-    expect(item.hasAttribute('data-scope')).toBe(false);
+    root.removeAttribute('data-uni');
+    item.removeAttribute('data-element');
 
     binder.start();
 
     expect(root.getAttribute('aria-label')).toBe('Go');
-    // The root's marker is its class, which the markup has and the binder
-    // leaves alone; it gets no data-scope or data-element.
-    expect(root.getAttribute('class')).toBe('uni-toy x');
-    expect(root.hasAttribute('data-scope')).toBe(false);
+    // The binder writes the markers, and never `class`: the consumer's.
+    expect(root.getAttribute('data-uni')).toBe('toy');
+    expect(root.getAttribute('class')).toBe('x');
     expect(root.hasAttribute('data-element')).toBe(false);
-    expect(item.getAttribute('data-scope')).toBe('toy');
     expect(item.getAttribute('data-element')).toBe('Item');
     expect(instance.element('root')).toBe(root);
   });
@@ -106,7 +105,8 @@ describe('createBinder', () => {
     instance.sync();
 
     expect(root.hasAttribute('aria-label')).toBe(false);
-    expect(root.getAttribute('class')).toBe('uni-toy x');
+    expect(root.getAttribute('data-uni')).toBe('toy');
+    expect(root.getAttribute('class')).toBe('x');
   });
 
   it('compares with the element, so outside writes are corrected', () => {
@@ -118,12 +118,10 @@ describe('createBinder', () => {
     binder.start();
 
     root.setAttribute('data-on', '');
-    item.setAttribute('data-scope', 'other');
     item.setAttribute('data-element', 'Other');
     binder.apply();
 
     expect(root.hasAttribute('data-on')).toBe(false);
-    expect(item.getAttribute('data-scope')).toBe('toy');
     expect(item.getAttribute('data-element')).toBe('Item');
   });
 
@@ -374,12 +372,7 @@ describe('createBinder', () => {
       expect(first.getAttribute('aria-expanded')).toBe('false');
 
       binder.attach('trigger', second);
-      for (const name of [
-        'id',
-        'aria-expanded',
-        'aria-controls',
-        'data-scope',
-      ]) {
+      for (const name of ['id', 'aria-expanded', 'aria-controls']) {
         expect(first.hasAttribute(name), name).toBe(false);
       }
       expect(first.style.getPropertyValue('--size')).toBe('');
@@ -417,7 +410,6 @@ describe('createBinder', () => {
       // Still the other instance's to write.
       expect(first.getAttribute('aria-expanded')).toBe('true');
       expect(first.style.getPropertyValue('--size')).toBe('2');
-      expect(first.getAttribute('data-scope')).toBe('panel');
       innerBinder.apply();
       expect(first.getAttribute('aria-expanded')).toBe('false');
     });
@@ -491,7 +483,7 @@ describe('createBinder', () => {
         }),
       });
       const { root, item, host } = setup(
-        '<div class="uni-nested"><p data-element="Item"><span>Go</span></p></div>',
+        '<div data-uni="nested"><p data-element="Item"><span>Go</span></p></div>',
       );
       const binder = createBinder(createInstance(nested), { host });
       binder.attach('root', root);
@@ -629,7 +621,7 @@ describe('createBinder', () => {
           }),
         });
       const { host: outer, root: outerRoot } = setup(
-        '<div class="uni-outer"><div id="inner"><button class="uni-inner">Go</button></div></div>',
+        '<div data-uni="outer"><div id="inner"><button data-uni="inner">Go</button></div></div>',
       );
       const inner = outer.querySelector<HTMLElement>('#inner')!;
       const button = inner.querySelector('button')!;
@@ -758,9 +750,9 @@ describe('createBinder', () => {
       document.body.append(shadowHost);
       const shadow = shadowHost.attachShadow({ mode: 'open' });
       const host = document.createElement('div');
-      host.innerHTML = '<div class="uni-toy"><span>Go</span></div>';
+      host.innerHTML = '<div data-uni="toy"><span>Go</span></div>';
       shadow.append(host);
-      const root = host.querySelector<HTMLElement>('.uni-toy')!;
+      const root = host.querySelector<HTMLElement>('[data-uni="toy"]')!;
       const onShadow = vi.spyOn(shadow, 'addEventListener');
       const instance = createInstance(toy);
       const binder = createBinder(instance, { host });
@@ -833,10 +825,9 @@ describe('createBinder with item parts', () => {
     const instance = createInstance(rows);
     const binder = createBinder(instance, { host });
     for (const key of ['a', 'b', 'c']) binder.attachItem('row', key, row(key));
-    expect(row('a').hasAttribute('data-scope')).toBe(false);
+    row('c').removeAttribute('data-element');
 
     binder.start();
-    expect(row('a').getAttribute('data-scope')).toBe('rows');
     expect(row('c').getAttribute('data-element')).toBe('Row');
     expect(binder.itemOf(row('b'))).toEqual({ part: 'row', key: 'b' });
     instance.api.computed.length = 0;
@@ -888,7 +879,6 @@ describe('createBinder with item parts', () => {
     binder.attachItem('row', 'a', row('b'));
     expect(row('a').hasAttribute('data-active')).toBe(false);
     expect(row('a').hasAttribute('data-tone')).toBe(false);
-    expect(row('a').hasAttribute('data-scope')).toBe(false);
     expect(row('a').getAttribute('data-key')).toBe('a');
     expect(row('a').getAttribute('data-element')).toBe('Row');
     expect(row('b').getAttribute('data-active')).toBe('');

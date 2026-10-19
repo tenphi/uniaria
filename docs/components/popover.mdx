@@ -66,8 +66,8 @@ export function ImageSize() {
 
 ```html
 <uni-popover position-area="bottom span-right">
-  <button data-element="Trigger">Size</button>
-  <div class="uni-popover">
+  <button data-uni-part="popover-trigger">Size</button>
+  <div data-uni="popover">
     <div data-element="Arrow"></div>
     <h3 data-element="Title">Image size</h3>
     <label>Width <input type="number" value="1280" /></label>
@@ -212,7 +212,7 @@ configure({ positioning: 'css' });
 ```
 
 ```css
-.uni-popover {
+[data-uni='popover'] {
   inset: auto; /* a popover's own is 0 */
   position-area: bottom span-right;
   position-try-fallbacks: flip-block;
@@ -358,8 +358,9 @@ On the custom element, read `element.instance.getState()`. See
 
 | Attribute                                                                             | On                        | When                                                                        |
 | ------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------- |
-| `class="uni-popover"`                                                                 | root                      | Always.                                                                     |
-| `data-scope="popover"`, `data-element`                                                | every other part          | Always.                                                                     |
+| `data-uni="popover"`                                                                  | root                      | Always.                                                                     |
+| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                   | trigger, anchor           | Always.                                                                     |
+| `data-element`                                                                        | every other part          | Always.                                                                     |
 | `data-open`                                                                           | every part but the anchor | The popover is open.                                                        |
 | `data-entering`                                                                       | every part but the anchor | The first frames after opening.                                             |
 | `data-exiting`                                                                        | every part but the anchor | It is closing, until its exit animations end.                               |
@@ -376,19 +377,19 @@ Nothing caps the popover's size unless you use them. A popover's default
 `overflow: visible`, and scroll an element inside it instead.
 
 ```css
-.uni-popover {
+[data-uni='popover'] {
   min-width: var(--anchor-width);
   max-height: var(--available-height);
   margin: 8px 0;
   overflow: visible;
 }
-.uni-popover [data-element='Arrow'] {
+[data-uni='popover'] [data-element='Arrow'] {
   position: absolute;
   width: 14px;
   height: 14px;
 }
 /* Rotate a child of the arrow: UniAria measures the arrow itself. */
-.uni-popover [data-element='Arrow']::before {
+[data-uni='popover'] [data-element='Arrow']::before {
   content: '';
   position: absolute;
   inset: 2px;

@@ -112,9 +112,9 @@ function. The source is `packages/testing/src/conformance/`.
 - **Scenarios get a context:** `mount`, real `pointer` and `keyboard` input
   through Playwright (they can hold a button or a key), `touch`, `spoken()`
   and `listen()` for the virtual screen reader, and `screenReader` for a real
-  one. `mounted.part(name)` finds the root by its `uni-<name>` class and
-  any other part by `[data-scope][data-element]`, and fails loudly when the
-  marker is missing.
+  one. `mounted.part(name)` finds the root by `data-uni`, a part outside
+  the root by `data-uni-part` and any other part by `data-element` inside
+  the root (`partSelector()`), and fails loudly when the marker is missing.
 - **Events** are camelCase in scenarios (`pressStart`); the DOM event is
   lowercase (`pressstart`) and the React prop is `onPressStart`.
 

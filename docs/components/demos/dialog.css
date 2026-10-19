@@ -12,8 +12,9 @@ body {
 }
 
 /* The trigger and close parts are buttons, like the Delete Button. */
-[data-scope='dialog']:is([data-element='Trigger'], [data-element='Close']),
-.uni-button {
+[data-uni-part='dialog-trigger'],
+[data-uni='dialog'] [data-element='Close'],
+[data-uni='button'] {
   padding: 0.5rem 1rem;
   border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
   border-radius: 0.5rem;
@@ -23,26 +24,38 @@ body {
   cursor: pointer;
   outline: none;
 }
-:is([data-scope='dialog'], .uni-button)[data-hovered] {
+:is(
+  [data-uni-part='dialog-trigger'],
+  [data-uni='dialog'] [data-element='Close'],
+  [data-uni='button']
+)[data-hovered] {
   background: color-mix(in srgb, CanvasText 6%, Canvas);
 }
-:is([data-scope='dialog'], .uni-button)[data-pressed] {
+:is(
+  [data-uni-part='dialog-trigger'],
+  [data-uni='dialog'] [data-element='Close'],
+  [data-uni='button']
+)[data-pressed] {
   background: color-mix(in srgb, CanvasText 12%, Canvas);
 }
-:is([data-scope='dialog'], .uni-button)[data-focus-visible] {
+:is(
+  [data-uni-part='dialog-trigger'],
+  [data-uni='dialog'] [data-element='Close'],
+  [data-uni='button']
+)[data-focus-visible] {
   outline: 2px solid Highlight;
   outline-offset: 2px;
 }
-.uni-button.primary {
+[data-uni='button'].primary {
   border-color: CanvasText;
   background: CanvasText;
   color: Canvas;
 }
-.uni-button.primary:is([data-hovered], [data-pressed]) {
+[data-uni='button'].primary:is([data-hovered], [data-pressed]) {
   background: color-mix(in srgb, CanvasText 80%, Canvas);
 }
 
-.uni-dialog {
+[data-uni='dialog'] {
   width: min(22rem, 100% - 2rem);
   padding: 1.25rem 1.5rem;
   border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
@@ -55,23 +68,23 @@ body {
     opacity 150ms,
     scale 150ms;
 }
-.uni-dialog::backdrop {
+[data-uni='dialog']::backdrop {
   background: rgb(0 0 0 / 0.4);
   transition: opacity 150ms;
 }
 /* The first frame after opening, and the closing phase. */
-.uni-dialog:is([data-entering], [data-exiting]) {
+[data-uni='dialog']:is([data-entering], [data-exiting]) {
   opacity: 0;
   scale: 0.96;
 }
-.uni-dialog:is([data-entering], [data-exiting])::backdrop {
+[data-uni='dialog']:is([data-entering], [data-exiting])::backdrop {
   opacity: 0;
 }
-.uni-dialog [data-element='Title'] {
+[data-uni='dialog'] [data-element='Title'] {
   margin: 0 0 0.25rem;
   font-size: 1.125rem;
 }
-.uni-dialog [data-element='Description'] {
+[data-uni='dialog'] [data-element='Description'] {
   margin: 0 0 1.25rem;
   color: GrayText;
 }

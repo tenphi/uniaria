@@ -64,7 +64,7 @@ export function EmailField(props: {
 
 ```html
 <uni-text-field id="email" required>
-  <div class="uni-text-field">
+  <div data-uni="text-field">
     <label data-element="Label">Email</label>
     <div data-element="Wrapper">
       <input data-element="Input" name="email" type="email" />
@@ -256,17 +256,17 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                                          | When                                                    |
-| -------------------------------------------------- | ------------------------------------------------------- |
-| `class="uni-text-field"`                           | On the root, always.                                    |
-| `data-scope="text-field"`, `data-element="<Part>"` | On every other part, always.                            |
-| `data-hovered`                                     | A mouse or pen is over the input.                       |
-| `data-focused`                                     | The input has focus.                                    |
-| `data-focus-visible`                               | The input has focus from a keyboard or a screen reader. |
-| `data-disabled`                                    | The field is disabled.                                  |
-| `data-readonly`                                    | The field is read-only.                                 |
-| `data-invalid`                                     | The field is invalid.                                   |
-| `data-required`                                    | The field is required.                                  |
+| Attribute               | When                                                    |
+| ----------------------- | ------------------------------------------------------- |
+| `data-uni="text-field"` | On the root, always.                                    |
+| `data-element="<Part>"` | On every other part, always.                            |
+| `data-hovered`          | A mouse or pen is over the input.                       |
+| `data-focused`          | The input has focus.                                    |
+| `data-focus-visible`    | The input has focus from a keyboard or a screen reader. |
+| `data-disabled`         | The field is disabled.                                  |
+| `data-readonly`         | The field is read-only.                                 |
+| `data-invalid`          | The field is invalid.                                   |
+| `data-required`         | The field is required.                                  |
 
 Every state attribute goes on every part, so the box, the label and the
 messages can follow the input: draw the focus ring on the wrapper with
