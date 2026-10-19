@@ -116,7 +116,9 @@ Radio:
 | describedBy             | `string \| undefined` | —         | Field's.                                                                                                                |
 
 A radio's `group` attribute (elements) and `owner` prop (React) link it to
-a group it isn't inside, as a checkbox's do.
+a group it isn't inside, as a checkbox's do. The group's arrow keys reach
+it too, in DOM order with the radios inside the root: the group's radios
+are the radios of its name in its form.
 
 ## Events
 
@@ -156,7 +158,8 @@ on a native radio.
   order.
 - **Disabled.** The group's or the radio's own: native `disabled`, skipped
   by arrows and Tab. With `isFocusableWhenDisabled`, `aria-disabled` and a
-  cancelled click instead.
+  cancelled click instead, and its entry left out of the form's data (a
+  `formdata` listener), as a natively disabled radio's is (Checkbox's rule).
 - **Form reset.** As CheckboxGroup: the group goes back to the value it
   mounted with, and the radios write their state again after the native
   reset.
@@ -174,7 +177,7 @@ right-to-left), and Safari doesn't Tab to radios at all.
 | Key                                    | Action                                                                                                                                                                                                                                                                                                               |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Tab, Shift+Tab                         | Enters at the selected radio; with none, the first (Tab) or the last (Shift+Tab). Leaves the group from any radio: Chromium would stop on the selected radio ahead of an unselected one (read-only), so UniAria moves that Tab on, as UI Kit does. Each radio's `tabindex` is `0` for that entry and `-1` otherwise. |
-| ArrowDown, ArrowRight                  | Focuses the next enabled radio in DOM order inside the root, wrapping, and selects it (a native `click`, so `input` and `change` fire). Read-only or a focusable disabled radio: focus only.                                                                                                                         |
+| ArrowDown, ArrowRight                  | Focuses the group's next enabled radio in DOM order, wrapping, and selects it (a native `click`, so `input` and `change` fire). Read-only or a focusable disabled radio: focus only.                                                                                                                                 |
 | ArrowUp, ArrowLeft                     | The same, to the previous radio.                                                                                                                                                                                                                                                                                     |
 | Right to left                          | ArrowLeft and ArrowRight swap when `orientation` is `horizontal`, as in React Aria.                                                                                                                                                                                                                                  |
 | Space                                  | Selects the focused radio, natively. Nothing when read-only.                                                                                                                                                                                                                                                         |
