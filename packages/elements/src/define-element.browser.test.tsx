@@ -657,6 +657,44 @@ describe('item parts', () => {
     expect(host.instance.getState().active).toBe('fig');
   });
 
+  it('reads an item’s text again when its text or data-text-value changes', async () => {
+    const { host, row } = rowsIn(mount(ROWS));
+    (row('apple').firstChild as Text).data = 'Green apple';
+    row('lemon').setAttribute('data-text-value', 'Lime');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.getState().items).toEqual([
+      { key: 'apple', textValue: 'Green apple' },
+      { key: 'citrus', items: [{ key: 'lemon', textValue: 'Lime' }] },
+      { key: 'kiwi', textValue: 'Kiwi fruit' },
+    ]);
+
+    row('lemon').removeAttribute('data-text-value');
+    row('lemon').querySelector('small')!.firstChild!.nodeValue = 'tart';
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.getState().items).toEqual([
+      { key: 'apple', textValue: 'Green apple' },
+      { key: 'citrus', items: [{ key: 'lemon', textValue: 'Lemon tart' }] },
+      { key: 'kiwi', textValue: 'Kiwi fruit' },
+    ]);
+  });
+
+  it('scans no more for a text change outside its items', async () => {
+    const { host } = rowsIn(
+      mount(`
+        <uni-test-rows>
+          <p>Fruit</p>
+          <div data-element="List">
+            <div data-element="Row" data-key="apple">Apple</div>
+          </div>
+        </uni-test-rows>`),
+    );
+    const scans = vi.spyOn(host, 'querySelectorAll');
+    (host.querySelector('p')!.firstChild as Text).data = 'Fruits';
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(scans).not.toHaveBeenCalled();
+    scans.mockRestore();
+  });
+
   it('keeps items the consumer sets, and the same items while the markup reads the same', async () => {
     const { host, row } = rowsIn(mount(ROWS));
     const items = host.instance.getState().items;
@@ -1845,6 +1883,15 @@ describe('<uni-listbox>', () => {
     const { option } = listboxIn(mount(FRUIT));
     option('apple').focus();
     await userEvent.keyboard('l');
+    expect(document.activeElement).toBe(option('lemon'));
+  });
+
+  it('finds an option by a data-text-value that changed', async () => {
+    const { option } = listboxIn(mount(FRUIT));
+    option('lemon').setAttribute('data-text-value', 'Kiwi');
+    await new Promise((resolve) => setTimeout(resolve));
+    option('apple').focus();
+    await userEvent.keyboard('k');
     expect(document.activeElement).toBe(option('lemon'));
   });
 

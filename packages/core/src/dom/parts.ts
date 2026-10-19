@@ -146,9 +146,11 @@ export function queryItemParts(
 
 /**
  * Calls `callback` whenever parts of the component `name` may have been
- * added, removed or renamed, or a nested element's tag was defined as a
- * host. A change of `class` counts only when it adds or removes the root's
- * class, so a consumer's class toggles cost no rescan.
+ * added, removed or renamed, an item's text value may have changed (its text
+ * or `data-text-value`), or a nested element's tag was defined as a host. A
+ * change of `class` counts only when it adds or removes the root's class,
+ * and a change of text only inside one of the host's items, so a consumer's
+ * class toggles and other text cost no rescan.
  */
 export function observeParts(
   host: Element,
@@ -160,10 +162,20 @@ export function observeParts(
   const root = rootClass(name);
   const hadRoot = (value: string | null) =>
     value !== null && value.split(/\s+/).includes(root);
-  const isRelevant = (record: MutationRecord): boolean =>
-    record.attributeName !== 'class' ||
-    hadRoot(record.oldValue) !==
-      (record.target as Element).classList.contains(root);
+  const isRelevant = (record: MutationRecord): boolean => {
+    if (record.type === 'characterData') {
+      // Text matters only as an item's text value: inside one of its items.
+      const item = record.target.parentElement?.closest('[data-key]');
+      return (
+        !!item && item !== host && host.contains(item) && belongsTo(item, host)
+      );
+    }
+    return (
+      record.attributeName !== 'class' ||
+      hadRoot(record.oldValue) !==
+        (record.target as Element).classList.contains(root)
+    );
+  };
   // A host upgraded before a nested element's tag was defined took the parts
   // inside it, and defining a tag mutates nothing: wait for each undefined
   // tag, and scan again if it turns out to be a host.
@@ -195,9 +207,10 @@ export function observeParts(
   observer.observe(host, {
     childList: true,
     subtree: true,
+    characterData: true,
     attributes: true,
     attributeOldValue: true,
-    attributeFilter: ['data-element', 'data-key', 'class'],
+    attributeFilter: ['data-element', 'data-key', 'data-text-value', 'class'],
   });
   for (const each of host.querySelectorAll(':not(:defined)')) wait(each);
   return () => {

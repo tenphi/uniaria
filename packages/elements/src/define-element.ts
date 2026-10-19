@@ -22,7 +22,7 @@
  *   attributes and delegates their listeners from the host's root. Item
  *   parts are every such element, keyed by the consumer's `data-key`; a prop
  *   that adopts `items` reads its collection from them while the consumer
- *   sets none.
+ *   sets none, again whenever an item's text or `data-text-value` changes.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
  *   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
  * - Owners (decision 11): every host answers owner requests for its
