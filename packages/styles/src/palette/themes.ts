@@ -5,7 +5,7 @@
  * the high-contrast schemes.
  */
 
-import type { ColorMap } from '@tenphi/glaze';
+import type { ColorMap, GlazeConfigOverride } from '@tenphi/glaze';
 
 export const THEMES = [
   'default',
@@ -54,14 +54,25 @@ export interface ThemeSeed {
   readonly saturation: number;
 }
 
-/** A neutral grey with a blue accent (spec: Resolved questions 9). */
+/**
+ * Conventional hues: a blue accent, red danger, amber warning and cyan
+ * note (owner, 2026-10-19). Saturations are Cube UI Kit's, the palette's
+ * reference: full for the colored themes, and a neutral whose surface
+ * carries 12 of it, its text 20.
+ */
 export const SEEDS: Readonly<Record<Theme, ThemeSeed>> = {
-  default: { hue: 262, saturation: 6 },
-  accent: { hue: 262, saturation: 80 },
-  danger: { hue: 25, saturation: 80 },
-  warning: { hue: 75, saturation: 90 },
-  note: { hue: 200, saturation: 80 },
-  disabled: { hue: 262, saturation: 0 },
+  default: { hue: 262, saturation: 20 },
+  accent: { hue: 262, saturation: 100 },
+  danger: { hue: 25, saturation: 100 },
+  warning: { hue: 75, saturation: 100 },
+  note: { hue: 200, saturation: 100 },
+  disabled: { hue: 262, saturation: 20 },
+};
+
+/** Glaze's dark tone window, and no desaturation in the dark, as UI Kit's. */
+export const GLAZE_CONFIG: GlazeConfigOverride = {
+  darkTone: [14, 95],
+  darkDesaturation: 0,
 };
 
 /** The token name of a theme's role: `#uni-danger-border`, `#uni-border`. */
@@ -70,46 +81,61 @@ export function colorToken(theme: Theme, role: string): string {
 }
 
 /**
- * The roles in a colored theme: a tinted surface, the theme's color as
- * text, border and fill. A fill follows the scheme: in the dark ones it is
- * lighter than the surface, with dark text on it.
+ * The roles in a colored theme, after UI Kit's: a lightly tinted surface,
+ * the theme's color as text and border, and a fill set from its white text,
+ * as UI Kit's primary button is, darker for hover and press. UI Kit keeps
+ * that fill and its white text in the dark schemes too, but there it can't
+ * meet 3:1 against the dark surface, so here the text turns dark with the
+ * scheme and the fills lighter. Tones are UI Kit's; a contrast floor moves
+ * a color only where it would fall short (spec: Tokens).
  */
 const COLORED: ColorMap = {
-  surface: { tone: [96, 98], saturation: 0.45 },
-  'surface-hover': { base: 'surface', tone: '-3', saturation: 0.45 },
-  'surface-pressed': { base: 'surface', tone: '-6', saturation: 0.45 },
-  text: { base: 'surface', tone: ['-62', '-78'], contrast: 'AA' },
-  'text-soft': {
-    base: 'surface',
-    tone: ['-52', '-66'],
-    contrast: 'AA',
-    saturation: 0.7,
-  },
-  border: { base: 'surface', tone: ['-42', '-56'], contrast: [3, 4.5] },
-  fill: { base: 'surface', tone: [46, 30], contrast: [3, 4.5] },
-  'fill-hover': { base: 'fill', tone: '-6' },
-  'fill-pressed': { base: 'fill', tone: '-12' },
-  'fill-text': { base: 'fill', tone: 'max', contrast: [4.5, 7] },
-  outline: { base: 'surface', tone: ['-50', '-62'], contrast: [3, 4.5] },
+  surface: { tone: [98, 96], saturation: 0.2 },
+  'surface-hover': { base: 'surface', tone: '-3', saturation: 0.2 },
+  'surface-pressed': { base: 'surface', tone: '-6', saturation: 0.2 },
+  text: { base: 'surface', tone: '-49', contrast: [6, 11] },
+  'text-soft': { base: 'surface', tone: '-49', contrast: [4.5, 7] },
+  border: { base: 'surface', tone: '-47', contrast: [3, 4.5] },
+  'fill-text': { tone: 100, saturation: 0.25 },
+  fill: { base: 'fill-text', tone: '-49', contrast: [4.5, 7] },
+  // Further from the text, in contrast: in the dark schemes the floors set
+  // the fills, so they step there too.
+  'fill-hover': { base: 'fill-text', tone: '-52', contrast: [5, 7.5] },
+  'fill-pressed': { base: 'fill-text', tone: '-55', contrast: [5.5, 8] },
+  outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
 };
 
-/** The default theme: white controls, grey text and borders, a dark fill. */
+/**
+ * The default theme: a white surface with a faint tint, near-black text,
+ * and a dark fill. UI Kit's borders are lighter (tone -10), as decoration;
+ * here a border is a field's or a checkbox's edge, which needs 3:1
+ * (WCAG 1.4.11), so the floor darkens it.
+ */
 export const DEFAULT_COLORS: ColorMap = {
   ...COLORED,
-  surface: { tone: 100 },
-  'surface-hover': { base: 'surface', tone: '-4' },
-  'surface-pressed': { base: 'surface', tone: '-8' },
-  text: { base: 'surface', tone: ['-86', '-100'], contrast: 'AA' },
-  'text-soft': { base: 'surface', tone: ['-56', '-72'], contrast: 'AA' },
-  fill: { base: 'surface', tone: ['-78', '-90'], contrast: [3, 4.5] },
+  surface: { tone: 100, saturation: 0.6 },
+  'surface-hover': { base: 'surface', tone: '-3', saturation: 0.5 },
+  'surface-pressed': { base: 'surface', tone: '-6', saturation: 0.5 },
+  text: { base: 'surface', tone: '-100', contrast: [4.5, 7] },
+  'text-soft': { base: 'surface', tone: '-54', contrast: [4.5, 7] },
+  border: {
+    base: 'surface',
+    tone: ['-10', '-30'],
+    saturation: 0.875,
+    contrast: [3, 4.5],
+  },
+  fill: { base: 'fill-text', tone: '-88', contrast: [4.5, 7] },
+  'fill-hover': { base: 'fill-text', tone: '-91', contrast: [5, 7.5] },
+  'fill-pressed': { base: 'fill-text', tone: '-94', contrast: [5.5, 8] },
+  outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
   shadow: {
     type: 'shadow',
     bg: 'surface',
     fg: 'text',
-    intensity: 12,
+    intensity: 10,
     inherit: false,
   },
-  backdrop: { tone: 0, opacity: 0.45, mode: 'static', inherit: false },
+  backdrop: { tone: 10, opacity: 0.5, mode: 'static', inherit: false },
 };
 
 /** Per-theme changes to the colored roles. */
@@ -117,30 +143,22 @@ export const THEME_COLORS: Readonly<Record<Theme, ColorMap>> = {
   default: {},
   accent: COLORED,
   danger: COLORED,
-  // A lighter amber than the other fills, with dark text: at their tone it
-  // reads as brown. Between 3:1 against white and 4.5:1 under dark text it
-  // has little room, so hovered and pressed get lighter, away from the
-  // text, in every scheme. High contrast needs 4.5:1 against the surface,
-  // too dark for dark text, so there it darkens and takes white text.
-  warning: {
-    ...COLORED,
-    fill: { base: 'surface', tone: [52, 30], contrast: [3, 4.5] },
-    'fill-hover': { base: 'fill', tone: ['+5', '+6'], mode: 'fixed' },
-    'fill-pressed': { base: 'fill', tone: ['+10', '+12'], mode: 'fixed' },
-  },
+  warning: COLORED,
   note: COLORED,
-  // WCAG exempts disabled controls: 3:1 for the text and the fill's text.
+  // UI Kit's disabled surface and fill, light and flat. WCAG exempts
+  // disabled controls, but their text keeps 3:1 here, on the surface and
+  // on the fill (spec: Tokens).
   disabled: {
-    surface: { tone: [94, 96] },
+    surface: { tone: 96.5 },
     'surface-hover': { base: 'surface' },
     'surface-pressed': { base: 'surface' },
-    text: { base: 'surface', tone: ['-40', '-55'], contrast: [3, 4.5] },
-    'text-soft': { base: 'surface', tone: ['-40', '-55'], contrast: [3, 4.5] },
-    border: { base: 'surface', tone: ['-22', '-40'] },
-    fill: { base: 'surface', tone: ['-36', '-50'] },
+    text: { base: 'surface', tone: '-23', contrast: [3, 4.5] },
+    'text-soft': { base: 'surface', tone: '-23', contrast: [3, 4.5] },
+    border: { base: 'surface', tone: '-10' },
+    fill: { base: 'surface', tone: '-10' },
     'fill-hover': { base: 'fill' },
     'fill-pressed': { base: 'fill' },
-    'fill-text': { base: 'fill', tone: 'max', contrast: [3, 4.5] },
-    outline: { base: 'surface', tone: '-40' },
+    'fill-text': { base: 'fill', tone: '-23', contrast: [3, 4.5] },
+    outline: { base: 'surface', tone: '-23' },
   },
 };

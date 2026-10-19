@@ -16,7 +16,7 @@ export const checkboxStyles = {
   position: 'relative',
   display: 'inline-grid',
   gridColumns: 'auto 1fr',
-  gap: '.25x 1x',
+  gap: '.5x 1x',
   alignItems: 'center',
   // eslint-disable-next-line tasty/consistent-token-usage -- WCAG 2.5.8 counts CSS pixels, whatever the root font size
   blockSize: 'min max(24px, 1.5rem)',
@@ -32,7 +32,7 @@ export const checkboxStyles = {
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontSize: '$uni-font-size',
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
-  lineHeight: '1.4',
+  lineHeight: '$uni-line-height',
   overflowWrap: 'anywhere',
 
   Wrapper: {
@@ -63,8 +63,9 @@ export const checkboxStyles = {
     display: 'grid',
     placeItems: 'center',
     boxSizing: 'border-box',
-    inlineSize: 'fixed 1rem',
-    blockSize: 'fixed 1rem',
+    // UI Kit's 14-pixel box.
+    inlineSize: 'fixed (2x - 2bw)',
+    blockSize: 'fixed (2x - 2bw)',
     radius: '.5r',
     fill: {
       '': '#uni-surface',

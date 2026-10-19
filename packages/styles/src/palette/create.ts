@@ -4,6 +4,7 @@ import type { GlazeTheme } from '@tenphi/glaze';
 import {
   colorToken,
   DEFAULT_COLORS,
+  GLAZE_CONFIG,
   SCHEMES,
   SEEDS,
   THEME_COLORS,
@@ -28,7 +29,7 @@ export function createPalette(seeds: PaletteSeeds = {}): Palette {
     ...SEEDS[theme],
     ...seeds[theme],
   });
-  const base = glaze(seed('default'));
+  const base = glaze(seed('default'), undefined, GLAZE_CONFIG);
   base.colors(DEFAULT_COLORS);
   const themes: Record<string, GlazeTheme> = {};
   for (const theme of THEMES) {

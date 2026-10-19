@@ -2,9 +2,9 @@ import type { Styles } from '@tenphi/tasty';
 
 /**
  * A field's description and error, as every field with an `Input` part
- * shows them: small text, soft or in the danger theme. A field hides its
- * error with `hidden`, so neither sets `display` (spec: Specificity and
- * overrides).
+ * shows them: small text (UI Kit's 12/18 at weight 500), soft or in the
+ * danger theme. A field hides its error with `hidden`, so neither sets
+ * `display` (spec: Specificity and overrides).
  */
 export const fieldDescription = {
   margin: 0,
@@ -15,6 +15,8 @@ export const fieldDescription = {
     '(@uni-forced-colors & @uni-input-disabled)': '#uni-system-gray-text',
   },
   fontSize: '$uni-font-size-small',
+  fontWeight: '500',
+  lineHeight: '$uni-line-height-small',
 } satisfies Styles;
 
 export const fieldError = {
@@ -24,4 +26,6 @@ export const fieldError = {
     '@uni-forced-colors': '#uni-system-canvas-text',
   },
   fontSize: '$uni-font-size-small',
+  fontWeight: '500',
+  lineHeight: '$uni-line-height-small',
 } satisfies Styles;

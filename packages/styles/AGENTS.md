@@ -18,6 +18,10 @@ Read the root [AGENTS.md](../../AGENTS.md) first, then this package's
   from `src/palette/`, system colors `#uni-system-*` tokens, sizes `$uni-*`
   tokens, never literals. Motion is transitions only (spec: Web platform
   baseline).
+- Cube UI Kit (`references/cube-ui-kit`, `src/tokens/` and
+  `src/data/item-themes.ts`) is the reference for paddings, gaps, sizes,
+  type and color tones, not hues (spec: Resolved questions 9). Where it
+  falls below a contrast floor, the floor wins; say so in the source.
 - A palette change keeps every contrast floor in the spec's Tokens table:
   `createPalette()` must not make Glaze warn, and
   `src/contrast.browser.test.ts` must pass in every engine.

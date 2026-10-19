@@ -8,8 +8,8 @@ import type { Styles } from '@tenphi/tasty';
 export const checkMarks = {
   content: { '': 'none', 'indeterminate | @uni-selected': '""' },
   boxSizing: 'border-box',
-  inlineSize: { '': 'fixed .3125rem', indeterminate: 'fixed .5rem' },
-  blockSize: { '': 'fixed .5625rem', indeterminate: 'fixed 0' },
+  inlineSize: { '': 'fixed .25rem', indeterminate: 'fixed .5rem' },
+  blockSize: { '': 'fixed .5rem', indeterminate: 'fixed 0' },
   marginBlockStart: { '': '-.125rem', indeterminate: '0' },
   border: {
     '': '2bw #current right bottom',

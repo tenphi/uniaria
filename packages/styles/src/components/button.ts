@@ -16,14 +16,16 @@ export const buttonStyles = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '1x',
+  gap: '.5x',
   boxSizing: 'border-box',
   // eslint-disable-next-line tasty/consistent-token-usage -- WCAG 2.5.8 counts CSS pixels, whatever the root font size
   blockSize: 'min max(24px, $uni-control-height)',
   // eslint-disable-next-line tasty/consistent-token-usage -- as above
   inlineSize: 'min max(24px, $uni-control-height)',
   margin: 0,
-  padding: '.5x 1.5x',
+  // UI Kit's: the inline padding centers one line of text in a square of
+  // the control's height, plus half a gap.
+  padding: '.5x (($uni-control-height - $uni-line-height) / 2 - 1bw + .5x)',
   radius: '1r',
   fill: {
     '': '#uni-surface',
@@ -72,7 +74,7 @@ export const buttonStyles = {
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontWeight: '500',
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
-  lineHeight: '1.4',
+  lineHeight: '$uni-line-height',
   textAlign: 'center',
   textDecoration: 'none',
   overflowWrap: 'anywhere',

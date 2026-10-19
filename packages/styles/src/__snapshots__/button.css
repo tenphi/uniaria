@@ -1,7 +1,7 @@
 /* button */
-[data-uni="button"]:where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: var(--uni-outline-width); }
+[data-uni="button"]:where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
 
-[data-uni="button"] { display: inline-flex; gap: var(--uni-gap); align-items: center; justify-content: center; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, var(--uni-control-height)); max-inline-size: initial; margin: 0px; padding: calc(0.5 * var(--uni-gap)) calc(1.5 * var(--uni-gap)); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: 1.4; font-weight: 500; font-family: inherit; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+[data-uni="button"] { display: inline-flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; justify-content: center; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, var(--uni-control-height)); max-inline-size: initial; margin: 0px; padding: calc(0.5 * var(--uni-gap)) calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2 - var(--uni-border-width) + calc(0.5 * var(--uni-gap))); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; font-family: inherit; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
 
 @media (not (forced-colors: active)) {
   [data-uni="button"]:where(:not([data-disabled]):not([data-hovered]):not([data-pressed]):not([data-variant="danger"]):not([data-variant="primary"]):not([data-variant="quiet"]):not(:disabled)) { background-color: var(--uni-surface-color); }
@@ -22,7 +22,7 @@
 }
 
 @media (not (forced-colors: active)) {
-  [data-uni="button"]:where([data-focus-visible]:not([data-invalid])) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-outline-width); }
+  [data-uni="button"]:where([data-focus-visible]:not([data-invalid])) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
 }
 
 @media (not (forced-colors: active)) {
@@ -32,7 +32,7 @@
 [data-uni="button"]:where(:is(:disabled, [data-disabled])) { cursor: default; }
 
 @media (not (forced-colors: active)) {
-  [data-uni="button"]:where([data-focus-visible][data-invalid]) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-outline-width); }
+  [data-uni="button"]:where([data-focus-visible][data-invalid]) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
 }
 
 @media (not (forced-colors: active)) {
@@ -44,7 +44,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-outline-width); }
+  [data-uni="button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
 }
 
 @media (not (forced-colors: active)) {

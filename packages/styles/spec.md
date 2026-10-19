@@ -355,9 +355,15 @@ can only be the default theme's.
   The ring is drawn with an offset, so what lies next to it is the page,
   never the fill. A ring at 3:1 against the white surface and a mid-tone
   fill at once would have to be nearly black in the light scheme.
-- **Fills follow the scheme:** in the dark schemes a fill is lighter than
-  the surface and its text dark. A fill at 3:1 against the dark surface and
-  4.5:1 under white text has no room between the two.
+- **Fills follow the scheme:** in the light schemes a fill is Cube UI
+  Kit's, set from its white text; in the dark ones it is lighter than the
+  surface and its text dark. UI Kit keeps the fill and its white text in
+  the dark too, but a fill at 3:1 against the dark surface and 4.5:1 under
+  white text has no room between the two: UI Kit's recipe measures 2.6 to
+  3.0:1 against the dark surface with these hues, and less in high
+  contrast. Hover and press step further from the text (5:1, 5.5:1).
+- **Borders are darker than UI Kit's**, which are decoration at about
+  1.3:1: here a border is a field's or a checkbox's edge, which needs 3:1.
 - A checkbox, for example: `#uni-surface` and `#uni-border` at rest,
   `#uni-accent-fill` with an `#uni-accent-fill-text` check when selected,
   `#uni-danger-border` while invalid, `#uni-disabled-*` while disabled, and
@@ -371,7 +377,8 @@ can only be the default theme's.
 - **Palette:** generated at build time with Glaze, one hue and saturation
   per theme, which gives light, dark and high-contrast variants that meet
   the contrast column. The default palette is a neutral grey with a blue
-  accent (Resolved questions 9).
+  accent (Resolved questions 9), with Cube UI Kit's tones, saturations and
+  dark tone window, and hues of its own.
 - **Glaze is opt-out** (owner, 2026-10-19). The styles only read the
   `--uni-*` variables, so a project with its own color tokens leaves the
   palette out and points the roles at its own:
@@ -388,14 +395,15 @@ can only be the default theme's.
 
 ### Sizes and motion
 
-| Token                                     | Use                                                       |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `$uni-gap`, `$uni-radius`                 | The `x` and `r` units in the prebuilt CSS.                |
-| `$uni-border-width`, `$uni-outline-width` | The `bw` and `ow` units.                                  |
-| `$uni-control-height`                     | Buttons, inputs and triggers.                             |
-| `$uni-font-size`, `$uni-font-size-small`  | Text; descriptions, errors and tooltips.                  |
-| `$uni-transition`                         | Hover, press and overlay transitions.                     |
-| `$uni-z-overlay`                          | Popovers without the Popover API (Browser support guide). |
+| Token                                            | Use                                                       |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| `$uni-gap`, `$uni-radius`                        | The `x` and `r` units in the prebuilt CSS.                |
+| `$uni-border-width`, `$uni-outline-width`        | The `bw` and `ow` units.                                  |
+| `$uni-control-height`                            | Buttons, inputs and triggers.                             |
+| `$uni-font-size`, `$uni-line-height`             | Text: 14 and 20 pixels at the default root size.          |
+| `$uni-font-size-small`, `$uni-line-height-small` | Descriptions, errors and tooltips: 12 and 18.             |
+| `$uni-transition`                                | Hover, press and overlay transitions: 80ms.               |
+| `$uni-z-overlay`                                 | Popovers without the Popover API (Browser support guide). |
 
 ### Schemes
 
@@ -795,7 +803,11 @@ With the spec's approval, its recommendations for the open questions:
 
 9. **The look:** a neutral default (grey surfaces, one blue accent,
    6-pixel radii, 32-pixel controls), close to the platform and easy to
-   retheme.
+   retheme. Cube UI Kit is the reference for paddings, gaps, sizes, type
+   and colors, but not for its hues: the themes take conventional ones,
+   a blue accent, red danger, amber warning and cyan note (owner,
+   2026-10-19, after approval). Where UI Kit falls below a contrast floor
+   here, the floor wins (Tokens).
 10. **Button variants through `data-variant`,** which the consumer writes
     (`<button data-variant="primary">`, or `modProps` in Tasty), for Button
     and ToggleButton: `secondary` (the default theme's surface; the
