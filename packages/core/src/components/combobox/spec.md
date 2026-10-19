@@ -167,6 +167,18 @@ Listbox's `action` closes the list and isn't reported.
 | isFocusWithin  | `boolean`           | Focus is in the combo box.                                   |
 | isFocusVisible | `boolean`           | That focus came from the keyboard.                           |
 
+## Actions
+
+Added on 2026-10-19 (owner): the definition's internal API is not public,
+and these are the only members of it consumers may call. They are
+`instance.actions`, the React handle's `actions` and methods of the element
+(`combobox.open()`). Each runs in a batch.
+
+| Action    | Effect                                                                                                                                                                                                                                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Asks to open the list, as a press on the button does: every option shows when the text matches none (Filtering), the selected option is highlighted without visible focus and scrolled into view, and focus stays where it is. Controlled, only `openChange(true)` is reported. Nothing while disabled or open. |
+| `close()` | Asks to close the list and leaves the text as it is. Controlled, only `openChange(false)` is reported. Nothing while closed.                                                                                                                                                                                    |
+
 ## Filtering
 
 - **What matches.** Each option's `getTextValue` against the input's text,

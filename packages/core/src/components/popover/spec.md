@@ -109,6 +109,18 @@ trigger in the DOM when you can: older browsers order Tab by the DOM (Focus).
 | isExiting  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
 | placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
+## Actions
+
+Added on 2026-10-19 (owner): the definition's internal API is not public,
+and these are the only members of it consumers may call. They are
+`instance.actions`, the React handle's `actions` and methods of the element
+(`popover.open()`). Each runs in a batch.
+
+| Action    | Effect                                                                                                                                                                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `open()`  | Asks to open the popover, as the trigger does. Uncontrolled, it opens and, with `shouldFocusOnOpen`, focus moves in (Focus); controlled, only `openChange(true)` is reported. `isDisabled` disables the trigger only, so `open()` still opens. Nothing while open. |
+| `close()` | Asks to close it. Uncontrolled, the closing phase runs and focus is restored (Focus); controlled, only `openChange(false)` is reported. No `dismiss` event: no user asked. Nothing while closed.                                                                   |
+
 ## Opening and closing
 
 - **The native popover.** The root carries `popover="manual"` and UniAria calls

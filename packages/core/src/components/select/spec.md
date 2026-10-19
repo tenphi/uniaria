@@ -163,6 +163,18 @@ Listbox's `action` closes the list in single mode and isn't reported.
 | isFocusWithin  | `boolean`                | Focus is on the trigger or in the popup.                                        |
 | isFocusVisible | `boolean`                | That focus came from the keyboard.                                              |
 
+## Actions
+
+Added on 2026-10-19 (owner): the definition's internal API is not public,
+and these are the only members of it consumers may call. They are
+`instance.actions`, the React handle's `actions` and methods of the element
+(`select.open()`). Each runs in a batch.
+
+| Action    | Effect                                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Asks to open the list, as Enter on the trigger does: focus moves to the selected option, else the first enabled one (Focus). Controlled, only `openChange(true)` is reported. Nothing while disabled or open. |
+| `close()` | Asks to close the list, as Escape does: focus returns to the trigger when it was in the popup (Focus). Controlled, only `openChange(false)` is reported. Nothing while closed.                                |
+
 ## Selection
 
 - **Single mode.** Choosing an option (a press, Enter or Space) selects it,

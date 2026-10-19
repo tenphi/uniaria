@@ -102,6 +102,18 @@ pointer moving on, for a reason to be useful.
 | isInstant  | `boolean`                                             | Open after opening without its delay (Warm-up), so CSS can skip the entrance. |
 | placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
+## Actions
+
+Added on 2026-10-19 (owner): the definition's internal API is not public,
+and these are the only members of it consumers may call. They are
+`instance.actions`, the React handle's `actions` and methods of the element
+(`tooltip.open()`). Each runs in a batch.
+
+| Action    | Effect                                                                                                                                                                                                                                                                                                                                               |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Shows the tooltip at once, without `delay`, as keyboard focus does; with `data-instant` while another tooltip is warm (Warm-up). Controlled, only `openChange(true)` is reported. Nothing while disabled or open. It stays open until `close()` or one of the usual closes: Escape, a press on the trigger, or hover or focus on the trigger ending. |
+| `close()` | Closes it, with its closing phase, and cancels a pending open. Unlike Escape and presses, it doesn't keep the tooltip closed until the pointer or focus leaves: the next hover opens it as usual. Controlled, only `openChange(false)` is reported. Nothing while closed.                                                                            |
+
 ## Opening and closing
 
 The tooltip is open while the pointer is over the trigger or the tooltip, or

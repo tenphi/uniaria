@@ -97,6 +97,18 @@ the dialog) from `isOpen || isExiting`.
 | isEntering | `boolean` | The first frame after opening, for enter animations.   |
 | isExiting  | `boolean` | Closed, but still shown until its exit animations end. |
 
+## Actions
+
+Added on 2026-10-19 (owner): the definition's internal API is not public,
+and these are the only members of it consumers may call. They are
+`instance.actions`, the React handle's `actions` and methods of the element
+(`dialog.open()`). Each runs in a batch.
+
+| Action    | Effect                                                                                                                                                                                                                                 |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Asks to open the dialog, as the trigger does. Uncontrolled, it opens and focus moves in (Focus); controlled, only `openChange(true)` is reported. `isDisabled` disables the trigger only, so `open()` still opens. Nothing while open. |
+| `close()` | Asks to close it. Uncontrolled, the closing phase runs and focus is restored (Focus); controlled, only `openChange(false)` is reported. No `dismiss` event: no user asked. Nothing while closed.                                       |
+
 ## Opening and closing
 
 - **Opening.** When `isOpen` turns true, UniAria calls `showModal()`, locks page
