@@ -11,7 +11,7 @@ import type { tooltip } from '@uniaria/core/tooltip';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
 import './button';
@@ -771,6 +771,11 @@ describe('links', () => {
     const nested = container.querySelector<Host>('#nested')!;
     expect(direct.instance.linked(hintLink)).toBe(tip.instance);
     expect(nested.instance.linked(hintLink)).toBeUndefined();
+  });
+
+  it('has no property for a link, which it takes by attribute or from the host around it', () => {
+    expectTypeOf<Host>().not.toHaveProperty('hint');
+    expect('hint' in document.createElement('uni-test-linker')).toBe(false);
   });
 
   it('links by id through the attribute of the key’s name, and unlinks when moved', () => {

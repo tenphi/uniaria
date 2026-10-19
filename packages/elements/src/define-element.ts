@@ -28,7 +28,9 @@
  * - Owners (decision 11): every host answers owner requests for its
  *   instance. A host whose definition names an owner links to the host its
  *   owner attribute names by id (`group="plan"`), else to the nearest
- *   owner around it; the `owner` property (an instance) wins over both.
+ *   owner around it; the `owner` property (an instance) wins over both. A
+ *   link (`tooltip`) comes from its attribute or the host the element sits
+ *   in directly, and has no property.
  */
 
 import type {
@@ -70,12 +72,24 @@ type IsCallback<Key> = Key extends `on${infer First}${string}`
   : false;
 
 /**
+ * The props a link sets in React (`tooltip`): an element takes a link from
+ * its attribute or the host around it instead, so it has no such property.
+ */
+type LinkName<D extends AnyDefinition> = D['links'] extends readonly LinkKey[]
+  ? D['links'][number]['name']
+  : never;
+
+/**
  * The element's prop properties, typed from the definition's schema: every
  * prop, and `default<Key>` for each bindable.
  */
 export type ElementProperties<D extends AnyDefinition> = {
   -readonly [
-    K in keyof PropsOf<D> as IsCallback<K> extends true ? never : K
+    K in keyof PropsOf<D> as IsCallback<K> extends true
+      ? never
+      : K extends LinkName<D>
+        ? never
+        : K
   ]: PropsOf<D>[K];
 };
 
