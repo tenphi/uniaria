@@ -151,3 +151,42 @@ it('formats for en-US and writes Android’s keyboard before the input is attach
   expect(input.attrs.inputmode).toBe('decimal');
   expect(input.attrs['aria-roledescription']).toBe('Number field');
 });
+
+/** A started field with its hidden input in a form, read in each change. */
+function inForm(props: Record<string, unknown>) {
+  const form = document.createElement('form');
+  const hidden = document.createElement('input');
+  hidden.name = 'quantity';
+  form.append(hidden);
+  document.body.append(form);
+  const submitted: unknown[] = [];
+  const { input, instance } = start({
+    locale: 'en-US',
+    onValueChange: () => submitted.push(new FormData(form).get('quantity')),
+    ...props,
+  });
+  const binder = createBinder(instance);
+  binder.attach('hiddenInput', hidden);
+  binder.start();
+  cleanups.push(() => binder.stop());
+  return { input, hidden, submitted };
+}
+
+// A conformance scenario can't read the form inside the component's own
+// event: the harness records events after the fact.
+it('has the value it reports in its form’s data inside valueChange', () => {
+  const { input, submitted } = inForm({ defaultValue: 1 });
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+  input.focus();
+  input.value = '7';
+  input.dispatchEvent(new InputEvent('input'));
+  input.blur();
+  expect(submitted).toEqual(['2', '7']);
+});
+
+it('puts back a controlled value the consumer didn’t take, after valueChange', () => {
+  const { input, hidden, submitted } = inForm({ value: 1 });
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+  expect(submitted).toEqual(['2']);
+  expect(hidden.value).toBe('1');
+});

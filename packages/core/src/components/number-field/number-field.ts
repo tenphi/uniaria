@@ -72,6 +72,10 @@ type Direction = 1 | -1;
 const numberOr = (value: number | undefined): number | undefined =>
   value === undefined || Number.isNaN(value) ? undefined : value;
 
+/** What the hidden input submits: the plain number, or `''` when empty. */
+const formValue = (value: number | null): string =>
+  value === null ? '' : String(value);
+
 /** Format options as a key, so a new object with the same options is equal. */
 const optionsKey = (options: Intl.NumberFormatOptions): string =>
   JSON.stringify(
@@ -262,6 +266,24 @@ export const numberField = defineComponent({
         return typeof value === 'number' && !Number.isNaN(value) ? value : null;
       },
     );
+
+    // Bumped to write the parts again where the element and the state may
+    // differ: after a form reset, and after a value the consumer didn't take.
+    const resync = ctx.state(0);
+    const writeAgain = () => resync.set(resync.get() + 1);
+    /**
+     * Reports a new value with the hidden input already holding it, since
+     * the binder writes parts only after the event: a `valueChange`
+     * listener's `FormData` has the value, as a native field's has in its
+     * `change`. A controlled value the consumer didn't take goes back after.
+     */
+    const report = (value: number | null) => {
+      const hidden = partElement(ctx, 'hiddenInput') as HTMLInputElement | null;
+      if (hidden) hidden.value = formValue(value);
+      props.value.set(value);
+      if (props.value.isControlled()) writeAgain();
+    };
+
     // The text typed since the last commit; without one the input shows the
     // committed value. A new value, locale or format shows it again.
     const draft = ctx.state<string | undefined>(undefined);
@@ -347,7 +369,7 @@ export const numberField = defineComponent({
       const after = format(value);
       ctx.batch(() => {
         draft.set(undefined);
-        if (!Object.is(value, committed())) props.value.set(value);
+        if (!Object.is(value, committed())) report(value);
       });
       if (after !== before) say(after);
     };
@@ -602,7 +624,6 @@ export const numberField = defineComponent({
     // Form reset goes back to the value the field mounted with, its
     // defaultValue when uncontrolled, as TextField's does.
     let initial: number | null | undefined;
-    const resync = ctx.state(0);
     partEffect(ctx, 'input', (element) => {
       if (initial === undefined) initial = committed();
       const form = (element as HTMLInputElement).form;
@@ -612,12 +633,12 @@ export const numberField = defineComponent({
         if (event.defaultPrevented) return;
         ctx.batch(() => {
           draft.set(undefined);
-          if (!Object.is(initial, committed())) props.value.set(initial!);
+          if (!Object.is(initial, committed())) report(initial!);
         });
         // The native reset runs after this event and puts back the value
         // attribute, so the text is written again after it.
         clearTimeout(resyncTimer);
-        resyncTimer = setTimeout(() => resync.set(resync.get() + 1));
+        resyncTimer = setTimeout(writeAgain);
       };
       form.addEventListener('reset', onReset);
       return () => {
@@ -793,7 +814,7 @@ export const numberField = defineComponent({
       ),
       hiddenInput: {
         attrs: { type: 'hidden', disabled: flag(isDisabled) },
-        properties: { value: value === null ? '' : String(value) },
+        properties: { value: formValue(value) },
       },
       description: withState(parts.description),
       error: withState(parts.error),
