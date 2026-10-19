@@ -64,8 +64,8 @@ interface FruitOptions {
 }
 
 /**
- * A listbox "Fruit": a root around the label and the list, then the
- * description, the error and the empty part, as Cube UI Kit places them.
+ * A listbox "Fruit": a root around the label, the list and, after the list,
+ * the description, the error and the empty part, as Cube UI Kit places them.
  * Groups and their options are `div`s, so the list is one too.
  */
 function fruit({
@@ -104,10 +104,10 @@ function fruit({
         { part: 'list', ...list },
         ...items.map(render),
       ),
+      ...(hasDescription ? [h('p', { part: 'description' }, 'Pick some')] : []),
+      h('p', { part: 'error' }, 'Pick one'),
+      h('p', { part: 'empty' }, 'No fruit'),
     ),
-    ...(hasDescription ? [h('p', { part: 'description' }, 'Pick some')] : []),
-    h('p', { part: 'error' }, 'Pick one'),
-    h('p', { part: 'empty' }, 'No fruit'),
   ];
 }
 
