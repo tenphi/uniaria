@@ -109,9 +109,9 @@ only when it differs and rendered once by React as `defaultChecked`; never
 Chromium ignores. A controlled toggle the consumer hasn't accepted goes
 back right after the event. Read-only cancels the click, and so does a
 disabled switch with `isFocusableWhenDisabled`, which is left out of its
-form's data as a natively disabled one is. Form reset returns
-to the mount state and writes it again after the native reset. The element
-adopts the input's `checked` property on upgrade.
+form's data as a natively disabled one is. Form reset goes back to
+`defaultSelected` as Checkbox's does, and writes the state again after the
+native reset. The element adopts the input's `checked` property on upgrade.
 
 Switch never writes `indeterminate`. Chromium exposes an indeterminate
 switch as `mixed`, which ARIA treats as off, so a consumer that sets the

@@ -241,8 +241,10 @@ step the value. Each step commits at once: the value, the text and
   the field (Resolved questions 4). Enter commits before the form submits; a
   press on a submit button blurs the input first, which commits.
 - **Reset.** On the form's `reset` event (skipped when `defaultPrevented`) the
-  value goes back to `defaultValue`, or without one the value it mounted with,
-  as TextField's does, and `valueChange` reports it.
+  value goes back to its default as TextField's does: an uncontrolled field
+  follows `defaultValue` again (empty without one), and a controlled one asks
+  for `defaultValue`, or without one the value it mounted with.
+  `valueChange` reports it.
 - **Before JavaScript** (the element): it takes the input's text, parsed for
   the locale, as `defaultValue`.
 

@@ -159,10 +159,11 @@ accessibility tree reads only the properties), and ARIA in HTML disallows it.
   toggle cancelled as read-only's, and its entry left out of the form's
   data (a `formdata` listener), as a natively disabled checkbox's is.
 - **Form reset.** As TextField: on the form's `reset` event (skipped when
-  `defaultPrevented`) the checkbox goes back to the state it mounted with,
-  `defaultSelected` when uncontrolled. The native reset then sets `checked`
-  from the attribute, so Checkbox writes its state again afterwards. A reset
-  leaves `indeterminate` alone, natively and here.
+  `defaultPrevented`) an uncontrolled checkbox follows `defaultSelected`
+  again (`false` without one), and a controlled one asks for
+  `defaultSelected`, or without one the state it mounted with. The native
+  reset then sets `checked` from the attribute, so Checkbox writes its state
+  again afterwards. A reset leaves `indeterminate` alone, natively and here.
 - **Before JavaScript.** The element adopts the input's `checked` property
   as `defaultSelected` on upgrade: the markup's `checked`, or a click before
   the script loaded.

@@ -136,8 +136,11 @@ The group's own error is announced once by its Field when it appears.
 ## Form reset
 
 On the form's `reset` event (skipped when `defaultPrevented`) the group goes
-back to the value it mounted with, `defaultValue` when uncontrolled, and its
-checkboxes follow. As in Checkbox, the native reset runs afterwards and
+back to its default, as TextField does, and its checkboxes follow. An
+uncontrolled group follows `defaultValue` again, one set after mount
+included; without one, the values its checkboxes adopted from the markup. A
+controlled group asks for `defaultValue`, or without one the value it
+mounted with. As in Checkbox, the native reset runs afterwards and
 CheckboxGroup writes its checkboxes' state again.
 
 ## Owner link

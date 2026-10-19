@@ -16,7 +16,10 @@ Read the root [AGENTS.md](../../AGENTS.md) first, especially "Custom elements
   (`group="plan"`), then the nearest owner through a bubbling request event.
   Owners announce themselves on connect so children that connected first
   can retry.
-- Properties in, events out (`openchange` with `detail`). Re-apply properties
+- Properties in, events out (`openchange` with `detail`). A bindable's
+  property reads the current value (`instance.getValue()`); setting it makes
+  the value controlled, `undefined` uncontrolled, so reading and writing back
+  the same value (`el.value = el.value`) controls it. Re-apply properties
   set before upgrade. Skip registration when the name is already defined.
 - Each component gets one registering entry (`src/<name>.ts`) that calls
   `defineElement` with the default `uni-` prefix (`defineElement` returns

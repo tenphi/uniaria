@@ -133,10 +133,12 @@ and React never controls the input.
   `compositionend`.
 - **Form reset.** On the form's `reset` event (skipped when
   `defaultPrevented`, as React Aria and Zag do) the field goes back to its
-  default: `defaultValue`, or without one the value it mounted with, as in
-  React Aria. An uncontrolled field takes it and reports `valueChange`; a
-  controlled one reports `valueChange` and keeps its value until the consumer
-  accepts. The
+  default, as a native field goes back to its `value` attribute: the
+  `defaultValue` it has then, one set after mount included. An uncontrolled
+  field follows `defaultValue` again until the next edit (`''` without one)
+  and reports `valueChange` if its value changes. A controlled one reports
+  `valueChange` with `defaultValue`, or without one the value it mounted
+  with, as in React Aria, and keeps its value until the consumer accepts. The
   native reset runs after the event and puts back the `value` attribute, so
   TextField writes its value again afterwards. Cube UI Kit's Form cancels the
   native reset and resets its own fields.

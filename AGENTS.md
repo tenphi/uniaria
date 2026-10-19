@@ -225,6 +225,14 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   uncontrolled; `null` is a controlled value (a Select's `value: null`
   selects nothing). A plain prop reads `undefined` and `null` alike, as its
   default.
+- Form reset (owner decision, 2026-10-19) goes through the bindable's
+  `reset()`, in every form component, as a native reset does: uncontrolled,
+  the first change is forgotten, so the value follows `default<Name>` again,
+  one set after mount included; controlled, the change callback asks for
+  `default<Name>`, or without one the value the component mounted with.
+  Either way the change callback reports the value unless it is the value
+  now. Never restore a value captured at mount on an uncontrolled bindable:
+  a custom element's default often arrives as a property after it connects.
 - The core reads props only through getters and never keeps a copy.
 
 ### Composition between instances
@@ -443,6 +451,11 @@ target parts the same way in every adapter (`runtime/define.ts`:
 - State goes in through properties and out through events: the `isOpen`
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.
+- A bindable's property reads the current value, controlled or not, like a
+  native input's `value` or `checked` (owner decision, 2026-10-19; the
+  instance's `getValue()`). Setting it still makes the value controlled, and
+  setting `undefined` uncontrolled again, so `el.value = el.value` controls
+  an uncontrolled element. `default<Name>` properties read what was set.
   Attributes drop the `is` and `should` prefixes (`disabled`,
   `prevent-focus-on-press`); properties keep the prop names. A boolean
   attribute is true when present, except `"false"` on a prop that defaults

@@ -160,9 +160,9 @@ on a native radio.
   by arrows and Tab. With `isFocusableWhenDisabled`, `aria-disabled` and a
   cancelled click instead, and its entry left out of the form's data (a
   `formdata` listener), as a natively disabled radio's is (Checkbox's rule).
-- **Form reset.** As CheckboxGroup: the group goes back to the value it
-  mounted with, and the radios write their state again after the native
-  reset.
+- **Form reset.** As CheckboxGroup: the group goes back to its default
+  (without `defaultValue`, the radio it adopted from the markup), and the
+  radios write their state again after the native reset.
 - **Before JavaScript.** The element group takes the `value` of the radio
   whose input is checked when it links (the markup's `checked`, or a click
   before upgrade) as its default.
