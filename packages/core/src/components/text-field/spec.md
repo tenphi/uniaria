@@ -208,9 +208,14 @@ return (
 ```html
 <!-- Custom element -->
 <uni-text-field required>
-  <label data-part="label">Email</label>
-  <input data-part="input" name="email" type="email" value="jane@example.com" />
-  <p data-part="error" hidden>Enter a valid email</p>
+  <label data-element="Label">Email</label>
+  <input
+    data-element="Input"
+    name="email"
+    type="email"
+    value="jane@example.com"
+  />
+  <p data-element="Error" hidden>Enter a valid email</p>
 </uni-text-field>
 ```
 

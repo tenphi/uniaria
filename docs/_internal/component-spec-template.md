@@ -16,10 +16,10 @@ any.
 
 ## Anatomy
 
-| Part    | Element  | Attributes UniAria owns                        | Notes |
-| ------- | -------- | ---------------------------------------------- | ----- |
-| root    | `div`    | `data-scope`, `data-part`, `data-disabled`     |       |
-| trigger | `button` | `aria-expanded`, `aria-controls`, `data-state` |       |
+| Part    | Element  | Attributes UniAria owns                                                                | Notes |
+| ------- | -------- | -------------------------------------------------------------------------------------- | ----- |
+| root    | `div`    | the `uni-<name>` class, `data-disabled`                                                |       |
+| trigger | `button` | `data-scope`, `data-element="Trigger"`, `aria-expanded`, `aria-controls`, `data-state` |       |
 
 Mark element-owned parts (content the custom element writes) explicitly.
 

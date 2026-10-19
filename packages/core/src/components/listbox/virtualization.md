@@ -331,12 +331,12 @@ import '@uniaria/elements/listbox';
 import { virtualizer } from '@uniaria/core/virtual';
 
 const element = document.querySelector('uni-listbox');
-const list = element.querySelector('[data-part="list"]');
+const list = element.querySelector('[data-element="List"]');
 element.items = users;
 element.virtualizer = virtualizer;
 element.addEventListener('renderedkeyschange', ({ detail }) => {
   // Synchronously, so a highlighted option exists before the next paint.
-  // Each row carries data-part="option" and data-key; lit-html's render
+  // Each row carries data-element="Option" and data-key; lit-html's render
   // keeps the rows that stay.
   render(
     detail.keys.map((key) => row(byKey.get(key))),
@@ -347,9 +347,9 @@ element.addEventListener('renderedkeyschange', ({ detail }) => {
 
 ```html
 <uni-listbox item-size="32">
-  <span data-part="label">Users</span>
-  <div data-part="scroller">
-    <div data-part="list"></div>
+  <span data-element="Label">Users</span>
+  <div data-element="Scroller">
+    <div data-element="List"></div>
   </div>
 </uni-listbox>
 ```

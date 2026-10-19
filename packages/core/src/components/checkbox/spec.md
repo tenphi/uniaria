@@ -257,12 +257,12 @@ return (
 ```html
 <!-- Custom element -->
 <uni-checkbox required>
-  <label data-part="root">
-    <input data-part="input" type="checkbox" name="terms" checked />
-    <span data-part="indicator"></span>
-    <span data-part="label">Accept the terms</span>
+  <label class="uni-checkbox">
+    <input data-element="Input" type="checkbox" name="terms" checked />
+    <span data-element="Indicator"></span>
+    <span data-element="Label">Accept the terms</span>
   </label>
-  <p data-part="error" hidden>You must accept to continue</p>
+  <p data-element="Error" hidden>You must accept to continue</p>
 </uni-checkbox>
 ```
 

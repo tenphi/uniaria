@@ -189,16 +189,17 @@ return (
 ```html
 <!-- Custom element -->
 <uni-switch>
-  <label data-part="root">
-    <input data-part="input" type="checkbox" name="wifi" checked />
-    <span data-part="indicator"><span class="thumb"></span></span>
-    <span data-part="label">Wi-Fi</span>
+  <label class="uni-switch">
+    <input data-element="Input" type="checkbox" name="wifi" checked />
+    <span data-element="Indicator"><span class="thumb"></span></span>
+    <span data-element="Label">Wi-Fi</span>
   </label>
 </uni-switch>
 ```
 
 The definition is exported from `@uniaria/core/switch` as `toggleSwitch`
-(Resolved questions 4); its name, `data-scope` and element stay `switch`.
+(Resolved questions 4); its name, `data-scope` and element stay `switch`,
+and its root class is `uni-switch`.
 
 Element attributes: `default-selected`, `disabled`,
 `focusable-when-disabled`, `readonly`, `required`,

@@ -299,7 +299,8 @@ closes. Everything else on the root is the consumer's.
 
 | Token                                                                                          | On                                 | Meaning                                                                |
 | ---------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| `data-scope="popover"`, `data-part`                                                            | its parts                          | Which part an element is.                                              |
+| The `uni-popover` class                                                                        | root                               | The root part.                                                         |
+| `data-scope="popover"`, `data-element`                                                         | its other parts                    | Which part an element is.                                              |
 | `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first frame after opening; closing until its animations end. |
 | `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                            |
 | Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                             |
@@ -351,11 +352,11 @@ return (
 ```html
 <!-- Custom element -->
 <uni-popover position-area="bottom span-right">
-  <button data-part="trigger">Size</button>
-  <div data-part="root">
-    <div data-part="arrow"></div>
+  <button data-element="Trigger">Size</button>
+  <div class="uni-popover">
+    <div data-element="Arrow"></div>
     <label>Width <input /></label>
-    <button data-part="close">Apply</button>
+    <button data-element="Close">Apply</button>
   </div>
 </uni-popover>
 ```

@@ -52,7 +52,7 @@ Linking).
 
 | Part        | Element                                                        | Attributes UniAria owns                                                                        | Notes                                                                                                                                                   |
 | ----------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`                                             | `data-scope="field"`, `data-part="root"`, `data-invalid`, `data-required`, `data-disabled`     | Optional wrapper for styling. No role.                                                                                                                  |
+| root        | any; usually `div`                                             | the `uni-field` class, `data-invalid`, `data-required`, `data-disabled`                        | Optional wrapper for styling. No role.                                                                                                                  |
 | label       | `label` by default; any element through `labelElementType`     | `id`, `for` (only on a `label`), state attributes                                              | The consumer owns the content. A required mark such as `*` must be `aria-hidden`: the control announces "required".                                     |
 | control     | any control: `input`, `textarea`, `select`, or a custom widget | `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`, state attributes | The consumer, or the UniAria input composing Field, owns everything else: `name`, `type`, `value`, `disabled`, `readonly`, the role of a custom widget. |
 | description | any                                                            | `id`, state attributes                                                                         |                                                                                                                                                         |
@@ -201,10 +201,10 @@ return (
 ```html
 <!-- Custom element -->
 <uni-field required>
-  <label data-part="label">Email</label>
-  <input data-part="control" id="email" name="email" type="email" />
-  <p data-part="description">We never share it</p>
-  <p data-part="error">Enter a valid email</p>
+  <label data-element="Label">Email</label>
+  <input data-element="Control" id="email" name="email" type="email" />
+  <p data-element="Description">We never share it</p>
+  <p data-element="Error">Enter a valid email</p>
 </uni-field>
 ```
 

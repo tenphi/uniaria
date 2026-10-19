@@ -275,7 +275,8 @@ to these tokens, so it can change with state. UniAria sets no look.
 
 | Token                                                         | On                                 | Meaning                                                                      |
 | ------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| `data-scope="tooltip"`, `data-part`                           | its parts                          | Which part an element is.                                                    |
+| The `uni-tooltip` class                                       | root                               | The root part.                                                               |
+| `data-scope="tooltip"`, `data-element`                        | its other parts                    | Which part an element is.                                                    |
 | `data-open`, `data-entering`, `data-exiting`                  | root, arrow                        | Open; the first frame after opening; closing until its animations end.       |
 | `data-instant`                                                | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
 | `data-placement`                                              | root, arrow                        | The side it was placed on, after fallbacks.                                  |
@@ -326,17 +327,17 @@ return (
 ```html
 <!-- Custom element: a UniAria component inside links itself -->
 <uni-tooltip position-area="top">
-  <uni-button><button data-part="root">Save</button></uni-button>
-  <div data-part="root">
+  <uni-button><button class="uni-button">Save</button></uni-button>
+  <div class="uni-tooltip">
     Saves the file
-    <div data-part="arrow"></div>
+    <div data-element="Arrow"></div>
   </div>
 </uni-tooltip>
 
 <!-- A plain element as the trigger -->
 <uni-tooltip>
-  <button data-part="trigger">Save</button>
-  <div data-part="root">Saves the file</div>
+  <button data-element="Trigger">Save</button>
+  <div class="uni-tooltip">Saves the file</div>
 </uni-tooltip>
 ```
 

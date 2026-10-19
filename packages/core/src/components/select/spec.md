@@ -377,23 +377,23 @@ return (
 ```html
 <!-- Custom elements: items read from the options -->
 <uni-select placeholder="Pick a fruit" required>
-  <span data-part="label">Fruit</span>
-  <button data-part="trigger">
-    <span data-part="value"></span>
+  <span data-element="Label">Fruit</span>
+  <button data-element="Trigger">
+    <span data-element="Value"></span>
     <svg aria-hidden="true">…</svg>
   </button>
-  <div data-part="popover">
-    <div data-part="list">
-      <div data-part="option" data-key="apple">Apple</div>
-      <div data-part="option" data-key="banana">Banana</div>
-      <div data-part="group" data-key="citrus">
-        <span data-part="groupLabel" data-key="citrus">Citrus</span>
-        <div data-part="option" data-key="lemon">Lemon</div>
+  <div data-element="Popover">
+    <div data-element="List">
+      <div data-element="Option" data-key="apple">Apple</div>
+      <div data-element="Option" data-key="banana">Banana</div>
+      <div data-element="Group" data-key="citrus">
+        <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+        <div data-element="Option" data-key="lemon">Lemon</div>
       </div>
     </div>
-    <p data-part="empty">No fruit</p>
+    <p data-element="Empty">No fruit</p>
   </div>
-  <select data-part="hiddenSelect" name="fruit" autocomplete="off"></select>
+  <select data-element="HiddenSelect" name="fruit" autocomplete="off"></select>
 </uni-select>
 ```
 

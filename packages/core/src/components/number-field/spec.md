@@ -332,7 +332,8 @@ to these tokens. UniAria sets no look.
 
 | Token                                                                                                                   | On                                     | Meaning                                                    |
 | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| `data-scope="number-field"`, `data-part`                                                                                | every part                             | Which part an element is.                                  |
+| The `uni-number-field` class                                                                                            | root                                   | The root part.                                             |
+| `data-scope="number-field"`, `data-element`                                                                             | every other part                       | Which part an element is.                                  |
 | `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, label, input, description, error | The field's state, as TextField's.                         |
 | `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                   | Button's own; `data-disabled` while the button can't step. |
 | `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)     | The same, for a framework's own bindings.                  |
@@ -386,11 +387,11 @@ return (
 ```html
 <!-- Custom element -->
 <uni-number-field min-value="0" max-value="99" lang="de">
-  <label data-part="label">Menge</label>
-  <input data-part="input" value="5" />
-  <button data-part="decrement">−</button>
-  <button data-part="increment">+</button>
-  <input type="hidden" data-part="hiddenInput" name="quantity" />
+  <label data-element="Label">Menge</label>
+  <input data-element="Input" value="5" />
+  <button data-element="Decrement">−</button>
+  <button data-element="Increment">+</button>
+  <input type="hidden" data-element="HiddenInput" name="quantity" />
 </uni-number-field>
 ```
 

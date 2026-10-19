@@ -6,7 +6,7 @@ TypeScript; thin adapters bind it to React and to light-DOM custom elements.
 Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason UniAria exists.
-Styling is out of scope: every part exposes `data-scope`, `data-part` and state
+Styling is out of scope: every part exposes its part markers and state
 attributes for the design system to target. UniAria is not a styling library:
 the consumer's CSS comes separately and binds to the tokens UniAria provides
 (state attributes, CSS variables, public state), so it can change with state.
@@ -283,6 +283,7 @@ type PartProps = {
   on?: Partial<Record<keyof HTMLElementEventMap, (event: Event) => void>>; // DOM event names
   style?: Record<`--${string}`, string>; // CSS custom properties only
   properties?: Record<string, string | number | boolean | undefined>; // live DOM properties
+  className?: string; // the root's `uni-<name>` (Part markers)
 };
 ```
 
@@ -297,14 +298,36 @@ handler with its event.
   `event.nativeEvent` and maps names (`focusin` → `onFocus`, `click` →
   `onClick`, `input` → `onInput`, `class` → `className`, `for` → `htmlFor`,
   `tabindex` → `tabIndex`).
-- Every part carries `data-scope` (component name), `data-part` and its state
-  attributes (`data-state`, `data-disabled`, …).
+- Every part carries its part markers (below) and its state attributes
+  (`data-state`, `data-disabled`, …).
 - `properties` are live DOM properties no attribute holds once the user acts
   (an input's `value`, a checkbox's `checked` and `indeterminate`). The binder
   sets each only when it differs from the element; `undefined` leaves it
   alone. React renders `value` and `checked` once, from the first render, as
   `defaultValue` and `defaultChecked`, so React never controls the element
   and server HTML shows the starting value.
+
+### Part markers
+
+Decided by the owner on 2026-10-19, so Tasty's sub-elements and plain CSS
+target parts the same way in every adapter (`runtime/define.ts`:
+`rootClass()`, `partElement()`):
+
+- **The root** (the part named `root`) carries the class `uni-<name>`, the
+  definition's name as in its element tag (`uni-checkbox`), and no
+  `data-scope` or `data-element`. React renders it in `className`; a custom
+  element finds its root by it, so the consumer's markup has it. The binder
+  never writes `class`: UniAria owns that one class and the consumer the
+  rest, and React warns in development when a rendered root lacks it. In
+  Tasty, the root is the component itself.
+- **Every other part**, item parts included, carries `data-scope="<name>"`
+  and `data-element` with the part's name capitalized (`trigger` →
+  `Trigger`), which is how Tasty names a sub-element. Custom elements find
+  these parts by `data-element`. Part names in code don't change
+  (`parts.trigger`).
+- A composed definition's parts take the outer definition's markers:
+  Select's panel is `data-element="Popover"`, ToggleButton's root is
+  `uni-toggle-button` only.
 
 ### DOM, lifecycle and SSR
 
@@ -365,7 +388,7 @@ handler with its event.
   `connectItem(part, key)`, computed lazily per rendered item (React
   `getItemProps(part, key)`), never for every row at once. After a flush only
   the keys the definition invalidates are rewritten. Custom elements find
-  them by `data-part` and the consumer's `data-key`.
+  them by `data-element` and the consumer's `data-key`.
 - Virtualization is opt-in through the `virtualizer` prop (Listbox
   virtualization spec): `@uniaria/core/virtual` wraps `@tanstack/virtual-core`
   behind the `Virtualizer` interface in `dom/virtual.ts`, so only lists that
@@ -382,8 +405,9 @@ handler with its event.
   Anything it must create (a live region) goes outside the consumer's tree;
   the one exception is the live announcer, which an open modal dialog hosts
   because the page outside it is inert.
-- Attribute ownership is per part: the element owns ARIA state and
-  `data-state`; the consumer owns content, classes and every other attribute.
+- Attribute ownership is per part: the element owns ARIA state, `data-state`
+  and the part markers; the consumer owns content, classes other than the
+  root's `uni-<name>`, and every other attribute.
   A part can be declared element-owned: the consumer leaves it empty and
   UniAria writes its content, in both adapters. Select's displayed value
   (its text) and its hidden `<select>` (its `<option>`s) are the two (Select
@@ -537,8 +561,9 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   Playwright (they can hold a button or key), `spoken()` for the virtual
   screen reader, `listen()` to hear what live regions announce, and
   `screenReader` for a real one in scenarios that declare
-  `needs: ['screenReader']`. `mounted.part(name)` finds
-  `[data-scope][data-part]` and fails loudly when either is missing.
+  `needs: ['screenReader']`. `mounted.part(name)` finds the part by its
+  markers (`partSelector()`: the root by its class, others by `data-scope`
+  and `data-element`) and fails loudly unless exactly one matches.
 - **Phases.** A scenario declares the roadmap phase whose features it needs
   (`{ phase: 2 }`); an adapter run declares the phase it has reached
   (`runConformance(adapter, suites, { phase: 1 })`) and later scenarios are

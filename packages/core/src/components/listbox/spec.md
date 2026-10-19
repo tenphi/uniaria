@@ -36,7 +36,7 @@ decided in Resolved questions 1.
   and previous enabled key, ranges), built once per `items`.
 - **Owner:** none. Select and Combobox will compose it rather than own it.
 - **Custom element:** yes, `<uni-listbox>`, hosting consumer markup. Its
-  options are the consumer's elements, found by `data-part` and keyed by the
+  options are the consumer's elements, found by `data-element` and keyed by the
   consumer's `data-key` (Resolved questions 3).
 
 Not part of Listbox:
@@ -89,9 +89,11 @@ custom elements, the consumer's `data-key` on the element):
 | group             | any; usually `div`         | `role="group"`, `aria-labelledby`, state attributes                                                                          | One per item with children (a section). Holds its label and its options. In a `ul`, the group's own list needs `role="presentation"`, so `div`s are easier. |
 | groupLabel        | any, first in the group    | `role="presentation"`, `id`                                                                                                  | Names the group. `presentation` because a listbox may not contain headings (React Aria, the APG's grouped example).                                         |
 
-Every part carries `data-scope="listbox"` and `data-part`. UniAria writes
-nothing on an item part the consumer didn't render, and item ids are made
-from the list's id and the key (Item parts).
+The root carries the `uni-listbox` class; every other part, item parts
+included, carries `data-scope="listbox"` and `data-element`, the part name
+capitalized (`List`, `Option`, `GroupLabel`). UniAria writes nothing on an
+item part the consumer didn't render, and item ids are made from the list's
+id and the key (Item parts).
 
 ## Props
 
@@ -188,7 +190,7 @@ at once, re-run after every flush. Item parts add, beside them:
   Field does for its parts.
 - **Handlers** are one per part and event type; the runtime finds the key
   from the element the event reached, so no closure is made per row.
-- **Custom elements.** Item parts are found by `data-part`, every match
+- **Custom elements.** Item parts are found by `data-element`, every match
   rather than the first, and keyed by the consumer's `data-key`, which the
   `MutationObserver` also watches. An item part without `data-key` is skipped
   with a development warning. The element writes item props on the
@@ -430,19 +432,19 @@ return (
 ```html
 <!-- Custom elements: items read from the markup (Resolved questions 3) -->
 <uni-listbox selection-mode="multiple" disabled-keys='["cherry"]'>
-  <span data-part="label">Fruit</span>
-  <div data-part="list">
-    <div data-part="option" data-key="apple">Apple</div>
-    <div data-part="option" data-key="banana">Banana</div>
-    <div data-part="group" data-key="citrus">
-      <span data-part="groupLabel" data-key="citrus">Citrus</span>
-      <div data-part="option" data-key="lemon">
-        <span data-part="optionLabel" data-key="lemon">Lemon</span>
-        <span data-part="optionDescription" data-key="lemon">Sour</span>
+  <span data-element="Label">Fruit</span>
+  <div data-element="List">
+    <div data-element="Option" data-key="apple">Apple</div>
+    <div data-element="Option" data-key="banana">Banana</div>
+    <div data-element="Group" data-key="citrus">
+      <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+      <div data-element="Option" data-key="lemon">
+        <span data-element="OptionLabel" data-key="lemon">Lemon</span>
+        <span data-element="OptionDescription" data-key="lemon">Sour</span>
       </div>
     </div>
   </div>
-  <p data-part="empty">No fruit</p>
+  <p data-element="Empty">No fruit</p>
 </uni-listbox>
 ```
 
@@ -533,6 +535,8 @@ Decided by @tenphi on 2026-10-18, each as recommended.
    alternative, each option its own instance (RadioGroup's radios), doesn't
    scale to long lists, can't virtualize and makes options components.
    Decided: approved, landing as its own runtime commit before Listbox.
+   Part markers changed on 2026-10-19 (owner): item parts are found by
+   `data-element` (`Option`, `Group`, …) instead of `data-part`.
 2. **Accessors and `disabledKeys`.** Root AGENTS.md names `getKey`,
    `getTextValue` and `isDisabled`; the last becomes `isItemDisabled` so the
    list keeps `isDisabled`, and `disabledKeys` sits beside it for markup and
