@@ -9,9 +9,9 @@ wires them together with ids and ARIA, so a screen reader announces the
 label, the description, the error and the required and invalid states when
 the control gets focus. Field renders no control of its own. Its `control`
 part goes on any control: a native `<input>`, `<textarea>` or `<select>`, or
-a custom widget. The UniAria inputs (TextInput, TextArea, Checkbox, NumberInput,
-Select and so on) compose Field with `ctx.use()` and put the `control` part on
-their own element.
+a custom widget. The UniAria inputs (TextField, NumberField, Checkbox, Select
+and so on) compose Field with `ctx.use()` and put the `control` part on their
+own element.
 
 Field shows validation state; it doesn't validate. Whether a field is invalid,
 and when that changes, is the form's business (in Cube UI Kit, its form
@@ -33,7 +33,7 @@ Not part of Field:
   field on submit. React Aria's native validation does these; Cube UI Kit's
   form engine does its own. A later Form component can take them on.
 - **Disabling the control.** `isDisabled` marks the field's parts and hides
-  the error, but the control is disabled by its own component (TextInput and
+  the error, but the control is disabled by its own component (TextField and
   the rest pass it on), or by the consumer for a native control.
 - **Group messages on child controls.** A checkbox group's description and
   error reaching each checkbox belong to CheckboxGroup.
