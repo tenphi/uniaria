@@ -978,6 +978,176 @@ describe('ctx.use', () => {
   });
 });
 
+describe('part ids', () => {
+  /** A disclosure whose panel id can come from a prop, as Field's control. */
+  const named = defineComponent({
+    name: 'named',
+    parts: ['trigger', 'panel'],
+    itemParts: ['row'],
+    props: {
+      panelId: prop<string | undefined>(undefined, {
+        attribute: false,
+        idOf: 'panel',
+      }),
+    },
+    setup: () => ({}),
+    expose: () => ({}),
+    connect: ({ ids }) => ({
+      trigger: { attrs: { id: ids.trigger, 'aria-controls': ids.panel } },
+      panel: { attrs: { id: ids.panel } },
+    }),
+    connectItem: ({ ids }, _part, key) => ({
+      attrs: { id: itemId(ids.panel, 'row', key) },
+    }),
+  });
+
+  it('keeps the id the consumer gave a part, and references follow it', () => {
+    const instance = createInstance(named, { id: 'n' });
+    instance.adoptId('panel', 'details');
+    expect(instance.ids.panel).toBe('details');
+    const { trigger, panel } = instance.connect();
+    expect(panel.attrs.id).toBe('details');
+    expect(trigger.attrs['aria-controls']).toBe('details');
+
+    instance.adoptId('panel', undefined);
+    expect(instance.ids.panel).toBe('n-panel');
+    expect(instance.connect().trigger.attrs['aria-controls']).toBe('n-panel');
+  });
+
+  it("takes an idOf prop's id where the element has none, after the consumer's", () => {
+    const instance = createInstance(named, {
+      id: 'n',
+      props: { panelId: 'more' },
+    });
+    expect(instance.ids).toEqual({ trigger: 'n-trigger', panel: 'more' });
+    instance.adoptId('panel', 'details');
+    expect(instance.ids.panel).toBe('details');
+    instance.adoptId('panel', undefined);
+
+    // The id it has anyway is not the consumer's, so the prop keeps it.
+    instance.adoptId('panel', 'more');
+    instance.setProps({ panelId: 'extra' });
+    expect(instance.ids.panel).toBe('extra');
+    instance.setProps({});
+    expect(instance.ids.panel).toBe('n-panel');
+  });
+
+  it('counts a new id as a change of state, started or not', () => {
+    const instance = createInstance(named, { id: 'n' });
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    const parts = instance.connect();
+    instance.adoptId('trigger', 'open');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(instance.connect()).not.toBe(parts);
+    expect(instance.connect().trigger.attrs.id).toBe('open');
+
+    instance.start();
+    instance.adoptId('trigger', 'show');
+    expect(listener).toHaveBeenCalledTimes(2);
+    instance.adoptId('trigger', 'show');
+    expect(listener).toHaveBeenCalledTimes(2);
+    instance.stop();
+  });
+
+  it('writes item ids made from a part id again', () => {
+    const instance = createInstance(named, { id: 'n' });
+    const keys = vi.fn();
+    instance.subscribeItems(keys);
+    expect(instance.connectItem('row', 'a').attrs.id).toBe('n-panel-row-a');
+    instance.adoptId('panel', 'details');
+    expect(keys).toHaveBeenCalledWith(null);
+    expect(instance.connectItem('row', 'a').attrs.id).toBe('details-row-a');
+  });
+
+  it("gives a composed definition the outer part's id, after its own idOf prop", () => {
+    const outer = defineComponent({
+      name: 'outer',
+      parts: ['button', 'body'],
+      props: {},
+      setup: (ctx) =>
+        ctx.use(named, () => ({ panelId: 'inner-panel' }), {
+          parts: { panel: 'body', trigger: 'button' },
+        }),
+      expose: () => ({}),
+      connect: ({ api }) => {
+        const { trigger, panel } = api.connect();
+        return { button: trigger, body: panel };
+      },
+    });
+    const instance = createInstance(outer, { id: 'o' });
+    expect(instance.connect().button.attrs).toMatchObject({
+      id: 'o-button',
+      'aria-controls': 'inner-panel',
+    });
+    instance.adoptId('body', 'mine');
+    instance.adoptId('button', 'go');
+    expect(instance.connect().button.attrs).toMatchObject({
+      id: 'go',
+      'aria-controls': 'mine',
+    });
+  });
+
+  it("lets an instance that reads another's ids see one adopted before either started", () => {
+    const labelled = defineComponent({
+      name: 'labelled',
+      parts: ['root'],
+      props: {},
+      owner: { definition: named, attribute: 'panel' },
+      setup: (ctx) => ({ panelId: () => ctx.owner(named)?.instance.ids.panel }),
+      expose: () => ({}),
+      connect: ({ api }) => ({
+        root: { attrs: { 'aria-controls': api.panelId() } },
+      }),
+    });
+    const target = createInstance(named, { id: 'n' });
+    const reader = createInstance(labelled, { props: { owner: target } });
+    expect(reader.connect().root.attrs['aria-controls']).toBe('n-panel');
+
+    // As in React: elements attach in the commit, before effects start.
+    target.adoptId('panel', 'details');
+    reader.start();
+    expect(reader.connect().root.attrs['aria-controls']).toBe('details');
+
+    // Started first, the reader hears of a later one.
+    target.adoptId('panel', 'more');
+    expect(reader.connect().root.attrs['aria-controls']).toBe('more');
+    reader.stop();
+  });
+
+  it('refuses an idOf that names no part, a part twice, or a bindable', () => {
+    const base = {
+      name: 'broken',
+      parts: ['root', 'panel'],
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} }, panel: { attrs: {} } }),
+    } as const;
+    const message = 'idOf takes a plain prop and a part no other prop names';
+    expect(() =>
+      defineComponent({
+        ...base,
+        props: { a: prop<string | undefined>(undefined, { idOf: 'nothing' }) },
+      }),
+    ).toThrow(message);
+    expect(() =>
+      defineComponent({
+        ...base,
+        props: {
+          a: prop<string | undefined>(undefined, { idOf: 'panel' }),
+          b: prop<string | undefined>(undefined, { idOf: 'panel' }),
+        },
+      }),
+    ).toThrow(message);
+    expect(() =>
+      defineComponent({
+        ...base,
+        props: { a: bindable<string>('', { idOf: 'panel' }) },
+      }),
+    ).toThrow(message);
+  });
+});
+
 describe('owner', () => {
   const group = defineComponent({
     name: 'group',

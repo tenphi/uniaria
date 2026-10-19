@@ -45,6 +45,11 @@ export interface InstanceOptions<D extends AnyDefinition> {
 export interface Instance<D extends AnyDefinition = AnyDefinition> {
   readonly definition: D;
   readonly id: string;
+  /**
+   * Each part's id now: the id the consumer gave its element (`adoptId()`),
+   * else the prop that names it (`idOf`, such as Field's `controlId`), else
+   * `<id>-<part>`.
+   */
   readonly ids: Readonly<Record<PartOf<D>, string>>;
   /**
    * Internal: what `setup()` returned, for composing definitions, owned
@@ -91,6 +96,16 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    */
   attach(part: PartOf<D>, element: unknown): void;
   element(part: PartOf<D>): unknown;
+  /**
+   * Keeps the id the consumer gave a part's element (owner, 2026-10-19), so
+   * `ids` and every reference to the part follow it; `undefined`, or the id
+   * the part has anyway, gives the part back its own. The DOM binder calls
+   * it as an element attaches and when its id changes. It counts as a
+   * change of state, and notifies even before `start()`: an instance that
+   * reads the id may follow this one already. Item ids made from it are
+   * written again.
+   */
+  adoptId(part: PartOf<D>, id: string | undefined): void;
   /**
    * Props for one item part of one item from the definition's
    * `connectItem()`, with `data-scope` and `data-element` added and every
@@ -146,6 +161,26 @@ interface ItemEffect {
 type Callback = ((value: unknown) => void) | undefined;
 
 let counter = 0;
+
+/** Each part a prop names the id of (`idOf`), with that prop. */
+function idProps(definition: AnyDefinition): ReadonlyMap<string, string> {
+  const result = new Map<string, string>();
+  for (const info of definition.schema.props) {
+    if (info.idOf !== undefined) result.set(info.idOf, info.key);
+  }
+  return result;
+}
+
+/** The id `values` give `part` through its `idOf` prop, if set. */
+function idFrom(
+  keys: ReadonlyMap<string, string>,
+  values: Readonly<Record<string, unknown>>,
+  part: string,
+): string | undefined {
+  const key = keys.get(part);
+  const value = key === undefined ? undefined : values[key];
+  return typeof value === 'string' && value !== '' ? value : undefined;
+}
 
 /** True when a value other than a callback differs. Callbacks change every render. */
 function havePropsChanged(
@@ -207,8 +242,20 @@ export function createInstance<D extends AnyDefinition>(
   let hasUnsyncedProps = false;
   let isStarted = false;
   const id = options.id ?? `uni-${++counter}`;
+  // Part ids (root AGENTS.md → DOM, lifecycle and SSR): the consumer's id on
+  // the element, else the prop that names it, else one made from `id`.
+  const adoptedIds = new Map<string, string>();
+  const ownIdProps = idProps(definition);
+  /** The id a part has without the consumer's. */
+  const ownId = (part: string) =>
+    idFrom(ownIdProps, props, part) ?? `${id}-${part}`;
   const ids: Record<string, string> = {};
-  for (const part of definition.parts) ids[part] = `${id}-${part}`;
+  for (const part of definition.parts) {
+    Object.defineProperty(ids, part, {
+      enumerable: true,
+      get: () => adoptedIds.get(part) ?? ownId(part),
+    });
+  }
   const elements = new Map<string, unknown>();
   let linked: Instance | undefined;
   const currentOwner = () => (props.owner as Instance | undefined) ?? linked;
@@ -393,12 +440,25 @@ export function createInstance<D extends AnyDefinition>(
       };
     }
 
+    // A composed definition's ids are its parts' here, its own `idOf`
+    // props coming after the consumer's id and before the outer's.
+    const scopedIdProps = idProps(scoped);
     const scopedIds: Record<string, string> = {};
     for (const part of scoped.parts) {
       const own = partOf(part);
-      // A part left out still gets an id of its own, which nothing renders.
-      scopedIds[part] =
-        own === null ? `${id}-${scoped.name}-${part}` : ids[own]!;
+      Object.defineProperty(scopedIds, part, {
+        enumerable: true,
+        get: () =>
+          // A part left out still gets an id of its own, which nothing
+          // renders.
+          own === null
+            ? `${id}-${scoped.name}-${part}`
+            : (adoptedIds.get(own) ??
+              (scoped === definition
+                ? undefined
+                : idFrom(scopedIdProps, readProps(), part)) ??
+              ids[own]!),
+      });
     }
 
     // The readers match the schema by construction; the generic types can't
@@ -589,6 +649,10 @@ export function createInstance<D extends AnyDefinition>(
       if (isStarted) return;
       isStarted = true;
       follow();
+      // What connect() and expose() read from an owner or a linked instance
+      // may have changed while this one didn't follow it (an id it adopted
+      // as its elements attached), so their caches go.
+      if (following.size > 0) changes++;
       store.batch(() => {
         for (const watcher of watchers) watcher.value = watcher.read();
         for (const effect of effects) runEffect(effect);
@@ -650,6 +714,20 @@ export function createInstance<D extends AnyDefinition>(
       if (isStarted) changed();
     },
     element: (part) => elements.get(part) ?? null,
+    adoptId(part, value) {
+      const next =
+        value === undefined || value === '' || value === ownId(part)
+          ? undefined
+          : value;
+      if (adoptedIds.get(part) === next) return;
+      if (next === undefined) adoptedIds.delete(part);
+      else adoptedIds.set(part, next);
+      // Item ids may be made from it (Listbox's from the list's).
+      if (definition.itemParts) markItems(null);
+      // Even before start: an instance that reads these ids (a radio its
+      // group's error, a button its tooltip's root) may already follow it.
+      changed();
+    },
     connectItem(part, key) {
       const id = `${part}\n${key}`;
       const version = keyVersions.get(key) ?? 0;

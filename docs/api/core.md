@@ -146,6 +146,7 @@ Declares an event the component reports, under `events`, by camelCase name:
 | `attribute` | both            | `string \| false`                             | The element attribute. Defaults to a [derived name](#naming-conventions). `false` makes the prop a property only, for values an attribute can't hold (functions, arrays). |
 | `type`      | both            | `'boolean' \| 'string' \| 'number' \| 'json'` | How the element converts the attribute. Inferred from the default; set it when the default is `undefined` and the value isn't a string.                                   |
 | `adopt`     | both            | `PropAdoption`                                | Where the custom element reads the prop when the consumer leaves it unset (below).                                                                                        |
+| `idOf`      | `prop` only     | `string`                                      | The part whose id this string prop sets, such as Field's `controlId`. A part's id is the one its element carries, else this prop, else the generated one.                 |
 | `event`     | `bindable` only | `string`                                      | The change event's camelCase name, instead of `<name>Change`.                                                                                                             |
 
 `adopt` lets a custom element take a value from the consumer's markup, so
@@ -221,7 +222,7 @@ and the few members the definition lists as [actions](#actions). Everything
 | Member                             | Description                                                                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `props`                            | One reader per prop: a function for a `prop()`, a [`Bindable`](#bindables-in-setup) for a `bindable()`. Read props here every time; never copy them.          |
-| `ids`                              | A stable id per part, `<instance id>-<part>`. React's comes from `useId`.                                                                                     |
+| `ids`                              | Each part's id now: the id its element carries, else its `idOf` prop, else `<instance id>-<part>`. Read it where you use it.                                  |
 | `env`                              | Host objects from the adapter. `env.document` is the element's document in the custom-element adapter; React passes none.                                     |
 | `state(initial)`                   | A `Cell<T>` of internal state: `get()` and `set(value)`. Setting a different value (`Object.is`) notifies.                                                    |
 | `memo(deps, compute)`              | A getter that calls `compute(...deps())` again only when a dependency changes (`Object.is`).                                                                  |
@@ -528,7 +529,7 @@ adapters drive one per rendered component, and tests use it directly.
 
 | Member                                                     | Description                                                                                                                       |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `definition`, `id`, `ids`                                  | The definition, the id base and the id of each part.                                                                              |
+| `definition`, `id`, `ids`                                  | The definition, the id base and the id of each part now.                                                                          |
 | `actions`                                                  | The definition's public [actions](#actions), each run in a batch.                                                                 |
 | `api`                                                      | Internal: what `setup()` returned, for adapters, composing definitions and owned components. Consumers call `actions` instead.    |
 | `getState()`                                               | What `expose()` returns, cached until state or props change.                                                                      |
@@ -541,6 +542,7 @@ adapters drive one per rendered component, and tests use it directly.
 | `subscribe(listener)`, `getSnapshot()`                     | The store: `listener` runs after each flush, and the snapshot is a version number that changes once per flush.                    |
 | `batch(fn)`                                                | Groups changes into one flush.                                                                                                    |
 | `attach(part, element)`, `element(part)`                   | Registers the element of a part (`null` removes it) and reads it back. Adapters call `attach`.                                    |
+| `adoptId(part, id)`                                        | Keeps the id the consumer gave a part's element; `undefined` gives the part its own back. The binder calls it.                    |
 | `connectItem(part, key)`                                   | Part props for one item part of one item, cached.                                                                                 |
 | `attachItem(part, key, element)`, `itemElement(part, key)` | Registers and reads an item part's element.                                                                                       |
 | `subscribeItems(listener)`                                 | Hears which item keys were invalidated (`null` for all), so an adapter rewrites only those.                                       |

@@ -62,6 +62,14 @@ export interface PropOptions {
   /** Attribute conversion. Inferred from the default when it is not `undefined`. */
   readonly type?: PropType;
   readonly adopt?: PropAdoption;
+  /**
+   * The part whose id this prop sets (a `string | undefined` prop, such as
+   * Field's `controlId`). The part's id is the one its element carries,
+   * else this prop, else the generated one (root AGENTS.md → DOM, lifecycle
+   * and SSR): the prop gives the id before the element is there, so
+   * React's server HTML has it.
+   */
+  readonly idOf?: string;
 }
 
 export interface PropSpec<T> {
@@ -134,6 +142,8 @@ export interface PropInfo {
   /** The element attribute, or `false` for a property-only prop. */
   readonly attribute: string | false;
   readonly adopt?: PropAdoption;
+  /** The part whose id the prop sets (`PropOptions.idOf`). */
+  readonly idOf?: string;
   /** Bindables only: the camelCase change event. */
   readonly changeEvent?: string;
 }
@@ -231,6 +241,7 @@ export function resolveSchema(
       type: inferType(spec),
       attribute,
       ...(spec.options.adopt ? { adopt: spec.options.adopt } : {}),
+      ...(spec.options.idOf ? { idOf: spec.options.idOf } : {}),
       ...(changeEvent ? { changeEvent } : {}),
     });
     if (changeEvent) names.push(changeEvent);

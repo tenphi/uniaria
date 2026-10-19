@@ -199,7 +199,12 @@ export interface SetupContext<
   E extends EventsSchema,
 > {
   readonly props: PropReaders<P>;
-  /** Stable ids per part, from the adapter (`useId` in React). */
+  /**
+   * Each part's id now (`Instance.ids`): the id the consumer gave its
+   * element, else its `idOf` prop, else one made from the adapter's stable
+   * id (`useId` in React). Read it where it is used, not once in `setup()`:
+   * it changes when an element with an id of its own attaches.
+   */
   readonly ids: Readonly<Record<Part, string>>;
   readonly env: Env;
   /** Internal state. Setting it notifies the store. */
@@ -301,6 +306,7 @@ export interface Composed<D extends AnyDefinition> {
 /** What `expose()` and `connect()` read. */
 export interface ViewContext<Part extends string, P extends PropsSchema, Api> {
   readonly props: PropReaders<P>;
+  /** Each part's id now, as `SetupContext.ids`. */
   readonly ids: Readonly<Record<Part, string>>;
   readonly api: Api;
 }
@@ -530,9 +536,21 @@ export function defineComponent<
     }
     seen.add(name);
   };
+  const idProps = new Set<string>();
   for (const info of schema.props) {
     callback(info.key);
     if (info.defaultKey) callback(info.defaultKey);
+    if (info.idOf === undefined) continue;
+    if (
+      info.kind !== 'prop' ||
+      !(config.parts as readonly string[]).includes(info.idOf) ||
+      idProps.has(info.idOf)
+    ) {
+      throw new Error(
+        `[uniaria] ${config.name}: "${info.key}" can't set the id of "${info.idOf}": idOf takes a plain prop and a part no other prop names.`,
+      );
+    }
+    idProps.add(info.idOf);
   }
   for (const name of schema.events) callback(`on${capitalize(name)}`);
   if (config.owner) {
