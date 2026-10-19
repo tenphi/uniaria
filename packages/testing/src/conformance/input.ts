@@ -71,13 +71,40 @@ const up: PointerInput['up'] = async (options) => {
   heldButtons.delete(button);
 };
 
+/** How long `pointer.wheel` waits for its event to reach the page. */
+const WHEEL_TIMEOUT = 1000;
+
+/**
+ * Resolves once the page gets a `wheel` event or the scroll one causes:
+ * Firefox's wheel command can resolve before either. WebKit sends no `wheel`
+ * event while a button is held, only the scroll, and a wheel that neither
+ * reaches the page nor scrolls gives up after `WHEEL_TIMEOUT`.
+ */
+function wheelArrival(): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      window.removeEventListener('wheel', done, true);
+      window.removeEventListener('scroll', done, true);
+      resolve();
+    };
+    const timer = setTimeout(done, WHEEL_TIMEOUT);
+    window.addEventListener('wheel', done, true);
+    window.addEventListener('scroll', done, true);
+  });
+}
+
 export const pointer: PointerInput = {
   down,
   up,
   move: (target) => commands.uniPointerMove(selectorFor(target), 'center'),
   moveOutside: (target) =>
     commands.uniPointerMove(selectorFor(target), 'outside'),
-  wheel: ({ deltaX = 0, deltaY = 0 }) => commands.uniWheel(deltaX, deltaY),
+  async wheel({ deltaX = 0, deltaY = 0 }) {
+    const arrival = wheelArrival();
+    await commands.uniWheel(deltaX, deltaY);
+    await arrival;
+  },
   async click(target, options) {
     await down(target, options);
     await up(options);
