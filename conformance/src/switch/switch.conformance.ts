@@ -26,7 +26,15 @@ const PHASE = { phase: 3 } as const;
 /** isFocusableWhenDisabled came with Tooltip (Tooltip spec, Resolved questions 12). */
 const FOCUSABLE_PHASE = { phase: 4 } as const;
 
-const PARTS = ['root', 'input', 'indicator', 'label', 'description', 'error'];
+const PARTS = [
+  'root',
+  'wrapper',
+  'input',
+  'indicator',
+  'label',
+  'description',
+  'error',
+];
 
 const STATE_ATTRIBUTES = [
   'data-selected',
@@ -50,8 +58,9 @@ interface WifiOptions {
 }
 
 /**
- * A `label` root around the input, an indicator (the track) and a `span`
- * label, with the description and error outside it: the spec's first layout.
+ * A `div` root around a `label` wrapper (the input, an indicator, the track,
+ * and a `span` label), the description and the error: the spec's first
+ * layout.
  */
 function wifi({
   input = h('input', { part: 'input', type: 'checkbox', name: 'wifi' }),
@@ -59,16 +68,20 @@ function wifi({
 }: WifiOptions = {}): TemplateElement[] {
   return [
     h(
-      'label',
+      'div',
       { part: 'root' },
-      input,
-      h('span', { part: 'indicator' }, '•'),
-      h('span', { part: 'label' }, 'Wi-Fi'),
+      h(
+        'label',
+        { part: 'wrapper' },
+        input,
+        h('span', { part: 'indicator' }, '•'),
+        h('span', { part: 'label' }, 'Wi-Fi'),
+      ),
+      ...(hasDescription
+        ? [h('p', { part: 'description' }, 'Uses more battery')]
+        : []),
+      h('p', { part: 'error' }, 'Turn on to sync'),
     ),
-    ...(hasDescription
-      ? [h('p', { part: 'description' }, 'Uses more battery')]
-      : []),
-    h('p', { part: 'error' }, 'Turn on to sync'),
   ];
 }
 
@@ -651,7 +664,7 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
 
     group('hover and focus', () => {
       scenario(
-        'hovering the root or the input marks every part, never while disabled',
+        'hovering the wrapper or the input marks every part, never while disabled',
         async ({ mount, pointer }) => {
           const mounted = await mount({ template: wifi(), props: IN_LABEL });
           const root = mounted.part('root');
@@ -659,6 +672,10 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
           await pointer.move(mounted.part('label'));
           expect(mounted.state().isHovered).toBe(true);
           expectOnEveryPart(mounted, 'data-hovered', true);
+
+          // The rest of the root isn't the hovered area.
+          await pointer.move(mounted.part('description'));
+          expect(mounted.state().isHovered).toBe(false);
 
           await pointer.moveOutside(root);
           expect(mounted.state().isHovered).toBe(false);
@@ -672,6 +689,19 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
           await pointer.move(mounted.part('label'));
           expect(mounted.state().isHovered).toBe(false);
           expectOnEveryPart(mounted, 'data-hovered', false);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'without a wrapper, the root is the hovered area',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({ template: plain() });
+          await pointer.move(mounted.part('label'));
+          expect(mounted.state().isHovered).toBe(true);
+          expect(mounted.part('root').hasAttribute('data-hovered')).toBe(true);
+          await pointer.moveOutside(mounted.part('root'));
+          expect(mounted.state().isHovered).toBe(false);
         },
         PHASE,
       );

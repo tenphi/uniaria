@@ -62,8 +62,8 @@ interface NotifyOptions {
 }
 
 /**
- * A group "Notifications" with Email and SMS, and the description and error
- * after it, as Cube UI Kit's field wrapper places them.
+ * A group "Notifications" with Email and SMS, then the description and
+ * the error, all inside the group's root (its outermost element).
  */
 function notify({
   options = [option('email', 'Email'), option('sms', 'SMS')],
@@ -75,11 +75,11 @@ function notify({
       { part: 'root' },
       h('span', { part: 'label' }, 'Notifications'),
       ...options,
+      ...(hasDescription
+        ? [h('p', { part: 'description' }, 'Pick at least one')]
+        : []),
+      h('p', { part: 'error' }, 'Select one'),
     ),
-    ...(hasDescription
-      ? [h('p', { part: 'description' }, 'Pick at least one')]
-      : []),
-    h('p', { part: 'error' }, 'Select one'),
   ];
 }
 

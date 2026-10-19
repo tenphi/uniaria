@@ -19,7 +19,14 @@ type MountedField = Mounted<NumberFieldProps, NumberFieldState>;
 const PHASE = { phase: 4 } as const;
 const TOUCH = { phase: 4, needs: ['touch'] } as const;
 
-const FIELD_PARTS = ['root', 'label', 'input', 'description', 'error'];
+const FIELD_PARTS = [
+  'root',
+  'wrapper',
+  'label',
+  'input',
+  'description',
+  'error',
+];
 
 const EVENTS = ['valueChange', 'focusChange'];
 
@@ -28,29 +35,34 @@ interface QuantityOptions {
   readonly label?: string | null;
   /** The root's language, which the field formats for. */
   readonly lang?: string;
-  /** More markup inside the root, before the label. */
-  readonly inRoot?: readonly TemplateNode[];
+  /** More markup inside the wrapper, before the input. */
+  readonly inWrapper?: readonly TemplateNode[];
   readonly error?: string;
 }
 
 /**
- * A root around a label, the input, both buttons, the hidden input, a
- * description and an error, in English unless `lang` says otherwise.
+ * A root around a label, a wrapper with the input and both buttons, the
+ * hidden input, a description and an error, in English unless `lang` says
+ * otherwise.
  */
 function quantity({
   label = 'Quantity',
   lang = 'en-US',
-  inRoot = [],
+  inWrapper = [],
   error = 'Order at most 10',
 }: QuantityOptions = {}): TemplateElement {
   return h(
     'div',
     { part: 'root', lang },
-    ...inRoot,
     ...(label === null ? [] : [h('label', { part: 'label' }, label)]),
-    h('input', { part: 'input' }),
-    h('button', { part: 'decrement' }, '−'),
-    h('button', { part: 'increment' }, '+'),
+    h(
+      'div',
+      { part: 'wrapper' },
+      ...inWrapper,
+      h('input', { part: 'input' }),
+      h('button', { part: 'decrement' }, '−'),
+      h('button', { part: 'increment' }, '+'),
+    ),
     h('input', { part: 'hiddenInput', name: 'quantity' }),
     h('p', { part: 'description' }, 'How many to order'),
     h('p', { part: 'error' }, error),
@@ -1321,13 +1333,20 @@ export const numberFieldConformance = defineConformance<
     );
 
     scenario(
-      'a press on the root outside any control focuses the input',
+      'a press on the wrapper outside any control focuses the input; on the rest of the root, not',
       async ({ mount, pointer }) => {
         const mounted = await mount({
-          template: quantity({ inRoot: [h('span', { id: 'unit' }, 'pcs')] }),
+          template: quantity({
+            inWrapper: [h('span', { id: 'unit' }, 'pcs')],
+          }),
         });
         await pointer.click(mounted.container.querySelector('#unit')!);
         expect(document.activeElement).toBe(inputOf(mounted));
+
+        // The root around the wrapper only holds the parts.
+        inputOf(mounted).blur();
+        await pointer.click(mounted.part('description'));
+        expect(document.activeElement).not.toBe(inputOf(mounted));
       },
       PHASE,
     );

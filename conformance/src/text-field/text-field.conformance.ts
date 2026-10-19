@@ -3,7 +3,7 @@
  * (`packages/core/src/components/text-field/spec.md`): Field composed on a
  * native input or textarea, the value (uncontrolled, controlled and
  * buffered, form reset), disabled and read-only, hover and focus on every
- * part, the root press, public state, render counts and spoken output.
+ * part, the wrapper press, public state, render counts and spoken output.
  * Field's own linking is Field's suite. Everything here is phase 3.
  */
 
@@ -17,7 +17,7 @@ type MountedField = Mounted<TextFieldProps, TextFieldState>;
 
 const PHASE = { phase: 3 } as const;
 
-const PARTS = ['root', 'label', 'input', 'description', 'error'];
+const PARTS = ['root', 'wrapper', 'label', 'input', 'description', 'error'];
 
 const STATE_ATTRIBUTES = [
   'data-hovered',
@@ -33,21 +33,23 @@ const EVENTS = ['valueChange', 'focusChange'];
 
 interface EmailOptions {
   readonly input?: TemplateElement;
-  /** More markup inside the root, before the label: a prefix, a button. */
-  readonly inRoot?: readonly TemplateNode[];
+  /** More markup inside the wrapper, before the input: a prefix, a button. */
+  readonly inWrapper?: readonly TemplateNode[];
 }
 
-/** A root around a label, an email input, a description and an error. */
+/**
+ * A root around a label, a wrapper with an email input, a description and an
+ * error.
+ */
 function email({
   input = h('input', { part: 'input', type: 'email', name: 'email' }),
-  inRoot = [],
+  inWrapper = [],
 }: EmailOptions = {}): TemplateElement {
   return h(
     'div',
     { part: 'root' },
-    ...inRoot,
     h('label', { part: 'label' }, 'Email'),
-    input,
+    h('div', { part: 'wrapper' }, ...inWrapper, input),
     h('p', { part: 'description' }, 'We never share it'),
     h('p', { part: 'error' }, 'Enter a valid email'),
   );
@@ -556,11 +558,11 @@ export const textFieldConformance = defineConformance<
     );
 
     scenario(
-      'a press on the root outside any control focuses the input',
+      'a press on the wrapper outside any control focuses the input; on the rest of the root, not',
       async ({ mount, pointer }) => {
         const mounted = await mount({
           template: email({
-            inRoot: [
+            inWrapper: [
               h('span', { id: 'prefix' }, '@'),
               // tabindex: WebKit focuses a clicked button only with one.
               h(
@@ -578,9 +580,13 @@ export const textFieldConformance = defineConformance<
         await pointer.click(prefix);
         expect(document.activeElement).toBe(input);
 
-        // Another control inside the root keeps its own press.
+        // Another control inside the wrapper keeps its own press.
         await pointer.click(action);
         expect(document.activeElement).toBe(action);
+
+        // The root around the wrapper only holds the parts.
+        await pointer.click(mounted.part('description'));
+        expect(document.activeElement).not.toBe(input);
       },
       PHASE,
     );

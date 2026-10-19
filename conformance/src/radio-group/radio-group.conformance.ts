@@ -64,8 +64,8 @@ interface PlanOptions {
 }
 
 /**
- * A group "Plan" with Free, Pro and Team, and the description and error
- * after it, as Cube UI Kit's field wrapper places them.
+ * A group "Plan" with Free, Pro and Team, then the description
+ * and the error, all inside the group's root (its outermost element).
  */
 function plan({
   options = FREE_PRO_TEAM,
@@ -77,11 +77,11 @@ function plan({
       { part: 'root' },
       h('span', { part: 'label' }, 'Plan'),
       ...options,
+      ...(hasDescription
+        ? [h('p', { part: 'description' }, 'Billed monthly')]
+        : []),
+      h('p', { part: 'error' }, 'Pick a plan'),
     ),
-    ...(hasDescription
-      ? [h('p', { part: 'description' }, 'Billed monthly')]
-      : []),
-    h('p', { part: 'error' }, 'Pick a plan'),
   ];
 }
 
@@ -880,6 +880,41 @@ export const radioGroupConformance = defineConformance<
         await mounted.setProps({ isDisabled: true });
         await pointer.move(radioParts(mounted, 'label')[1]!);
         expectOnRadio(1, 'data-hovered', false);
+      },
+      PHASE,
+    );
+
+    scenario(
+      "a radio's wrapper is its hovered area, not the rest of its root",
+      async ({ mount, pointer }) => {
+        const described = nested(
+          'radio',
+          { value: 'pro', labelElementType: 'span' },
+          h(
+            'div',
+            { part: 'root' },
+            h(
+              'label',
+              { part: 'wrapper' },
+              h('input', { part: 'input', type: 'radio' }),
+              h('span', { part: 'indicator' }),
+              h('span', { part: 'label' }, 'Pro'),
+            ),
+            h('p', { part: 'description' }, 'For small teams'),
+          ),
+        );
+        const mounted = await mount({
+          template: plan({ options: [option('free', 'Free'), described] }),
+        });
+        const [root] = radioParts(mounted, 'root').slice(1);
+        const [wrapper] = radioParts(mounted, 'wrapper');
+
+        await pointer.move(radioParts(mounted, 'label')[1]!);
+        expect(root!.hasAttribute('data-hovered')).toBe(true);
+        expect(wrapper!.hasAttribute('data-hovered')).toBe(true);
+
+        await pointer.move(radioParts(mounted, 'description')[0]!);
+        expect(root!.hasAttribute('data-hovered')).toBe(false);
       },
       PHASE,
     );
