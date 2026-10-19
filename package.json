@@ -40,7 +40,7 @@
     "@changesets/cli": "^3.0.3",
     "@eslint/js": "^10.0.1",
     "@tenphi/eslint-plugin-tasty": "^1.7.0",
-    "@types/node": "^22.20.4",
+    "@types/node": "^22.20.5",
     "@vitest/browser-playwright": "^5.0.3",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
@@ -50,8 +50,8 @@
     "tsdown": "^0.23.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
-    "vite": "^8.3.1",
+    "vite": "^8.3.2",
     "vitest": "^5.0.3",
-    "web-features": "^3.40.0"
+    "web-features": "^3.40.1"
   }
 }
