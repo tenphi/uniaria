@@ -14,7 +14,7 @@
  * own tests cover it).
  */
 
-import { defineConformance, h, nested } from '@uniaria/testing';
+import { defineConformance, h, nested, partName } from '@uniaria/testing';
 import type { Mounted, TemplateElement, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
@@ -157,7 +157,7 @@ function watchAttribute(
     for (const record of records) {
       const element = record.target as Element;
       if (element.hasAttribute(attribute)) {
-        parts.add(element.getAttribute('data-part') ?? '');
+        parts.add(partName(element, 'dialog') ?? '');
       }
     }
   });

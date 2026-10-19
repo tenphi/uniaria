@@ -14,7 +14,14 @@
  * overscan renders ten more beyond each edge.
  */
 
-import { VIRTUALIZER, defineConformance, h, rows } from '@uniaria/testing';
+import {
+  VIRTUALIZER,
+  defineConformance,
+  h,
+  partName,
+  partSelector,
+  rows,
+} from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -177,7 +184,7 @@ function itemPart(
   key: string,
 ): HTMLElement | null {
   return mounted.container.querySelector<HTMLElement>(
-    `[data-scope="listbox"][data-part="${part}"][data-key="${key}"]`,
+    `${partSelector('listbox', part)}[data-key="${key}"]`,
   );
 }
 
@@ -196,7 +203,7 @@ function keysOf(mounted: MountedListbox): string[] {
 /** The key of the option with focus, or `null`. */
 function focusedKey(mounted: MountedListbox): string | null {
   const active = mounted.container.ownerDocument.activeElement as HTMLElement;
-  return active?.dataset.part === 'option'
+  return active && partName(active, 'listbox') === 'option'
     ? (active.dataset.key ?? null)
     : null;
 }

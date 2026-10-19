@@ -108,7 +108,7 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
         'marks every part and sets no state while valid',
         async ({ mount }) => {
           const mounted = await mount({ template: email() });
-          // `part()` fails without data-scope="field" and data-part.
+          // `part()` fails without the part markers.
           expect(mounted.part('root').hasAttribute('role')).toBe(false);
           const control = mounted.part('control');
           for (const name of [

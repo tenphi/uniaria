@@ -53,8 +53,9 @@ export const toggleButtonConformance = defineConformance<
         expect(root.tagName).toBe('BUTTON');
         expect(root.getAttribute('type')).toBe('button');
         expect(root.getAttribute('tabindex')).toBe('0');
-        expect(root.getAttribute('data-scope')).toBe('toggle-button');
-        expect(root.getAttribute('data-part')).toBe('root');
+        expect(root.classList.contains('uni-toggle-button')).toBe(true);
+        expect(root.hasAttribute('data-scope')).toBe(false);
+        expect(root.hasAttribute('data-element')).toBe(false);
         expectSelected(mounted, false);
         for (const name of ['role', 'disabled', 'aria-disabled']) {
           expect(root.hasAttribute(name), name).toBe(false);

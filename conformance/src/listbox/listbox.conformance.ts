@@ -12,7 +12,7 @@
  * takes as set; reading items from markup is the element's own test.
  */
 
-import { defineConformance, h } from '@uniaria/testing';
+import { defineConformance, h, partName, partSelector } from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -127,7 +127,7 @@ function byId(mounted: MountedListbox, id: string): HTMLElement {
 /** The option part for a key. */
 function option(mounted: MountedListbox, key: string): HTMLElement {
   const element = mounted.container.querySelector<HTMLElement>(
-    `[data-scope="listbox"][data-part="option"][data-key="${key}"]`,
+    `${partSelector('listbox', 'option')}[data-key="${key}"]`,
   );
   if (!element) throw new Error(`No option "${key}".`);
   return element;
@@ -140,7 +140,7 @@ function itemPart(
   key: string,
 ): HTMLElement {
   return mounted.container.querySelector<HTMLElement>(
-    `[data-scope="listbox"][data-part="${part}"][data-key="${key}"]`,
+    `${partSelector('listbox', part)}[data-key="${key}"]`,
   )!;
 }
 
@@ -167,7 +167,7 @@ function tabStops(mounted: MountedListbox): (string | null)[] {
 /** The key of the option with focus, or `null`. */
 function focusedKey(mounted: MountedListbox): string | null {
   const active = mounted.container.ownerDocument.activeElement as HTMLElement;
-  return active?.dataset.part === 'option'
+  return active && partName(active, 'listbox') === 'option'
     ? (active.dataset.key ?? null)
     : null;
 }

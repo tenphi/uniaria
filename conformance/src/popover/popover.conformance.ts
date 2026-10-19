@@ -22,7 +22,13 @@
  * development warnings; the element tests cover them.
  */
 
-import { defineConformance, h, nested } from '@uniaria/testing';
+import {
+  defineConformance,
+  h,
+  nested,
+  partName,
+  partSelector,
+} from '@uniaria/testing';
 import type { Mounted, TemplateNode } from '@uniaria/testing';
 import { expect } from 'vitest';
 
@@ -227,7 +233,7 @@ function watchAttribute(
     for (const record of records) {
       const element = record.target as Element;
       if (element.hasAttribute(attribute)) {
-        parts.add(element.getAttribute('data-part') ?? '');
+        parts.add(partName(element, 'popover') ?? '');
       }
     }
   });
@@ -1566,7 +1572,7 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
           const popover = root(mounted);
           const dialog = mounted.container.querySelector('dialog')!;
           const reset = mounted.container.querySelector<HTMLElement>(
-            '[data-scope="dialog"][data-part="trigger"]',
+            partSelector('dialog', 'trigger'),
           )!;
           await pointer.click(mounted.part('trigger'));
           await pointer.click(reset);

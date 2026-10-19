@@ -21,7 +21,13 @@
  * warnings; the element tests and the core tests cover them.
  */
 
-import { defineConformance, h, nested } from '@uniaria/testing';
+import {
+  defineConformance,
+  h,
+  nested,
+  partName,
+  partSelector,
+} from '@uniaria/testing';
 import type {
   InputNeed,
   Mounted,
@@ -180,7 +186,7 @@ function partOf(
   part: string,
 ): HTMLElement {
   return mounted.container.querySelector<HTMLElement>(
-    `[data-scope="${scope}"][data-part="${part}"]`,
+    partSelector(scope, part),
   )!;
 }
 
@@ -247,7 +253,7 @@ function watchAttribute(
     for (const record of records) {
       const element = record.target as Element;
       if (element.hasAttribute(attribute)) {
-        parts.add(element.getAttribute('data-part') ?? '');
+        parts.add(partName(element, 'tooltip') ?? '');
       }
     }
   });

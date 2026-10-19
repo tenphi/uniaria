@@ -11,7 +11,7 @@
  * property, and spoken output covers it only where the markup carries it.
  */
 
-import { defineConformance, h, nested } from '@uniaria/testing';
+import { defineConformance, h, nested, partSelector } from '@uniaria/testing';
 import type {
   Mounted,
   TemplateComponent,
@@ -101,7 +101,7 @@ function between(nodes: TemplateElement[]): TemplateElement[] {
 function radioParts(mounted: MountedGroup, part: string): HTMLElement[] {
   return Array.from(
     mounted.container.querySelectorAll<HTMLElement>(
-      `[data-scope="radio"][data-part="${part}"]`,
+      partSelector('radio', part),
     ),
   );
 }

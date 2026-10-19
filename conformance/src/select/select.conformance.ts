@@ -15,7 +15,14 @@
  * scenarios focus it by script.
  */
 
-import { VIRTUALIZER, defineConformance, h, rows } from '@uniaria/testing';
+import {
+  VIRTUALIZER,
+  defineConformance,
+  h,
+  partName,
+  partSelector,
+  rows,
+} from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -292,7 +299,7 @@ function hiddenSelect(mounted: MountedSelect): HTMLSelectElement {
 /** The option part for a key. */
 function option(mounted: MountedSelect, key: string): HTMLElement {
   const element = mounted.container.querySelector<HTMLElement>(
-    `[data-scope="select"][data-part="option"][data-key="${key}"]`,
+    `${partSelector('select', 'option')}[data-key="${key}"]`,
   );
   if (!element) throw new Error(`No option "${key}".`);
   return element;
@@ -309,7 +316,7 @@ function selectedKeys(mounted: MountedSelect): string[] {
 /** The key of the option with focus, or `null`. */
 function focusedKey(mounted: MountedSelect): string | null {
   const active = mounted.container.ownerDocument.activeElement as HTMLElement;
-  return active?.dataset.part === 'option'
+  return active && partName(active, 'select') === 'option'
     ? (active.dataset.key ?? null)
     : null;
 }

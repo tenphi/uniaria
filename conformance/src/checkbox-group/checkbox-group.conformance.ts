@@ -10,7 +10,7 @@
  * phase 3.
  */
 
-import { defineConformance, h, nested } from '@uniaria/testing';
+import { defineConformance, h, nested, partSelector } from '@uniaria/testing';
 import type {
   Mounted,
   TemplateComponent,
@@ -87,7 +87,7 @@ function notify({
 function boxParts(mounted: MountedGroup, part: string): HTMLElement[] {
   return Array.from(
     mounted.container.querySelectorAll<HTMLElement>(
-      `[data-scope="checkbox"][data-part="${part}"]`,
+      partSelector('checkbox', part),
     ),
   );
 }

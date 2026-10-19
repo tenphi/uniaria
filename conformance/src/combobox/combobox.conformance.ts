@@ -15,7 +15,13 @@
  * own test.
  */
 
-import { VIRTUALIZER, defineConformance, h, rows } from '@uniaria/testing';
+import {
+  VIRTUALIZER,
+  defineConformance,
+  h,
+  partSelector,
+  rows,
+} from '@uniaria/testing';
 import type {
   KeyboardInput,
   Mounted,
@@ -293,7 +299,7 @@ function form(mounted: MountedCombobox): HTMLFormElement {
 /** The item part of `part` for a key. */
 function item(mounted: MountedCombobox, part: string, key: string) {
   const element = mounted.container.querySelector<HTMLElement>(
-    `[data-scope="combobox"][data-part="${part}"][data-key="${key}"]`,
+    `${partSelector('combobox', part)}[data-key="${key}"]`,
   );
   if (!element) throw new Error(`No ${part} "${key}".`);
   return element;
