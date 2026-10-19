@@ -719,4 +719,33 @@ export const textFieldConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the field by its label and description, and typing echoes',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: { field: /Email We never share it/, typed: /^a$/ },
+          nvda: {
+            field: /Email, edit, We never share it, blank/,
+            typed: /^a$/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            email(),
+          ],
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.field);
+        await screenReader.type('a');
+        expect.soft(await screenReader.spoken()).toMatch(heard.typed);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

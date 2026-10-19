@@ -667,4 +667,42 @@ export const checkboxGroupConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the group and its first checkbox, and Space reads it checked',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            group:
+              /Email unchecked checkbox Notifications Pick at least one group/,
+            focus: /Email unchecked checkbox/,
+            checked: /^checked Email checkbox/,
+          },
+          nvda: {
+            group: /Notifications, grouping/,
+            focus: /Email, check box, focused, not checked/,
+            checked: /^checked$/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            ...notify(),
+          ],
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.group);
+        // NVDA reads the description or the checkbox on entering the group,
+        // which one varies from run to run; its focus report names the checkbox.
+        expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
+        await screenReader.press('Space');
+        expect.soft(await screenReader.spoken()).toMatch(heard.checked);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

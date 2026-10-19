@@ -886,5 +886,36 @@ export const listboxVirtualizationConformance = defineConformance<
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Tab reads an option among a thousand, and End reads the last one',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              entered: /Item 0 \(1 of 1,000\)/,
+              focus: /Item 0/,
+              last: /Item 999 \(1,000 of 1,000\)/,
+            },
+            nvda: {
+              entered: /Items, list/,
+              focus: /Item 0, list item, focused, 1 of 1000/,
+              last: /Item 999, not selected, 1000 of 1000/,
+            },
+          }[screenReader.name];
+          const mounted = await mountList(mount);
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.entered);
+          // NVDA's speech stops at the list; its focus report names the option.
+          expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
+          await screenReader.press('End');
+          expect.soft(await screenReader.spoken()).toMatch(heard.last);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   });
 });

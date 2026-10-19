@@ -1020,4 +1020,37 @@ export const checkboxConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the checkbox not checked, with its description, and Space reads it checked',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            checkbox: /Accept terms We email a copy unchecked checkbox/,
+            checked: /^checked Accept terms/,
+          },
+          nvda: {
+            checkbox: /Accept terms, check box, not checked, We email a copy/,
+            checked: /^checked$/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            ...terms(),
+          ],
+          props: IN_LABEL,
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.checkbox);
+        await screenReader.press('Space');
+        expect.soft(await screenReader.spoken()).toMatch(heard.checked);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

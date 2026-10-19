@@ -1042,4 +1042,38 @@ export const radioGroupConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the group and its first radio, and an arrow checks the next',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            group: /Free radio button, 1 of 3 Plan Billed monthly radio group/,
+            next: /Pro selected radio button, 2 of 3/,
+          },
+          nvda: {
+            group: /Plan, grouping, Billed monthly/,
+            next: /Pro, radio button, checked, 2 of 3/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({ template: between(plan()) });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.group);
+        // NVDA's speech stops at the group; its focus report names the radio.
+        // VoiceOver has no item text for a radio.
+        if (screenReader.name === 'nvda') {
+          expect
+            .soft(await screenReader.readFocus())
+            .toMatch(/Free, radio button, focused, not checked, 1 of 3/);
+        }
+        await screenReader.press('ArrowDown');
+        expect.soft(await screenReader.spoken()).toMatch(heard.next);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

@@ -406,4 +406,36 @@ export const toggleButtonConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the toggle button not pressed, and Space reads it pressed',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            button: /Bold toggle button/,
+            pressed: /selected Bold toggle button/,
+          },
+          nvda: {
+            button: /Bold, toggle button, not pressed/,
+            pressed: /^pressed$/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            bold(),
+          ],
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.button);
+        await screenReader.press('Space');
+        expect.soft(await screenReader.spoken()).toMatch(heard.pressed);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

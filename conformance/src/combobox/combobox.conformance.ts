@@ -2229,4 +2229,44 @@ export const comboboxConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'the arrows read each highlighted option, and Enter reads the field with the chosen text',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            field: /Fruit list box pop up collapsed combo box/,
+            first: /Apple \(1 of 4\)/,
+            next: /Banana \(2 of 4\)/,
+            chosen: /Banana Fruit list box pop up collapsed combo box/,
+          },
+          nvda: {
+            field:
+              /Fruit, combo box, collapsed, has auto complete, editable, blank/,
+            first: /Apple, not selected, 1 of 4/,
+            next: /Banana, not selected, 2 of 4/,
+            chosen:
+              /Fruit, combo box, collapsed, has auto complete, editable, Banana/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: fruit(),
+          props: { items: FRUIT },
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.field);
+        await screenReader.press('ArrowDown');
+        expect.soft(await screenReader.spoken()).toMatch(heard.first);
+        await screenReader.press('ArrowDown');
+        expect.soft(await screenReader.spoken()).toMatch(heard.next);
+        await screenReader.press('Enter');
+        expect.soft(await screenReader.spoken()).toMatch(heard.chosen);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

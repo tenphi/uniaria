@@ -1493,4 +1493,36 @@ export const numberFieldConformance = defineConformance<
       PHASE,
     );
   });
+
+  group('real screen readers', () => {
+    scenario(
+      'Tab reads the field by its label and role, and ArrowUp reads the new value',
+      async ({ mount, screenReader }) => {
+        const heard = {
+          voiceover: {
+            field: /Quantity How many to order number field/,
+            value: /^0$/,
+          },
+          nvda: {
+            field: /Quantity, Number field, How many to order, blank/,
+            value: /^0$/,
+          },
+        }[screenReader.name];
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            quantity(),
+          ],
+        });
+        await screenReader.startFrom(
+          mounted.container.querySelector<HTMLElement>('#before')!,
+        );
+        await screenReader.press('Tab');
+        expect.soft(await screenReader.spoken()).toMatch(heard.field);
+        await screenReader.press('ArrowUp');
+        expect.soft(await screenReader.spoken()).toMatch(heard.value);
+      },
+      { ...PHASE, needs: ['screenReader'] },
+    );
+  });
 });

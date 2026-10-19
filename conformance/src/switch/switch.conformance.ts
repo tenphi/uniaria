@@ -930,5 +930,35 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Tab reads the switch off, with its description, and Space reads it on',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              off: /Wi-Fi Uses more battery off switch/,
+              on: /^on Wi-Fi/,
+            },
+            nvda: { off: /Wi-Fi, switch, off, Uses more battery/, on: /^on$/ },
+          }[screenReader.name];
+          const mounted = await mount({
+            template: [
+              h('input', { id: 'before', 'aria-label': 'Before' }),
+              ...wifi(),
+            ],
+            props: IN_LABEL,
+          });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.off);
+          await screenReader.press('Space');
+          expect.soft(await screenReader.spoken()).toMatch(heard.on);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   },
 );

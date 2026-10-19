@@ -1833,5 +1833,47 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'ArrowDown opens the list on the first option, and Enter reads the trigger with the chosen value',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              trigger: /Fruit list box pop up collapsed combo box/,
+              opened: /Apple \(1 of 4\)/,
+              focus: /Apple/,
+              next: /Banana \(2 of 4\)/,
+              chosen: /Banana Fruit list box pop up collapsed combo box/,
+            },
+            nvda: {
+              trigger: /Fruit, combo box, collapsed, opens list/,
+              opened: /Fruit, list/,
+              focus: /Apple, list item, focused, 1 of 4/,
+              next: /Banana, not selected, 2 of 4/,
+              chosen: /Fruit, combo box, Banana, collapsed, opens list/,
+            },
+          }[screenReader.name];
+          const mounted = await mount({
+            template: fruit(),
+            props: { items: FRUIT },
+          });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.trigger);
+          await screenReader.press('ArrowDown');
+          expect.soft(await screenReader.spoken()).toMatch(heard.opened);
+          // NVDA's speech stops at the list; its focus report names the option.
+          expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
+          await screenReader.press('ArrowDown');
+          expect.soft(await screenReader.spoken()).toMatch(heard.next);
+          await screenReader.press('Enter');
+          expect.soft(await screenReader.spoken()).toMatch(heard.chosen);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   },
 );

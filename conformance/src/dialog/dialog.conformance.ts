@@ -1120,5 +1120,37 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Enter on the trigger reads the dialog, and Escape reads the trigger again',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              trigger: /Delete file button/,
+              dialog:
+                /Delete file dialog with \d+ items heading level 2 Delete file/,
+              returned: /^Delete file button$/,
+            },
+            nvda: {
+              trigger: /Delete file, button/,
+              dialog: /Delete file, dialog, This can't be undone\./,
+              returned: /^Delete file, button$/,
+            },
+          }[screenReader.name];
+          const mounted = await mount({ template: confirm() });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.trigger);
+          await screenReader.press('Enter');
+          expect.soft(await screenReader.spoken()).toMatch(heard.dialog);
+          await screenReader.press('Escape');
+          expect.soft(await screenReader.spoken()).toMatch(heard.returned);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   },
 );

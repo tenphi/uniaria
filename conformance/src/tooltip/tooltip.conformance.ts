@@ -1540,5 +1540,24 @@ export const tooltipConformance = defineConformance<TooltipProps, TooltipState>(
         },
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Tab reads the trigger with the tooltip as its description',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: { trigger: /Save Saves the file button/ },
+            nvda: { trigger: /Save, button, Saves the file/ },
+          }[screenReader.name];
+          const mounted = await mount({ template: tip() });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.trigger);
+        },
+        ['screenReader'],
+      );
+    });
   },
 );

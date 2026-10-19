@@ -1689,5 +1689,37 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Enter on the trigger reads the popover, and Escape reads the trigger again',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              trigger: /Size collapsed button/,
+              popover:
+                /Column size dialog with \d+ items heading level 2 Column size/,
+              returned: /^Size collapsed button$/,
+            },
+            nvda: {
+              trigger: /Size, button, collapsed/,
+              popover: /Column size, dialog, Applies to every row\./,
+              returned: /^Size, button, collapsed$/,
+            },
+          }[screenReader.name];
+          const mounted = await mount({ template: size() });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.trigger);
+          await screenReader.press('Enter');
+          expect.soft(await screenReader.spoken()).toMatch(heard.popover);
+          await screenReader.press('Escape');
+          expect.soft(await screenReader.spoken()).toMatch(heard.returned);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   },
 );

@@ -1053,5 +1053,33 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
         TOUCH,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Tab reads the button by its name and role',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: { button: /Save button/ },
+            nvda: { button: /Save, button/ },
+          }[screenReader.name];
+          const mounted = await mount({
+            template: [
+              h('input', { id: 'before', 'aria-label': 'Before' }),
+              save(),
+            ],
+          });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          const entered = await screenReader.spoken();
+          expect.soft(entered).toMatch(heard.button);
+          // Listeners a custom element delegates from its host must not make the
+          // button read as clickable.
+          expect.soft(entered).not.toMatch(/clickable/);
+        },
+        { needs: ['screenReader'] },
+      );
+    });
   },
 );

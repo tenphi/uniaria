@@ -1785,5 +1785,39 @@ export const listboxConformance = defineConformance<ListboxProps, ListboxState>(
         PHASE,
       );
     });
+
+    group('real screen readers', () => {
+      scenario(
+        'Tab reads the focused option and its position, and an arrow reads the next',
+        async ({ mount, screenReader }) => {
+          const heard = {
+            voiceover: {
+              entered: /Apple \(1 of 4\)/,
+              focus: /Apple/,
+              next: /Banana \(2 of 4\)/,
+            },
+            nvda: {
+              entered: /Fruit, list/,
+              focus: /Apple, list item, focused, 1 of 4/,
+              next: /Banana, not selected, 2 of 4/,
+            },
+          }[screenReader.name];
+          const mounted = await mount({
+            template: between(fruit()),
+            props: { items: FRUIT },
+          });
+          await screenReader.startFrom(
+            mounted.container.querySelector<HTMLElement>('#before')!,
+          );
+          await screenReader.press('Tab');
+          expect.soft(await screenReader.spoken()).toMatch(heard.entered);
+          // NVDA's speech stops at the list; its focus report names the option.
+          expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
+          await screenReader.press('ArrowDown');
+          expect.soft(await screenReader.spoken()).toMatch(heard.next);
+        },
+        { ...PHASE, needs: ['screenReader'] },
+      );
+    });
   },
 );
