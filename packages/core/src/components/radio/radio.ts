@@ -176,6 +176,28 @@ export const radio = defineComponent({
     partEffect(ctx, 'input', joinChecked);
     ctx.watch(() => group()?.instance, joinChecked);
 
+    // A focusable disabled radio isn't submitted, as a natively disabled one
+    // isn't (Checkbox's rule): its entry comes out of the form's data, others
+    // of the same name stay.
+    partEffect(ctx, 'input', (element) => {
+      const input = element as HTMLInputElement;
+      const form = input.form;
+      if (!form) return;
+      const onFormData = (formDataEvent: FormDataEvent) => {
+        if (!isInert() || !input.checked || !input.name) return;
+        const { formData } = formDataEvent;
+        const values = formData.getAll(input.name);
+        const index = values.indexOf(input.value);
+        if (index === -1) return;
+        formData.delete(input.name);
+        values.forEach((value, at) => {
+          if (at !== index) formData.append(input.name, value);
+        });
+      };
+      form.addEventListener('formdata', onFormData);
+      return () => form.removeEventListener('formdata', onFormData);
+    });
+
     return {
       field: labelling,
       group,

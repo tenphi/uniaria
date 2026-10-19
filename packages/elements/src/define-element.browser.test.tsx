@@ -1290,6 +1290,25 @@ describe('<uni-radio-group>', () => {
     expect([free!.checked, pro!.checked]).toEqual([true, false]);
     expect(group.instance.getState().value).toBe('free');
   });
+
+  it('leaves a focusable disabled radio out of its form’s data, as a disabled one is', () => {
+    const container = mount(`
+      <form>
+        <uni-radio-group name="plan">
+          <div class="uni-radio-group">
+            ${option('free')}${option('pro', 'disabled focusable-when-disabled')}
+          </div>
+        </uni-radio-group>
+        <input type="hidden" name="plan" value="also" />
+      </form>`);
+    const form = container.querySelector('form')!;
+    const pro = container.querySelectorAll('uni-radio')[1]!;
+    expect(pro.querySelector('input')!.checked).toBe(true);
+    expect(new FormData(form).getAll('plan')).toEqual(['also']);
+
+    pro.removeAttribute('disabled');
+    expect(new FormData(form).getAll('plan')).toEqual(['pro', 'also']);
+  });
 });
 
 describe('<uni-dialog>', () => {
