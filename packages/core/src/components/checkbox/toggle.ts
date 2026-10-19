@@ -177,8 +177,9 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     if (isReadOnly() || isInert()) clickEvent.preventDefault();
   };
 
-  // Form reset goes back to the state the input mounted with, its
-  // defaultSelected when uncontrolled, as TextField's does.
+  // Form reset goes back to the default, as TextField's does: an
+  // uncontrolled toggle follows defaultSelected again; a controlled one asks
+  // for it, or without one for the state the input mounted with.
   let initial: boolean | undefined;
   partEffect(ctx, 'input', (element) => {
     initial ??= props.isSelected.get();
@@ -191,7 +192,7 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
       if (!external()) {
         ctx.batch(() => {
           isRefusing = false;
-          props.isSelected.set(initial!);
+          props.isSelected.reset({ fallback: initial });
         });
       }
       // The native reset runs after this event and sets `checked` from the

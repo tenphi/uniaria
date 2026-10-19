@@ -204,10 +204,10 @@ See [State](../guide/state.md).
   submits its `name` with its `value` (`on` when it has none). You write
   both; the `value` prop writes the input's `value` for you, which a
   [CheckboxGroup](./checkbox-group.mdx) needs.
-- **Reset.** A form reset returns the checkbox to the state it mounted with,
-  `defaultSelected` when uncontrolled; a controlled one gets a
-  `selectedchange` asking for it. It leaves `indeterminate` alone, as the
-  browser does.
+- **Reset.** A form reset returns an uncontrolled checkbox to
+  `defaultSelected`, even one set after it rendered; a controlled one gets a
+  `selectedchange` asking for `defaultSelected`, or without one the state it
+  mounted with. It leaves `indeterminate` alone, as the browser does.
 - **Disabled.** A disabled checkbox is never submitted, and neither is one
   disabled with `isFocusableWhenDisabled`. A read-only one is submitted.
 - **Validation.** Checkbox never validates. `isRequired` writes

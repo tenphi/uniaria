@@ -114,9 +114,10 @@ Everything else works as in Checkbox:
 
 - **Submission.** While on, the form submits the input's `name` with its
   `value` (`on` when it has none). You write both on the input.
-- **Reset.** A form reset returns the switch to the state it mounted with,
-  `defaultSelected` when uncontrolled; a controlled one gets a
-  `selectedchange` asking for it.
+- **Reset.** A form reset returns an uncontrolled switch to
+  `defaultSelected`, even one set after it rendered; a controlled one gets a
+  `selectedchange` asking for `defaultSelected`, or without one the state it
+  mounted with.
 - **Disabled.** A disabled switch is never submitted, and neither is one
   disabled with `isFocusableWhenDisabled`. A read-only one is submitted.
 - **Validation.** Switch never validates. `isRequired` writes

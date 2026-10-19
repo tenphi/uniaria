@@ -126,8 +126,10 @@ export const textField = defineComponent({
       props.value.set(text);
     };
 
-    // Form reset goes back to the value the field mounted with, its
-    // defaultValue when uncontrolled, as React Aria's does.
+    // Form reset goes back to the default, as a native field does: an
+    // uncontrolled field follows defaultValue again, even one set after
+    // mount; a controlled one asks for it, or without one for the value it
+    // mounted with, as React Aria's does.
     let initial: string | undefined;
     const resync = ctx.state(0);
     partEffect(ctx, 'input', (element) => {
@@ -139,7 +141,7 @@ export const textField = defineComponent({
         if (event.defaultPrevented) return;
         ctx.batch(() => {
           settle();
-          props.value.set(initial!);
+          props.value.reset({ fallback: initial });
         });
         // The native reset runs after this event and puts back the value
         // attribute, so the value is written again after it.

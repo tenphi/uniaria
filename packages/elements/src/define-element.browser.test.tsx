@@ -96,6 +96,24 @@ function byElement(part: string): string {
   return `[data-element="${part.charAt(0).toUpperCase()}${part.slice(1)}"]`;
 }
 
+/** The `detail` of each `type` event the host dispatches. */
+function details(host: HTMLElement, type: string): unknown[] {
+  const list: unknown[] = [];
+  host.addEventListener(type, (event) => {
+    if (event.target === host) list.push((event as CustomEvent).detail);
+  });
+  return list;
+}
+
+/**
+ * Resets `form` and waits a task: the native reset runs after the `reset`
+ * event, and the components write their parts again after it.
+ */
+async function resetForm(form: HTMLFormElement): Promise<void> {
+  form.reset();
+  await new Promise((resolve) => setTimeout(resolve));
+}
+
 function disclosureIn(container: HTMLElement) {
   const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
   const trigger = host.querySelector<HTMLElement>('[data-element="Trigger"]')!;
@@ -945,6 +963,38 @@ describe('<uni-text-field>', () => {
     expect(input.value).toBe('Jane');
     expect(host.instance.getState().value).toBe('Jane');
   });
+
+  it('goes back on a form reset to a default set after it connected', async () => {
+    const container = mount(`
+      <form>
+        <uni-text-field>
+          <label data-element="Label">Name</label>
+          <input data-element="Input" />
+        </uni-text-field>
+      </form>`);
+    const host = container.querySelector('uni-text-field')!;
+    const input = host.querySelector('input')!;
+    const form = container.querySelector('form')!;
+    const changes = details(host, 'valuechange');
+    host.defaultValue = 'Jane';
+    expect(input.value).toBe('Jane');
+
+    await resetForm(form);
+    expect(input.value).toBe('Jane');
+    expect(host.instance.getState().value).toBe('Jane');
+    expect(changes).toEqual([]);
+
+    await userEvent.type(input, 's');
+    host.defaultValue = 'Joe';
+    expect(input.value).toBe('Janes');
+    await resetForm(form);
+    expect(input.value).toBe('Joe');
+    expect(changes).toEqual(['Janes', 'Joe']);
+
+    // The default applies again until the next edit.
+    host.defaultValue = 'Ann';
+    expect(input.value).toBe('Ann');
+  });
 });
 
 describe('<uni-number-field>', () => {
@@ -1073,6 +1123,37 @@ describe('<uni-checkbox>', () => {
     expect(input.checked).toBe(true);
     expect(host.instance.getState().isSelected).toBe(true);
   });
+
+  it.each(['uni-checkbox', 'uni-switch'] as const)(
+    '%s goes back on a form reset to a default set after it connected',
+    async (tag) => {
+      const container = mount(`
+        <form>
+          <${tag}>
+            <label class="${tag}">
+              <input data-element="Input" type="checkbox" />
+              <span data-element="Label">News</span>
+            </label>
+          </${tag}>
+        </form>`);
+      const host = container.querySelector(tag)!;
+      const input = host.querySelector('input')!;
+      const form = container.querySelector('form')!;
+      const changes = details(host, 'selectedchange');
+      host.defaultSelected = true;
+      expect(input.checked).toBe(true);
+
+      await resetForm(form);
+      expect(input.checked).toBe(true);
+      expect(host.instance.getState().isSelected).toBe(true);
+      expect(changes).toEqual([]);
+
+      input.click();
+      await resetForm(form);
+      expect(input.checked).toBe(true);
+      expect(changes).toEqual([false, true]);
+    },
+  );
 });
 
 describe('<uni-checkbox-group>', () => {

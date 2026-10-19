@@ -171,10 +171,13 @@ that updates late loses no keystrokes and the caret stays put:
 ### In a form
 
 Put `name` on the input: the native input is what the form submits. On the
-form's `reset`, the field goes back to `defaultValue`, or without one to the
-value it started with, and reports it through `valueChange`. A controlled
-field reports it and keeps your value until you accept. A reset cancelled
-with `preventDefault()` before it reaches the form changes nothing.
+form's `reset`, the field goes back to its default, as a native input goes
+back to its `value` attribute. An uncontrolled field follows `defaultValue`
+again (empty without one), even one you set after it rendered, and reports
+the change through `valueChange`. A controlled field reports `defaultValue`,
+or without one the value it started with, and keeps your value until you
+accept. A reset cancelled with `preventDefault()` before it reaches the form
+changes nothing.
 
 TextField doesn't validate. Set `isInvalid` from your own checks, for example
 when `focusChange` reports `false`, as the demo does. See
@@ -307,5 +310,7 @@ TextField handles no keys; the input keeps its native editing.
 - **No native validation.** There is no `validate` or
   `validationBehavior="native"`: pass `isInvalid`. Native attributes such as
   `pattern` still work if you use the browser's validation yourself.
-- **Form reset** goes back to the value the field started with, as in React
-  Aria.
+- **Form reset** goes back to the `defaultValue` the field has when the form
+  resets, as a native input does; React Aria keeps the one it started with. A
+  controlled field without `defaultValue` goes back to the value it started
+  with, as in React Aria.
