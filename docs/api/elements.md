@@ -101,11 +101,11 @@ The element maps the definition's [props schema](./core.md#props-schema) to
 the DOM. State goes in through attributes and properties and comes out
 through events:
 
-| Schema                       | Attribute                     | Property                             | Event                             |
-| ---------------------------- | ----------------------------- | ------------------------------------ | --------------------------------- |
-| `isDisabled: prop(false)`    | `disabled`                    | `isDisabled`                         |                                   |
-| `isOpen: bindable(false)`    | `default-open` (uncontrolled) | `isOpen` (controlled), `defaultOpen` | `openchange`, value in `detail`   |
-| `press: event<PressEvent>()` |                               |                                      | `press`, `PressEvent` in `detail` |
+| Schema                       | Attribute                     | Property                            | Event                             |
+| ---------------------------- | ----------------------------- | ----------------------------------- | --------------------------------- |
+| `isDisabled: prop(false)`    | `disabled`                    | `isDisabled`                        |                                   |
+| `isOpen: bindable(false)`    | `default-open` (uncontrolled) | `isOpen` (the value), `defaultOpen` | `openchange`, value in `detail`   |
+| `press: event<PressEvent>()` |                               |                                     | `press`, `PressEvent` in `detail` |
 
 - **Attributes** are the prop name in kebab case without an `is` or `should`
   prefix: `isDisabled` is `disabled`, `shouldPreventFocusOnPress` is
@@ -120,7 +120,7 @@ through events:
 - **Properties** have the prop's own name: `element.isDisabled`,
   `element.positionArea`. An attribute and its property set the same prop,
   and the last write wins. Reading a plain prop's property gives its value or
-  default.
+  default; reading a bindable's gives its current value (see below).
 - **Events** are the lowercase event name (`pressstart`, `openchange`,
   `valuechange`): a `CustomEvent` that bubbles, with the value in `detail`.
   It isn't `composed`, so it doesn't leave a shadow root you put the element
@@ -150,8 +150,18 @@ dialog.addEventListener('openchange', (event) => {
 });
 ```
 
-The bindable's property reads back only what you set. Read the current value
-from the public state: `element.instance.getState().isOpen`.
+Reading the property gives the current value, controlled or not, as a native
+input's `value` and `checked` do: `dialog.isOpen` is `true` while the dialog
+is open, whoever opened it. `defaultOpen` reads back what you set. A few
+components show a value they take from elsewhere until the first change,
+such as a group's from the controls checked in its markup; their pages say
+so, and their public state has what they show.
+
+Writing a property always controls the value, even with the value it already
+has: `element.value = element.value` turns an uncontrolled element into a
+controlled one. A framework that compares the element's property with the
+value it wants before setting it (Lit's `live()` directive) may skip that
+write, and leave the element uncontrolled.
 
 ### Actions
 

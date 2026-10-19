@@ -358,7 +358,10 @@ registering entry, `@uniaria/elements/<name>`.
 - **Props in through properties and attributes.** There is one property per
   prop, plus `default<Name>` for each bindable. A plain prop also has an
   attribute; a bindable's attribute is `default-<name>`, which seeds it, and
-  setting its property makes it controlled. A boolean attribute is true when
+  setting its property makes it controlled (`undefined` uncontrolled again).
+  Reading a bindable's property gives the current value through
+  `instance.getValue()`, so `el.value = el.value` controls it; other
+  properties read what was set. A boolean attribute is true when
   present, except `"false"` on a prop that defaults to true. Properties a
   framework set before the element was defined are applied on upgrade.
 - **Events out.** Every event and change event is dispatched on the host as

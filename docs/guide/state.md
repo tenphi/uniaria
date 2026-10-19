@@ -52,7 +52,9 @@ const settings = useComponent(dialog, { isOpen, onOpenChange: setOpen });
 ```
 
 On a custom element, the `default-<name>` attribute seeds an uncontrolled
-value, and setting the property makes it controlled:
+value, setting the property makes it controlled, and reading the property
+gives the current value either way, like a native input's `value`. Writing
+back what you read (`el.value = el.value`) controls it too:
 
 ```html
 <uni-checkbox default-selected>…</uni-checkbox>

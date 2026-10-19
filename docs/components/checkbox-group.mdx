@@ -114,7 +114,9 @@ function Channel(props: { value: string; children: ReactNode }) {
 ```
 
 The checkboxes checked in the markup, or clicked before the script loaded,
-make the group's starting value: `['email']` here.
+make the group's starting value: `['email']` here. Until the value first
+changes, the group's `value` property still reads `[]`; its public state,
+`instance.getState().value`, has `['email']`.
 
 </Tab>
 </Tabs>

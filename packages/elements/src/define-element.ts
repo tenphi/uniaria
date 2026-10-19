@@ -6,9 +6,13 @@
  * - Props: one property per prop, plus `default<Key>` for bindables. Plain
  *   props also have a kebab-case attribute; a bindable's attribute is
  *   `default-<key>` (uncontrolled), and setting its property makes it
- *   controlled. The last write wins. A boolean attribute is true when
- *   present, except `"false"` on a prop that defaults to true
- *   (`dismissable="false"`).
+ *   controlled, `undefined` uncontrolled again. The last write wins. A
+ *   boolean attribute is true when present, except `"false"` on a prop that
+ *   defaults to true (`dismissable="false"`).
+ * - A bindable's property reads the current value, controlled or not, like a
+ *   native input's `value` (owner, 2026-10-19): `instance.getValue()`. So
+ *   writing back what it reads (`el.value = el.value`) makes the value
+ *   controlled. Other properties read what was set, or the prop's default.
  * - Events: every event and bindable change is dispatched on the host as a
  *   bubbling, non-composed `CustomEvent` with the value in `detail`
  *   (`pressStart` → `pressstart`).
@@ -245,11 +249,14 @@ export function defineElement<D extends AnyDefinition>(
           configurable: true,
           enumerable: true,
           get(this: Element) {
+            // A bindable reads its current value, controlled or not, as a
+            // native input's `value` does; `default<Key>` reads what was set.
+            if (info?.kind === 'bindable' && property === info.key) {
+              return (this.instance as Instance).getValue(property);
+            }
             const value = this.#values[property];
             return value === undefined && property === info?.key
-              ? info.kind === 'prop'
-                ? info.defaultValue
-                : undefined
+              ? info.defaultValue
               : value;
           },
           set(this: Element, value: unknown) {

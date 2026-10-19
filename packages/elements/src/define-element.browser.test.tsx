@@ -224,6 +224,64 @@ describe('defineElement', () => {
       host.isOpen = true;
       expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
+
+    it('reads the current value from the property, controlled or not', () => {
+      const container = mount(
+        `<uni-test-disclosure default-open>${MARKUP}</uni-test-disclosure>`,
+      );
+      const { host, trigger } = disclosureIn(container);
+      expect(host.isOpen).toBe(true);
+
+      trigger.click();
+      expect(host.isOpen).toBe(false);
+      // The default reads what was set.
+      expect(host.defaultOpen).toBe(true);
+
+      // Writing back what it reads controls the value, as any write does.
+      const current = host.isOpen;
+      host.isOpen = current;
+      trigger.click();
+      expect(host.isOpen).toBe(false);
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+
+      // `undefined` hands it back to the element, which keeps its own.
+      host.isOpen = undefined;
+      expect(host.isOpen).toBe(false);
+      trigger.click();
+      expect(host.isOpen).toBe(true);
+    });
+
+    it('keeps a bindable property set before upgrade controlling the value', () => {
+      const late = defineComponent({
+        name: 'test-late-bindable',
+        parts: ['root'],
+        props: { isOn: bindable(false) },
+        setup: () => ({}),
+        expose: ({ props }) => ({
+          isOn: props.isOn.get(),
+          isControlled: props.isOn.isControlled(),
+        }),
+        connect: ({ props }) => ({
+          root: { attrs: { 'data-on': String(props.isOn.get()) } },
+        }),
+      });
+      const container = mount(
+        '<uni-test-late-bindable><span class="uni-test-late-bindable"></span></uni-test-late-bindable>',
+      );
+      const host = container.querySelector(
+        'uni-test-late-bindable',
+      ) as unknown as UniElement<typeof late>;
+      host.isOn = true;
+
+      defineElement(late);
+
+      expect(host.instance.getState()).toEqual({
+        isOn: true,
+        isControlled: true,
+      });
+      expect(host.isOn).toBe(true);
+      expect(host.querySelector('span')!.getAttribute('data-on')).toBe('true');
+    });
   });
 
   it('dispatches events that bubble and are not composed', () => {
@@ -942,6 +1000,7 @@ describe('<uni-text-field>', () => {
       isReadOnly: true,
     });
     expect(host.defaultValue).toBe('Jane');
+    expect(host.value).toBe('Jane');
     expect(input.value).toBe('Jane');
     expect(input.readOnly).toBe(true);
   });
@@ -962,6 +1021,7 @@ describe('<uni-text-field>', () => {
     await userEvent.type(input, 'Jane');
     expect(input.value).toBe('Jane');
     expect(host.instance.getState().value).toBe('Jane');
+    expect(host.value).toBe('Jane');
   });
 
   it('goes back on a form reset to a default set after it connected', async () => {
