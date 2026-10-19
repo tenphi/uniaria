@@ -81,3 +81,15 @@ it('tracks focus on the trigger and in the popup, with no root rendered', async 
   expect(instance.getState().isFocusWithin).toBe(false);
   expect(focusChanges).toEqual([true, false]);
 });
+
+it('writes its state attributes on the anchor, as on every named part', () => {
+  const { part } = start(
+    `<div data-element="Anchor">
+      <button data-element="Trigger"><span data-element="Value"></span></button>
+    </div>
+    <div data-element="Popover"><div data-element="List"></div></div>`,
+    { isDisabled: true },
+  );
+  expect(part('Anchor').hasAttribute('data-disabled')).toBe(true);
+  expect(part('Anchor').hasAttribute('data-placeholder')).toBe(true);
+});

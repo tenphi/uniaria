@@ -737,7 +737,7 @@ export const select = defineComponent({
           textContent: api.isPlaceholder() ? placeholder : api.valueText(),
         },
       },
-      anchor: layerParts.anchor,
+      anchor: withState(layerParts.anchor),
       popover: {
         ...popoverRoot,
         attrs: {
