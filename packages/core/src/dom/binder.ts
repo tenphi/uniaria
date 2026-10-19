@@ -15,6 +15,15 @@
  * `value`) are set only when they differ from the element, so an input's
  * caret stays put while the two agree; `undefined` leaves one alone.
  *
+ * Except while the browser's own change is on its way to the instance: the
+ * browser changes an input's `value`, or a checkbox's or radio's `checked`,
+ * before the `input` or `click` event that tells the instance. A consumer's
+ * listener on the path that flushes the instance (by setting an attribute of
+ * the host) would write the old value back, and the user's keystroke or
+ * toggle would be lost. From a custom element's root capturing such an event
+ * until the root's bubble phase, where the instance hears of it, the binder
+ * writes only a property the instance changed since it last wrote it.
+ *
  * Item parts (Listbox spec, Item parts) are bound per part and key. After a
  * flush the binder writes only the items the instance reports invalidated,
  * so moving focus in a long list rewrites two rows, not all of them.
@@ -66,6 +75,8 @@ interface Bound {
   readonly element: Element;
   readonly attrs: Set<string>;
   readonly style: Set<string>;
+  /** Each live property as the binder last wrote or found it. */
+  readonly properties: Map<string, unknown>;
 }
 
 interface BoundItem extends Bound {
@@ -80,14 +91,37 @@ type Target = string | ItemTarget;
 
 type Dispatch = (event: Event) => void;
 
-/** One event type's listeners on a root, and the hosts they serve. */
+/**
+ * One event type's listeners on a root, and the hosts they serve: with no
+ * dispatch, a host that only guards its properties from the type's events.
+ */
 interface RootListener {
-  readonly hosts: Map<Node, Dispatch>;
+  readonly hosts: Map<Node, Dispatch | undefined>;
   readonly capture: Dispatch;
   readonly bubble: Dispatch;
 }
 
 const rootListeners = new WeakMap<Node, Map<string, RootListener>>();
+
+/** Event types that come after the browser changed a live property. */
+const CHANGING = new Set(['click', 'input', 'change']);
+
+/** Per root, such events between its capture and bubble phases. */
+const changingEvents = new WeakMap<Node, Set<Event>>();
+
+/**
+ * Whether an event of a `CHANGING` type is on its way to the hosts of
+ * `root`. One whose propagation a listener stopped never reaches the bubble
+ * phase, and counts until its dispatch ends.
+ */
+function isChanging(root: Node): boolean {
+  const events = changingEvents.get(root);
+  if (!events) return false;
+  for (const event of events) {
+    if (event.eventPhase === Event.NONE) events.delete(event);
+  }
+  return events.size > 0;
+}
 
 /** The browser treats these as passive on the document unless told not to. */
 const PASSIVE_BY_DEFAULT = new Set([
@@ -102,7 +136,10 @@ const PASSIVE_BY_DEFAULT = new Set([
  * bubbles, as the bubble phase reaches them, outermost first for one that
  * doesn't, as the capture phase does. None after a handler stops it.
  */
-function dispatchToHosts(hosts: Map<Node, Dispatch>, event: Event): void {
+function dispatchToHosts(
+  hosts: Map<Node, Dispatch | undefined>,
+  event: Event,
+): void {
   const reached: Dispatch[] = [];
   for (let node = event.target as Node | null; node; node = node.parentNode) {
     const dispatch = hosts.get(node);
@@ -115,33 +152,43 @@ function dispatchToHosts(hosts: Map<Node, Dispatch>, event: Event): void {
   }
 }
 
+/** Listens for `host`; with no `dispatch`, only to guard its properties. */
 function listenFromRoot(
   root: Node,
   type: string,
   host: Node,
-  dispatch: Dispatch,
+  dispatch?: Dispatch,
 ): void {
   let types = rootListeners.get(root);
   if (!types) rootListeners.set(root, (types = new Map()));
   let entry = types.get(type);
   if (!entry) {
-    const hosts = new Map<Node, Dispatch>();
+    const hosts = new Map<Node, Dispatch | undefined>();
     entry = {
       hosts,
-      // Events that don't bubble reach the root only while capturing.
+      // Events that don't bubble reach the root only while capturing, and
+      // reach the hosts before any consumer's listener.
       capture: (event) => {
         if (!event.bubbles) dispatchToHosts(hosts, event);
+        else if (CHANGING.has(type)) {
+          let events = changingEvents.get(root);
+          if (!events) changingEvents.set(root, (events = new Set()));
+          events.add(event);
+        }
       },
       // Bubbling ones once every listener on their path has run, so a
       // consumer's listener can prevent one first, as with React.
-      bubble: (event) => dispatchToHosts(hosts, event),
+      bubble: (event) => {
+        changingEvents.get(root)?.delete(event);
+        dispatchToHosts(hosts, event);
+      },
     };
     types.set(type, entry);
     const passive = PASSIVE_BY_DEFAULT.has(type) ? { passive: false } : {};
     root.addEventListener(type, entry.capture, { ...passive, capture: true });
     root.addEventListener(type, entry.bubble, passive);
   }
-  entry.hosts.set(host, dispatch);
+  if (dispatch || !entry.hosts.has(host)) entry.hosts.set(host, dispatch);
 }
 
 function unlistenFromRoot(root: Node, type: string, host: Node): void {
@@ -252,10 +299,13 @@ export function createBinder<D extends AnyDefinition>(
         }
       }
     }
+    const changing = root !== undefined && isChanging(root);
+    const target = element as unknown as Record<string, unknown>;
     for (const [name, value] of Object.entries(props.properties ?? {})) {
       if (value === undefined) continue;
-      const target = element as unknown as Record<string, unknown>;
-      if (target[name] !== value) target[name] = value;
+      const known = changing ? entry.properties.get(name) : target[name];
+      if (known !== value) target[name] = value;
+      entry.properties.set(name, value);
     }
     if (props.on) delegate(Object.keys(props.on));
   };
@@ -291,7 +341,12 @@ export function createBinder<D extends AnyDefinition>(
       }
       instance.attach(part as never, element);
       if (!element) return;
-      const entry: Bound = { element, attrs: new Set(), style: new Set() };
+      const entry: Bound = {
+        element,
+        attrs: new Set(),
+        style: new Set(),
+        properties: new Map(),
+      };
       bound.set(part, entry);
       targets.set(element, part);
       if (unsubscribe) write(part, entry);
@@ -307,6 +362,7 @@ export function createBinder<D extends AnyDefinition>(
           key,
           attrs: new Set(),
           style: new Set(),
+          properties: new Map(),
         };
         items.set(itemEntryId(part, key), entry);
         let siblings = itemsByKey.get(key);
@@ -328,6 +384,10 @@ export function createBinder<D extends AnyDefinition>(
     },
     start() {
       if (unsubscribe) return;
+      if (host) {
+        root ??= host.getRootNode();
+        for (const type of CHANGING) listenFromRoot(root, type, host);
+      }
       pending = 'all';
       unsubscribeItems = instance.subscribeItems((keys) => {
         if (pending === 'all') return;
@@ -343,7 +403,9 @@ export function createBinder<D extends AnyDefinition>(
       unsubscribeItems?.();
       unsubscribeItems = undefined;
       if (host && root) {
-        for (const type of delegated) unlistenFromRoot(root, type, host);
+        for (const type of [...delegated, ...CHANGING]) {
+          unlistenFromRoot(root, type, host);
+        }
       }
       delegated.clear();
       root = undefined;

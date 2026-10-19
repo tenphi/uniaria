@@ -848,6 +848,24 @@ describe('<uni-text-field>', () => {
     expect(input.value).toBe('Jane');
     expect(input.readOnly).toBe(true);
   });
+
+  it('keeps what the user types when a listener of theirs changes an attribute', async () => {
+    const container = mount(`
+      <uni-text-field>
+        <label data-element="Label">Name</label>
+        <input data-element="Input" />
+      </uni-text-field>`);
+    const host = container.querySelector('uni-text-field')!;
+    const input = host.querySelector('input')!;
+    // Validating as the user types flushes the instance before its own
+    // listener has read the new text.
+    host.addEventListener('input', () => {
+      host.toggleAttribute('invalid', input.value.length < 3);
+    });
+    await userEvent.type(input, 'Jane');
+    expect(input.value).toBe('Jane');
+    expect(host.instance.getState().value).toBe('Jane');
+  });
 });
 
 describe('<uni-number-field>', () => {
@@ -959,6 +977,22 @@ describe('<uni-checkbox>', () => {
     const host = container.querySelector('uni-checkbox')!;
     expect(host.isIndeterminate).toBe(true);
     expect(host.querySelector('input')!.indeterminate).toBe(true);
+  });
+
+  it('keeps a toggle when a click listener of theirs changes an attribute', async () => {
+    const container = mount(`
+      <uni-checkbox>
+        <label class="uni-checkbox">
+          <input data-element="Input" type="checkbox" />
+          <span data-element="Label">News</span>
+        </label>
+      </uni-checkbox>`);
+    const host = container.querySelector('uni-checkbox')!;
+    const input = host.querySelector('input')!;
+    host.addEventListener('click', () => host.toggleAttribute('invalid'));
+    await userEvent.click(input);
+    expect(input.checked).toBe(true);
+    expect(host.instance.getState().isSelected).toBe(true);
   });
 });
 
@@ -1162,6 +1196,20 @@ describe('<uni-radio-group>', () => {
     expect(input.checked).toBe(true);
     // No name prop: the group's root id, unique on the page.
     expect(input.name).toBe(group.querySelector('.uni-radio-group')!.id);
+  });
+
+  it('keeps a choice when a click listener of theirs changes an attribute', async () => {
+    const container = mount(`
+      <uni-radio-group>
+        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+      </uni-radio-group>`);
+    const group = container.querySelector('uni-radio-group')!;
+    const [free, pro] = Array.from(container.querySelectorAll('input'));
+    // The flush writes every radio: the one the click unchecked as well.
+    group.addEventListener('click', () => group.toggleAttribute('invalid'));
+    await userEvent.click(free!);
+    expect([free!.checked, pro!.checked]).toEqual([true, false]);
+    expect(group.instance.getState().value).toBe('free');
   });
 });
 

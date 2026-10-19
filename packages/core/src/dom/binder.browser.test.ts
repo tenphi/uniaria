@@ -450,6 +450,76 @@ describe('createBinder', () => {
       binder.stop();
     });
 
+    it('writes no stale live property while an input event is on its way to it', () => {
+      const field = defineComponent({
+        name: 'field',
+        parts: ['input'],
+        props: { mark: prop(0) },
+        setup(ctx) {
+          const text = ctx.state('');
+          return {
+            text: () => text.get(),
+            setText: (value: string) => text.set(value),
+          };
+        },
+        expose: ({ api }) => ({ text: api.text() }),
+        connect: ({ props, api }) => ({
+          input: {
+            attrs: { 'data-mark': String(props.mark()) },
+            on: {
+              input: (event: Event) =>
+                api.setText((event.target as HTMLInputElement).value),
+            },
+            properties: { value: api.text() },
+          },
+        }),
+      });
+      const { host, root } = setup('<input data-element="Input" />');
+      const input = root as HTMLInputElement;
+      const instance = createInstance(field);
+      const binder = createBinder(instance, { host });
+      binder.attach('input', input);
+      instance.start();
+      binder.start();
+      const type = (text: string) => {
+        input.value = text;
+        input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      };
+      let mark = 0;
+      // A consumer's listener setting a host attribute flushes the instance
+      // before it hears of the text.
+      const flush = () => {
+        instance.setProps({ mark: ++mark });
+        instance.sync();
+      };
+
+      host.addEventListener('input', flush, { once: true });
+      type('a');
+      expect(input.getAttribute('data-mark')).toBe('1');
+      expect(input.value).toBe('a');
+      expect(instance.getState().text).toBe('a');
+
+      // A value the instance changes meanwhile is written.
+      const replace = () => {
+        instance.api.setText('B');
+        instance.sync();
+      };
+      host.addEventListener('input', replace, { once: true });
+      type('ab');
+      expect(input.value).toBe('B');
+      expect(instance.getState().text).toBe('B');
+
+      // An event a listener stops never reaches the instance, and the guard
+      // ends with its dispatch: the next flush writes the instance's text.
+      const stop = (event: Event) => event.stopPropagation();
+      host.addEventListener('input', stop, { once: true });
+      type('Bc');
+      expect(instance.getState().text).toBe('B');
+      flush();
+      expect(input.value).toBe('B');
+      binder.stop();
+    });
+
     it('listens on the shadow root of a host inside one', () => {
       const shadowHost = document.createElement('div');
       document.body.append(shadowHost);
