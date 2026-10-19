@@ -67,6 +67,9 @@ export const dialog = defineComponent({
   parts: ['trigger', 'root', 'title', 'description', 'close'],
   // The trigger takes a tooltip (Tooltip spec, Resolved questions 2).
   links: [tooltipLink],
+  // The only members of setup()'s result consumers may call (spec,
+  // Actions).
+  actions: ['open', 'close'],
   props: {
     isOpen: bindable(false),
     isDismissable: prop(true),

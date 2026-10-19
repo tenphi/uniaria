@@ -1098,12 +1098,12 @@ describe('<uni-dialog>', () => {
     ]);
   });
 
-  it('opens from instance.api.open() and closes from close()', async () => {
+  it('opens from open() and closes from close()', async () => {
     const container = mount(`<uni-dialog>${DIALOG}</uni-dialog>`);
     const { host, modal, events } = dialogIn(container);
-    host.instance.api.open();
+    host.open();
     expect(modal.matches(':modal')).toBe(true);
-    host.instance.api.close();
+    host.close();
     expect(events).toEqual([true, false]);
     await vi.waitFor(() => expect(modal.open).toBe(false));
   });
@@ -1267,13 +1267,13 @@ describe('<uni-popover>', () => {
     expect(trigger.hasAttribute('aria-hidden')).toBe(false);
   });
 
-  it('opens from instance.api.open() and closes from close()', async () => {
+  it('opens from open() and closes from close()', async () => {
     const container = mount(`<uni-popover>${POPOVER}</uni-popover>`);
     const host = hostIn(container);
     const { root, events } = popoverIn(host);
-    host.instance.api.open();
+    host.open();
     expect(root.matches(':popover-open')).toBe(true);
-    host.instance.api.close();
+    host.close();
     expect(events).toEqual([true, false]);
     await vi.waitFor(() => expect(root.matches(':popover-open')).toBe(false));
   });
@@ -1325,7 +1325,7 @@ describe('<uni-popover>', () => {
     inner.trigger.click();
     expect(inner.root.matches(':popover-open')).toBe(true);
 
-    outerHost.instance.api.close();
+    outerHost.close();
     expect(inner.events).toEqual([true, { reason: 'parent' }, false]);
     expect(outer.events).toEqual([true, false]);
     await vi.waitFor(() =>

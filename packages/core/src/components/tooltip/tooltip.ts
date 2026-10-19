@@ -84,6 +84,9 @@ export const tooltip = defineComponent({
   name: 'tooltip',
   parts: ['trigger', 'anchor', 'root', 'arrow'],
   provides: [tooltipLink],
+  // The only members of setup()'s result consumers may call (spec,
+  // Actions).
+  actions: ['open', 'close'],
   props: {
     isOpen: bindable(false),
     isDisabled: prop(false),
@@ -424,6 +427,8 @@ export const tooltip = defineComponent({
       isExiting: presence.isExiting,
       isInstant: () => isOpen.get() && isInstant.get(),
       placement: position.side,
+      open,
+      close: requestClose,
     };
   },
   expose({ props, api }) {

@@ -142,6 +142,9 @@ export const select = defineComponent({
     // Listbox's virtualization, forwarded to the list.
     ...virtualProps,
   },
+  // The only members of setup()'s result consumers may call (spec,
+  // Actions).
+  actions: ['open', 'close'],
   events: {
     focusChange: event<boolean>(),
     renderedKeysChange,
@@ -620,6 +623,9 @@ export const select = defineComponent({
       onOptionPointerUp,
       onPopoverKeyDown,
       onLabelClick,
+      // As Enter on the trigger opens it (spec, Actions).
+      open: () => open('first'),
+      close,
     };
   },
   expose({ props, api }) {

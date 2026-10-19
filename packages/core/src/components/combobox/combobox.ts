@@ -188,6 +188,9 @@ export const combobox = defineComponent({
     // Listbox's virtualization, forwarded to the list.
     ...virtualProps,
   },
+  // The only members of setup()'s result consumers may call (spec,
+  // Actions).
+  actions: ['open', 'close'],
   events: {
     focusChange: event<boolean>(),
     renderedKeysChange,
@@ -810,6 +813,9 @@ export const combobox = defineComponent({
       } satisfies DomHandlers,
       onButtonPointerDown,
       onPopoverMouseDown,
+      // As a press on the button opens it (spec, Actions).
+      open: () => open('button'),
+      close,
     };
   },
   expose({ props, api }) {

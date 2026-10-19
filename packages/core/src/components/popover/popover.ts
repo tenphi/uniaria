@@ -98,6 +98,9 @@ export const popover = defineComponent({
     'close',
   ],
   links: [tooltipLink],
+  // The only members of setup()'s result consumers may call (spec,
+  // Actions).
+  actions: ['open', 'close'],
   props: {
     isOpen: bindable(false),
     isNonModal: prop(false),
