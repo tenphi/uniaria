@@ -128,6 +128,24 @@ export const uniTouch: BrowserCommand<
   });
 };
 
+/** Media features Playwright emulates; `null` ends a feature's emulation. */
+export interface MediaFeatures {
+  readonly forcedColors?: 'active' | 'none' | null;
+  readonly contrast?: 'more' | 'no-preference' | null;
+  readonly reducedMotion?: 'reduce' | 'no-preference' | null;
+  readonly colorScheme?: 'light' | 'dark' | 'no-preference' | null;
+}
+
+/**
+ * Emulates media features for the whole page, frames included. Forced
+ * colors work in Chromium only.
+ */
+export const uniEmulateMedia: BrowserCommand<
+  [features: MediaFeatures]
+> = async (context, features) => {
+  await context.page.emulateMedia(features);
+};
+
 export { screenReaderCommands } from './screen-reader-commands';
 
 export const uniCommands = {
@@ -139,4 +157,5 @@ export const uniCommands = {
   uniWheel,
   uniKeyDown,
   uniKeyUp,
+  uniEmulateMedia,
 };

@@ -13,6 +13,8 @@ export {
   releaseInput,
   touch,
 } from './conformance/input';
+export { emulateMedia } from './media';
+export type { MediaFeatures } from './media';
 export { runConformance } from './conformance/run';
 export type { RunOptions } from './conformance/run';
 export { spokenPhrases } from './conformance/spoken';

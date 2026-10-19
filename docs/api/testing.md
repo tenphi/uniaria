@@ -26,7 +26,7 @@ browser, you don't need it: drive an instance with
 | Entry                       | Runs in                     | Exports                                                                                                                                                       |
 | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@uniaria/testing`          | Anywhere, Node included     | `defineConformance`; the templates `h`, `nested`, `rows` and `VIRTUALIZER`; `renderTemplate`, `templateParts`, `partSelector`, `partName`; the contract types |
-| `@uniaria/testing/browser`  | Vitest browser mode         | `runConformance`; `pointer`, `keyboard`, `touch`, `releaseInput`, `isTouchSupported`; `spokenPhrases`                                                         |
+| `@uniaria/testing/browser`  | Vitest browser mode         | `runConformance`; `pointer`, `keyboard`, `touch`, `releaseInput`, `isTouchSupported`; `emulateMedia`; `spokenPhrases`                                         |
 | `@uniaria/testing/commands` | Node, in your Vitest config | `uniCommands`, `screenReaderCommands`                                                                                                                         |
 
 It needs Vitest 5 (a peer dependency) with browser mode and its Playwright
@@ -327,6 +327,26 @@ it('keeps the press while the pointer comes back', async () => {
   await pointer.move(button);
   expect(button.hasAttribute('data-pressed')).toBe(true);
   await pointer.up();
+});
+```
+
+### Media features
+
+`emulateMedia()` sets media features for the whole page through Playwright,
+so a test can check forced colors (Chromium only), `prefers-contrast: more`,
+reduced motion or a color scheme. It needs `uniCommands` registered. The
+page outlives a test, so end what you set: `null` ends a feature's
+emulation.
+
+```ts
+import { emulateMedia } from '@uniaria/testing/browser';
+import { afterEach, expect, it } from 'vitest';
+
+afterEach(() => emulateMedia({ forcedColors: null }));
+
+it('keeps the focus ring in forced colors', async () => {
+  await emulateMedia({ forcedColors: 'active' });
+  expect(matchMedia('(forced-colors: active)').matches).toBe(true);
 });
 ```
 
