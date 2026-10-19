@@ -152,10 +152,10 @@ dialog.addEventListener('openchange', (event) => {
 
 Reading the property gives the current value, controlled or not, as a native
 input's `value` and `checked` do: `dialog.isOpen` is `true` while the dialog
-is open, whoever opened it. `defaultOpen` reads back what you set. A few
-components show a value they take from elsewhere until the first change,
-such as a group's from the controls checked in its markup; their pages say
-so, and their public state has what they show.
+is open, whoever opened it. It reads the value as the component shows it,
+the same as `instance.getState()`: a group's value taken from the controls
+checked in its markup, NumberField's number parsed from its text.
+`defaultOpen` reads back what you set.
 
 Writing a property always controls the value, even with the value it already
 has: `element.value = element.value` turns an uncontrolled element into a

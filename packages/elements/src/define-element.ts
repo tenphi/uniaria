@@ -10,9 +10,10 @@
  *   boolean attribute is true when present, except `"false"` on a prop that
  *   defaults to true (`dismissable="false"`).
  * - A bindable's property reads the current value, controlled or not, like a
- *   native input's `value` (owner, 2026-10-19): `instance.getValue()`. So
- *   writing back what it reads (`el.value = el.value`) makes the value
- *   controlled. Other properties read what was set, or the prop's default.
+ *   native input's `value` (owner, 2026-10-19): as the instance's state has
+ *   it, else `instance.getValue()`. So writing back what it reads
+ *   (`el.value = el.value`) makes the value controlled. Other properties
+ *   read what was set, or the prop's default.
  * - Events: every event and bindable change is dispatched on the host as a
  *   bubbling, non-composed `CustomEvent` with the value in `detail`
  *   (`pressStart` → `pressstart`).
@@ -250,9 +251,15 @@ export function defineElement<D extends AnyDefinition>(
           enumerable: true,
           get(this: Element) {
             // A bindable reads its current value, controlled or not, as a
-            // native input's `value` does; `default<Key>` reads what was set.
+            // native input's `value` does: as the component's state has it
+            // (NumberField's number, not the text it adopted), else as the
+            // bindable holds it. `default<Key>` reads what was set.
             if (info?.kind === 'bindable' && property === info.key) {
-              return (this.instance as Instance).getValue(property);
+              const instance = this.instance as Instance;
+              const state = instance.getState() as Record<string, unknown>;
+              return property in state
+                ? state[property]
+                : instance.getValue(property);
             }
             const value = this.#values[property];
             return value === undefined && property === info?.key

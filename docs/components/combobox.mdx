@@ -239,10 +239,8 @@ fruit.addEventListener('valuechange', (event) => {
 
 Setting the `value`, `inputValue` or `isOpen` property makes it controlled.
 Set `defaultValue`, `defaultInputValue` or `defaultOpen` to let the element
-keep its own. Reading the property gives the current value either way, except
-that `inputValue` reads `undefined` while the text still follows the value,
-until the text first changes: read the text from
-`instance.getState().inputValue`.
+keep its own. Reading the property gives the current value either way:
+`inputValue` reads the input's text.
 
 </Tab>
 </Tabs>

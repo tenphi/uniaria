@@ -452,8 +452,10 @@ target parts the same way in every adapter (`runtime/define.ts`:
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.
 - A bindable's property reads the current value, controlled or not, like a
-  native input's `value` or `checked` (owner decision, 2026-10-19; the
-  instance's `getValue()`). Setting it still makes the value controlled, and
+  native input's `value` or `checked` (owner decision, 2026-10-19), as the
+  instance's state has it (NumberField's number, a group's value adopted
+  from its controls), else `getValue()`. Setting it still makes the value
+  controlled, and
   setting `undefined` uncontrolled again, so `el.value = el.value` controls
   an uncontrolled element. `default<Name>` properties read what was set.
   Attributes drop the `is` and `should` prefixes (`disabled`,

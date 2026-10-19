@@ -17,7 +17,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first, especially "Custom elements
   Owners announce themselves on connect so children that connected first
   can retry.
 - Properties in, events out (`openchange` with `detail`). A bindable's
-  property reads the current value (`instance.getValue()`); setting it makes
+  property reads the current value (the instance's state, else
+  `instance.getValue()`); setting it makes
   the value controlled, `undefined` uncontrolled, so reading and writing back
   the same value (`el.value = el.value`) controls it. Re-apply properties
   set before upgrade. Skip registration when the name is already defined.

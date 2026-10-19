@@ -359,8 +359,9 @@ registering entry, `@uniaria/elements/<name>`.
   prop, plus `default<Name>` for each bindable. A plain prop also has an
   attribute; a bindable's attribute is `default-<name>`, which seeds it, and
   setting its property makes it controlled (`undefined` uncontrolled again).
-  Reading a bindable's property gives the current value through
-  `instance.getValue()`, so `el.value = el.value` controls it; other
+  Reading a bindable's property gives the current value as the instance's
+  state has it, else through `instance.getValue()`, so `el.value = el.value`
+  controls it; other
   properties read what was set. A boolean attribute is true when
   present, except `"false"` on a prop that defaults to true. Properties a
   framework set before the element was defined are applied on upgrade.

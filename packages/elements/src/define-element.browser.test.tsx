@@ -251,6 +251,46 @@ describe('defineElement', () => {
       expect(host.isOpen).toBe(true);
     });
 
+    it('reads a bindable as the component’s state has it, not as adopted', () => {
+      const container = mount(`
+        <uni-number-field lang="de-DE">
+          <input data-element="Input" value="1.234,5" />
+        </uni-number-field>
+        <uni-radio-group>
+          <div class="uni-radio-group">
+            <uni-radio value="pro">
+              <input data-element="Input" type="radio" checked />
+            </uni-radio>
+          </div>
+        </uni-radio-group>
+        <uni-checkbox-group>
+          <div class="uni-checkbox-group">
+            <uni-checkbox value="sms">
+              <input data-element="Input" type="checkbox" checked />
+            </uni-checkbox>
+          </div>
+        </uni-checkbox-group>
+        <uni-combobox>
+          <input data-element="Input" />
+          <div data-element="Popover">
+            <div data-element="List">
+              <div data-element="Option" data-key="apple">Apple</div>
+            </div>
+          </div>
+        </uni-combobox>`);
+      const number = container.querySelector('uni-number-field')!;
+      // The adopted text is the default; the value is the number it reads.
+      expect(number.defaultValue).toBe('1.234,5');
+      expect(number.value).toBe(1234.5);
+      expect(container.querySelector('uni-radio-group')!.value).toBe('pro');
+      expect(container.querySelector('uni-checkbox-group')!.value).toEqual([
+        'sms',
+      ]);
+      const combobox = container.querySelector('uni-combobox')!;
+      combobox.value = ['apple'];
+      expect(combobox.inputValue).toBe('Apple');
+    });
+
     it('keeps a bindable property set before upgrade controlling the value', () => {
       const late = defineComponent({
         name: 'test-late-bindable',

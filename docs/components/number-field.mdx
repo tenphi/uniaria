@@ -94,9 +94,8 @@ export function QuantityField(props: {
 
 Without `default-value`, the element takes the input's text as its default,
 parsed for the field's locale: the markup's `value`, or what the user typed
-before the script loaded. Until the value first changes, the `value` and
-`defaultValue` properties read that text unparsed; the number is in
-`instance.getState().value`.
+before the script loaded. The `value` property reads the number;
+`defaultValue` reads the text as it was adopted.
 
 </Tab>
 </Tabs>
