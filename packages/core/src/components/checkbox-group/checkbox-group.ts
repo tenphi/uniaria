@@ -88,7 +88,10 @@ export const checkboxGroup = defineComponent({
       );
     };
 
-    // Form reset goes back to the value the group mounted with.
+    // Form reset goes back to the default, as TextField's does: an
+    // uncontrolled group follows defaultValue again, even one set after
+    // mount, and without one the checkboxes it adopted; a controlled one
+    // asks for it, or without one for the value it mounted with.
     let initial: readonly string[] | undefined;
     ctx.effect(() => {
       initial ??= value();
@@ -110,9 +113,19 @@ export const checkboxGroup = defineComponent({
       if (!form) return;
       const onReset = (resetEvent: Event) => {
         if (resetEvent.defaultPrevented || !initial) return;
-        if (isSame(value(), initial)) return;
         // The checkboxes write their state again after the native reset.
-        setValue(initial);
+        ctx.batch(() => {
+          // Before the report, so its listeners read the adopted values.
+          if (!props.value.isControlled()) isPristine = true;
+          props.value.reset({
+            fallback: initial,
+            isEqual: isSame,
+            readDefault: (raw) =>
+              raw.length === 0 && !props.value.isControlled()
+                ? adopted.get()
+                : raw,
+          });
+        });
       };
       form.addEventListener('reset', onReset);
       return () => form.removeEventListener('reset', onReset);

@@ -84,11 +84,15 @@ radio and a combo box (after settling its text), as it would without UniAria.
 
 ## Reset
 
-On the form's `reset` event, each control goes back to its default: the
-`default<Value>` you passed, or the value it started with. Uncontrolled
-controls take it and report the change; controlled ones report it through
-their change event and wait for you. A `reset` listener that calls
-`preventDefault()` cancels this.
+On the form's `reset` event, each control goes back to its default, as a
+native control goes back to its `value` or `checked` attribute. An
+uncontrolled control forgets the user's changes and follows
+`default<Value>` again, as it is at that moment: a default set after the
+control rendered counts, such as a custom element's property set after it
+connected, and so does one set after the reset, until the next change. It
+reports the change. A controlled control reports `default<Value>`, or
+without one the value it started with, through its change event, and waits
+for you. A `reset` listener that calls `preventDefault()` cancels this.
 
 ## Before JavaScript runs
 

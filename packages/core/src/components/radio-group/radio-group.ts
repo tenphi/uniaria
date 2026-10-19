@@ -150,7 +150,10 @@ export const radioGroup = defineComponent({
       initial = item;
     };
 
-    // Form reset goes back to the value the group mounted with.
+    // Form reset goes back to the default, as TextField's does: an
+    // uncontrolled group follows defaultValue again, even one set after
+    // mount, and without one the radio it adopted; a controlled one asks for
+    // it, or without one for the value it mounted with.
     let initial: string | null | undefined;
     ctx.effect(() => {
       initial ??= value();
@@ -161,12 +164,16 @@ export const radioGroup = defineComponent({
       let timer: ReturnType<typeof setTimeout> | undefined;
       const onReset = (resetEvent: Event) => {
         if (resetEvent.defaultPrevented || initial === undefined) return;
-        if (value() !== initial) {
-          ctx.batch(() => {
-            isRefusing = false;
-            setValue(initial!);
+        ctx.batch(() => {
+          isRefusing = false;
+          // Before the report, so its listeners read the adopted radio.
+          if (!props.value.isControlled()) isPristine = true;
+          props.value.reset({
+            fallback: initial,
+            readDefault: (raw) =>
+              raw === null && !props.value.isControlled() ? adopted.get() : raw,
           });
-        }
+        });
         // The native reset runs after this event and checks the radios from
         // their attributes, so the value is written again after it.
         clearTimeout(timer);

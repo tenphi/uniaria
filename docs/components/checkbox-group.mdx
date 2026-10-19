@@ -162,9 +162,11 @@ See [Checkbox](./checkbox.mdx) for the indeterminate state.
 - **Submission.** The group writes its `name` to every checkbox while set,
   so the form submits each selected `value` under it. There is no generated
   name; without `name`, the checkboxes keep their own.
-- **Reset.** A form reset returns the group to the value it mounted with,
-  `defaultValue` when uncontrolled, and the checkboxes follow; a controlled
-  group gets a `valuechange` asking for it.
+- **Reset.** A form reset returns an uncontrolled group to `defaultValue`,
+  even one set after it rendered, and the checkboxes follow. Without
+  `defaultValue`, the element goes back to the checkboxes checked in its
+  markup. A controlled group gets a `valuechange` asking for `defaultValue`,
+  or without one the value it mounted with.
 - **Disabled.** Every checkbox is disabled natively and none is submitted.
 - **Validation.** The group never validates: `isRequired` and `isInvalid`
   only mark it. You decide when it is invalid and set `isInvalid`, as the

@@ -1260,6 +1260,53 @@ describe('<uni-checkbox-group>', () => {
     container.append(box);
     expect(box.instance.owner()).toBeUndefined();
   });
+
+  it('goes back on a form reset to a default set after it connected', async () => {
+    const container = mount(`
+      <form>
+        <uni-checkbox-group>
+          <div class="uni-checkbox-group">${option('email')}${option('sms')}</div>
+        </uni-checkbox-group>
+      </form>`);
+    const group = container.querySelector('uni-checkbox-group')!;
+    const [email, sms] = Array.from(container.querySelectorAll('input'));
+    const form = container.querySelector('form')!;
+    const changes = details(group, 'valuechange');
+    group.defaultValue = ['email'];
+    expect([email!.checked, sms!.checked]).toEqual([true, false]);
+
+    await resetForm(form);
+    expect([email!.checked, sms!.checked]).toEqual([true, false]);
+    expect(group.instance.getState().value).toEqual(['email']);
+    expect(changes).toEqual([]);
+
+    sms!.click();
+    await resetForm(form);
+    expect([email!.checked, sms!.checked]).toEqual([true, false]);
+    expect(changes).toEqual([['email', 'sms'], ['email']]);
+  });
+
+  it('goes back on a form reset to the checkboxes checked in the markup', async () => {
+    const container = mount(`
+      <form>
+        <uni-checkbox-group>
+          <div class="uni-checkbox-group">${option('email')}${option('sms')}</div>
+        </uni-checkbox-group>
+      </form>`);
+    const group = container.querySelector('uni-checkbox-group')!;
+    const [email, sms] = Array.from(container.querySelectorAll('input'));
+    const form = container.querySelector('form')!;
+    const changes = details(group, 'valuechange');
+
+    await resetForm(form);
+    expect(changes).toEqual([]);
+
+    sms!.click();
+    await resetForm(form);
+    expect([email!.checked, sms!.checked]).toEqual([false, true]);
+    expect(group.instance.getState().value).toEqual(['sms']);
+    expect(changes).toEqual([[], ['sms']]);
+  });
 });
 
 describe('<uni-switch>', () => {
@@ -1434,6 +1481,53 @@ describe('<uni-radio-group>', () => {
 
     pro.removeAttribute('disabled');
     expect(new FormData(form).getAll('plan')).toEqual(['pro', 'also']);
+  });
+
+  it('goes back on a form reset to a default set after it connected', async () => {
+    const container = mount(`
+      <form>
+        <uni-radio-group>
+          <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+        </uni-radio-group>
+      </form>`);
+    const group = container.querySelector('uni-radio-group')!;
+    const [free, pro] = Array.from(container.querySelectorAll('input'));
+    const form = container.querySelector('form')!;
+    const changes = details(group, 'valuechange');
+    group.defaultValue = 'free';
+    expect([free!.checked, pro!.checked]).toEqual([true, false]);
+
+    await resetForm(form);
+    expect([free!.checked, pro!.checked]).toEqual([true, false]);
+    expect(changes).toEqual([]);
+
+    pro!.click();
+    await resetForm(form);
+    expect([free!.checked, pro!.checked]).toEqual([true, false]);
+    expect(group.instance.getState().value).toBe('free');
+    expect(changes).toEqual(['pro', 'free']);
+  });
+
+  it('goes back on a form reset to the radio checked in the markup', async () => {
+    const container = mount(`
+      <form>
+        <uni-radio-group>
+          <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+        </uni-radio-group>
+      </form>`);
+    const group = container.querySelector('uni-radio-group')!;
+    const [free, pro] = Array.from(container.querySelectorAll('input'));
+    const form = container.querySelector('form')!;
+    const changes = details(group, 'valuechange');
+
+    await resetForm(form);
+    expect(changes).toEqual([]);
+
+    free!.click();
+    await resetForm(form);
+    expect([free!.checked, pro!.checked]).toEqual([false, true]);
+    expect(group.instance.getState().value).toBe('pro');
+    expect(changes).toEqual(['free', 'pro']);
   });
 
   it('moves by arrow keys through a radio linked by id from outside its root', async () => {

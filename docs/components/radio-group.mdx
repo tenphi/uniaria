@@ -180,9 +180,11 @@ buttons is the same two definitions with other CSS.
   one native group and the form submits the selected `value` under it.
   Without `name`, the group generates one from its id. A `name` in a radio's
   markup is overwritten: put it on the group.
-- **Reset.** A form reset returns the group to the value it mounted with,
-  `defaultValue` when uncontrolled; a controlled group gets a `valuechange`
-  asking for it.
+- **Reset.** A form reset returns an uncontrolled group to `defaultValue`,
+  even one set after it rendered. Without `defaultValue`, the element goes
+  back to the radio checked in its markup. A controlled group gets a
+  `valuechange` asking for `defaultValue`, or without one the value it
+  mounted with.
 - **Disabled.** The user can't select a disabled radio, and a natively
   disabled one is never submitted.
 - **Validation.** The group never validates. `isRequired` and `isInvalid`
