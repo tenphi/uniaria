@@ -1,6 +1,8 @@
 /**
  * `@uniaria/elements/switch` — registers `<uni-switch>` on import. The
  * input's markup `checked`, or a click before upgrade, becomes the default.
+ * With a description or an error, the root holds them and a `label` wrapper,
+ * as on `<uni-checkbox>`.
  *
  * ```html
  * <uni-switch>

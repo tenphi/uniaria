@@ -2,8 +2,8 @@
  * TextField, from the approved spec (`./spec.md`): Field composed on a native
  * `<input>` or `<textarea>`, plus the value (uncontrolled, or controlled and
  * buffered as Cube UI Kit's is), read-only mode, form reset, hover and focus
- * state on every part, and a press on the root that focuses the input. The
- * browser keeps doing the editing.
+ * state on every part, and a press on the wrapper that focuses the input.
+ * The browser keeps doing the editing.
  */
 
 import {
@@ -21,13 +21,13 @@ import { linkTooltip, tooltipLink } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
-/** Elements inside the root that keep their own press. */
+/** Elements inside the wrapper that keep their own press. */
 const CONTROLS =
   'a[href], button, input, select, textarea, label, [contenteditable], [tabindex]';
 
 export const textField = defineComponent({
   name: 'text-field',
-  parts: ['root', 'label', 'input', 'description', 'error'],
+  parts: ['root', 'wrapper', 'label', 'input', 'description', 'error'],
   links: [tooltipLink],
   props: {
     // The element adopts the input's current text: the markup's value, or
@@ -153,14 +153,16 @@ export const textField = defineComponent({
       };
     });
 
-    // The root draws the box around the input, so a press on it outside any
-    // control focuses the input.
+    // The wrapper draws the box around the input, so a press on it outside
+    // any control focuses the input.
     const focusInput = (event: MouseEvent) => {
       const input = partElement(ctx, 'input');
-      const root = partElement(ctx, 'root');
-      if (!input || !root || event.button !== 0 || props.isDisabled()) return;
+      const wrapper = partElement(ctx, 'wrapper');
+      if (!input || !wrapper || event.button !== 0 || props.isDisabled()) {
+        return;
+      }
       const control = (event.target as Element).closest(CONTROLS);
-      if (control && root.contains(control)) return;
+      if (control && wrapper.contains(control)) return;
       event.preventDefault();
       input.focus();
     };
@@ -208,7 +210,8 @@ export const textField = defineComponent({
       ...part,
       attrs: { ...part.attrs, ...state },
     });
-    const root: DomPartProps = {
+    // The box around the input, with Field's state attributes as on the root.
+    const wrapper: DomPartProps = {
       attrs: { ...parts.root.attrs, ...state },
       on: { mousedown: api.focusInput },
     };
@@ -223,7 +226,8 @@ export const textField = defineComponent({
       properties: { value: api.isComposing() ? undefined : api.shown() },
     };
     return {
-      root,
+      root: withState(parts.root),
+      wrapper,
       label: withState(parts.label),
       input,
       description: withState(parts.description),

@@ -53,7 +53,7 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 const references = (...ids: (string | undefined)[]): string | undefined =>
   ids.filter(Boolean).join(' ') || undefined;
 
-/** Elements inside the root that keep their own press. */
+/** Elements inside the wrapper that keep their own press. */
 const CONTROLS =
   'a[href], button, input, select, textarea, label, [contenteditable], [tabindex]';
 
@@ -133,6 +133,7 @@ export const numberField = defineComponent({
   name: 'number-field',
   parts: [
     'root',
+    'wrapper',
     'label',
     'input',
     'increment',
@@ -625,14 +626,16 @@ export const numberField = defineComponent({
       };
     });
 
-    // The root draws the box around the input, so a press on it outside any
-    // control focuses the input.
+    // The wrapper draws the box around the input and the buttons, so a
+    // press on it outside any control focuses the input.
     const focusInput = (event: MouseEvent) => {
       const input = partElement(ctx, 'input');
-      const root = partElement(ctx, 'root');
-      if (!input || !root || event.button !== 0 || props.isDisabled()) return;
+      const wrapper = partElement(ctx, 'wrapper');
+      if (!input || !wrapper || event.button !== 0 || props.isDisabled()) {
+        return;
+      }
       const control = (event.target as Element).closest(CONTROLS);
-      if (control && root.contains(control)) return;
+      if (control && wrapper.contains(control)) return;
       event.preventDefault();
       input.focus();
     };
@@ -767,7 +770,10 @@ export const numberField = defineComponent({
     const value = api.committed();
 
     return {
-      root: {
+      root: withState(parts.root),
+      // The box around the input and the buttons, with Field's state
+      // attributes as on the root.
+      wrapper: {
         attrs: { ...parts.root.attrs, ...state },
         on: { mousedown: api.focusInput },
       } satisfies DomPartProps,

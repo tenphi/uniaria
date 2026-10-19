@@ -34,7 +34,13 @@ const references = (...ids: (string | undefined)[]): string | undefined =>
   ids.filter(Boolean).join(' ') || undefined;
 
 type TogglePart =
-  'root' | 'input' | 'indicator' | 'label' | 'description' | 'error';
+  | 'root'
+  | 'wrapper'
+  | 'input'
+  | 'indicator'
+  | 'label'
+  | 'description'
+  | 'error';
 
 /** The props both definitions declare. */
 interface ToggleSchema extends PropsSchema {
@@ -85,9 +91,12 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const describedBy = options.describedBy ?? props.describedBy;
   // Focusable while disabled: never toggles, and never submitted.
   const isInert = () => isDisabled() && props.isFocusableWhenDisabled();
-  // Hover from the root, focus and presses from the input (Tooltip spec,
-  // Resolved questions 2).
-  const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'input' });
+  // Hover from the wrapper, else the root; focus and presses from the input
+  // (Tooltip spec, Resolved questions 2).
+  const tooltip = linkTooltip(ctx, {
+    hover: ['wrapper', 'root'],
+    focus: 'input',
+  });
 
   const labelling = ctx.use(
     field,
@@ -103,10 +112,14 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     { parts: { control: 'input' } },
   );
 
-  // The root is where a label root takes clicks; the input counts too, for
-  // a control without a root.
+  // The wrapper is the label area that takes clicks, or the root when there
+  // is no wrapper; the input counts too, for a control without either.
+  const wrapperHover = createHover(ctx, { part: 'wrapper', isDisabled });
   const rootHover = createHover(ctx, { part: 'root', isDisabled });
   const inputHover = createHover(ctx, { part: 'input', isDisabled });
+  // The area hovered: the wrapper, or without one the root.
+  const areaHover = () =>
+    partElement(ctx, 'wrapper') ? wrapperHover : rootHover;
   const focus = createFocus(ctx, 'input');
 
   ctx.watch(focus.isFocused, (isFocused) => {
@@ -218,10 +231,11 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     isReadOnly,
     isInvalid,
     isRequired,
-    isHovered: () => rootHover.isHovered() || inputHover.isHovered(),
+    isHovered: () => areaHover().isHovered() || inputHover.isHovered(),
     isFocused: focus.isFocused,
     isFocusVisible: focus.isFocusVisible,
     rootHandlers: rootHover.handlers,
+    wrapperHandlers: wrapperHover.handlers,
     handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
       input: onInput,
       click: onClick,
@@ -278,6 +292,11 @@ export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
     attrs: { ...parts.root.attrs, ...state },
     on: toggle.rootHandlers,
   };
+  // The label area inside the root; Field's state attributes as on the root.
+  const wrapper: DomPartProps = {
+    attrs: { ...parts.root.attrs, ...state },
+    on: toggle.wrapperHandlers,
+  };
   const input: DomPartProps = {
     attrs: {
       ...control.attrs,
@@ -307,6 +326,7 @@ export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
   };
   return {
     root,
+    wrapper,
     input,
     indicator,
     label: withState(parts.label),

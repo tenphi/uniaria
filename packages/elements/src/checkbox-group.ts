@@ -2,7 +2,8 @@
  * `@uniaria/elements/checkbox-group` — registers `<uni-checkbox-group>`
  * on import. The `<uni-checkbox>` elements inside it, or naming its id in
  * their `group` attribute, are its checkboxes; those checked in the markup
- * make its default value.
+ * make its default value. Its label, description and error go inside the
+ * root.
  *
  * ```html
  * <uni-checkbox-group required>

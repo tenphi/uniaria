@@ -1,13 +1,18 @@
 /**
  * `@uniaria/elements/text-field` — registers `<uni-text-field>` on
  * import. The input can be an `<input>` or a `<textarea>`; its markup value,
- * or text typed before upgrade, becomes the default.
+ * or text typed before upgrade, becomes the default. The root and the wrapper,
+ * the box around the input, are optional.
  *
  * ```html
  * <uni-text-field required>
- *   <label data-element="Label">Email</label>
- *   <input data-element="Input" name="email" type="email" />
- *   <p data-element="Error" hidden>Enter a valid email</p>
+ *   <div class="uni-text-field">
+ *     <label data-element="Label">Email</label>
+ *     <div data-element="Wrapper">
+ *       <input data-element="Input" name="email" type="email" />
+ *     </div>
+ *     <p data-element="Error" hidden>Enter a valid email</p>
+ *   </div>
  * </uni-text-field>
  * ```
  */

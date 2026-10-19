@@ -51,7 +51,8 @@ export const tooltipLink: LinkKey<'tooltip', TooltipLinkApi> = {
  * focusable part and the anchor to hover, for a part that isn't rendered.
  */
 export interface TooltipParts {
-  readonly hover: string;
+  /** One part, or several in order: the first one rendered. */
+  readonly hover: string | readonly string[];
   readonly focus: string;
   /** Defaults to `hover`. */
   readonly anchor?: string;
@@ -72,13 +73,17 @@ interface LinkContext extends InteractionContext {
  */
 export function linkTooltip(ctx: LinkContext, parts: TooltipParts) {
   const linked = () => ctx.link(tooltipLink);
+  const hoverParts =
+    typeof parts.hover === 'string' ? [parts.hover] : parts.hover;
+  const hovered = () =>
+    hoverParts.map((part) => partElement(ctx, part)).find(Boolean) ?? null;
   const target = ctx.memo(
     () =>
       [
         linked(),
-        partElement(ctx, parts.hover),
+        hovered(),
         partElement(ctx, parts.focus),
-        partElement(ctx, parts.anchor ?? parts.hover),
+        parts.anchor ? partElement(ctx, parts.anchor) : hovered(),
       ] as const,
     (tooltip, hover, focus, anchor) =>
       tooltip

@@ -26,7 +26,7 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
 export const radio = defineComponent({
   name: 'radio',
-  parts: ['root', 'input', 'indicator', 'label', 'description'],
+  parts: ['root', 'wrapper', 'input', 'indicator', 'label', 'description'],
   owner: { definition: radioGroup, attribute: 'group' },
   links: [tooltipLink],
   props: {
@@ -65,9 +65,12 @@ export const radio = defineComponent({
     const isInvalid = () => group()?.state().isInvalid ?? false;
     // Focusable while disabled: never selected, by click or arrow key.
     const isInert = () => isDisabled() && props.isFocusableWhenDisabled();
-    // Hover from the root, focus and presses from the input (Tooltip spec,
-    // Resolved questions 2).
-    const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'input' });
+    // Hover from the wrapper, else the root; focus and presses from the
+    // input (Tooltip spec, Resolved questions 2).
+    const tooltip = linkTooltip(ctx, {
+      hover: ['wrapper', 'root'],
+      focus: 'input',
+    });
 
     const labelling = ctx.use(
       field,
@@ -112,10 +115,13 @@ export const radio = defineComponent({
       });
     }
 
-    // The root is where a label root takes clicks; the input counts too, for
-    // a radio without a root.
+    // The wrapper is the label area that takes clicks, or the root when
+    // there is no wrapper; the input counts too, for a radio without either.
+    const wrapperHover = createHover(ctx, { part: 'wrapper', isDisabled });
     const rootHover = createHover(ctx, { part: 'root', isDisabled });
     const inputHover = createHover(ctx, { part: 'input', isDisabled });
+    const areaHover = () =>
+      partElement(ctx, 'wrapper') ? wrapperHover : rootHover;
     const focus = createFocus(ctx, 'input');
     ctx.watch(focus.isFocused, (isFocused) => {
       ctx.emit('focusChange', isFocused);
@@ -178,10 +184,11 @@ export const radio = defineComponent({
       isReadOnly,
       isInvalid,
       isInert,
-      isHovered: () => rootHover.isHovered() || inputHover.isHovered(),
+      isHovered: () => areaHover().isHovered() || inputHover.isHovered(),
       isFocused: focus.isFocused,
       isFocusVisible: focus.isFocusVisible,
       rootHandlers: rootHover.handlers,
+      wrapperHandlers: wrapperHover.handlers,
       handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
         input: onInput,
         click: onClick,
@@ -247,6 +254,12 @@ export const radio = defineComponent({
       root: {
         attrs: { ...parts.root.attrs, ...state },
         on: api.rootHandlers,
+      },
+      // The label area inside the root; Field's state attributes as on the
+      // root.
+      wrapper: {
+        attrs: { ...parts.root.attrs, ...state },
+        on: api.wrapperHandlers,
       },
       input,
       // Not a Field part, so it takes Field's state attributes from the root.

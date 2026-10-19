@@ -19,7 +19,15 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
 export const checkbox = defineComponent({
   name: 'checkbox',
-  parts: ['root', 'input', 'indicator', 'label', 'description', 'error'],
+  parts: [
+    'root',
+    'wrapper',
+    'input',
+    'indicator',
+    'label',
+    'description',
+    'error',
+  ],
   links: [tooltipLink],
   owner: { definition: checkboxGroup, attribute: 'group' },
   props: {

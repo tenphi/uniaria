@@ -10,7 +10,15 @@ import { tooltipLink } from '../tooltip/link';
 
 export const toggleSwitch = defineComponent({
   name: 'switch',
-  parts: ['root', 'input', 'indicator', 'label', 'description', 'error'],
+  parts: [
+    'root',
+    'wrapper',
+    'input',
+    'indicator',
+    'label',
+    'description',
+    'error',
+  ],
   links: [tooltipLink],
   props: {
     // The element adopts the input's checked state: the markup's `checked`,

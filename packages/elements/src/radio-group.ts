@@ -2,7 +2,8 @@
  * `@uniaria/elements/radio-group` — registers `<uni-radio-group>` on
  * import. Its radios are `<uni-radio>` elements
  * (`@uniaria/elements/radio`); the one whose input is checked in the
- * markup gives the default.
+ * markup gives the default. Its label, description and error go inside the
+ * root.
  *
  * ```html
  * <uni-radio-group name="plan" required>
