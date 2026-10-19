@@ -1,0 +1,91 @@
+name: Screen readers
+
+# The conformance scenarios that need a real screen reader (design doc,
+# Testing and accessibility): VoiceOver on macOS and NVDA on Windows, driven
+# through Guidepup in headed Chromium. Too slow and flaky for every push, so
+# nightly, and on demand.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      discover:
+        description: Log what the screen reader holds for the focus after each key, for writing a new scenario
+        type: boolean
+        default: false
+
+concurrency:
+  group: screen-readers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # macOS and Windows minutes cost more than Linux ones: a night with no new
+  # commit on main skips the run.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Check for a commit in the last day
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" != schedule ] ||
+            [ "$(git log -1 --format=%ct)" -gt "$(( $(date +%s) - 25 * 3600 ))" ]; then
+            echo changed=true >> "$GITHUB_OUTPUT"
+          else
+            echo changed=false >> "$GITHUB_OUTPUT"
+          fi
+
+  screen-reader:
+    needs: changes
+    if: needs.changes.outputs.changed == 'true'
+    name: ${{ matrix.screen-reader }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            screen-reader: voiceover
+          - os: windows-latest
+            screen-reader: nvda
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+
+      # Lets Guidepup drive the screen reader: permissions and settings on
+      # macOS, NVDA's configuration on Windows.
+      - name: Prepare the screen reader
+        run: pnpm dlx @guidepup/setup@0.29.1 setup --ci
+
+      # The screen reader assets the installed @guidepup/guidepup needs.
+      - name: Install the screen reader
+        working-directory: packages/testing
+        run: pnpm dlx @guidepup/setup@0.29.1 install ${{ matrix.screen-reader }}
+
+      - name: Test
+        run: pnpm test:screen-readers
+        env:
+          UNIARIA_SCREEN_READERS: ${{ inputs.discover && 'discover' || '1' }}

@@ -2,10 +2,13 @@ import { playwright } from '@vitest/browser-playwright';
 import { defaultClientConditions, defaultServerConditions } from 'vite';
 import { defaultExclude, defineConfig } from 'vitest/config';
 
-import { uniCommands } from './packages/testing/src/commands';
+import {
+  screenReaderCommands,
+  uniCommands,
+} from './packages/testing/src/commands';
 
 /**
- * Two projects, split by file name:
+ * Two projects, split by file name, and a third for real screen readers:
  *
  * - `node` — `*.test.ts(x)`. Pure logic with no DOM: the runtime, collections,
  *   component definitions driven through test instances, SSR-safety checks.
@@ -15,6 +18,12 @@ import { uniCommands } from './packages/testing/src/commands';
  *   Firefox and WebKit through Playwright. `uniCommands` give tests real
  *   mouse and keyboard input that can hold a button or key
  *   (`@uniaria/testing/browser`).
+ * - `screen-readers` — `*.screen-reader.test.ts(x)`: the scenarios that need
+ *   VoiceOver (macOS) or NVDA (Windows), driven through Guidepup in headed
+ *   Chromium, one file at a time. It takes over the machine's screen reader
+ *   and keyboard, so it exists only when `UNIARIA_SCREEN_READERS` is set:
+ *   nightly in CI (.github/workflows/screen-readers.yml), on runners
+ *   prepared by `@guidepup/setup`.
  *
  * Workspace packages resolve each other's `src/` through the `uniaria-source`
  * export condition, so tests never need a build first.
@@ -37,7 +46,11 @@ export default defineConfig({
             'packages/*/src/**/*.test.{ts,tsx}',
             'conformance/src/**/*.test.{ts,tsx}',
           ],
-          exclude: [...defaultExclude, '**/*.browser.test.{ts,tsx}'],
+          exclude: [
+            ...defaultExclude,
+            '**/*.browser.test.{ts,tsx}',
+            '**/*.screen-reader.test.{ts,tsx}',
+          ],
         },
       },
       {
@@ -62,6 +75,33 @@ export default defineConfig({
           },
         },
       },
+      ...(process.env.UNIARIA_SCREEN_READERS
+        ? [
+            {
+              extends: true,
+              test: {
+                name: 'screen-readers',
+                include: ['packages/*/src/**/*.screen-reader.test.{ts,tsx}'],
+                // One screen reader per machine, started once per file.
+                fileParallelism: false,
+                // A screen reader that falls behind now and then.
+                retry: 1,
+                testTimeout: 120_000,
+                hookTimeout: 300_000,
+                browser: {
+                  enabled: true,
+                  // Screen readers don't read headless browsers.
+                  headless: false,
+                  ui: false,
+                  provider: playwright(),
+                  screenshotFailures: false,
+                  commands: { ...uniCommands, ...screenReaderCommands },
+                  instances: [{ browser: 'chromium' as const }],
+                },
+              },
+            },
+          ]
+        : []),
     ],
   },
 });

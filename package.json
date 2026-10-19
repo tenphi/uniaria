@@ -8,6 +8,7 @@
     "test": "vitest run",
     "test:node": "vitest run --project node",
     "test:browser": "vitest run --project browser",
+    "test:screen-readers": "vitest run --project screen-readers",
     "test:setup": "playwright install chromium firefox webkit",
     "test:watch": "vitest",
     "bench": "pnpm --filter @uniaria/react bench",

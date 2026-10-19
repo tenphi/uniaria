@@ -8,6 +8,8 @@
  * reported as skipped instead of failing (Button's touch and virtual-click
  * scenarios wait for the phase 2 interaction layer). A scenario can also need
  * input that only some browsers take (touch); elsewhere it is skipped too.
+ * Scenarios that need a real screen reader run only in the screen-reader
+ * project, nightly, and only they run there.
  */
 
 import type { MountOptions, Mounted } from './contract';
@@ -66,8 +68,52 @@ export interface TouchInput {
   tap(target: Element): Promise<void>;
 }
 
+/** Which real screen reader a scenario runs with. */
+export type ScreenReaderName = 'voiceover' | 'nvda';
+
+/**
+ * A real screen reader driven through Guidepup: VoiceOver on macOS, NVDA on
+ * Windows, both with Chromium. Keys go through the operating system, so the
+ * screen reader hears them as a user's and speaks what they do. Only in
+ * scenarios that declare `needs: ['screenReader']`, which run nightly.
+ *
+ * The screen readers word things differently (`check box` in NVDA,
+ * `checkbox` in VoiceOver), so scenarios match what they need to hear, not
+ * whole phrases.
+ */
+export interface ScreenReaderInput {
+  /** Which screen reader runs. */
+  readonly name: ScreenReaderName;
+  /**
+   * Clicks `element` (a text field before the component), waits for the
+   * screen reader to speak it and forgets what it said: the scenario starts
+   * from there, usually with Tab into the component.
+   */
+  startFrom(element: HTMLElement): Promise<void>;
+  /**
+   * Presses a key through the screen reader (Playwright's names: `Tab`,
+   * `ArrowDown`, `Shift+Tab`) and waits until it stops speaking.
+   */
+  press(key: string): Promise<void>;
+  /** Types text through the screen reader, a key per character. */
+  type(text: string): Promise<void>;
+  /** Moves the screen reader's own cursor to the next item. */
+  next(): Promise<void>;
+  /**
+   * What the screen reader holds for the element with keyboard focus: NVDA
+   * reads it again (NVDA+Tab), VoiceOver gives its cursor's item text. A
+   * check that holds when the speech on arrival is cut short.
+   */
+  readFocus(): Promise<string>;
+  /**
+   * What it has said since `startFrom` or the last call: each key's phrases
+   * in order, joined with ` / `.
+   */
+  spoken(): Promise<string>;
+}
+
 /** Input a scenario needs beyond mouse and keyboard. */
-export type InputNeed = 'touch';
+export type InputNeed = 'touch' | 'screenReader';
 
 export interface ScenarioContext<Props, State> {
   /** Mounts the suite's component through the adapter under test. */
@@ -76,6 +122,8 @@ export interface ScenarioContext<Props, State> {
   keyboard: KeyboardInput;
   /** Only in scenarios that declare `needs: ['touch']`. */
   touch: TouchInput;
+  /** Only in scenarios that declare `needs: ['screenReader']`. */
+  screenReader: ScreenReaderInput;
   /**
    * Reads the whole document with the virtual screen reader and returns every
    * phrase, from `document` to `end of document`.
@@ -99,7 +147,8 @@ export interface ScenarioOptions {
   readonly phase?: number;
   /**
    * Input beyond mouse and keyboard. Where the browser can't take it, the
-   * scenario is skipped.
+   * scenario is skipped; a scenario that needs a real screen reader runs
+   * only where one runs.
    */
   readonly needs?: readonly InputNeed[];
 }

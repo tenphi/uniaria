@@ -12,5 +12,11 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  external: [/^vitest/, /^@vitest\//, '@guidepup/virtual-screen-reader'],
+  external: [
+    /^node:/,
+    /^vitest/,
+    /^@vitest\//,
+    '@guidepup/virtual-screen-reader',
+    '@guidepup/guidepup',
+  ],
 });

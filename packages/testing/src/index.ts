@@ -29,6 +29,8 @@ export type {
   ScenarioGroup,
   ScenarioOptions,
   ScenarioRun,
+  ScreenReaderInput,
+  ScreenReaderName,
   TouchInput,
 } from './conformance/scenario';
 export {

@@ -58,6 +58,15 @@
     "@uniaria/core": "workspace:*"
   },
   "peerDependencies": {
+    "@guidepup/guidepup": "^0.35.0",
     "vitest": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@guidepup/guidepup": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@guidepup/guidepup": "^0.35.0"
   }
 }

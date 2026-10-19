@@ -6,10 +6,11 @@
  * input the browser can't take.
  *
  * An adapter's conformance test file is one call:
- * `runConformance(reactAdapter, suites, { phase: 1 })`.
+ * `runConformance(reactAdapter, suites, { phase: 1 })`. Its screen-reader
+ * file passes `screenReader: true` too.
  */
 
-import { afterEach, describe, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, it } from 'vitest';
 
 import type {
   AdapterMount,
@@ -31,6 +32,12 @@ import type {
   ScenarioContext,
   ScenarioGroup,
 } from './scenario';
+import {
+  noScreenReader,
+  screenReader,
+  startScreenReader,
+  stopScreenReader,
+} from './screen-reader';
 import { listenLive, spokenPhrases, stopListening } from './spoken';
 import type { TemplateNode } from './template';
 
@@ -40,7 +47,27 @@ export interface RunOptions {
    * a later phase are skipped. Default: run everything.
    */
   readonly phase?: number;
+  /**
+   * Runs the scenarios that need a real screen reader
+   * (`needs: ['screenReader']`), and only those, with the machine's screen
+   * reader started for the whole file. Without it they aren't registered.
+   * Needs `screenReaderCommands` from `@uniaria/testing/commands`.
+   */
+  readonly screenReader?: boolean;
 }
+
+type Child = Scenario<unknown, unknown> | ScenarioGroup<unknown, unknown>;
+
+const needsScreenReader = (child: Child): boolean =>
+  child.kind === 'group'
+    ? child.children.some(needsScreenReader)
+    : child.needs.includes('screenReader');
+
+/** Whether a run registers this child: a screen-reader run, only theirs. */
+const isInRun = (child: Child, isScreenReaderRun: boolean): boolean =>
+  child.kind === 'group'
+    ? child.children.some((each) => isInRun(each, isScreenReaderRun))
+    : needsScreenReader(child) === isScreenReaderRun;
 
 function partsOf(container: HTMLElement, component: string, name: string) {
   return Array.from(
@@ -64,8 +91,18 @@ export function runConformance(
   options: RunOptions = {},
 ): void {
   const phase = options.phase ?? Number.POSITIVE_INFINITY;
+  const isScreenReaderRun = options.screenReader ?? false;
+
+  if (isScreenReaderRun) {
+    // Starting takes seconds, and the screen reader is one per machine.
+    beforeAll(startScreenReader);
+    afterAll(stopScreenReader);
+  }
 
   for (const suite of suites) {
+    if (!suite.children.some((child) => isInRun(child, isScreenReaderRun))) {
+      continue;
+    }
     describe(`${suite.component} (${adapter.name})`, () => {
       const mounted: { mount: AdapterMount; container: HTMLElement }[] = [];
 
@@ -91,6 +128,7 @@ export function runConformance(
         pointer,
         keyboard,
         touch,
+        screenReader: isScreenReaderRun ? screenReader : noScreenReader,
         spoken: () => spokenPhrases(),
         listen: () => listenLive(),
         async mount(mountOptions: MountOptions<unknown>) {
@@ -135,12 +173,9 @@ export function runConformance(
         },
       };
 
-      const register = (
-        children: readonly (
-          Scenario<unknown, unknown> | ScenarioGroup<unknown, unknown>
-        )[],
-      ) => {
+      const register = (children: readonly Child[]) => {
         for (const child of children) {
+          if (!isInRun(child, isScreenReaderRun)) continue;
           if (child.kind === 'group') {
             describe(child.name, () => register(child.children));
           } else if (child.phase > phase) {

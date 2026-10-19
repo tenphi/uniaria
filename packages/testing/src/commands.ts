@@ -8,6 +8,10 @@
  * Targets arrive as CSS selectors because elements cannot cross from the
  * browser to Node. Coordinates come from the test frame's locator, so they
  * account for the iframe Vitest runs tests in.
+ *
+ * `screenReaderCommands` drive the machine's real screen reader through
+ * Guidepup, for a project that runs scenarios with `screenReader: true`:
+ * `commands: { ...uniCommands, ...screenReaderCommands }`.
  */
 
 import type {} from '@vitest/browser-playwright';
@@ -123,6 +127,8 @@ export const uniTouch: BrowserCommand<
     touchPoints,
   });
 };
+
+export { screenReaderCommands } from './screen-reader-commands';
 
 export const uniCommands = {
   uniTouchSupported,
