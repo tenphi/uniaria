@@ -475,6 +475,35 @@ export const checkboxGroupConformance = defineConformance<
     );
 
     scenario(
+      'follows a default set after mount, with or without a change',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: inForm(notify()),
+          events: EVENTS,
+        });
+        await mounted.setProps({ defaultValue: ['sms'] });
+        expect(checked(mounted)).toEqual([false, true]);
+
+        // Unchanged: the default stays, and nothing is reported.
+        await reset(mounted, pointer);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(checked(mounted)).toEqual([false, true]);
+        expect(mounted.state().value).toEqual(['sms']);
+        expect(changes(mounted)).toEqual([]);
+
+        // Changed, then a new default: the reset goes back to it.
+        await pointer.click(inputs(mounted)[0]!);
+        await mounted.setProps({ defaultValue: ['email'] });
+        expect(checked(mounted)).toEqual([true, true]);
+        await reset(mounted, pointer);
+        await expect.poll(() => checked(mounted)).toEqual([true, false]);
+        expect(mounted.state().value).toEqual(['email']);
+        expect(changes(mounted)).toEqual([['sms', 'email'], ['email']]);
+      },
+      PHASE,
+    );
+
+    scenario(
       'asks a controlled group for the value it mounted with',
       async ({ mount, pointer }) => {
         const mounted = await mount({

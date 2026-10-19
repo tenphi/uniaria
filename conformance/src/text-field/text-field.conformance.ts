@@ -362,6 +362,42 @@ export const textFieldConformance = defineConformance<
     );
 
     scenario(
+      'form reset follows a default set after mount, with or without a change',
+      async ({ mount, keyboard, pointer }) => {
+        const mounted = await mount({
+          template: inForm(email()),
+          events: EVENTS,
+        });
+        const input = inputOf(mounted);
+        const reset = mounted.container.querySelector<HTMLElement>(
+          'button[type="reset"]',
+        )!;
+        await mounted.setProps({ defaultValue: 'jane' });
+        expect(input.value).toBe('jane');
+
+        // Unchanged: the default stays, and nothing is reported.
+        await pointer.click(reset);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(input.value).toBe('jane');
+        expect(mounted.state().value).toBe('jane');
+        expect(changes(mounted)).toEqual([]);
+
+        // Changed, then a new default: the reset goes back to it.
+        input.focus();
+        await typeText(keyboard, 'x');
+        const typed = input.value;
+        expect(typed).not.toBe('jane');
+        await mounted.setProps({ defaultValue: 'bob' });
+        expect(input.value).toBe(typed);
+        await pointer.click(reset);
+        await expect.poll(() => input.value).toBe('bob');
+        expect(mounted.state().value).toBe('bob');
+        expect(changes(mounted)).toEqual([typed, 'bob']);
+      },
+      PHASE,
+    );
+
+    scenario(
       'form reset asks a controlled field for the value it mounted with',
       async ({ mount, pointer }) => {
         const mounted = await mount({

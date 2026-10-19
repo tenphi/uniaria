@@ -1951,6 +1951,40 @@ export const comboboxConformance = defineConformance<
     );
 
     scenario(
+      'a form reset follows a default set after mount, with or without a change',
+      async ({ mount, keyboard }) => {
+        const mounted = await mount({
+          template: fruit({ inForm: true }),
+          props: { items: FRUIT },
+          events: EVENTS,
+        });
+        await mounted.setProps({ defaultValue: ['banana'] });
+        await expect.poll(() => input(mounted).value).toBe('Banana');
+
+        // Unchanged: the default stays, and nothing is reported.
+        form(mounted).reset();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(mounted.state().value).toEqual(['banana']);
+        expect(input(mounted).value).toBe('Banana');
+        expect(hiddenInput(mounted).value).toBe('banana');
+        expect(changes(mounted)).toEqual([]);
+
+        // Changed, then a new default: the reset goes back to it.
+        await retype(mounted, keyboard, 'che');
+        await keyboard.press('ArrowDown');
+        await keyboard.press('Enter');
+        await mounted.setProps({ defaultValue: ['apple'] });
+        expect(mounted.state().value).toEqual(['cherry']);
+        form(mounted).reset();
+        await expect.poll(() => mounted.state().value).toEqual(['apple']);
+        await expect.poll(() => input(mounted).value).toBe('Apple');
+        await expect.poll(() => hiddenInput(mounted).value).toBe('apple');
+        expect(changes(mounted)).toEqual([['cherry'], ['apple']]);
+      },
+      PHASE,
+    );
+
+    scenario(
       'a required combo box with no value blocks the submit and takes focus',
       async ({ mount }) => {
         const mounted = await mount({

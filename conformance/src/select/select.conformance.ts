@@ -1564,6 +1564,40 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
       );
 
       scenario(
+        'a form reset follows a default set after mount, with or without a change',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: fruit({ inForm: true }),
+            props: { items: FRUIT },
+            events: EVENTS,
+          });
+          const form = byId(mounted, 'form') as HTMLFormElement;
+          await mounted.setProps({ defaultValue: ['banana'] });
+          expect(valueText(mounted)).toBe('Banana');
+
+          // Unchanged: the default stays, and nothing is reported.
+          form.reset();
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          expect(mounted.state().value).toEqual(['banana']);
+          expect(hiddenSelect(mounted).value).toBe('banana');
+          expect(valueText(mounted)).toBe('Banana');
+          expect(changes(mounted)).toEqual([]);
+
+          // Changed, then a new default: the reset goes back to it.
+          trigger(mounted).focus();
+          await keyboard.press('ArrowRight');
+          await mounted.setProps({ defaultValue: ['apple'] });
+          expect(mounted.state().value).toEqual(['cherry']);
+          form.reset();
+          await expect.poll(() => mounted.state().value).toEqual(['apple']);
+          await expect.poll(() => hiddenSelect(mounted).value).toBe('apple');
+          expect(valueText(mounted)).toBe('Apple');
+          expect(changes(mounted)).toEqual([['cherry'], ['apple']]);
+        },
+        PHASE,
+      );
+
+      scenario(
         'a required select with no value blocks the submit and takes focus',
         async ({ mount }) => {
           const mounted = await mount({

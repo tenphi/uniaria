@@ -439,6 +439,36 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
       );
 
       scenario(
+        'follows a default set after mount, with or without a change',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: inForm(wifi()),
+            props: IN_LABEL,
+            events: EVENTS,
+          });
+          const input = inputOf(mounted);
+          await mounted.setProps({ defaultSelected: true });
+          expect(input.checked).toBe(true);
+
+          // Unchanged: the default stays, and nothing is reported.
+          await reset(mounted, pointer);
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          expect(input.checked).toBe(true);
+          expect(mounted.state().isSelected).toBe(true);
+          expect(changes(mounted)).toEqual([]);
+
+          // Changed: back to the default, reported.
+          await pointer.click(input);
+          expect(input.checked).toBe(false);
+          await reset(mounted, pointer);
+          await expect.poll(() => input.checked).toBe(true);
+          expect(mounted.state().isSelected).toBe(true);
+          expect(changes(mounted)).toEqual([false, true]);
+        },
+        PHASE,
+      );
+
+      scenario(
         'asks a controlled switch for the state it mounted with',
         async ({ mount, pointer }) => {
           const mounted = await mount({

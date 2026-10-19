@@ -1273,6 +1273,42 @@ export const numberFieldConformance = defineConformance<
       },
       PHASE,
     );
+
+    scenario(
+      'form reset follows a default set after mount, with or without a change',
+      async ({ mount, keyboard, pointer }) => {
+        const mounted = await mount({
+          template: inForm(quantity()),
+          events: EVENTS,
+        });
+        const input = inputOf(mounted);
+        const reset = mounted.container.querySelector<HTMLElement>(
+          'button[type="reset"]',
+        )!;
+        await mounted.setProps({ defaultValue: 5 });
+        expect(input.value).toBe('5');
+
+        // Unchanged: the default stays, and nothing is reported.
+        await pointer.click(reset);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(input.value).toBe('5');
+        expect(hiddenOf(mounted).value).toBe('5');
+        expect(mounted.state().value).toBe(5);
+        expect(changes(mounted)).toEqual([]);
+
+        // Changed, then a new default: the reset goes back to it.
+        input.focus();
+        await keyboard.press('ArrowUp');
+        await mounted.setProps({ defaultValue: 8 });
+        expect(input.value).toBe('6');
+        await pointer.click(reset);
+        await expect.poll(() => input.value).toBe('8');
+        expect(hiddenOf(mounted).value).toBe('8');
+        expect(mounted.state().value).toBe(8);
+        expect(changes(mounted)).toEqual([6, 8]);
+      },
+      PHASE,
+    );
   });
 
   group('announcements', () => {
