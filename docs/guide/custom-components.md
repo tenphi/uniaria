@@ -114,7 +114,8 @@ What each piece does:
   state. It runs again after every change and UniAria writes only the
   attributes that differ, so keep it cheap and pure. ARIA values are strings
   (`'true'`, `'false'`), a boolean attribute that is on is `''`, and
-  `undefined` removes an attribute. `ids` gives a stable id per part;
+  `undefined` removes an attribute. `ids` gives each part's id: the one its
+  element carries, else a stable generated one, so read it in `connect()`;
   `DomPartProps` types the handlers with DOM events.
 
 A few rules keep a definition working in both adapters:

@@ -15,8 +15,11 @@ attributes a component starts with: a selected checkbox's `checked`, a
 disabled button's `disabled`, a listbox's selected options.
 
 - **Ids** come from React's `useId`, so they match between the server and the
-  client. Pass your own (`inputId`, `listId` and similar props) to override
-  them.
+  client. An id you write on a part after the spread is in the server HTML,
+  but references to the part (a label's `for`) name its own id until
+  hydration, when UniAria finds yours. Pass the id through the component's
+  prop (`inputId`, `listId` and similar) for references that are right
+  before hydration (see [Ids](./accessibility.md#ids)).
 - **Live values** such as an input's `value` and a checkbox's `checked` render
   once, as `defaultValue` and `defaultChecked`, so the server HTML shows them
   and React never controls the element afterwards.
@@ -41,7 +44,7 @@ navigates, a checkbox toggles and submits, a `<dialog>` stays closed.
 
 When it upgrades, the element reads its starting state from that markup where
 HTML has it: a checkbox's `checked`, a text field's `value`, a link's `href`,
-a control's `id`, a list's options and the label's tag. Then it writes the
+each part's `id`, a list's options and the label's tag. Then it writes the
 rest: roles that HTML can't express (`role="switch"`), ARIA links between
 parts, state attributes and keyboard handling.
 

@@ -36,10 +36,10 @@ export const radio = defineComponent({
     // As Button's: `aria-disabled` instead of `disabled`, so a tooltip can
     // explain it.
     isFocusableWhenDisabled: prop(false),
-    // The element adopts the input's id on upgrade.
+    // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'input', attribute: 'id' },
+      idOf: 'input',
     }),
     // The element reads the label's tag instead of taking an attribute.
     labelElementType: prop('label', {

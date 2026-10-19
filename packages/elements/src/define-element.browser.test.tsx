@@ -1015,8 +1015,52 @@ describe('<uni-button>', () => {
   });
 });
 
+describe('part ids', () => {
+  it("keeps the ids of a dialog's root, title and description", () => {
+    const container = mount(`
+      <uni-dialog>
+        <button data-element="Trigger">Open</button>
+        <dialog class="uni-dialog" id="terms">
+          <h2 data-element="Title" id="terms-title">Terms</h2>
+          <p data-element="Description" id="terms-text">Read them.</p>
+        </dialog>
+      </uni-dialog>`);
+    const root = container.querySelector('dialog')!;
+    expect(root.id).toBe('terms');
+    expect(container.querySelector('h2')!.id).toBe('terms-title');
+    expect(container.querySelector('p')!.id).toBe('terms-text');
+    expect(root.getAttribute('aria-labelledby')).toBe('terms-title');
+    expect(root.getAttribute('aria-describedby')).toBe('terms-text');
+  });
+
+  it('follows an id the consumer gives, changes or removes later', async () => {
+    const container = mount(`
+      <uni-field>
+        <label data-element="Label">Email</label>
+        <input data-element="Control" />
+      </uni-field>`);
+    const host =
+      container.querySelector<UniElement<typeof field>>('uni-field')!;
+    const label = container.querySelector('label')!;
+    const control = container.querySelector('input')!;
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+    expect(label.id).toBe(`${host.instance.id}-label`);
+
+    label.id = 'email-label';
+    control.id = 'email';
+    await settle();
+    expect(control.getAttribute('aria-labelledby')).toBe('email-label');
+    expect(label.getAttribute('for')).toBe('email');
+
+    control.removeAttribute('id');
+    await settle();
+    expect(control.id).toBe(`${host.instance.id}-control`);
+    expect(label.getAttribute('for')).toBe(control.id);
+  });
+});
+
 describe('<uni-field>', () => {
-  it("adopts the control's id and the label's tag", () => {
+  it("keeps the control's id and adopts the label's tag", () => {
     const container = mount(`
       <uni-field>
         <span data-element="Label">Plan</span>
@@ -1026,7 +1070,9 @@ describe('<uni-field>', () => {
       container.querySelector<UniElement<typeof field>>('uni-field')!;
     const label = host.querySelector('[data-element="Label"]')!;
     const control = host.querySelector('[data-element="Control"]')!;
-    expect(host.controlId).toBe('plan');
+    // The control keeps its id; no prop copies it.
+    expect(host.controlId).toBeUndefined();
+    expect(host.instance.ids.control).toBe('plan');
     expect(host.labelElementType).toBe('span');
     expect(control.id).toBe('plan');
     expect(label.hasAttribute('for')).toBe(false);
@@ -2280,9 +2326,10 @@ describe('<uni-listbox>', () => {
     return { host, part, option };
   };
 
-  it('reads its options from the markup and adopts the list id', () => {
+  it('reads its options from the markup and keeps the list id', () => {
     const { host, part, option } = listboxIn(mount(FRUIT));
-    expect(host.listId).toBe('fruit');
+    expect(host.listId).toBeUndefined();
+    expect(part('list').id).toBe('fruit');
     expect(part('list').getAttribute('aria-multiselectable')).toBe('true');
     expect(option('apple').getAttribute('role')).toBe('option');
     expect(option('apple').id).toBe('fruit-option-apple');
@@ -2358,10 +2405,9 @@ describe('<uni-select>', () => {
     return { host, part, option };
   };
 
-  it('reads its options from the markup and adopts the trigger and list ids', () => {
+  it('reads its options from the markup and keeps the trigger and list ids', () => {
     const { host, part, option } = selectIn(mount(FRUIT));
-    expect(host.triggerId).toBe('pick');
-    expect(host.listId).toBe('fruit');
+    expect(host.instance.ids).toMatchObject({ trigger: 'pick', list: 'fruit' });
     const trigger = part('trigger');
     expect(trigger.getAttribute('role')).toBe('combobox');
     expect(trigger.getAttribute('aria-controls')).toBe('fruit');
@@ -2478,10 +2524,9 @@ describe('<uni-combobox>', () => {
     return { host, part, option };
   };
 
-  it('reads its options from the markup and adopts the input and list ids', () => {
+  it('reads its options from the markup and keeps the input and list ids', () => {
     const { host, part, option } = comboboxIn(mount(FRUIT));
-    expect(host.inputId).toBe('pick');
-    expect(host.listId).toBe('fruit');
+    expect(host.instance.ids).toMatchObject({ input: 'pick', list: 'fruit' });
     const input = part('input') as HTMLInputElement;
     expect(input.getAttribute('role')).toBe('combobox');
     expect(input.getAttribute('aria-controls')).toBe('fruit');

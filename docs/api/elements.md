@@ -218,15 +218,19 @@ order.
   `items` stops that.
 - **Values from markup.** Some props the element reads from a part when you
   haven't set them: Button's `elementType` from the root's tag and `href`
-  from the link, a field's control `id`, an input's `value` or `checked`
-  (including what the user typed or clicked before the element upgraded).
+  from the link, an input's `value` or `checked` (including what the user
+  typed or clicked before the element upgraded).
+- **Ids.** Every part keeps the `id` in your markup, and the element points
+  every reference at it, now and when you change it; it writes an id only on
+  a part that has none (see [Ids](../guide/accessibility.md#ids)). Option
+  ids are made from the list's id and the key.
 
 The element writes only what it owns on each part: ARIA attributes,
-`data-scope` and `data-element`, state attributes and the ids and references
-it needs. When an element stops being a part (you rename its
-`data-element`, or a nested element defined later takes it), the element
-removes what it wrote there. It never writes `class`: the root's
-`uni-<name>` comes from your markup. Content, your own classes and every other attribute stay yours.
+`data-scope` and `data-element`, state attributes, the references it needs,
+and an id where a part has none. When an element stops being a part (you
+rename its `data-element`, or a nested element defined later takes it), the
+element removes what it wrote there. It never writes `class`: the root's `uni-<name>` comes from your
+markup. Content, your own classes and every other attribute stay yours.
 
 Event listeners for parts are delegated from the element's root node (the
 document, or the shadow root it sits in), never added to the host element.

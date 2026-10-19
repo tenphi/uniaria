@@ -126,6 +126,9 @@ function renderNodes(
       if (own && props.className && own !== props.className) {
         props.className = `${props.className as string} ${own as string}`;
       }
+      // A consumer's id goes after the spread, where it overrides the
+      // part's (root AGENTS.md → DOM, lifecycle and SSR).
+      if (node.attrs.id !== undefined) props.id = node.attrs.id;
     }
     return createElement(
       node.tag,

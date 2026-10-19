@@ -122,15 +122,15 @@ export const select = defineComponent({
     shouldFocusWrap: prop(false),
     positionArea: prop<PositionArea>('block-end span-inline-end'),
     positionTryFallbacks: prop('flip-block, flip-inline'),
-    // Field's `controlId`. The element adopts the trigger's id.
+    // Field's `controlId`: the trigger's id where it has none of its own.
     triggerId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'trigger', attribute: 'id' },
+      idOf: 'trigger',
     }),
-    // Listbox's. The element adopts the list's id.
+    // Listbox's: the list's id where it has none of its own.
     listId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'list', attribute: 'id' },
+      idOf: 'list',
     }),
     // The element reads the label's tag.
     labelElementType: prop('span', {

@@ -46,10 +46,10 @@ export const checkbox = defineComponent({
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
     isInvalid: prop(false),
-    // The element adopts the input's id on upgrade.
+    // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'input', attribute: 'id' },
+      idOf: 'input',
     }),
     // The element reads the label's tag instead of taking an attribute.
     labelElementType: prop('label', {

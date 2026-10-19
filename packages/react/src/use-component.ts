@@ -138,7 +138,12 @@ function checkOwnership<D extends AnyDefinition>(
       Readonly<Record<string, PartProps>> | undefined
   )?.[part],
 ): void {
+  // A named part keeps an id the JSX gives it after the spread, and the
+  // binder points every reference at it; an item's id is made from its key.
+  const isItem =
+    internal.instance.definition.itemParts?.includes(part) ?? false;
   for (const [name, value] of Object.entries(rendered?.attrs ?? {})) {
+    if (name === 'id' && !isItem) continue;
     const actual = element.getAttribute(name);
     if (actual === (value ?? null)) continue;
     warn(

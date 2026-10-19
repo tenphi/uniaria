@@ -248,6 +248,10 @@ positioned absolutely, so give the popover a width, such as
 | `error`        | any                        | Optional. Shown and announced while `isInvalid`.                                                                                          |
 | `hiddenSelect` | `select`, left empty       | Optional. Submits the value and takes autofill; UniAria writes its options.                                                               |
 
+A part keeps an `id` you give it, and everything that refers to the part
+follows it; UniAria writes an `id` only on a part that has none (see
+[Ids](../guide/accessibility.md#ids)).
+
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
 `group` and `groupLabel`, inside the list and keyed by the item's key (see
 [Listbox](./listbox.mdx#anatomy)). They carry `data-scope="select"`.
@@ -269,8 +273,8 @@ The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
 | `shouldFocusWrap`                                                               | `focus-wrap`              | `boolean`                | `false`                       | The arrows in the list wrap from the last option to the first.                                                                |
 | `positionArea`                                                                  | `position-area`           | `PositionArea`           | `'block-end span-inline-end'` | Where the popover goes: below the trigger, aligned to its start edge. See [Popover](./popover.mdx).                           |
 | `positionTryFallbacks`                                                          | `position-try-fallbacks`  | `string`                 | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                          |
-| `triggerId`                                                                     | — (the trigger's `id`)    | `string`                 | generated                     | The trigger's id.                                                                                                             |
-| `listId`                                                                        | — (the list's `id`)       | `string`                 | generated                     | The list's id. Option ids are made from it.                                                                                   |
+| `triggerId`                                                                     | —                         | `string`                 | generated                     | The trigger's id while it has none of its own.                                                                                |
+| `listId`                                                                        | —                         | `string`                 | generated                     | The list's id while it has none of its own. Option ids are made from the list's id.                                           |
 | `labelElementType`                                                              | — (the label's tag)       | `string`                 | `'span'`                      | The tag you render as the label.                                                                                              |
 | `labelledBy`                                                                    | `labelled-by`             | `string`                 | —                             | Ids of more elements that name the trigger and the list.                                                                      |
 | `describedBy`                                                                   | `described-by`            | `string`                 | —                             | Ids of more elements that describe the trigger.                                                                               |

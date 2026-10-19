@@ -261,15 +261,19 @@ browsers until UniAria starts.
 
 ## Anatomy
 
-| Part          | Element                | Notes                                                                                                                                                                                               |
-| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trigger`     | `button`               | Optional. A press toggles the popover. A [Button](./button.mdx): another element gets Button's role and keys. UniAria writes its `id`, `aria-expanded`, and `aria-controls` while open.             |
-| `anchor`      | any                    | Optional. The popover is placed against it instead of the trigger.                                                                                                                                  |
-| `root`        | any; usually `div`     | Hidden while closed. UniAria writes its `id`, `popover="manual"`, `role="dialog"`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, `data-placement` and its position. Its content is yours. |
-| `arrow`       | any                    | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                   |
-| `title`       | any; usually a heading | Optional. Names the popover through `aria-labelledby`.                                                                                                                                              |
-| `description` | any                    | Optional. Linked through `aria-describedby` while rendered.                                                                                                                                         |
-| `close`       | `button`               | Optional. A press closes the popover, even when it isn't dismissable. A Button too.                                                                                                                 |
+| Part          | Element                | Notes                                                                                                                                                                                                                   |
+| ------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger`     | `button`               | Optional. A press toggles the popover. A [Button](./button.mdx): another element gets Button's role and keys. UniAria writes its `id` (unless it has one), `aria-expanded`, and `aria-controls` while open.             |
+| `anchor`      | any                    | Optional. The popover is placed against it instead of the trigger.                                                                                                                                                      |
+| `root`        | any; usually `div`     | Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="dialog"`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, `data-placement` and its position. Its content is yours. |
+| `arrow`       | any                    | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                       |
+| `title`       | any; usually a heading | Optional. Names the popover through `aria-labelledby`.                                                                                                                                                                  |
+| `description` | any                    | Optional. Linked through `aria-describedby` while rendered.                                                                                                                                                             |
+| `close`       | `button`               | Optional. A press closes the popover, even when it isn't dismissable. A Button too.                                                                                                                                     |
+
+A part keeps an `id` you give it, and everything that refers to the part
+follows it; UniAria writes an `id` only on a part that has none (see
+[Ids](../guide/accessibility.md#ids)).
 
 The popover's name comes from `labelledBy` and a rendered title, else an
 `aria-label` on the root, else the trigger: a popover opened by "Size" is read

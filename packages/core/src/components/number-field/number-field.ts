@@ -172,10 +172,10 @@ export const numberField = defineComponent({
     // Without it, "Number field" in English and none in other languages, so
     // a screen reader says its own role word there.
     roleDescription: prop<string | undefined>(undefined, { type: 'string' }),
-    // The element adopts the input's id on upgrade.
+    // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'input', attribute: 'id' },
+      idOf: 'input',
     }),
     // The element reads the label's tag instead of taking an attribute.
     labelElementType: prop('label', {

@@ -299,13 +299,17 @@ outside the top dialog is inert.
 
 ## Anatomy
 
-| Part          | Element                | Notes                                                                                                                                                                                            |
-| ------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `trigger`     | `button`               | Optional. A press opens the dialog. It is a [Button](./button.mdx), with Button's states.                                                                                                        |
-| `root`        | `dialog`               | Required. Opened with `showModal()`, hidden while closed. UniAria writes its `id`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, and `role` for an alert dialog. Its content is yours. |
-| `title`       | any; usually a heading | Names the dialog through `aria-labelledby`. UniAria writes its `id`.                                                                                                                             |
-| `description` | any                    | Optional. Linked through `aria-describedby` while rendered. Leave it out for long or structured content, which screen readers would read in one go.                                              |
-| `close`       | `button`               | Optional. A press closes the dialog, even when it isn't dismissable. A Button too.                                                                                                               |
+| Part          | Element                | Notes                                                                                                                                                                                                                |
+| ------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger`     | `button`               | Optional. A press opens the dialog. It is a [Button](./button.mdx), with Button's states.                                                                                                                            |
+| `root`        | `dialog`               | Required. Opened with `showModal()`, hidden while closed. UniAria writes its `id` (unless it has one), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, and `role` for an alert dialog. Its content is yours. |
+| `title`       | any; usually a heading | Names the dialog through `aria-labelledby`. UniAria writes its `id` (unless it has one).                                                                                                                             |
+| `description` | any                    | Optional. Linked through `aria-describedby` while rendered. Leave it out for long or structured content, which screen readers would read in one go.                                                                  |
+| `close`       | `button`               | Optional. A press closes the dialog, even when it isn't dismissable. A Button too.                                                                                                                                   |
+
+A part keeps an `id` you give it, and everything that refers to the part
+follows it; UniAria writes an `id` only on a part that has none (see
+[Ids](../guide/accessibility.md#ids)).
 
 `aria-labelledby` and `aria-describedby` reference only the parts you render,
 plus the ids in `labelledBy` and `describedBy`. Development builds warn when

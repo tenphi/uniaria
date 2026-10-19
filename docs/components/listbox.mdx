@@ -409,6 +409,11 @@ so an option the keyboard moves to exists before the next paint.
 | `error`       | any                                                       | Optional. Shown and announced while `isInvalid`; hidden otherwise.                                                                                      |
 | `empty`       | any, outside the list                                     | Optional. Your "No items" text. UniAria hides it while there are options, and while there are none it describes the list. A listbox can't contain text. |
 
+A part keeps an `id` you give it, and everything that refers to the part
+follows it; UniAria writes an `id` only on a part that has none (see
+[Ids](../guide/accessibility.md#ids)). Option ids are always made from the
+list's id and the option's key.
+
 Item parts repeat once per item and are keyed by the item's key: in React you
 pass it to `getItemProps(part, key)`, on the element each part carries it as
 `data-key`.
@@ -445,7 +450,7 @@ made from the list's id and the key (`<list id>-option-<key>`).
 | `shouldFocusWrap`        | `focus-wrap`            | `boolean`                                | `false`                    | The arrows wrap from the last option to the first and back. Home, End and the page keys never wrap.                                 |
 | `shouldFocusOnHover`     | `focus-on-hover`        | `boolean`                                | `false`                    | A hovering mouse focuses the option, unless the keyboard is in use. Select turns it on.                                             |
 | `shouldUseVirtualFocus`  | — (property)            | `boolean`                                | `false`                    | For a component that keeps focus in its own input, as Combobox does: options take no focus, and `data-focused` follows a highlight. |
-| `listId`                 | — (the list's `id`)     | `string`                                 | generated                  | The list's id. Option ids are made from it.                                                                                         |
+| `listId`                 | —                       | `string`                                 | generated                  | The list's id while it has none of its own. Option ids are made from the list's id.                                                 |
 | `labelElementType`       | — (the label's tag)     | `string`                                 | `'span'`                   | The tag you render as the label.                                                                                                    |
 | `labelledBy`             | `labelled-by`           | `string`                                 | —                          | Ids of more elements that name the list.                                                                                            |
 | `describedBy`            | `described-by`          | `string`                                 | —                          | Ids of more elements that describe the list.                                                                                        |

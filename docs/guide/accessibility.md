@@ -32,6 +32,34 @@ from the APG, its page says so and why.
 - **Mobile quirks**: iOS scroll locking, emulated mouse events after a touch,
   dropped clicks after a long press, text selection during a touch press.
 
+## Ids
+
+Every part another part refers to gets an id: a label that names a control,
+a description, a dialog's title, the list a combo box controls. A part keeps
+an id you give it, and everything that refers to the part follows: the
+label's `for`, `aria-labelledby`, `aria-describedby`, `aria-controls`,
+`aria-activedescendant`. UniAria writes an id only on a part that has none,
+and an id you change or remove later is followed too.
+
+```html
+<uni-text-field>
+  <label data-element="Label" id="email-label">Email</label>
+  <input data-element="Input" id="email" />
+</uni-text-field>
+```
+
+In React, write the id after the part spread, so it wins over the part's
+own: `<label {...ui.parts.label} id="email-label">`. The first render can't
+see the element, so until hydration the server HTML refers to the part's
+own id. Where that matters, as for a label's `for` before JavaScript runs,
+name the control's id through the component's prop instead (`inputId`,
+`controlId`, `triggerId`, `listId`): the server render uses it.
+
+Without either, ids are generated from the component's id (React's `useId`).
+Options and the other repeated parts of a list always get ids made from the
+list's id and their key, `<list id>-option-<key>`, since a combo box refers
+to the highlighted option by its key.
+
 ## How it is tested
 
 Each component has conformance scenarios, written from its approved

@@ -138,8 +138,9 @@ export const disclosure = defineComponent({
 
 `createInstance(definition, { props, id, env })` creates the running
 component both adapters drive: its props, its store, the `api` its `setup()`
-returned and its lifecycle. Part ids are `<id>-<part>`; React passes an id
-from `useId()`, and an element gets a generated one.
+returned and its lifecycle. A part's id is the id its element carries, else
+the prop that names it (`idOf`, such as `controlId`), else `<id>-<part>`;
+React passes an id from `useId()`, and an element gets a generated one.
 
 Node tests drive definitions through it directly, without a framework or a
 DOM: call actions or part handlers from `instance.connect()`, then read
@@ -286,10 +287,15 @@ after every flush and writes only what differs:
   of step.
 - It owns every attribute `connect()` has ever returned for a part, and
   `undefined` removes one. Every other attribute belongs to the consumer.
+- Except a part's `id` (owner, 2026-10-19): a part keeps an id its element
+  carries. The binder reads it as the element attaches, before each write
+  and when it changes (a mutation observer), and hands it to the instance
+  (`adoptId()`), so `ctx.ids` and every reference follow it. It writes an id
+  only where there is none. Item parts keep the ids made from their key.
 - When an element stops being a part, it removes the attributes and styles
   it wrote there that still hold what it wrote, unless another part bound to
-  the element writes them too. What it never wrote (the consumer's markers,
-  what React rendered) stays.
+  the element writes them too. What it never wrote (the consumer's markers
+  and id, what React rendered) stays.
 - It sets a live property only when it differs, so an input's caret stays
   where it is.
 - For item parts it rewrites only the keys the instance reports changed.
@@ -568,7 +574,10 @@ run in both modes.
   never runs.
 - **Stable ids** come from the adapter (`useId()` in React), so ARIA
   relationships match between the server and the client. Consumers can
-  override every id except an item part's.
+  override every id except an item part's: a part keeps an id on its
+  element. React's first render can't see the element, so server HTML refers
+  to the part's own id until hydration; an `idOf` prop (`inputId`) gives the
+  right one before then.
 - **`ctx.env`** is the runtime's only view of the host. Today it carries the
   instance's `document`: the element adapter passes its own `ownerDocument`,
   and where React passes none, a definition falls back to the global

@@ -154,10 +154,10 @@ export const listbox = defineComponent({
     shouldFocusOnHover: prop(false),
     // Set by a component that keeps focus in its own input (Combobox).
     shouldUseVirtualFocus: prop(false, { attribute: false }),
-    // Field's `controlId`. The element adopts the list's id.
+    // Field's `controlId`: the list's id where it has none of its own.
     listId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'list', attribute: 'id' },
+      idOf: 'list',
     }),
     // A listbox can't be labelled natively. The element reads the label's tag.
     labelElementType: prop('span', {
@@ -286,7 +286,8 @@ export const listbox = defineComponent({
       },
     );
 
-    const base = () => props.listId() ?? ctx.ids.list;
+    // Item ids are made from the list's id, whoever gave it.
+    const base = () => ctx.ids.list;
     const optionElement = (key: string) =>
       ctx.itemElement('option', key) as HTMLElement | null;
 

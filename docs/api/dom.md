@@ -509,10 +509,13 @@ itself. You need them only to write another adapter; see
 
 The binder writes only what differs from the element: an attribute set to the
 same value, or a live property that already matches, is left alone, so a
-framework that renders the same values never fights it. When an element
-stops being a part, the binder removes the attributes and styles it wrote
-there, unless another part bound to the element writes them too; what it
-never wrote (your markers, what React rendered) stays. React attaches its
+framework that renders the same values never fights it. A part keeps an `id`
+its element carries: the binder reads it as the element attaches and when it
+changes, hands it to the instance (`adoptId`), and writes an id only where
+there is none; item parts always take the ids made from their key. When an
+element stops being a part, the binder removes the attributes and styles it
+wrote there, unless another part bound to the element writes them too; what
+it never wrote (your markers, your id, what React rendered) stays. React attaches its
 own listeners; the custom-element adapter lets the binder delegate them from
 the document or shadow root, in the bubble phase for events that bubble and
 the capture phase for those that don't, never on the host.

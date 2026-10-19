@@ -322,6 +322,129 @@ describe('development warnings', () => {
   });
 });
 
+describe('part ids', () => {
+  function Name({
+    labelId,
+    inputId,
+  }: {
+    readonly labelId?: string;
+    readonly inputId?: string;
+  }) {
+    const ui = useComponent(field, {});
+    return (
+      <>
+        <label
+          {...ui.parts.label}
+          id={labelId ?? (ui.parts.label.id as string)}
+        >
+          Name
+        </label>
+        <input
+          {...ui.parts.control}
+          id={inputId ?? (ui.parts.control.id as string)}
+        />
+        <p {...ui.parts.description}>As on your passport</p>
+      </>
+    );
+  }
+
+  const partsOf = (element: HTMLElement) => ({
+    label: element.querySelector('label')!,
+    input: element.querySelector('input')!,
+    description: element.querySelector('p')!,
+  });
+
+  /** Lets the binder hear of an id React changed. */
+  const observed = () => new Promise((resolve) => setTimeout(resolve));
+
+  it('keeps an id the JSX gives a part after the spread, and points references at it', () => {
+    const warn = vi.spyOn(console, 'warn');
+    const { label, input } = partsOf(
+      render(<Name labelId="name-label" inputId="name" />),
+    );
+    expect(label.id).toBe('name-label');
+    expect(input.id).toBe('name');
+    expect(label.getAttribute('for')).toBe('name');
+    expect(input.getAttribute('aria-labelledby')).toBe('name-label');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('follows an id a later render changes', async () => {
+    const element = render(<Name labelId="name-label" />);
+    const { label, input, description } = partsOf(element);
+    rerender(<Name labelId="full-name" inputId="name" />);
+    await observed();
+    expect(label.id).toBe('full-name');
+    expect(input.getAttribute('aria-labelledby')).toBe('full-name');
+    expect(label.getAttribute('for')).toBe('name');
+    expect(input.getAttribute('aria-describedby')).toBe(description.id);
+  });
+
+  it('hydrates server HTML with consumer ids, then references them', () => {
+    const html = renderToString(<Name labelId="name-label" inputId="name" />);
+    container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.append(container);
+    const { label, input } = partsOf(container);
+    // The server can't see the elements: `for` names the input's own id.
+    expect(input.id).toBe('name');
+    expect(label.getAttribute('for')).not.toBe('name');
+
+    const onRecoverableError = vi.fn();
+    const errors = vi.spyOn(console, 'error');
+    flushSync(() => {
+      root = hydrateRoot(
+        container!,
+        <Name labelId="name-label" inputId="name" />,
+        { onRecoverableError },
+      );
+    });
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(errors).not.toHaveBeenCalled();
+    errors.mockRestore();
+    expect(label.getAttribute('for')).toBe('name');
+    expect(input.getAttribute('aria-labelledby')).toBe('name-label');
+  });
+
+  it('leaves nothing it wrote on an element the part moves away from', async () => {
+    const pressable = defineComponent({
+      name: 'pressable',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        const isOn = ctx.state(false);
+        return { isOn: () => isOn.get(), toggle: () => isOn.set(!isOn.get()) };
+      },
+      expose: () => ({}),
+      connect: ({ api }) => ({
+        trigger: { attrs: { 'aria-pressed': String(api.isOn()) } },
+      }),
+    });
+    let instance: ComponentHandle<typeof pressable>['instance'] | undefined;
+    function Two({ isFirst }: { readonly isFirst: boolean }) {
+      const ui = useComponent(pressable, {});
+      instance = ui.instance;
+      return (
+        <>
+          <button {...(isFirst ? ui.parts.trigger : {})}>A</button>
+          <button {...(isFirst ? {} : ui.parts.trigger)}>B</button>
+        </>
+      );
+    }
+    const element = render(<Two isFirst />);
+    const [first, second] = element.querySelectorAll('button');
+    instance!.api.toggle();
+    expect(first!.getAttribute('aria-pressed')).toBe('true');
+
+    rerender(<Two isFirst={false} />);
+    expect(first!.hasAttribute('aria-pressed')).toBe(false);
+    expect(first!.hasAttribute('data-element')).toBe(false);
+    expect(second!.getAttribute('aria-pressed')).toBe('true');
+    expect(second!.getAttribute('data-element')).toBe('Trigger');
+  });
+});
+
 describe('useComponentState', () => {
   it('re-renders only when the selected value changes', async () => {
     const renders: boolean[] = [];

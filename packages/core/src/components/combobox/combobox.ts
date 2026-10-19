@@ -168,15 +168,15 @@ export const combobox = defineComponent({
       defaultOptionCount,
       { attribute: false },
     ),
-    // Field's `controlId`. The element adopts the input's id.
+    // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'input', attribute: 'id' },
+      idOf: 'input',
     }),
-    // Listbox's. The element adopts the list's id.
+    // Listbox's: the list's id where it has none of its own.
     listId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'list', attribute: 'id' },
+      idOf: 'list',
     }),
     // The element reads the label's tag.
     labelElementType: prop('label', {

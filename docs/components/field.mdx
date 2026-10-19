@@ -176,8 +176,8 @@ the component's label names:
 
 The component's state attributes (`data-scope="text-field"` and so on) go on
 those parts, so style them through the component, not through `field`. Where
-you can choose the control's id, the prop is named after the part: `inputId`,
-`triggerId`, `listId`.
+you can name the control's id with a prop, the prop is named after the part:
+`inputId`, `triggerId`, `listId`. An `id` you write on the part itself wins.
 
 Use Field itself only for native and third-party controls. Don't wrap a
 UniAria component in `<uni-field>`: the field doesn't look inside another
@@ -190,19 +190,20 @@ warns. To build your own component on Field, see
 | Part          | Element                                                        | Notes                                                                                                                                                                                      |
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `root`        | any; usually `div`                                             | Optional. The outermost element, around the other parts, for styling. No role.                                                                                                             |
-| `label`       | `label` by default; any element through `labelElementType`     | You own the content. UniAria writes its `id`, and `for` when it is a `label`.                                                                                                              |
+| `label`       | `label` by default; any element through `labelElementType`     | You own the content. UniAria writes its `id` (unless it has one), and `for` when it is a `label`.                                                                                          |
 | `control`     | any control: `input`, `textarea`, `select`, or a custom widget | UniAria writes `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`. You own the rest: `name`, `type`, `value`, `disabled`, `readonly`, a custom widget's role. |
-| `description` | any                                                            | UniAria writes its `id`.                                                                                                                                                                   |
-| `error`       | any                                                            | UniAria writes its `id`, and `hidden` while the error isn't shown. You own the content.                                                                                                    |
+| `description` | any                                                            | UniAria writes its `id` (unless it has one).                                                                                                                                               |
+| `error`       | any                                                            | UniAria writes its `id` (unless it has one), and `hidden` while the error isn't shown. You own the content.                                                                                |
 
-Every part is optional. The ids of the label, the description and the error
-are UniAria's; don't set your own. The control's id is yours to choose: pass
-`controlId` in React, or write `id` on the control for the element, which
-reads it on upgrade. Without one, UniAria generates it.
+Every part is optional. Every part keeps an `id` (unless it has one) you give it, and the links
+below use it; UniAria writes an `id` (unless it has one) only on a part that has none. Write it
+on the element (after the part spread in React), or name the control's with
+`controlId`. Without either, UniAria generates one (see
+[Ids](../guide/accessibility.md#ids)).
 
 The parts link like this:
 
-- **Label.** The label gets an `id`, and `for` pointing at the control when it
+- **Label.** The label gets an `id` (unless it has one), and `for` pointing at the control when it
   is a `<label>`, so a click on it focuses the control and a native control is
   named before JavaScript runs. The control gets `aria-labelledby` with the
   label's id, then `labelledBy`. While the label is rendered, it names the
@@ -219,15 +220,15 @@ The parts link like this:
 
 ## Props
 
-| Prop               | Attribute                        | Type      | Default   | Description                                                                                                                    |
-| ------------------ | -------------------------------- | --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `isInvalid`        | `invalid`                        | `boolean` | `false`   | `aria-invalid="true"` on the control, removed when false (never `"false"`). Shows, links and announces the error.              |
-| `isRequired`       | `required`                       | `boolean` | `false`   | `aria-required="true"` on the control. Never the native `required`, which would start the browser's own validation.            |
-| `isDisabled`       | `disabled`                       | `boolean` | `false`   | `data-disabled` on every part, and hides the error. It doesn't disable the control: disable a native control yourself.         |
-| `controlId`        | — (read from the control's `id`) | `string`  | generated | The control's `id`, which the label's `for` points at.                                                                         |
-| `labelElementType` | — (read from the label's tag)    | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                 |
-| `labelledBy`       | `labelled-by`                    | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                              |
-| `describedBy`      | `described-by`                   | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example. |
+| Prop               | Attribute                     | Type      | Default   | Description                                                                                                                              |
+| ------------------ | ----------------------------- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `isInvalid`        | `invalid`                     | `boolean` | `false`   | `aria-invalid="true"` on the control, removed when false (never `"false"`). Shows, links and announces the error.                        |
+| `isRequired`       | `required`                    | `boolean` | `false`   | `aria-required="true"` on the control. Never the native `required`, which would start the browser's own validation.                      |
+| `isDisabled`       | `disabled`                    | `boolean` | `false`   | `data-disabled` on every part, and hides the error. It doesn't disable the control: disable a native control yourself.                   |
+| `controlId`        | —                             | `string`  | generated | The control's `id` while the control has none of its own. Server HTML from React has it, so the label's `for` is right before hydration. |
+| `labelElementType` | — (read from the label's tag) | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                           |
+| `labelledBy`       | `labelled-by`                 | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                                        |
+| `describedBy`      | `described-by`                | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example.           |
 
 Field has no events and handles no keys: the control keeps its own.
 
@@ -286,8 +287,8 @@ mark, an "(optional)" note and a success state are yours to draw.
   ARIA supports both on `radiogroup` but not on `group`. There, the error text
   in `aria-describedby` is all a screen reader user hears.
 - **Owned attributes.** Pass more ids through `labelledBy` and `describedBy`
-  instead of writing `aria-labelledby` or `aria-describedby`, and set the
-  control's id through `controlId`, or its `id` attribute on the element.
+  instead of writing `aria-labelledby` or `aria-describedby`. Ids are yours
+  to set on any part.
   React warns in development when you pass an attribute UniAria writes.
 
 ## Compared with other libraries

@@ -42,10 +42,11 @@ export const field = defineComponent({
     isInvalid: prop(false),
     isRequired: prop(false),
     isDisabled: prop(false),
-    // The element adopts the control's id on upgrade.
+    // The control's id where it has none of its own; an id on the element
+    // wins (root AGENTS.md → DOM, lifecycle and SSR).
     controlId: prop<string | undefined>(undefined, {
       attribute: false,
-      adopt: { part: 'control', attribute: 'id' },
+      idOf: 'control',
     }),
     // The element reads the label's tag instead of taking an attribute.
     labelElementType: prop('label', {
@@ -147,7 +148,7 @@ export const field = defineComponent({
     const isRequired = props.isRequired();
     const isDisabled = props.isDisabled();
     const isErrorShown = api.isErrorShown();
-    const controlId = props.controlId() ?? ids.control;
+    const controlId = ids.control;
     const state = {
       'data-invalid': flag(isInvalid),
       'data-required': flag(isRequired),

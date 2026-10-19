@@ -64,7 +64,9 @@ class: keep it when you add classes of your own, as above.
   the latest ones.
 - **One instance** per component, created on the first render. A different
   `definition` creates a new one, so keep definitions at module scope.
-- **Ids** come from `useId`, so server and client agree.
+- **Ids** come from `useId`, so server and client agree. An `id` you write
+  after a part's spread wins, and UniAria points every reference at it once
+  the part mounts (see [Ids](../guide/accessibility.md#ids)).
 
 ### The handle
 
@@ -276,9 +278,11 @@ React checkbox group's part finds that group. See
 ## Attributes UniAria owns
 
 UniAria owns every attribute a part's props contain: ARIA state, `data-scope`,
-`data-element`, state attributes such as `data-pressed`, and the ids and
-references it writes, plus the root's `uni-<name>` class. The rest of the
-element, other classes included, is yours.
+`data-element`, state attributes such as `data-pressed`, and the references
+it writes, plus the root's `uni-<name>` class. The rest of the element, other
+classes and a part's `id` included, is yours: an `id` after the spread is
+kept, and the references follow it. An option's `id`, made from its key, is
+UniAria's.
 
 In development, the first time each part element mounts, UniAria compares its
 attributes with the part props React just rendered. When you wrote one of its

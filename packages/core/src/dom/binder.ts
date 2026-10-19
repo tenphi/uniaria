@@ -15,13 +15,20 @@
  * `value`) are set only when they differ from the element, so an input's
  * caret stays put while the two agree; `undefined` leaves one alone.
  *
+ * Except `id` (owner, 2026-10-19): a part keeps an id the consumer gave its
+ * element. The binder reads it as the element attaches, before each write
+ * and whenever it changes (a mutation observer, while started), and hands it
+ * to the instance (`adoptId()`), so `ids` and every reference follow it; it
+ * writes the part's own id only where the element has none. Item parts keep
+ * the ids made from their key.
+ *
  * When an element stops being a part (another element takes the part, or
  * none), the binder removes the attributes and styles it wrote there and
  * that still hold what it wrote, unless another part bound to the element,
  * of this instance or another, writes them too. What it never wrote stays:
  * the markers the consumer authored (`data-element`, `data-key`, the root's
- * class), and what a framework rendered from the part props, which React
- * removes itself.
+ * class), an id the consumer gave, and what a framework rendered from the
+ * part props, which React removes itself.
  *
  * Except while the browser's own change is on its way to the instance: the
  * browser changes an input's `value`, or a checkbox's or radio's `checked`,
@@ -89,6 +96,11 @@ interface Bound {
   readonly written: Map<string, string>;
   /** Styles the binder set, with the value the element then held. */
   readonly writtenStyle: Map<string, string>;
+  /**
+   * The part's id when the element last held it, written or rendered from
+   * the part props: still the part's own while the id changes.
+   */
+  partId?: string;
 }
 
 const newBound = (element: Element): Bound => ({
@@ -280,6 +292,51 @@ export function createBinder<D extends AnyDefinition>(
   let unsubscribeItems: (() => void) | undefined;
   /** Keys of items to write on the next apply, or `'all'`. */
   let pending: Set<string> | 'all' = 'all';
+  /** Watches the parts' ids while started. */
+  let idObserver: MutationObserver | undefined;
+
+  /**
+   * Hands the instance the id the consumer gave a part's element: one that
+   * differs from the part's id and from the one the element last held for
+   * it, or none.
+   */
+  const readId = (part: string, entry: Bound): void => {
+    const value = entry.element.getAttribute('id') || undefined;
+    if (value === (instance.ids as Readonly<Record<string, string>>)[part]) {
+      entry.partId = value;
+      return;
+    }
+    // The part's id as it was (its id prop changed): the write that follows
+    // brings it up to date.
+    if (value !== undefined && value === entry.partId) return;
+    entry.written.delete('id');
+    instance.adoptId(part as never, value);
+    entry.partId = value;
+  };
+
+  const readIds = (): void => {
+    instance.batch(() => {
+      for (const [part, entry] of bound) readId(part, entry);
+    });
+  };
+
+  const observeId = (element: Element): void => {
+    if (!unsubscribe) return;
+    const view = element.ownerDocument.defaultView;
+    if (!view) return;
+    idObserver ??= new view.MutationObserver((records) => {
+      instance.batch(() => {
+        for (const { target } of records) {
+          const part = targets.get(target as Element);
+          if (typeof part !== 'string') continue;
+          const entry = bound.get(part);
+          if (entry?.element === target) readId(part, entry);
+        }
+      });
+    });
+    idObserver.observe(element, { attributes: true, attributeFilter: ['id'] });
+  };
+
   /**
    * The parts an event reaches, innermost first: every part on the path from
    * the target up to the host for a bubbling event, as the bubble phase
@@ -346,6 +403,7 @@ export function createBinder<D extends AnyDefinition>(
       } else if (element.getAttribute(name) !== value) {
         element.setAttribute(name, value);
         written.set(name, value);
+        if (name === 'id') entry.partId = value;
       }
     }
     const style = (element as HTMLElement).style as
@@ -375,6 +433,9 @@ export function createBinder<D extends AnyDefinition>(
   };
 
   const apply = (): void => {
+    // An id the consumer changed is the part's from now on, not overwritten:
+    // the observer hears of it only after a flush that comes first.
+    readIds();
     for (const [part, entry] of bound) write(part, entry);
     const keys = pending;
     pending = new Set();
@@ -400,18 +461,27 @@ export function createBinder<D extends AnyDefinition>(
     attach(part, element) {
       const current = bound.get(part);
       if ((current?.element ?? null) === element) return;
-      if (current) {
-        targets.delete(current.element);
-        bound.delete(part);
-        release(current);
-      }
-      instance.attach(part as never, element);
-      if (!element) return;
-      const entry = newBound(element);
-      bound.set(part, entry);
-      targets.set(element, part);
-      register(entry);
-      if (unsubscribe) write(part, entry);
+      const entry = element ? newBound(element) : undefined;
+      // One flush for the element and its id, which references follow.
+      instance.batch(() => {
+        if (current) {
+          targets.delete(current.element);
+          bound.delete(part);
+          release(current);
+        }
+        if (entry) {
+          bound.set(part, entry);
+          targets.set(entry.element, part);
+          register(entry);
+          observeId(entry.element);
+          readId(part, entry);
+        } else {
+          // The element that gave the part an id is gone.
+          instance.adoptId(part as never, undefined);
+        }
+        instance.attach(part as never, element);
+      });
+      if (unsubscribe && entry) write(part, entry);
     },
     attachItem(part, key, element) {
       const current = items.get(itemEntryId(part, key));
@@ -451,11 +521,14 @@ export function createBinder<D extends AnyDefinition>(
         else for (const key of keys) pending.add(key);
       });
       unsubscribe = instance.subscribe(apply);
+      for (const entry of bound.values()) observeId(entry.element);
       apply();
     },
     stop() {
       unsubscribe?.();
       unsubscribe = undefined;
+      idObserver?.disconnect();
+      idObserver = undefined;
       unsubscribeItems?.();
       unsubscribeItems = undefined;
       if (host && root) {

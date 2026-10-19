@@ -17,7 +17,9 @@ them for you, in both adapters.
 
 Composite components, such as Select (a listbox, a popover and a trigger) or
 TextField (a field and an input), are one component with more parts. They
-need none of this.
+need none of this. When one element is a part of two components at once, as
+a component's root can be a part of the one around it in React, both use the
+id the element carries.
 
 ## Finding the owner
 
@@ -105,7 +107,8 @@ child that isn't inside its owner at all, and isn't in the same root, set its
 `radioElement.owner = groupElement.instance`.
 
 A tooltip links to the UniAria element it directly wraps, or to the one whose
-`tooltip` attribute names it:
+`tooltip` attribute names it. The trigger's `aria-describedby` names the
+tooltip's root by its id, yours if you give it one:
 
 ```html
 <uni-tooltip id="save-hint">

@@ -68,7 +68,10 @@ export const radioGroup = defineComponent({
       ctx.emit('focusChange', isFocusWithin);
     });
 
-    const name = () => props.name() ?? ctx.ids.root;
+    // From the generated id, read before any element attaches: an id the
+    // consumer gives the root doesn't rename the radios' form field.
+    const generatedName = ctx.ids.root;
+    const name = () => props.name() ?? generatedName;
 
     // Until the first change, an uncontrolled group with no default takes
     // the value of the radio that was checked when it linked: the element's

@@ -279,8 +279,12 @@ shows.
 | --------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `trigger` | a focusable element; usually `button` | Optional. For an element that isn't a UniAria component's part; a linked component takes its place. UniAria writes `aria-describedby` (`aria-labelledby` with `relation: 'label'`) while the tooltip is enabled, and no state attributes. |
 | `anchor`  | any                                   | Optional. The tooltip is placed against it instead of the trigger.                                                                                                                                                                        |
-| `root`    | any; usually `div`                    | The text. Hidden while closed. UniAria writes its `id`, `popover="manual"`, `role="tooltip"`, `data-placement` and its position. Text only: development builds warn when it holds a focusable element.                                    |
+| `root`    | any; usually `div`                    | The text. Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="tooltip"`, `data-placement` and its position. Text only: development builds warn when it holds a focusable element.                |
 | `arrow`   | any                                   | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                                         |
+
+A part keeps an `id` you give it, and everything that refers to the part
+follows it; UniAria writes an `id` only on a part that has none (see
+[Ids](../guide/accessibility.md#ids)).
 
 The root gets no `tabindex`, and the trigger no `aria-expanded`,
 `aria-haspopup` or `aria-controls`: a tooltip isn't a popup the user opens.

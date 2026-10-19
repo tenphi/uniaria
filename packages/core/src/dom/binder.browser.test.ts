@@ -201,6 +201,140 @@ describe('createBinder', () => {
     expect(instance.element('root')).toBeNull();
   });
 
+  describe('part ids', () => {
+    /** A trigger that controls a panel, as a disclosure's. */
+    const disclosure = defineComponent({
+      name: 'disc',
+      parts: ['trigger', 'panel'],
+      props: {
+        panelId: prop<string | undefined>(undefined, { idOf: 'panel' }),
+      },
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: ({ ids }) => ({
+        trigger: { attrs: { id: ids.trigger, 'aria-controls': ids.panel } },
+        panel: { attrs: { id: ids.panel } },
+      }),
+    });
+
+    function mountDisclosure(html: string, props = {}) {
+      const { host } = setup(html);
+      const trigger = host.querySelector<HTMLElement>(
+        '[data-element="Trigger"]',
+      )!;
+      const panel = host.querySelector<HTMLElement>('[data-element="Panel"]')!;
+      const instance = createInstance(disclosure, { id: 'd', props });
+      const binder = createBinder(instance, { host });
+      binder.attach('trigger', trigger);
+      binder.attach('panel', panel);
+      instance.start();
+      binder.start();
+      return { trigger, panel, instance, binder };
+    }
+
+    /** Lets the id observer hear of a change. */
+    const observed = () => new Promise((resolve) => setTimeout(resolve));
+
+    it('keeps the id an element has as it attaches, and references follow it', () => {
+      const { trigger, panel, instance } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel" id="details"></div>',
+      );
+      expect(panel.id).toBe('details');
+      expect(trigger.getAttribute('aria-controls')).toBe('details');
+      expect(trigger.id).toBe('d-trigger');
+      expect(instance.ids.panel).toBe('details');
+    });
+
+    it("wins over the part's id prop", () => {
+      const { trigger, panel } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel" id="details"></div>',
+        { panelId: 'more' },
+      );
+      expect(panel.id).toBe('details');
+      expect(trigger.getAttribute('aria-controls')).toBe('details');
+    });
+
+    it('follows an id the consumer gives, changes or removes later', async () => {
+      const { trigger, panel } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel"></div>',
+      );
+      expect(panel.id).toBe('d-panel');
+
+      panel.id = 'details';
+      await observed();
+      expect(trigger.getAttribute('aria-controls')).toBe('details');
+
+      panel.id = 'more';
+      await observed();
+      expect(trigger.getAttribute('aria-controls')).toBe('more');
+
+      // With none, the part takes its own again.
+      panel.removeAttribute('id');
+      await observed();
+      expect(panel.id).toBe('d-panel');
+      expect(trigger.getAttribute('aria-controls')).toBe('d-panel');
+    });
+
+    it('never writes over an id the consumer set just before a flush', () => {
+      const { trigger, panel, instance } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel"></div>',
+      );
+      panel.id = 'details';
+      instance.setProps({ panelId: 'more' });
+      instance.sync();
+      expect(panel.id).toBe('details');
+      expect(trigger.getAttribute('aria-controls')).toBe('details');
+    });
+
+    it('writes its own id again when the id prop changes', async () => {
+      const { trigger, panel, instance } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel"></div>',
+        { panelId: 'more' },
+      );
+      expect(panel.id).toBe('more');
+      instance.setProps({ panelId: 'extra' });
+      instance.sync();
+      await observed();
+      expect(panel.id).toBe('extra');
+      expect(trigger.getAttribute('aria-controls')).toBe('extra');
+      expect(instance.ids.panel).toBe('extra');
+    });
+
+    it('takes the id a framework rendered from the part props as its own', async () => {
+      const { panel, instance } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel"></div>',
+        { panelId: 'more' },
+      );
+      // A render of the new props reaches the element before the sync.
+      instance.setProps({ panelId: 'extra' });
+      panel.id = 'extra';
+      instance.sync();
+      await observed();
+      instance.setProps({ panelId: 'last' });
+      instance.sync();
+      expect(panel.id).toBe('last');
+    });
+
+    it('agrees on one id with another instance bound to the same element', async () => {
+      const { trigger, panel, instance } = mountDisclosure(
+        '<button data-element="Trigger"></button><div data-element="Panel"></div>',
+      );
+      const other = createInstance(disclosure, { id: 'o' });
+      const binder = createBinder(other);
+      binder.attach('panel', panel);
+      other.start();
+      binder.start();
+      expect(panel.id).toBe('d-panel');
+      expect(other.ids.panel).toBe('d-panel');
+
+      panel.id = 'details';
+      await observed();
+      expect(instance.ids.panel).toBe('details');
+      expect(other.ids.panel).toBe('details');
+      expect(trigger.getAttribute('aria-controls')).toBe('details');
+    });
+  });
+
   describe('letting an element go', () => {
     const panel = defineComponent({
       name: 'panel',
@@ -254,6 +388,17 @@ describe('createBinder', () => {
       expect(first.className).toBe('a');
       expect(second.getAttribute('aria-expanded')).toBe('false');
       expect(second.id).toBe('p-trigger');
+    });
+
+    it("removes what it wrote when the part detaches, and keeps the consumer's id", () => {
+      const { first, binder } = mountPanel(
+        '<button data-element="Trigger" id="go" aria-label="Go">One</button>',
+      );
+      expect(first.getAttribute('aria-controls')).toBe('p-panel');
+      binder.attach('trigger', null);
+      expect(first.id).toBe('go');
+      expect(first.getAttribute('aria-label')).toBe('Go');
+      expect(first.hasAttribute('aria-controls')).toBe(false);
     });
 
     it('leaves what no longer holds what it wrote, and what another part writes', () => {
