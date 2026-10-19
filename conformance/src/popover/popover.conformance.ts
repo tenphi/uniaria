@@ -1700,11 +1700,13 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
               popover:
                 /Column size dialog with \d+ items heading level 2 Column size/,
               returned: /^Size collapsed button$/,
+              focus: /^Size collapsed button$/,
             },
             nvda: {
               trigger: /Size, button, collapsed/,
               popover: /Column size, dialog, Applies to every row\./,
-              returned: /^Size, button, collapsed$/,
+              returned: /Size/,
+              focus: /Size, button, focused, collapsed/,
             },
           }[screenReader.name];
           const mounted = await mount({ template: size() });
@@ -1716,7 +1718,11 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
           await screenReader.press('Enter');
           expect.soft(await screenReader.spoken()).toMatch(heard.popover);
           await screenReader.press('Escape');
+          // NVDA reads the page again when anything in the top layer closes,
+          // a plain <dialog> or popover too (probed); its focus report names
+          // the trigger.
           expect.soft(await screenReader.spoken()).toMatch(heard.returned);
+          expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
         },
         { ...PHASE, needs: ['screenReader'] },
       );

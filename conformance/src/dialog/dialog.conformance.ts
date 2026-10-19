@@ -1131,11 +1131,13 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
               dialog:
                 /Delete file dialog with \d+ items heading level 2 Delete file/,
               returned: /^Delete file button$/,
+              focus: /^Delete file button$/,
             },
             nvda: {
               trigger: /Delete file, button/,
               dialog: /Delete file, dialog, This can't be undone\./,
-              returned: /^Delete file, button$/,
+              returned: /Delete file/,
+              focus: /Delete file, button, focused/,
             },
           }[screenReader.name];
           const mounted = await mount({ template: confirm() });
@@ -1147,7 +1149,11 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
           await screenReader.press('Enter');
           expect.soft(await screenReader.spoken()).toMatch(heard.dialog);
           await screenReader.press('Escape');
+          // NVDA reads the page again when anything in the top layer closes,
+          // a plain <dialog> or popover too (probed); its focus report names
+          // the trigger.
           expect.soft(await screenReader.spoken()).toMatch(heard.returned);
+          expect.soft(await screenReader.readFocus()).toMatch(heard.focus);
         },
         { ...PHASE, needs: ['screenReader'] },
       );
