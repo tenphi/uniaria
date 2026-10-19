@@ -367,6 +367,9 @@ describe.each([
     afterEach(() => emulateMedia({ forcedColors: null, reducedMotion: null }));
 
     test('with reduced motion, no transition runs', async () => {
+      // Set, not left to the reset after the last run: in WebKit on Linux,
+      // `null` didn't end the emulation.
+      await emulateMedia({ reducedMotion: 'no-preference' });
       const root = await adapter.checkbox();
       const durations = () =>
         style(part(root, 'Indicator')).transitionDuration.split(', ');
