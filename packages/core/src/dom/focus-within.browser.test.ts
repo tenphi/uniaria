@@ -121,4 +121,42 @@ describe('createFocusWithin', () => {
     instance.stop();
     expect(instance.getState().isFocusWithin).toBe(false);
   });
+
+  it('counts several parts as one, with nothing around them', () => {
+    const pair = defineComponent({
+      name: 'pair',
+      parts: ['input', 'popup'],
+      props: {},
+      setup: (ctx) => createFocusWithin(ctx, { part: ['input', 'popup'] }),
+      expose: ({ api }) => ({ isFocusWithin: api.isFocusWithin() }),
+      connect: () => ({ input: { attrs: {} }, popup: { attrs: {} } }),
+    });
+    const host = document.createElement('div');
+    host.innerHTML = `
+      <input id="input"><button id="between">Between</button>
+      <div id="popup"><button id="option">Option</button></div>`;
+    document.body.append(host);
+    const byId = (id: string) => host.querySelector<HTMLElement>(`#${id}`)!;
+    const instance = createInstance(pair);
+    instance.attach('input', byId('input'));
+    instance.attach('popup', byId('popup'));
+    instance.start();
+    const changes: boolean[] = [];
+    instance.subscribe(() => changes.push(instance.getState().isFocusWithin));
+
+    byId('input').focus();
+    byId('option').focus();
+    byId('input').focus();
+    expect(changes).toEqual([true]);
+    byId('between').focus();
+    expect(changes).toEqual([true, false]);
+
+    // A part going away leaves focus within the others.
+    byId('option').focus();
+    instance.attach('input', null);
+    expect(instance.getState().isFocusWithin).toBe(true);
+    instance.attach('popup', null);
+    expect(instance.getState().isFocusWithin).toBe(false);
+    instance.stop();
+  });
 });

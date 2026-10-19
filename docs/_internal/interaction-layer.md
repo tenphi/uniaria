@@ -116,7 +116,8 @@ These are decided; follow them rather than the catalogue.
   notices a removed focused element, which gets no `focusout` in WebKit.
   The fallback for focus lost in a scope ends with the scope element itself.
 - **Focus-within listens on the part element**, not through part handlers,
-  so a component has nothing to merge for it.
+  so a component has nothing to merge for it. Several parts can be watched
+  as one (Select's trigger and popup), with no element around them.
 - **The custom-element binder delivers a bubbling event to every part on
   its path**, innermost first, as React calls each ancestor part's handler
   (owner decision, 2026-10-14). An event that doesn't bubble reaches only

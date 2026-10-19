@@ -718,9 +718,11 @@ export const combobox = defineComponent({
 
     // Focus leaving the combo box settles the text and closes the list,
     // before the press that moved it acts. The window losing focus leaves
-    // the input focused, and settles nothing (Focus).
+    // the input focused, and settles nothing (Focus). The combo box is the
+    // input, the button and the popup, which the root holds when it is
+    // rendered; it is optional.
     const focusWithin = createFocusWithin(ctx, {
-      part: 'root',
+      part: ['root', 'input', 'button', 'popover'],
       isDisabled: props.isDisabled,
     });
     ctx.watch(focusWithin.isFocusWithin, (isFocusWithin) => {

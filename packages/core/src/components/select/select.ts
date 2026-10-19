@@ -262,8 +262,10 @@ export const select = defineComponent({
       { parts: { root: 'popover', title: null, description: null } },
     );
 
+    // On the trigger or in the popup, which the root holds when it is
+    // rendered; it is optional.
     const focusWithin = createFocusWithin(ctx, {
-      part: 'root',
+      part: ['root', 'trigger', 'popover'],
       isDisabled: props.isDisabled,
     });
     ctx.watch(focusWithin.isFocusWithin, (isFocusWithin) => {
