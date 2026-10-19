@@ -136,8 +136,8 @@ Fixed rather than props: the list is in Listbox's virtual focus mode with
 `shouldFocusOnHover` on and vertical orientation; the popover is non-modal
 and dismissable and doesn't take focus on open (Resolved questions 10).
 
-`Item` is Listbox's. Development warns when the input has no name, and when
-the button has no `aria-label` of its own besides `buttonLabel`.
+`Item` is Listbox's. Development warns when the input has no name. The
+button always has one, `buttonLabel`.
 
 ## Events
 
@@ -321,7 +321,8 @@ Through the live announcer, politely (Resolved questions 14):
 
 - **The option count** when the list opens, and when typing changes it while
   open: "3 options available", from `optionCountAnnouncement(count)` (English
-  by default, replaced whole by a translation).
+  by default, replaced whole by a translation). Disabled options count, as in
+  React Aria, so the number matches the set size a screen reader reads.
 
 ## Styling tokens
 

@@ -109,18 +109,18 @@ Two layouts work without any script for the click:
 
 ## Public state
 
-| Field           | Type      | Meaning                                                                                 |
-| --------------- | --------- | --------------------------------------------------------------------------------------- |
-| isSelected      | `boolean` | The current state.                                                                      |
-| isIndeterminate | `boolean` | The prop.                                                                               |
-| isFocused       | `boolean` | The input has focus.                                                                    |
-| isFocusVisible  | `boolean` | Focus arrived by keyboard or assistive technology.                                      |
-| isHovered       | `boolean` | A mouse is over the wrapper (without one, the root) or the input; never while disabled. |
-| isDisabled      | `boolean` | The prop.                                                                               |
-| isReadOnly      | `boolean` | The prop.                                                                               |
-| isRequired      | `boolean` | The prop.                                                                               |
-| isInvalid       | `boolean` | The prop.                                                                               |
-| isErrorShown    | `boolean` | Field's: invalid and not disabled.                                                      |
+| Field           | Type      | Meaning                                                                                        |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| isSelected      | `boolean` | The current state.                                                                             |
+| isIndeterminate | `boolean` | The prop.                                                                                      |
+| isFocused       | `boolean` | The input has focus.                                                                           |
+| isFocusVisible  | `boolean` | Focus arrived by keyboard or assistive technology.                                             |
+| isHovered       | `boolean` | A mouse or pen is over the wrapper (without one, the root) or the input; never while disabled. |
+| isDisabled      | `boolean` | The prop.                                                                                      |
+| isReadOnly      | `boolean` | The prop.                                                                                      |
+| isRequired      | `boolean` | The prop.                                                                                      |
+| isInvalid       | `boolean` | The prop.                                                                                      |
+| isErrorShown    | `boolean` | Field's: invalid and not disabled.                                                             |
 
 ## Selection
 

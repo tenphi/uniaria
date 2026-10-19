@@ -63,7 +63,9 @@ dialog has no name (no title, `labelledBy` or `aria-label`), when an
 `alertdialog` has no description, and when the root isn't a `<dialog>`.
 
 State attributes on every part: `data-open` while open, `data-entering` for
-the first frame after opening, `data-exiting` while closing (Resolved questions 5).
+the first two frames after opening, `data-exiting` while closing (Resolved
+questions 5). Two frames: styles are computed with `data-entering` in the
+first, so a transition starts from them when it goes.
 
 Render the `<dialog>` always; it is hidden while closed. A design system that
 wants to skip rendering heavy content while closed renders the content (not
@@ -91,11 +93,11 @@ the dialog) from `isOpen || isExiting`.
 
 ## Public state
 
-| Field      | Type      | Meaning                                                |
-| ---------- | --------- | ------------------------------------------------------ |
-| isOpen     | `boolean` | The current value.                                     |
-| isEntering | `boolean` | The first frame after opening, for enter animations.   |
-| isExiting  | `boolean` | Closed, but still shown until its exit animations end. |
+| Field      | Type      | Meaning                                                   |
+| ---------- | --------- | --------------------------------------------------------- |
+| isOpen     | `boolean` | The current value.                                        |
+| isEntering | `boolean` | The first two frames after opening, for enter animations. |
+| isExiting  | `boolean` | Closed, but still shown until its exit animations end.    |
 
 ## Actions
 
@@ -162,7 +164,7 @@ and these are the only members of it consumers may call. They are
 | ---------------- | ---------- | --------------------------------------------------------------------------------------------------------------- |
 | closed           | root       | `id`, `tabindex="-1"`, `aria-labelledby` and `aria-describedby` (rendered parts); `role="alertdialog"` when set |
 | open             | every part | + `data-open`; the root is `:modal`, in the top layer                                                           |
-| first frame      | every part | + `data-entering`                                                                                               |
+| first two frames | every part | + `data-entering`                                                                                               |
 | closing          | every part | − `data-open`, + `data-exiting`; the root is still `:modal` until its animations end                            |
 | dismissable      | root       | none: dismissability changes behavior, not semantics                                                            |
 | trigger disabled | trigger    | Button's `disabled` or `aria-disabled`, `data-disabled`                                                         |
@@ -362,7 +364,7 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    its subtree (including `::backdrop`) finish, read through
    `getAnimations()` as React Aria does, then UniAria calls `close()`. Reopening
    while closing cancels it. Enter animations need only `data-entering` for
-   the first frame (or CSS `@starting-style`). Cross-browser exit animation
+   the first two frames (or CSS `@starting-style`). Cross-browser exit animation
    can't be pure CSS: `overlay` and `display` transitions aren't Baseline.
    UI Kit uses a fixed 350 ms instead of reading the animations. This is a
    new `dom/` primitive that Popover and Tooltip reuse. Decided: yes.

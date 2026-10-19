@@ -97,7 +97,7 @@ it needs no `elementType`: the input part is whichever the consumer renders.
 | value          | `string`  | The current value.                                                        |
 | isFocused      | `boolean` | The input has focus.                                                      |
 | isFocusVisible | `boolean` | Focus arrived by keyboard or assistive technology; typing doesn't set it. |
-| isHovered      | `boolean` | A mouse is over the input (not the wrapper), as in Cube UI Kit.           |
+| isHovered      | `boolean` | A mouse or pen is over the input (not the wrapper), as in Cube UI Kit.    |
 | isDisabled     | `boolean` | The prop.                                                                 |
 | isReadOnly     | `boolean` | The prop.                                                                 |
 | isRequired     | `boolean` | The prop.                                                                 |

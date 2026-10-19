@@ -279,7 +279,7 @@ RadioGroup):
 | selected            | option           | `aria-selected="true"`, + `data-selected`                                                                                                              |
 | focused             | option           | + `data-focused`, + `data-focus-visible` after keyboard focus                                                                                          |
 |                     | every named part | + `data-focus-within`, + `data-focus-visible` after keyboard focus                                                                                     |
-| hovered             | option           | + `data-hovered` (a mouse, not touch; never on a disabled option)                                                                                      |
+| hovered             | option           | + `data-hovered` (a mouse or pen, not touch; never on a disabled option)                                                                               |
 | pressed             | option           | + `data-pressed`                                                                                                                                       |
 | disabled option     | option           | + `aria-disabled="true"`, + `data-disabled`; no `tabindex`                                                                                             |
 | disabled list       | list             | + `aria-disabled="true"`; no option `tabindex`; every part + `data-disabled`; the error hidden (Field)                                                 |
@@ -338,8 +338,8 @@ on to the tab stop.
   anchor and doesn't select text. Ctrl+click and Cmd+click toggle, as a
   plain click does.
 - **Other buttons.** Middle and right clicks do nothing.
-- **Hover** marks the option with `data-hovered`, mouse only, never a
-  disabled one. With `shouldFocusOnHover`, hovering also focuses the option
+- **Hover** marks the option with `data-hovered`, from a mouse or pen,
+  never touch, never a disabled one. With `shouldFocusOnHover`, hovering also focuses the option
   while focus isn't visible (React Aria; Select will use it). UI Kit
   documents that as the default but its code leaves it off; UniAria's
   default is off.
@@ -361,7 +361,7 @@ on to the tab stop.
 | `data-focused`       | option              | Has focus.                                                    |
 | `data-focus-visible` | option, named parts | Keyboard focus.                                               |
 | `data-focus-within`  | named parts         | Focus is on the list or an option.                            |
-| `data-hovered`       | option              | A mouse is over it.                                           |
+| `data-hovered`       | option              | A mouse or pen is over it.                                    |
 | `data-pressed`       | option              | Being pressed.                                                |
 | `data-disabled`      | option, every part  | The option, or the whole list.                                |
 | `data-readonly`      | every part          |                                                               |
