@@ -6,3 +6,4 @@ coverage/
 specs/
 apps/docs/.astro/
 apps/docs/public/demo/
+.claude/worktrees/

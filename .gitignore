@@ -46,3 +46,6 @@ specs/
 
 # Read-only reference repositories (`pnpm references`, AGENTS.md → Reference repos)
 references/
+
+# Agents' git worktrees
+.claude/worktrees/

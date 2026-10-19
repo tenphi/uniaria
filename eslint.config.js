@@ -40,6 +40,7 @@ export default defineConfig(
       'references/**',
       'apps/docs/.astro/**',
       'apps/docs/public/demo/**',
+      '.claude/worktrees/**',
     ],
   },
   eslint.configs.recommended,
