@@ -6,7 +6,8 @@
  *   event from its element, in the shape of the Context Community Protocol
  *   (`references/community-protocols/proposals/context.md`). The nearest
  *   element providing an owner of the requested definition answers and stops
- *   the event.
+ *   the event. Composed, so a child in a wrapper's shadow root finds the
+ *   owner around the wrapper (owner decision, 2026-10-19).
  * - **By id.** An attribute such as `<uni-checkbox group="plan">` names the
  *   owner's element, looked up in the child's root node.
  * - **Late owners.** A request nobody answered waits; an owner that starts
@@ -24,6 +25,19 @@ import { answers } from '../runtime';
 import { isUniHost } from './parts';
 
 const REQUEST = 'uni-owner-request';
+
+/**
+ * Whether `node` is inside `owner`, through the shadow roots between them,
+ * as the composed request event travels.
+ */
+function isAround(owner: Element, node: Node): boolean {
+  let at: Node | undefined = node;
+  while (at) {
+    if (owner.contains(at)) return true;
+    at = (at.getRootNode() as Partial<ShadowRoot>).host;
+  }
+  return false;
+}
 
 /** An owner providing on an element. */
 interface Provider {
@@ -175,7 +189,7 @@ export function requestOwner(
         ? owner.id === ownerId && owner.getRootNode() === element.getRootNode()
         : isLink
           ? owner === hostAround(element)
-          : owner.contains(element),
+          : isAround(owner, element),
     ask,
   };
 

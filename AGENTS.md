@@ -246,7 +246,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   and exposed state and subscribes the child's binder to the owner's store.
   It is `undefined` until the owner is resolved; resolving it triggers a
   flush.
-- Request events are not `composed`; lookup stops at shadow roots.
+- Request events are `composed` (owner decision, 2026-10-19): a child in a
+  wrapper's shadow root finds the owner its wrapper sits in. Lookup by id
+  stays in the child's root node.
 - Collections stay data. Owner links are for composed components, not for
   collection items.
 - Lookup code lives in `dom/`; the DOM-free runtime only sees `ctx.owner()`

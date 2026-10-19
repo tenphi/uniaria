@@ -95,6 +95,29 @@ describe('owner lookup', () => {
     expect(seen).toEqual([later]);
   });
 
+  it('finds an owner around the shadow root it sits in, now or later, and by id only in its own root', () => {
+    const container = tree(
+      '<div id="owner"><div id="wrapper"></div></div><div id="plan"></div>',
+    );
+    const shadow = container
+      .querySelector('#wrapper')!
+      .attachShadow({ mode: 'open' });
+    shadow.innerHTML = '<span id="child"></span>';
+    const child = shadow.querySelector('#child')!;
+
+    const seen = track(child);
+    expect(seen).toEqual([]);
+    const owner = createInstance(group);
+    cleanups.push(provideOwner(owner, container.querySelector('#owner')!));
+    expect(seen).toEqual([owner]);
+    expect(track(child)).toEqual([owner]);
+
+    cleanups.push(
+      provideOwner(createInstance(group), container.querySelector('#plan')!),
+    );
+    expect(track(child, 'plan')).toEqual([]);
+  });
+
   it('stops asking after its cleanup', () => {
     const container = tree('<div id="owner"><span id="child"></span></div>');
     const seen: (Instance | undefined)[] = [];
