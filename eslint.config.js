@@ -30,6 +30,12 @@ const FRAMEWORKS = {
     '@uniaria/core is framework-free. Framework code belongs in an adapter package.',
 };
 
+/** `@uniaria/styles` tests and their helpers, which mount components. */
+const STYLES_TESTS = [
+  'packages/styles/src/**/*.test.{ts,tsx}',
+  'packages/styles/src/testing/**',
+];
+
 export default defineConfig(
   {
     ignores: [
@@ -91,6 +97,11 @@ export default defineConfig(
     ...tasty.configs.strict,
     files: ['apps/docs/**/*.{ts,tsx}'],
   },
+  {
+    ...tasty.configs.strict,
+    files: ['packages/styles/src/**/*.ts'],
+    ignores: STYLES_TESTS,
+  },
 
   // Architecture boundaries (AGENTS.md → Architecture rules). Each block encodes
   // a design decision; change them only with the owner's approval. Later blocks
@@ -140,6 +151,43 @@ export default defineConfig(
               message: 'dom/ sits below components/ and must not import them.',
             },
           ],
+        },
+      ],
+    },
+  },
+  // @uniaria/styles targets the part markers and state attributes alone, and
+  // takes only types from Tasty's entries that load React (styles spec:
+  // Changes outside the package).
+  {
+    files: ['packages/styles/src/**/*.ts'],
+    ignores: STYLES_TESTS,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [...FRAMEWORKS.group, '@uniaria/core', '@uniaria/core/*'],
+              message:
+                '@uniaria/styles reads no framework or component code; its tests may.',
+            },
+          ],
+        },
+      ],
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            '@tenphi/tasty',
+            '@tenphi/tasty/core',
+            '@tenphi/tasty/static',
+            '@tenphi/tasty/ssr',
+          ].map((name) => ({
+            name,
+            allowTypeImports: true,
+            message:
+              'Only types from Tasty entries that load React; the build uses @tenphi/tasty/zero.',
+          })),
         },
       ],
     },

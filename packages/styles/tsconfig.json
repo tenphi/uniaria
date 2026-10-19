@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // The build and its test commands run in Node.
+  "compilerOptions": { "types": ["node"] },
+  "include": ["src", "tsdown.config.ts", "tasty.config.ts"]
+}

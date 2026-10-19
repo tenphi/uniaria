@@ -16,6 +16,9 @@ Per-element rules go inline and yield to an inline value the consumer set
 (press sets `touch-action: pan-x pan-y pinch-zoom` on pressable parts). A rule
 that must be global is adopted as a constructed stylesheet inside an anonymous
 `@layer`, so any consumer CSS wins, and only while the behavior is active.
+The optional `@uniaria/styles` package (owner, 2026-10-19) gives every
+component a default look, written against those same tokens; no other package
+depends on it, and specs still list no look.
 
 UniAria is built by AI agents. The owner, **@tenphi**, approves specs and reviews
 APIs at phase gates. Manual screen-reader testing is deferred until the
@@ -38,6 +41,7 @@ whole file before changing anything; it is the binding summary of the design.
 | `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                                                          | Yes       |
 | `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
 | `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
+| `@uniaria/styles`      | `packages/styles`   | Optional default styles: prebuilt CSS (`./css`), a Tasty style object per component (`./button`), the palette; its own `spec.md`                                  | Later     |
 | `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                                                | No        |
 
 All published packages share one version (Changesets `fixed` group). Each
@@ -61,7 +65,8 @@ uniaria/
 │   │   └── tsdown.config.ts
 │   ├── react/
 │   ├── elements/
-│   └── testing/
+│   ├── testing/
+│   └── styles/                     Optional default styles; spec.md there
 ├── conformance/                    Scenarios; owner approval required (see Conformance)
 ├── apps/docs/                      The documentation site (Cookbook); see Documentation
 ├── docs/                           The site's pages (Markdown and MDX)
@@ -531,7 +536,9 @@ that policy (2026-10-18): its `minimumReleaseAgeExclude` entry in
 `pnpm-workspace.yaml` goes once it is 14 days old, on 2026-10-30.
 
 The documentation site's (owner, 2026-10-19): `@tenphi/cookbook`, `astro`
-and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root. The
+and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root.
+`@uniaria/styles`' (owner, 2026-10-19): `@tenphi/tasty` and `@tenphi/glaze`,
+as optional peers and development dependencies. The
 owner's own `@tenphi/*` packages are exempt from the 14-day release age
 (`minimumReleaseAgeExclude` in `pnpm-workspace.yaml`).
 
@@ -784,9 +791,12 @@ readable overview of this file for people; this file stays the binding one.
   `scripts` prop inlines `/demo/<page>.js` into the sandboxed frame.
   `apps/docs/demo/<page>.ts` imports the elements a page's demos register;
   `apps/docs/scripts/build-demo.mjs` bundles each from the workspace sources
-  into `apps/docs/public/demo/` (gitignored) before `dev` and `build`. Demo
-  CSS uses system colors and the state attributes, since it doubles as a
-  styling example.
+  into `apps/docs/public/demo/` (gitignored) before `dev` and `build`. A
+  demo of a component with default styles (Button and Checkbox so far)
+  imports `uniaria-styles:<name>,…`, which the script builds with
+  `@uniaria/styles`' `buildCss()`, and its CSS holds only the page's layout.
+  The others' CSS uses system colors and the state attributes until theirs
+  land.
 - **The site's own styling** is Tasty only: Cookbook's build rejects any other
   CSS. `eslint.config.js` lints `apps/docs` with the Tasty plugin's strict
   rules, against the tokens, states and presets `apps/docs/tasty.config.ts`

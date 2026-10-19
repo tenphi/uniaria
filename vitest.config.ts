@@ -6,6 +6,7 @@ import {
   screenReaderCommands,
   uniCommands,
 } from './packages/testing/src/commands';
+import { stylesCommands } from './packages/styles/src/testing/commands';
 
 /**
  * Two projects, split by file name, and a third for real screen readers:
@@ -66,7 +67,8 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             screenshotFailures: false,
-            commands: uniCommands,
+            // `stylesCommands` build `@uniaria/styles`' CSS in Node.
+            commands: { ...uniCommands, ...stylesCommands },
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },

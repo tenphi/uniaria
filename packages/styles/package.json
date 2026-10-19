@@ -1,0 +1,93 @@
+{
+  "name": "@uniaria/styles",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Default styles for UniAria components: prebuilt CSS, a CSS builder and Tasty style objects",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "uniaria-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./button": {
+      "uniaria-source": "./src/components/button.ts",
+      "types": "./dist/button.d.ts",
+      "default": "./dist/button.js"
+    },
+    "./checkbox": {
+      "uniaria-source": "./src/components/checkbox.ts",
+      "types": "./dist/checkbox.d.ts",
+      "default": "./dist/checkbox.js"
+    },
+    "./build": {
+      "uniaria-source": "./src/build.ts",
+      "types": "./dist/build.d.ts",
+      "default": "./dist/build.js"
+    },
+    "./css": "./dist/css/index.css",
+    "./css/layered": "./dist/css/layered.css",
+    "./css/*.css": "./dist/css/*.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/uniaria.git",
+    "directory": "packages/styles"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "styles",
+    "css",
+    "tasty",
+    "accessibility"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/tenphi/uniaria/issues"
+  },
+  "homepage": "https://github.com/tenphi/uniaria#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@tenphi/glaze": "^2.0.1",
+    "@tenphi/tasty": "^3.10.0"
+  },
+  "peerDependenciesMeta": {
+    "@tenphi/glaze": {
+      "optional": true
+    },
+    "@tenphi/tasty": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tenphi/glaze": "^2.0.1",
+    "@tenphi/tasty": "^3.10.0",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@uniaria/core": "workspace:*",
+    "@uniaria/elements": "workspace:*",
+    "@uniaria/react": "workspace:*",
+    "@uniaria/testing": "workspace:*",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

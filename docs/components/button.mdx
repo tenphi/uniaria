@@ -190,6 +190,13 @@ State attributes are present or absent, never `"false"`. UniAria also sets
 `touch-action: pan-x pan-y pinch-zoom` on the root: it removes the double-tap
 delay on touch screens and lets a scroll cancel a press.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles the root, as in the demo above,
+whose CSS tab holds only the page's layout. Set `data-variant` on the root to
+`primary`, `quiet` or `danger` (for a destructive action); without it, the
+button is secondary.
+
 ## Keyboard
 
 | Key   | Behavior                                                                                                      |

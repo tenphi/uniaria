@@ -1,5 +1,7 @@
 pnpm-lock.yaml
 **/dist/
+# Generated CSS, compared byte for byte.
+**/__snapshots__/
 coverage/
 **/CHANGELOG.md
 .changeset/*.md

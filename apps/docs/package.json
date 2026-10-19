@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@uniaria/elements": "workspace:*",
+    "@uniaria/styles": "workspace:*",
     "typescript": "^6.0.3",
     "vite": "^8.3.1"
   },
