@@ -13,10 +13,10 @@
  */
 
 /**
- * Presses outside an element (`docs/interaction-layer.md` §6), after React
- * Aria's `useInteractOutside`: a primary-button `pointerdown` outside starts
- * one, and the `click` that follows, also outside, completes it. Completing
- * on `click` rather than `pointerup` sidesteps an Android Chrome bug
+ * Presses outside an element (`docs/_internal/interaction-layer.md` §6), after
+ * React Aria's `useInteractOutside`: a primary-button `pointerdown` outside
+ * starts one, and the `click` that follows, also outside, completes it.
+ * Completing on `click` rather than `pointerup` sidesteps an Android Chrome bug
  * (Chromium 40732224). Both listen on the document in the capture phase, so
  * they run before anything at the target.
  *

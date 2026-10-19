@@ -14,7 +14,7 @@
 
 /**
  * Text-selection suppression while a touch press lasts
- * (`docs/interaction-layer.md` §1.58-63), after React Aria's
+ * (`docs/_internal/interaction-layer.md` §1.58-63), after React Aria's
  * `textSelection.ts`.
  *
  * - Elsewhere: `user-select: none` (`-webkit-user-select` in Safari) inline

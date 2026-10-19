@@ -14,8 +14,9 @@
 
 /**
  * Hide outside: takes everything outside a set of target elements away from
- * assistive technology while a modal is open (`docs/interaction-layer.md`
- * §9), after React Aria's `ariaHideOutside`
+ * assistive technology while a modal is open
+ * (`docs/_internal/interaction-layer.md` §9), after React Aria's
+ * `ariaHideOutside`
  * (`references/react-spectrum/packages/react-aria/src/overlays/ariaHideOutside.ts`).
  *
  * - Every element under the root that is not a target, an ancestor of one or

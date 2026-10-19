@@ -13,7 +13,7 @@
  */
 
 /**
- * Scroll lock (`docs/interaction-layer.md` §8), after React Aria's
+ * Scroll lock (`docs/_internal/interaction-layer.md` §8), after React Aria's
  * `usePreventScroll`.
  *
  * - Everywhere: `overflow: hidden` on `<html>`, and when a classic scrollbar

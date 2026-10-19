@@ -16,8 +16,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   (`createPress`, `createFocus` with focus-visible, `createHover`), the
   shared input-modality tracker, and `warn()` for development warnings.
 - Before building or changing an interaction, read its section of
-  `docs/interaction-layer.md` (behaviours, browser bugs, where UniAria differs)
-  and update the status there.
+  `docs/_internal/interaction-layer.md` (behaviours, browser bugs, where
+  UniAria differs) and update the status there.
 - Interactions take the `setup()` context (`InteractionContext`), keep their
   state in `ctx.state()`, clean up through `ctx.effect()`, and batch any
   document listener they add (`ctx.batch()`), since only part handlers are

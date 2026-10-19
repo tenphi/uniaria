@@ -13,8 +13,8 @@
  */
 
 /**
- * Focus within one part (`docs/interaction-layer.md` §4), after React Aria's
- * `useFocusWithin`: true while the part or anything inside it has focus,
+ * Focus within one part (`docs/_internal/interaction-layer.md` §4), after React
+ * Aria's `useFocusWithin`: true while the part or anything inside it has focus,
  * unchanged while focus moves between descendants.
  *
  * It listens on the part element itself rather than through part handlers,

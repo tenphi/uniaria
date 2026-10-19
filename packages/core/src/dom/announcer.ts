@@ -13,9 +13,10 @@
  */
 
 /**
- * The live announcer: messages for screen-reader users that nothing on the
- * page shows, like a result count or a value a spin button stepped to
- * (`docs/interaction-layer.md` §10). Modelled on React Aria's `LiveAnnouncer`
+ * The live announcer: messages for screen-reader users that nothing on the page
+ * shows, like a result count or a value a spin button stepped to
+ * (`docs/_internal/interaction-layer.md` §10). Modelled on React Aria's
+ * `LiveAnnouncer`
  * (`references/react-spectrum/packages/react-aria/src/live-announcer/LiveAnnouncer.tsx`).
  *
  * - One visually hidden container per document, prepended to `<body>` on the

@@ -381,7 +381,7 @@ Decided by @tenphi on 2026-10-16, each as recommended.
    modal dialog is open, the announcer writes to a region inside the top
    one, and moves back when it closes. This touches `dom/`'s announcer and
    answers part of the open top-layer question in
-   `docs/interaction-layer.md`. Decided: yes.
+   `docs/_internal/interaction-layer.md`. Decided: yes.
 8. **No trigger ARIA.** UI Kit's modal triggers, React Spectrum's and the
    APG examples carry no `aria-haspopup`, `aria-expanded` or
    `aria-controls`. An open modal makes the trigger inert, so `aria-expanded`

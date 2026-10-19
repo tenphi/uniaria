@@ -13,7 +13,7 @@
  */
 
 /**
- * Focus scopes (`docs/interaction-layer.md` §5), after React Aria's
+ * Focus scopes (`docs/_internal/interaction-layer.md` §5), after React Aria's
  * `FocusScope`. A scope is one part element, live while `isActive()` holds
  * (an open popover or dialog), and can:
  *

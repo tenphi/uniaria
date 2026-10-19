@@ -63,8 +63,9 @@ uniaria/
 │   ├── elements/
 │   └── testing/
 ├── conformance/                    Scenarios; owner approval required (see Conformance)
-├── docs/component-spec-template.md
-├── docs/interaction-layer.md       What dom/ must do, from React Aria; status
+├── docs/                           The site's pages (Markdown and MDX)
+│   └── _internal/                  Not published: the spec template, and
+│                                   interaction-layer.md (what dom/ must do; status)
 ├── scripts/                        Repo checks run by CI
 ├── specs/                          Owner's local design notes (gitignored)
 ├── references/                     Read-only clones of related repos (gitignored)
@@ -450,7 +451,7 @@ when CI passes after the fixes they need.
 
 One component per task, small commits, in this order:
 
-1. **Spec.** Copy `docs/component-spec-template.md` to
+1. **Spec.** Copy `docs/_internal/component-spec-template.md` to
    `packages/core/src/components/<name>/spec.md` and fill it in. Commit the
    spec on its own and ask the owner to review it. Do not go further until
    the owner sets its status to `approved`.

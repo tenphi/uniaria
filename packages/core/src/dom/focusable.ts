@@ -15,7 +15,7 @@
 
 /**
  * What can take focus, and in which order Tab visits it
- * (`docs/interaction-layer.md` §5.2, 5.44-48), after React Aria.
+ * (`docs/_internal/interaction-layer.md` §5.2, 5.44-48), after React Aria.
  *
  * - Focusable: a natively focusable element or any `[tabindex]`, not
  *   disabled, not `hidden`, not inside `inert`, and rendered and visible

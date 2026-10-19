@@ -13,8 +13,8 @@
  */
 
 /**
- * The dismissable layer stack (`docs/interaction-layer.md` §7), after React
- * Aria's `useOverlay`. Every open layer (popover, dialog, menu) joins one
+ * The dismissable layer stack (`docs/_internal/interaction-layer.md` §7), after
+ * React Aria's `useOverlay`. Every open layer (popover, dialog, menu) joins one
  * stack per window, stored under `Symbol.for` so copies of UniAria share it:
  *
  * - Escape, with focus inside, not repeated, not composing, no modifiers,
