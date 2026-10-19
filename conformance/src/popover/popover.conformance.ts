@@ -1624,6 +1624,76 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
       );
     });
 
+    group('actions', () => {
+      scenario(
+        'open() shows it and focuses it; close() closes it and returns focus to the trigger, with no dismissal',
+        async ({ mount }) => {
+          const mounted = await mount({ template: size(), events: EVENTS });
+          const popover = root(mounted);
+
+          await mounted.call('open');
+          expect(isInTopLayer(popover)).toBe(true);
+          expect(activeElement(mounted)).toBe(popover);
+          expect(mounted.part('trigger').getAttribute('aria-expanded')).toBe(
+            'true',
+          );
+          expectOnEveryPart(mounted, 'data-open', true);
+
+          await mounted.call('close');
+          await closed(popover);
+          expect(activeElement(mounted)).toBe(mounted.part('trigger'));
+          expect(openChanges(mounted)).toEqual([true, false]);
+          expect(reasons(mounted)).toEqual([]);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'open() shows it although isDisabled disables the trigger',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: size(),
+            props: { isDisabled: true },
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          expect(isInTopLayer(root(mounted))).toBe(true);
+          expect(openChanges(mounted)).toEqual([true]);
+          await mounted.call('close');
+          await closed(root(mounted));
+        },
+        PHASE,
+      );
+
+      scenario(
+        'controlled, open() and close() only report; the consumer opens and closes it',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: size(),
+            props: { isOpen: false },
+            events: EVENTS,
+          });
+          const popover = root(mounted);
+          await mounted.call('open');
+          await pause(100);
+          expect(isInTopLayer(popover)).toBe(false);
+          expect(openChanges(mounted)).toEqual([true]);
+
+          await mounted.setProps({ isOpen: true });
+          expect(isInTopLayer(popover)).toBe(true);
+          await mounted.call('close');
+          await pause(100);
+          expect(isInTopLayer(popover)).toBe(true);
+          expect(openChanges(mounted)).toEqual([true, false]);
+          expect(reasons(mounted)).toEqual([]);
+
+          await mounted.setProps({ isOpen: false });
+          await closed(popover);
+        },
+        PHASE,
+      );
+    });
+
     group('state', () => {
       scenario(
         'opening, placing and closing never re-render the owner',

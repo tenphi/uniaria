@@ -943,6 +943,80 @@ export const tooltipConformance = defineConformance<TooltipProps, TooltipState>(
       );
     });
 
+    group('actions', () => {
+      scenario(
+        'open() shows it at once, without its delay; close() closes it',
+        async ({ mount }) => {
+          const mounted = await mount({ template: tip(), events: EVENTS });
+          const tooltip = root(mounted);
+
+          await mounted.call('open');
+          expect(isInTopLayer(tooltip)).toBe(true);
+          expect(mounted.state().isOpen).toBe(true);
+          expect(mounted.part('trigger').getAttribute('aria-describedby')).toBe(
+            tooltip.id,
+          );
+
+          await mounted.call('close');
+          await closed(tooltip);
+          expect(openChanges(mounted)).toEqual([true, false]);
+        },
+      );
+
+      scenario(
+        'after close(), hovering the trigger opens it as usual',
+        async (context) => {
+          const mounted = await context.mount({
+            template: tip(),
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          await mounted.call('close');
+          await closed(root(mounted));
+          await hoverOpen(context, mounted);
+          expect(openChanges(mounted)).toEqual([true, false, true]);
+        },
+      );
+
+      scenario('open() does nothing while disabled', async ({ mount }) => {
+        const mounted = await mount({
+          template: tip(),
+          props: { isDisabled: true },
+          events: EVENTS,
+        });
+        await mounted.call('open');
+        await pause(100);
+        expect(isShown(root(mounted))).toBe(false);
+        expect(mounted.events).toEqual([]);
+      });
+
+      scenario(
+        'controlled, open() and close() only report; the consumer opens and closes it',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: tip(),
+            props: { isOpen: false },
+            events: EVENTS,
+          });
+          const tooltip = root(mounted);
+          await mounted.call('open');
+          await pause(100);
+          expect(isShown(tooltip)).toBe(false);
+          expect(openChanges(mounted)).toEqual([true]);
+
+          await mounted.setProps({ isOpen: true });
+          await expect.poll(() => isInTopLayer(tooltip)).toBe(true);
+          await mounted.call('close');
+          await pause(100);
+          expect(isInTopLayer(tooltip)).toBe(true);
+          expect(openChanges(mounted)).toEqual([true, false]);
+
+          await mounted.setProps({ isOpen: false });
+          await closed(tooltip);
+        },
+      );
+    });
+
     group('warm-up', () => {
       scenario(
         'once one has shown, the next opens at once with data-instant and closes the first without its closing phase',

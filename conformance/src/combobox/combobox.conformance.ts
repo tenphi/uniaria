@@ -1473,6 +1473,84 @@ export const comboboxConformance = defineConformance<
     );
   });
 
+  group('actions', () => {
+    scenario(
+      'open() opens the list as the button does, leaving focus where it is; close() closes it and keeps the text',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: fruit(),
+          props: { items: FRUIT, defaultValue: ['banana'] },
+          events: EVENTS,
+        });
+        const before = byId(mounted, 'before');
+        before.focus();
+        const text = input(mounted).value;
+
+        await mounted.call('open');
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        expect(active(mounted)).toBe(before);
+        expect(highlighted(mounted)).toBe('banana');
+        expect(
+          option(mounted, 'banana').hasAttribute('data-focus-visible'),
+        ).toBe(false);
+        expect(shownKeys(mounted)).toEqual(
+          mounted.parts('option').map((element) => element.dataset.key!),
+        );
+
+        await mounted.call('close');
+        await closed(mounted);
+        expect(input(mounted).value).toBe(text);
+        expect(active(mounted)).toBe(before);
+        expect(opens(mounted)).toEqual([true, false]);
+        expect(changes(mounted)).toEqual([]);
+        expect(texts(mounted)).toEqual([]);
+      },
+      PHASE,
+    );
+
+    scenario(
+      'open() does nothing while disabled',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: fruit(),
+          props: { items: FRUIT, isDisabled: true },
+          events: EVENTS,
+        });
+        await mounted.call('open');
+        await pause(100);
+        expect(isShown(mounted)).toBe(false);
+        expect(opens(mounted)).toEqual([]);
+      },
+      PHASE,
+    );
+
+    scenario(
+      'controlled, open() and close() only report; the consumer opens and closes the list',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: fruit(),
+          props: { items: FRUIT, isOpen: false },
+          events: EVENTS,
+        });
+        await mounted.call('open');
+        await pause(100);
+        expect(isShown(mounted)).toBe(false);
+        expect(opens(mounted)).toEqual([true]);
+
+        await mounted.setProps({ isOpen: true });
+        await expect.poll(() => isOpen(mounted)).toBe(true);
+        await mounted.call('close');
+        await pause(100);
+        expect(isShown(mounted)).toBe(true);
+        expect(opens(mounted)).toEqual([true, false]);
+
+        await mounted.setProps({ isOpen: false });
+        await closed(mounted);
+      },
+      PHASE,
+    );
+  });
+
   group('pointer and touch', () => {
     scenario(
       'a mouse press on the button opens the list on press start, highlighting the selected option, and focuses the input',

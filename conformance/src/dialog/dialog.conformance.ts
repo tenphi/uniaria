@@ -1062,6 +1062,74 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
       );
     });
 
+    group('actions', () => {
+      scenario(
+        'open() opens it modally and focuses it; close() closes it and returns focus to the trigger, with no dismissal',
+        async ({ mount }) => {
+          const mounted = await mount({ template: confirm(), events: EVENTS });
+          const dialog = root(mounted);
+
+          await mounted.call('open');
+          expect(isModal(dialog)).toBe(true);
+          expect(activeElement(mounted)).toBe(dialog);
+          expect(mounted.state().isOpen).toBe(true);
+          expectOnEveryPart(mounted, 'data-open', true);
+
+          await mounted.call('close');
+          await closed(dialog);
+          expect(activeElement(mounted)).toBe(mounted.part('trigger'));
+          expect(openChanges(mounted)).toEqual([true, false]);
+          expect(dismissals(mounted)).toEqual([]);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'open() opens it although isDisabled disables the trigger',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: confirm(),
+            props: { isDisabled: true },
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          expect(isModal(root(mounted))).toBe(true);
+          expect(openChanges(mounted)).toEqual([true]);
+          await mounted.call('close');
+          await closed(root(mounted));
+        },
+        PHASE,
+      );
+
+      scenario(
+        'controlled, open() and close() only report; the consumer opens and closes it',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: confirm(),
+            props: { isOpen: false },
+            events: EVENTS,
+          });
+          const dialog = root(mounted);
+          await mounted.call('open');
+          await pause(100);
+          expect(isModal(dialog)).toBe(false);
+          expect(openChanges(mounted)).toEqual([true]);
+
+          await mounted.setProps({ isOpen: true });
+          expect(isModal(dialog)).toBe(true);
+          await mounted.call('close');
+          await pause(100);
+          expect(isModal(dialog)).toBe(true);
+          expect(openChanges(mounted)).toEqual([true, false]);
+          expect(dismissals(mounted)).toEqual([]);
+
+          await mounted.setProps({ isOpen: false });
+          await closed(dialog);
+        },
+        PHASE,
+      );
+    });
+
     group('state', () => {
       scenario(
         'opening and closing never re-render the owner',

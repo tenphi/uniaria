@@ -1283,6 +1283,79 @@ export const selectConformance = defineConformance<SelectProps, SelectState>(
       );
     });
 
+    group('actions', () => {
+      scenario(
+        'open() opens the list on the selected option, else the first; close() returns focus to the trigger',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: fruit(),
+            props: { items: FRUIT, defaultValue: ['banana'] },
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          await expect.poll(() => isOpen(mounted)).toBe(true);
+          await expect.poll(() => focusedKey(mounted)).toBe('banana');
+          expectOnEveryPart(mounted, 'data-open', true);
+
+          await mounted.call('close');
+          await closed(mounted);
+          expect(active(mounted)).toBe(trigger(mounted));
+          expect(opens(mounted)).toEqual([true, false]);
+          expect(changes(mounted)).toEqual([]);
+
+          const unselected = await mount({
+            template: fruit(),
+            props: { items: FRUIT },
+          });
+          await unselected.call('open');
+          await expect.poll(() => focusedKey(unselected)).toBe('apple');
+        },
+        PHASE,
+      );
+
+      scenario(
+        'open() does nothing while disabled',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: fruit(),
+            props: { items: FRUIT, isDisabled: true },
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          await pause(100);
+          expect(isShown(mounted)).toBe(false);
+          expect(opens(mounted)).toEqual([]);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'controlled, open() and close() only report; the consumer opens and closes the list',
+        async ({ mount }) => {
+          const mounted = await mount({
+            template: fruit(),
+            props: { items: FRUIT, isOpen: false },
+            events: EVENTS,
+          });
+          await mounted.call('open');
+          await pause(100);
+          expect(isShown(mounted)).toBe(false);
+          expect(opens(mounted)).toEqual([true]);
+
+          await mounted.setProps({ isOpen: true });
+          await expect.poll(() => isOpen(mounted)).toBe(true);
+          await mounted.call('close');
+          await pause(100);
+          expect(isShown(mounted)).toBe(true);
+          expect(opens(mounted)).toEqual([true, false]);
+
+          await mounted.setProps({ isOpen: false });
+          await closed(mounted);
+        },
+        PHASE,
+      );
+    });
+
     group('the label', () => {
       scenario(
         'a press on the label focuses the trigger with visible focus, without opening',
