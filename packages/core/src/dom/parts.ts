@@ -5,7 +5,8 @@
  * with no other host between them and this one count, so a nested instance
  * keeps its own parts. Another host is a nested UniAria element of any kind,
  * or one of the same tag. A nested UniAria element can itself be a part of
- * the outer host. Parts added later are picked up by observing the host.
+ * the outer host. Parts added later are picked up by observing the host, as
+ * are parts a nested element takes over once its tag is defined.
  */
 
 import { partElement, rootClass } from '../runtime';
@@ -23,10 +24,49 @@ export const UNI_HOST: unique symbol = Symbol.for('@uniaria/host') as never;
  */
 export function isUniHost(element: Element): boolean {
   if (!element.localName.includes('-')) return false;
-  const registry = element.ownerDocument.defaultView?.customElements;
-  const host = registry?.get(element.localName) as
+  return isUniTag(
+    element.ownerDocument.defaultView?.customElements,
+    element.localName,
+  );
+}
+
+function isUniTag(
+  registry: CustomElementRegistry | undefined,
+  tag: string,
+): boolean {
+  const host = registry?.get(tag) as
     { readonly [UNI_HOST]?: boolean } | undefined;
   return host?.[UNI_HOST] === true;
+}
+
+/** Callbacks per registry and undefined tag, waiting for its definition. */
+const waiting = new WeakMap<
+  CustomElementRegistry,
+  Map<string, Set<() => void>>
+>();
+
+/**
+ * Calls `callback` once `tag` is defined; returns the function that stops
+ * waiting. Observers share one `whenDefined()` per tag, so a tag that is
+ * never defined holds on to no host that stopped waiting.
+ */
+function whenDefined(
+  registry: CustomElementRegistry,
+  tag: string,
+  callback: () => void,
+): () => void {
+  let tags = waiting.get(registry);
+  if (!tags) waiting.set(registry, (tags = new Map()));
+  const callbacks: Set<() => void> = tags.get(tag) ?? new Set();
+  if (!tags.has(tag)) {
+    tags.set(tag, callbacks);
+    void registry.whenDefined(tag).then(() => {
+      tags.delete(tag);
+      for (const each of callbacks) each();
+    });
+  }
+  callbacks.add(callback);
+  return () => callbacks.delete(callback);
 }
 
 /** No other host stands between `element` and `host`. */
@@ -106,8 +146,9 @@ export function queryItemParts(
 
 /**
  * Calls `callback` whenever parts of the component `name` may have been
- * added, removed or renamed. A change of `class` counts only when it adds or
- * removes the root's class, so a consumer's class toggles cost no rescan.
+ * added, removed or renamed, or a nested element's tag was defined as a
+ * host. A change of `class` counts only when it adds or removes the root's
+ * class, so a consumer's class toggles cost no rescan.
  */
 export function observeParts(
   host: Element,
@@ -119,14 +160,37 @@ export function observeParts(
   const root = rootClass(name);
   const hadRoot = (value: string | null) =>
     value !== null && value.split(/\s+/).includes(root);
+  const isRelevant = (record: MutationRecord): boolean =>
+    record.attributeName !== 'class' ||
+    hadRoot(record.oldValue) !==
+      (record.target as Element).classList.contains(root);
+  // A host upgraded before a nested element's tag was defined took the parts
+  // inside it, and defining a tag mutates nothing: wait for each undefined
+  // tag, and scan again if it turns out to be a host.
+  const { customElements: registry } = view;
+  const waits = new Map<string, () => void>();
+  const wait = (element: Element) => {
+    const tag = element.localName;
+    if (waits.has(tag) || !tag.includes('-') || element.matches(':defined')) {
+      return;
+    }
+    const onDefined = () => {
+      waits.delete(tag);
+      if (isUniTag(registry, tag)) callback();
+    };
+    waits.set(tag, whenDefined(registry, tag, onDefined));
+  };
+  const waitInside = (element: Element) => {
+    wait(element);
+    for (const each of element.querySelectorAll(':not(:defined)')) wait(each);
+  };
   const observer = new view.MutationObserver((records) => {
-    const relevant = records.some(
-      (record) =>
-        record.attributeName !== 'class' ||
-        hadRoot(record.oldValue) !==
-          (record.target as Element).classList.contains(root),
-    );
-    if (relevant) callback();
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === node.ELEMENT_NODE) waitInside(node as Element);
+      }
+    }
+    if (records.some(isRelevant)) callback();
   });
   observer.observe(host, {
     childList: true,
@@ -135,5 +199,10 @@ export function observeParts(
     attributeOldValue: true,
     attributeFilter: ['data-element', 'data-key', 'class'],
   });
-  return () => observer.disconnect();
+  for (const each of host.querySelectorAll(':not(:defined)')) wait(each);
+  return () => {
+    observer.disconnect();
+    for (const stop of waits.values()) stop();
+    waits.clear();
+  };
 }

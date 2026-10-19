@@ -294,6 +294,42 @@ describe('defineElement', () => {
     expect(host.instance.element('panel')).toBe(panel);
   });
 
+  it('gives up the parts inside a nested UniAria element defined after it', async () => {
+    const container = mount(`
+      <uni-test-disclosure>
+        <uni-test-late-wrapper>
+          <button data-element="Trigger">Inner</button>
+        </uni-test-late-wrapper>
+        <test-never-defined>
+          <button data-element="Trigger">Outer</button>
+        </test-never-defined>
+      </uni-test-disclosure>`);
+    const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
+    const [inner, outer] = host.querySelectorAll('button');
+    // Until its tag is defined, nothing marks the wrapper as a host.
+    expect(host.instance.element('trigger')).toBe(inner);
+
+    defineElement(
+      defineComponent({
+        name: 'test-late-wrapper',
+        parts: ['trigger'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ trigger: { attrs: {} } }),
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve));
+
+    // A custom element that is never defined is no boundary.
+    expect(host.instance.element('trigger')).toBe(outer);
+    expect(inner!.getAttribute('data-scope')).toBe('test-late-wrapper');
+    inner!.click();
+    expect(host.instance.getState().isOpen).toBe(false);
+    outer!.click();
+    expect(host.instance.getState().isOpen).toBe(true);
+  });
+
   it('finds parts added after it connected', async () => {
     const container = mount(
       '<uni-test-disclosure><button data-element="Trigger">Details</button></uni-test-disclosure>',

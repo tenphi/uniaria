@@ -17,10 +17,12 @@
  * - Parts: the element with the `uni-<name>` class is the root, and
  *   `data-element` marks the others (`data-element="Trigger"`), inside the
  *   host, minus those inside a nested UniAria element (of any kind) or a
- *   nested host of the same tag, re-scanned when the subtree changes. The DOM binder writes their attributes and
- *   delegates their listeners from the host's root. Item parts are every such
- *   element, keyed by the consumer's `data-key`; a prop that adopts
- *   `items` reads its collection from them while the consumer sets none.
+ *   nested host of the same tag, re-scanned when the subtree changes or a
+ *   nested element's tag is defined later. The DOM binder writes their
+ *   attributes and delegates their listeners from the host's root. Item
+ *   parts are every such element, keyed by the consumer's `data-key`; a prop
+ *   that adopts `items` reads its collection from them while the consumer
+ *   sets none.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →
  *   `stop()`, `attributeChangedCallback` → `setProps()` then `sync()`.
  * - Owners (decision 11): every host answers owner requests for its
