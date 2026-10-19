@@ -74,23 +74,34 @@ const up: PointerInput['up'] = async (options) => {
 /** How long `pointer.wheel` waits for its event to reach the page. */
 const WHEEL_TIMEOUT = 1000;
 
+/** How long `pointer.wheel` waits for its event after a scroll. */
+const SCROLL_GRACE = 250;
+
 /**
- * Resolves once the page gets a `wheel` event or the scroll one causes:
- * Firefox's wheel command can resolve before either. WebKit sends no `wheel`
- * event while a button is held, only the scroll, and a wheel that neither
- * reaches the page nor scrolls gives up after `WHEEL_TIMEOUT`.
+ * Resolves once the page gets a `wheel` event: Firefox's wheel command can
+ * resolve before it. A scroll gives the event `SCROLL_GRACE` more, then
+ * resolves: WebKit sends no `wheel` event while a button is held, only the
+ * scroll, and a scroll can come first that isn't this wheel's (Firefox
+ * scrolling one ahead of its event, or one left from an earlier step). A
+ * wheel that neither reaches the page nor scrolls gives up after
+ * `WHEEL_TIMEOUT`.
  */
 function wheelArrival(): Promise<void> {
   return new Promise((resolve) => {
-    const done = () => {
+    let timer = setTimeout(done, WHEEL_TIMEOUT);
+    function done() {
       clearTimeout(timer);
       window.removeEventListener('wheel', done, true);
-      window.removeEventListener('scroll', done, true);
+      window.removeEventListener('scroll', scrolled, true);
       resolve();
-    };
-    const timer = setTimeout(done, WHEEL_TIMEOUT);
+    }
+    function scrolled() {
+      window.removeEventListener('scroll', scrolled, true);
+      clearTimeout(timer);
+      timer = setTimeout(done, SCROLL_GRACE);
+    }
     window.addEventListener('wheel', done, true);
-    window.addEventListener('scroll', done, true);
+    window.addEventListener('scroll', scrolled, true);
   });
 }
 
