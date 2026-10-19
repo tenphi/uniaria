@@ -28,6 +28,23 @@ let name: ScreenReaderName | undefined;
 /** Starts the machine's screen reader and moves it into the page. */
 export async function startScreenReader(): Promise<void> {
   name = await commands.uniScreenReaderStart();
+  if (name === 'voiceover') await openFirstDialog();
+}
+
+/**
+ * VoiceOver says nothing for the first modal dialog the browser opens, a
+ * plain `<dialog>` too, and reads the ones after it (probed). One opened and
+ * closed here keeps that out of the scenarios.
+ */
+async function openFirstDialog(): Promise<void> {
+  const dialog = document.createElement('dialog');
+  dialog.innerHTML = '<button type="button">Close</button>';
+  document.body.append(dialog);
+  dialog.showModal();
+  await commands.uniScreenReaderSettle();
+  dialog.close();
+  dialog.remove();
+  await commands.uniScreenReaderSettle();
 }
 
 export async function stopScreenReader(): Promise<void> {
