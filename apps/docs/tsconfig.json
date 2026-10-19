@@ -1,5 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    // The workspace packages' sources, as tsconfig.base.json and the demo
+    // bundles resolve them, so the site needs no package build.
+    "customConditions": ["uniaria-source"]
+  },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist", "public"]
 }
