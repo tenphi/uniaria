@@ -2027,6 +2027,24 @@ describe('<uni-select>', () => {
       .poll(() => part('popover').matches(':popover-open'))
       .toBe(false);
   });
+
+  it('has the new value in its form data inside valuechange, as a native select', () => {
+    const container = mount(`<form>${FRUIT}</form>`);
+    const { host, option } = selectIn(container);
+    const form = container.querySelector('form')!;
+    const submitted: unknown[] = [];
+    host.addEventListener('valuechange', () =>
+      submitted.push(new FormData(form).getAll('fruit')),
+    );
+    option('lemon').click();
+    expect(submitted).toEqual([['lemon']]);
+
+    // Controlled: a value the consumer doesn't take goes back after.
+    host.value = ['lemon'];
+    option('apple').click();
+    expect(submitted.at(-1)).toEqual(['apple']);
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+  });
 });
 
 describe('<uni-combobox>', () => {
@@ -2091,5 +2109,23 @@ describe('<uni-combobox>', () => {
       .poll(() => part('popover').matches(':popover-open'))
       .toBe(false);
     expect(option('lemon').hidden).toBe(false);
+  });
+
+  it('has the new value in its form data inside valuechange, as a native field', () => {
+    const container = mount(`<form>${FRUIT}</form>`);
+    const { host, option } = comboboxIn(container);
+    const form = container.querySelector('form')!;
+    const submitted: unknown[] = [];
+    host.addEventListener('valuechange', () =>
+      submitted.push(new FormData(form).getAll('fruit')),
+    );
+    option('lemon').click();
+    expect(submitted).toEqual([['lemon']]);
+
+    // Controlled: a value the consumer doesn't take goes back after.
+    host.value = ['lemon'];
+    option('apple').click();
+    expect(submitted.at(-1)).toEqual(['apple']);
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
   });
 });

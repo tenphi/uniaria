@@ -182,7 +182,7 @@ export const select = defineComponent({
         getChildren: props.getChildren(),
         disabledKeys: props.disabledKeys(),
         value: value.get(),
-        onValueChange: (next: readonly string[]) => value.set(next),
+        onValueChange: (next: readonly string[]) => setValue(next),
         selectionMode: props.selectionMode(),
         isDisabled: props.isDisabled(),
         isReadOnly: props.isReadOnly(),
@@ -320,7 +320,7 @@ export const select = defineComponent({
     const typeahead = createTypeahead();
     const choose = (key: string | null) => {
       if (key === null || props.isReadOnly()) return;
-      if (!isSameKeys([key], value.get())) value.set([key]);
+      if (!isSameKeys([key], value.get())) setValue([key]);
     };
     const step = (direction: 1 | -1) => {
       const options = collection();
@@ -511,13 +511,16 @@ export const select = defineComponent({
       group.append(...wanted.slice(1).map(toOption));
       element.replaceChildren(toOption(wanted[0]!), group);
     };
-    const syncHiddenSelect = (element: HTMLSelectElement) => {
+    const syncHiddenSelect = (
+      element: HTMLSelectElement,
+      selected: readonly string[] = value.get(),
+    ) => {
       const { options } = collection();
       const isMany = isMultiple();
       if (element.multiple !== isMany) element.multiple = isMany;
       writeOptions(element, options);
       // The attribute too, which a form reset goes back to.
-      const keys = new Set(value.get());
+      const keys = new Set(selected);
       for (const option of element.options) {
         const isSelected = option.value !== '' && keys.has(option.value);
         if (option.defaultSelected !== isSelected) {
@@ -528,6 +531,18 @@ export const select = defineComponent({
     };
     const hiddenSelect = () =>
       partElement(ctx, 'hiddenSelect') as HTMLSelectElement | null;
+    /**
+     * Sets the value with the hidden select already holding it, as a native
+     * select does before its `change`: a `valueChange` listener's FormData
+     * has the new value. A controlled value the consumer didn't take goes
+     * back.
+     */
+    const setValue = (next: readonly string[]) => {
+      const element = hiddenSelect();
+      if (element) syncHiddenSelect(element, next);
+      value.set(next);
+      if (element && value.isControlled()) syncHiddenSelect(element);
+    };
     const hiddenSnapshot = ctx.memo(
       () => [collection(), value.get(), props.selectionMode()] as const,
       (options, keys, mode) => ({ options, keys, mode }),
@@ -552,7 +567,7 @@ export const select = defineComponent({
             (option) => option.value,
           ).filter(Boolean);
           const next = isMultiple() ? keys : keys.slice(0, 1);
-          if (!isSameKeys(next, value.get())) value.set(next);
+          if (!isSameKeys(next, value.get())) setValue(next);
           syncHiddenSelect(element);
         });
       // Validation and autofill may focus it: the trigger takes focus.
@@ -563,7 +578,7 @@ export const select = defineComponent({
         if (resetEvent.defaultPrevented || initial === undefined) return;
         const restored = initial;
         ctx.batch(() => {
-          if (!isSameKeys(restored, value.get())) value.set(restored);
+          if (!isSameKeys(restored, value.get())) setValue(restored);
         });
       };
       element.addEventListener('change', onChange);

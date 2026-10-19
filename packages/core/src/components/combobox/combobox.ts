@@ -382,7 +382,7 @@ export const combobox = defineComponent({
         getChildren: shownChildren,
         disabledKeys: props.disabledKeys(),
         value: value.get(),
-        onValueChange: (next: readonly string[]) => value.set(next),
+        onValueChange: (next: readonly string[]) => setValue(next),
         isDisabled: props.isDisabled(),
         isReadOnly: props.isReadOnly(),
         shouldFocusWrap: props.shouldFocusWrap(),
@@ -544,7 +544,7 @@ export const combobox = defineComponent({
       }
       isFiltering.set(false);
       if (next === null) return setText(settledText());
-      if (!isSameKeys(next, value.get())) value.set(next);
+      if (!isSameKeys(next, value.get())) setValue(next);
       setText(textOf(next));
     };
 
@@ -738,6 +738,18 @@ export const combobox = defineComponent({
     // text, as NumberField's.
     let initial: readonly string[] | undefined;
     const resync = ctx.state(0);
+    /**
+     * Sets the value with the hidden input already holding it, as a native
+     * field does before its `change`: a `valueChange` listener's FormData
+     * has the new value. A controlled value the consumer didn't take goes
+     * back on the flush this asks for.
+     */
+    const setValue = (next: readonly string[]) => {
+      const hidden = partElement(ctx, 'hiddenInput') as HTMLInputElement | null;
+      if (hidden) hidden.value = next[0] ?? '';
+      value.set(next);
+      if (hidden && value.isControlled()) resync.set(resync.get() + 1);
+    };
     partEffect(ctx, 'input', (element) => {
       initial ??= value.get();
       const form = (element as HTMLInputElement).form;
@@ -750,7 +762,7 @@ export const combobox = defineComponent({
           dropDraft();
           isFiltering.set(false);
           close();
-          if (!isSameKeys(restored, value.get())) value.set(restored);
+          if (!isSameKeys(restored, value.get())) setValue(restored);
           setText(textOf(restored));
         });
         // The native reset runs after this event and puts back the value
