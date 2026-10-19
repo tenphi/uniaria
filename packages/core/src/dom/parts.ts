@@ -50,7 +50,7 @@ const waiting = new WeakMap<
  * waiting. Observers share one `whenDefined()` per tag, so a tag that is
  * never defined holds on to no host that stopped waiting.
  */
-function whenDefined(
+export function whenDefined(
   registry: CustomElementRegistry,
   tag: string,
   callback: () => void,

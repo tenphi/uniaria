@@ -158,6 +158,28 @@ describe('link lookup', () => {
     return seen;
   }
 
+  it('asks again when an element around it turns out to be a nearer host', async () => {
+    const tag = (name: string) =>
+      `test-${name}-${Math.random().toString(36).slice(2)}`;
+    const [late, plain] = [tag('late'), tag('plain')];
+    const container = tree(
+      `<test-link-host id="tip"><${plain}><${late}><span id="inside"></span></${late}></${plain}></test-link-host>`,
+    );
+    const inside = trackLink(container.querySelector('#inside')!);
+    const instance = createInstance(hint);
+    cleanups.push(provideOwner(instance, container.querySelector('#tip')!));
+    expect(inside).toEqual([instance]);
+
+    // A custom element of another library is no host: the link stays.
+    customElements.define(plain, class extends HTMLElement {});
+    await customElements.whenDefined(plain);
+    await Promise.resolve();
+    expect(inside).toEqual([instance]);
+
+    customElements.define(late, class extends Host {});
+    await expect.poll(() => inside).toEqual([instance, undefined]);
+  });
+
   it('asks only the nearest UniAria host, by key, and waits for it', () => {
     const container = tree(
       '<test-link-host id="tip"><div><test-link-host id="pop"><span id="inside"></span></test-link-host><span id="direct"></span></div></test-link-host>',

@@ -17,12 +17,14 @@
  *   ask again: another owner may answer.
  * - **Links** (Tooltip spec, Resolved questions 2) are asked for by key
  *   rather than definition, and only of the nearest UniAria host around the
- *   child: a button in a popover inside a tooltip isn't the tooltip's.
+ *   child: a button in a popover inside a tooltip isn't the tooltip's. An
+ *   element around the child whose tag is defined later may turn out to be
+ *   that nearest host, so the link is asked for again then.
  */
 
 import type { AnyDefinition, Instance, LinkKey } from '../runtime';
 import { answers } from '../runtime';
-import { isUniHost } from './parts';
+import { isUniHost, whenDefined } from './parts';
 
 const REQUEST = 'uni-owner-request';
 
@@ -132,6 +134,10 @@ export function requestOwner(
   const isLink = !('setup' in wanted);
   let isDone = false;
   let forget: (() => void) | undefined;
+  /** A link's nearest host when it last asked. */
+  let host: Element | null = null;
+  /** Stops waiting for the tags around the child still undefined. */
+  let unwait: (() => void)[] = [];
 
   const accept = (provider: Provider) => {
     waiting.delete(request);
@@ -159,11 +165,42 @@ export function requestOwner(
     );
   };
 
+  // A tag defined between the child and its host may make a nearer host.
+  const onDefined = () => {
+    if (isDone || hostAround(element) === host) return;
+    if (forget) {
+      forget();
+      forget = undefined;
+      onChange(undefined);
+    }
+    waiting.delete(request);
+    ask();
+  };
+
+  const waitForHosts = () => {
+    for (const stop of unwait) stop();
+    unwait = [];
+    const registry = element.ownerDocument.defaultView?.customElements;
+    if (!registry) return;
+    for (
+      let node = element.parentElement;
+      node && node !== host;
+      node = node.parentElement
+    ) {
+      if (node.localName.includes('-') && !node.matches(':defined')) {
+        unwait.push(whenDefined(registry, node.localName, onDefined));
+      }
+    }
+  };
+
   const ask = () => {
     if (isDone) return;
     if (ownerId !== undefined || isLink) {
-      const provider =
-        ownerId !== undefined ? byId() : providerOn(hostAround(element));
+      if (isLink && ownerId === undefined) {
+        host = hostAround(element);
+        waitForHosts();
+      }
+      const provider = ownerId !== undefined ? byId() : providerOn(host);
       if (provider) accept(provider);
       else waiting.add(request);
       return;
@@ -199,5 +236,7 @@ export function requestOwner(
     waiting.delete(request);
     forget?.();
     forget = undefined;
+    for (const stop of unwait) stop();
+    unwait = [];
   };
 }
