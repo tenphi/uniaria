@@ -849,7 +849,9 @@ export const listbox = defineComponent({
         ...rootProps,
         attrs: { ...rootProps.attrs, 'data-virtualized': flag(isVirtualized) },
       },
-      label: withState(label),
+      // A listbox can't be labelled natively: no `for`, whatever the label's
+      // tag.
+      label: withState({ attrs: { ...label.attrs, for: undefined } }),
       // The box that scrolls, around the list (Anatomy): no tab stop of its
       // own, and no scroll anchoring on top of the engine's.
       scroller: {

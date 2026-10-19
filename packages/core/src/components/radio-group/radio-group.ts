@@ -308,7 +308,9 @@ export const radioGroup = defineComponent({
     };
     return {
       root: rootPart,
-      label: withState(parts.label),
+      // A group can't be labelled natively: no `for`, whatever the label's
+      // tag.
+      label: withState({ attrs: { ...parts.label.attrs, for: undefined } }),
       description: withState(parts.description),
       error: withState(parts.error),
     };
