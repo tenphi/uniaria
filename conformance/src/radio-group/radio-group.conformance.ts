@@ -730,6 +730,33 @@ export const radioGroupConformance = defineConformance<
     );
 
     scenario(
+      'a focusable disabled radio is left out of its form’s data, as a disabled one is',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: inForm([
+            ...plan({
+              options: [
+                option('free', 'Free'),
+                option('pro', 'Pro', { isFocusableWhenDisabled: true }),
+              ],
+            }),
+            h('input', { type: 'hidden', name: 'plan', value: 'also' }),
+          ]),
+          props: { name: 'plan', defaultValue: 'pro', isDisabled: true },
+        });
+        const form = mounted.container.querySelector('form')!;
+        const pro = inputs(mounted)[1]!;
+        expect(pro.checked).toBe(true);
+        expect(pro.disabled).toBe(false);
+        expect(new FormData(form).getAll('plan')).toEqual(['also']);
+
+        await mounted.setProps({ isDisabled: false });
+        expect(new FormData(form).getAll('plan')).toEqual(['pro', 'also']);
+      },
+      PHASE,
+    );
+
+    scenario(
       'isRequired and isInvalid go on the radiogroup; the error joins every radio',
       async ({ mount }) => {
         const mounted = await mount({
