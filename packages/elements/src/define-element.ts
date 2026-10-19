@@ -15,7 +15,7 @@
  * - Parts: `data-part` elements inside the host, minus those inside a nested
  *   UniAria element (of any kind) or a nested host of the same tag, re-scanned
  *   when the subtree changes. The DOM binder writes their attributes and
- *   delegates their listeners from the host. Item parts are every such
+ *   delegates their listeners from the host's root. Item parts are every such
  *   element, keyed by the consumer's `data-key`; a prop that adopts
  *   `items` reads its collection from them while the consumer sets none.
  * - Lifecycle: `connectedCallback` → `start()`, `disconnectedCallback` →

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createInstance, defineComponent, itemId, prop } from '../runtime';
 import { createBinder } from './binder';
@@ -272,6 +272,191 @@ describe('createBinder', () => {
 
       root.click();
       expect(instance.getState().on).toBe(false);
+    });
+
+    // Earlier tests leave their hosts started: event types of their own keep
+    // the document's listeners for them apart.
+    const heard = (types: readonly string[]) => {
+      const calls: string[] = [];
+      const definition = defineComponent({
+        name: 'heard',
+        parts: ['root'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({
+          root: {
+            attrs: {},
+            on: Object.fromEntries(
+              types.map((type) => [type, () => calls.push(type)]),
+            ),
+          },
+        }),
+      });
+      return { definition, calls };
+    };
+
+    it('listens on the document, never on the host or a part', () => {
+      const { host, root } = setup();
+      const onHost = vi.spyOn(host, 'addEventListener');
+      const onRoot = vi.spyOn(root, 'addEventListener');
+      const onDocument = vi.spyOn(document, 'addEventListener');
+      const { definition } = heard(['uni-a', 'uni-b']);
+      const binder = createBinder(createInstance(definition), { host });
+      binder.attach('root', root);
+      binder.start();
+
+      expect(onHost).not.toHaveBeenCalled();
+      expect(onRoot).not.toHaveBeenCalled();
+      // Capturing, for events that don't bubble, and bubbling.
+      expect(
+        onDocument.mock.calls.map(([type, , options]) => [
+          type,
+          typeof options === 'object' && options.capture === true,
+        ]),
+      ).toEqual([
+        ['uni-a', true],
+        ['uni-a', false],
+        ['uni-b', true],
+        ['uni-b', false],
+      ]);
+      onDocument.mockRestore();
+      binder.stop();
+    });
+
+    it('shares one listener per event type among hosts, removed with the last', () => {
+      const first = setup();
+      const second = setup();
+      const added = vi.spyOn(document, 'addEventListener');
+      const removed = vi.spyOn(document, 'removeEventListener');
+      const firstHeard = heard(['uni-c']);
+      const secondHeard = heard(['uni-c']);
+      const firstBinder = createBinder(createInstance(firstHeard.definition), {
+        host: first.host,
+      });
+      const secondBinder = createBinder(
+        createInstance(secondHeard.definition),
+        { host: second.host },
+      );
+      firstBinder.attach('root', first.root);
+      secondBinder.attach('root', second.root);
+      firstBinder.start();
+      secondBinder.start();
+      expect(added).toHaveBeenCalledTimes(2);
+
+      const fire = () =>
+        second.root.dispatchEvent(new Event('uni-c', { bubbles: true }));
+      fire();
+      expect(firstHeard.calls).toEqual([]);
+      expect(secondHeard.calls).toEqual(['uni-c']);
+
+      firstBinder.stop();
+      expect(removed).not.toHaveBeenCalled();
+      fire();
+      expect(secondHeard.calls).toEqual(['uni-c', 'uni-c']);
+
+      secondBinder.stop();
+      expect(removed).toHaveBeenCalledTimes(2);
+      fire();
+      expect(secondHeard.calls).toEqual(['uni-c', 'uni-c']);
+      added.mockRestore();
+      removed.mockRestore();
+    });
+
+    it('reaches nested hosts innermost first, and none after a handler stops it', () => {
+      const calls: string[] = [];
+      const logging = (name: string, stops = false) =>
+        defineComponent({
+          name,
+          parts: ['root'],
+          props: {},
+          setup: () => ({}),
+          expose: () => ({}),
+          connect: () => ({
+            root: {
+              attrs: {},
+              on: {
+                click: (event: Event) => {
+                  calls.push(name);
+                  if (stops) event.stopPropagation();
+                },
+              },
+            },
+          }),
+        });
+      const { host: outer, root: outerRoot } = setup(
+        '<div data-part="root"><div id="inner"><button data-part="root">Go</button></div></div>',
+      );
+      const inner = outer.querySelector<HTMLElement>('#inner')!;
+      const button = inner.querySelector('button')!;
+      const start = (
+        name: string,
+        host: HTMLElement,
+        part: HTMLElement,
+        stops = false,
+      ) => {
+        const binder = createBinder(createInstance(logging(name, stops)), {
+          host,
+        });
+        binder.attach('root', part);
+        binder.start();
+        return binder;
+      };
+      const outerBinder = start('outer', outer, outerRoot);
+      const innerBinder = start('inner', inner, button);
+
+      button.click();
+      expect(calls).toEqual(['inner', 'outer']);
+
+      outerBinder.stop();
+      innerBinder.stop();
+      calls.length = 0;
+      start('outer', outer, outerRoot);
+      start('inner', inner, button, true);
+      button.click();
+      expect(calls).toEqual(['inner']);
+    });
+
+    it('runs after the listeners on the path, which can prevent an event first', () => {
+      const { host, root } = setup();
+      const instance = createInstance(toy);
+      const binder = createBinder(instance, { host });
+      binder.attach('root', root);
+      binder.start();
+      const order: string[] = [];
+      const span = root.querySelector('span')!;
+      span.addEventListener('click', () => order.push('target'));
+      host.addEventListener('click', () => order.push('host'));
+      document.body.addEventListener('click', () => order.push('body'));
+
+      span.click();
+      expect(order).toEqual(['target', 'host', 'body']);
+      expect(instance.getState().on).toBe(true);
+
+      host.addEventListener('click', (event) => event.stopPropagation());
+      span.click();
+      expect(instance.getState().on).toBe(true);
+      binder.stop();
+    });
+
+    it('listens on the shadow root of a host inside one', () => {
+      const shadowHost = document.createElement('div');
+      document.body.append(shadowHost);
+      const shadow = shadowHost.attachShadow({ mode: 'open' });
+      const host = document.createElement('div');
+      host.innerHTML = '<div data-part="root"><span>Go</span></div>';
+      shadow.append(host);
+      const root = host.querySelector<HTMLElement>('[data-part="root"]')!;
+      const onShadow = vi.spyOn(shadow, 'addEventListener');
+      const instance = createInstance(toy);
+      const binder = createBinder(instance, { host });
+      binder.attach('root', root);
+      binder.start();
+
+      expect(onShadow).toHaveBeenCalled();
+      root.querySelector('span')!.click();
+      expect(instance.getState().on).toBe(true);
+      binder.stop();
     });
   });
 });

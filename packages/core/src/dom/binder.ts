@@ -20,17 +20,26 @@
  * so moving focus in a long list rewrites two rows, not all of them.
  *
  * Custom elements also pass their host: the binder then delegates each
- * part's listeners from it (capture phase, so events that don't bubble, like
- * `pointerenter`, are seen too). A bubbling event reaches every part on its
- * path, innermost first, as React's listeners on each part element would; one
- * that doesn't bubble reaches only its target's part. React attaches its own
+ * part's listeners for it from the host's root, the document or a shadow
+ * root, as React delegates from its root container (owner, 2026-10-19): in
+ * the bubble phase for events that bubble, so the consumer's listeners on the
+ * path run first and can prevent one, and in the capture phase for those that
+ * don't, like `pointerenter`. A bubbling event reaches every part on its path,
+ * innermost first, as React's listeners on each part element would; one that
+ * doesn't bubble reaches only its target's part. React attaches its own
  * listeners.
+ *
+ * Never from the host itself: Chromium exposes an element with a `click` or
+ * `mousedown` listener as clickable, and NVDA then says "clickable" before
+ * every control inside it (probed; listeners on the document are not
+ * reported). One pair of listeners per event type and root serves every host
+ * in it, and none after a handler stops propagation.
  */
 
 import type { AnyDefinition, Instance, PartProps } from '../runtime';
 
 export interface BinderOptions {
-  /** The custom-element host to delegate part listeners from. */
+  /** The custom-element host to delegate part listeners for. */
   readonly host?: HTMLElement;
 }
 
@@ -69,6 +78,83 @@ interface BoundItem extends Bound {
 /** A part element, or an item part's with its key. */
 type Target = string | ItemTarget;
 
+type Dispatch = (event: Event) => void;
+
+/** One event type's listeners on a root, and the hosts they serve. */
+interface RootListener {
+  readonly hosts: Map<Node, Dispatch>;
+  readonly capture: Dispatch;
+  readonly bubble: Dispatch;
+}
+
+const rootListeners = new WeakMap<Node, Map<string, RootListener>>();
+
+/** The browser treats these as passive on the document unless told not to. */
+const PASSIVE_BY_DEFAULT = new Set([
+  'touchstart',
+  'touchmove',
+  'wheel',
+  'mousewheel',
+]);
+
+/**
+ * Hands `event` to every host on its path: innermost first for one that
+ * bubbles, as the bubble phase reaches them, outermost first for one that
+ * doesn't, as the capture phase does. None after a handler stops it.
+ */
+function dispatchToHosts(hosts: Map<Node, Dispatch>, event: Event): void {
+  const reached: Dispatch[] = [];
+  for (let node = event.target as Node | null; node; node = node.parentNode) {
+    const dispatch = hosts.get(node);
+    if (dispatch) reached.push(dispatch);
+  }
+  if (!event.bubbles) reached.reverse();
+  for (const dispatch of reached) {
+    dispatch(event);
+    if (event.cancelBubble) return;
+  }
+}
+
+function listenFromRoot(
+  root: Node,
+  type: string,
+  host: Node,
+  dispatch: Dispatch,
+): void {
+  let types = rootListeners.get(root);
+  if (!types) rootListeners.set(root, (types = new Map()));
+  let entry = types.get(type);
+  if (!entry) {
+    const hosts = new Map<Node, Dispatch>();
+    entry = {
+      hosts,
+      // Events that don't bubble reach the root only while capturing.
+      capture: (event) => {
+        if (!event.bubbles) dispatchToHosts(hosts, event);
+      },
+      // Bubbling ones once every listener on their path has run, so a
+      // consumer's listener can prevent one first, as with React.
+      bubble: (event) => dispatchToHosts(hosts, event),
+    };
+    types.set(type, entry);
+    const passive = PASSIVE_BY_DEFAULT.has(type) ? { passive: false } : {};
+    root.addEventListener(type, entry.capture, { ...passive, capture: true });
+    root.addEventListener(type, entry.bubble, passive);
+  }
+  entry.hosts.set(host, dispatch);
+}
+
+function unlistenFromRoot(root: Node, type: string, host: Node): void {
+  const types = rootListeners.get(root);
+  const entry = types?.get(type);
+  if (!types || !entry) return;
+  entry.hosts.delete(host);
+  if (entry.hosts.size > 0) return;
+  root.removeEventListener(type, entry.capture, true);
+  root.removeEventListener(type, entry.bubble);
+  types.delete(type);
+}
+
 const itemEntryId = (part: string, key: string) => `${part}\n${key}`;
 
 export function createBinder<D extends AnyDefinition>(
@@ -81,6 +167,8 @@ export function createBinder<D extends AnyDefinition>(
   const itemsByKey = new Map<string, Set<BoundItem>>();
   const targets = new Map<Element, Target>();
   const delegated = new Set<string>();
+  /** The root the listeners are on, from the first one to the last. */
+  let root: Node | undefined;
   let unsubscribe: (() => void) | undefined;
   let unsubscribeItems: (() => void) | undefined;
   /** Keys of items to write on the next apply, or `'all'`. */
@@ -122,7 +210,8 @@ export function createBinder<D extends AnyDefinition>(
     for (const type of types) {
       if (delegated.has(type)) continue;
       delegated.add(type);
-      host.addEventListener(type, dispatch, true);
+      root ??= host.getRootNode();
+      listenFromRoot(root, type, host, dispatch);
     }
   };
 
@@ -253,9 +342,11 @@ export function createBinder<D extends AnyDefinition>(
       unsubscribe = undefined;
       unsubscribeItems?.();
       unsubscribeItems = undefined;
-      for (const type of delegated)
-        host?.removeEventListener(type, dispatch, true);
+      if (host && root) {
+        for (const type of delegated) unlistenFromRoot(root, type, host);
+      }
       delegated.clear();
+      root = undefined;
     },
     apply,
   };
