@@ -52,9 +52,9 @@ Not part of Dialog:
 | Part        | Element                | Attributes UniAria owns                                                                                                           | Notes                                                                                                                                                    |
 | ----------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | trigger     | `button`               | Button's (`type`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`); `data-open` | Optional. A press opens the dialog. No `aria-haspopup`, `aria-expanded` or `aria-controls` (Resolved questions 8).                                       |
-| root        | `dialog`               | `id`, `role` (only `alertdialog`), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`; state attributes                       | Opened with `showModal()`. UniAria never writes the `open` attribute, which would open it non-modally. Its `::backdrop` is the underlay.                 |
-| title       | any; usually a heading | `id`; state attributes                                                                                                            | Names the dialog through `aria-labelledby`.                                                                                                              |
-| description | any                    | `id`; state attributes                                                                                                            | Optional; required for an `alertdialog` by the APG. Linked through `aria-describedby` while rendered. Leave it out for long or structured content (APG). |
+| root        | `dialog`               | `id` (unless it has one), `role` (only `alertdialog`), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`; state attributes   | Opened with `showModal()`. UniAria never writes the `open` attribute, which would open it non-modally. Its `::backdrop` is the underlay.                 |
+| title       | any; usually a heading | `id` (unless it has one); state attributes                                                                                        | Names the dialog through `aria-labelledby`.                                                                                                              |
+| description | any                    | `id` (unless it has one); state attributes                                                                                        | Optional; required for an `alertdialog` by the APG. Linked through `aria-describedby` while rendered. Leave it out for long or structured content (APG). |
 | close       | `button`               | Button's                                                                                                                          | Optional. A press closes the dialog even when it isn't dismissable: it is an explicit action (as UI Kit's close button).                                 |
 
 `aria-labelledby` and `aria-describedby` reference only rendered parts, as
@@ -70,6 +70,10 @@ first, so a transition starts from them when it goes.
 Render the `<dialog>` always; it is hidden while closed. A design system that
 wants to skip rendering heavy content while closed renders the content (not
 the dialog) from `isOpen || isExiting`.
+
+A part keeps an `id` the consumer gives its element, in both adapters, and
+every reference to the part follows it; UniAria writes an `id` only on a
+part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 ## Props
 

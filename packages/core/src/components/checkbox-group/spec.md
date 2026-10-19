@@ -38,12 +38,12 @@ Not part of CheckboxGroup:
 
 ## Anatomy
 
-| Part        | Element                                                   | Attributes UniAria owns                                                                                            | Notes                                                                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`                                        | `role="group"`, `aria-disabled`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`; state attributes | The outermost element: holds the label, the description, the error and the checkboxes. Field's `aria-invalid` and `aria-required` are left off: screen readers don't read them on a group (see Required and invalid). |
-| label       | `span` by default; any element through `labelElementType` | as Field: `id`, state attributes                                                                                   | A group can't be labelled natively, so no `for`. A `<fieldset>` root with a `<legend>` label works too.                                                                                                               |
-| description | any                                                       | as Field                                                                                                           |                                                                                                                                                                                                                       |
-| error       | any                                                       | as Field                                                                                                           | Announced by Field when it appears.                                                                                                                                                                                   |
+| Part        | Element                                                   | Attributes UniAria owns                                                                                                                | Notes                                                                                                                                                                                                                 |
+| ----------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`                                        | `role="group"`, `aria-disabled`; as Field's control: `id` (unless it has one), `aria-labelledby`, `aria-describedby`; state attributes | The outermost element: holds the label, the description, the error and the checkboxes. Field's `aria-invalid` and `aria-required` are left off: screen readers don't read them on a group (see Required and invalid). |
+| label       | `span` by default; any element through `labelElementType` | as Field: `id` (unless it has one), state attributes                                                                                   | A group can't be labelled natively, so no `for`. A `<fieldset>` root with a `<legend>` label works too.                                                                                                               |
+| description | any                                                       | as Field                                                                                                                               |                                                                                                                                                                                                                       |
+| error       | any                                                       | as Field                                                                                                                               | Announced by Field when it appears.                                                                                                                                                                                   |
 
 Changed on 2026-10-19 (owner): the root is the outermost element, so the label,
 the description and the error go inside it, as in React Aria.
@@ -53,6 +53,10 @@ components inside the root, or linked from elsewhere (Owner link). State
 attributes go on every part: `data-disabled`, `data-readonly`,
 `data-invalid`, `data-required`, `data-focus-within` and
 `data-focus-visible` (focus within came by keyboard).
+
+A part keeps an `id` the consumer gives its element, in both adapters, and
+every reference to the part follows it; UniAria writes an `id` only on a
+part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 ## Props
 

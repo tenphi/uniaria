@@ -152,7 +152,14 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   call the handler from the latest `connect()`.
 - The binder owns state attributes (ARIA state, `data-state` and other state
   attributes). Consumers don't pass them; adapters warn in development if
-  they do.
+  they do. A part's `id` is the exception (DOM, lifecycle and SSR).
+- When an element stops being a part (another element takes the part, or
+  none: a nested element defined later, a renamed `data-element`, an
+  unmount), the binder removes the attributes and styles it wrote there that
+  still hold what it wrote, unless another part bound to the element writes
+  them too. It never removes what it didn't write: the consumer's markers
+  (`data-element`, `data-key`, the root's class), the consumer's id, and
+  what React rendered from the part props.
 - Every render reads current state, so a parent re-render writes the values
   the binder already set.
 - Changing the rendered tree by state (other content, lazy mounting) needs a
@@ -169,9 +176,11 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 { event? })` for stateful ones, and `event<Detail>()` under `events` for
   what the component reports. Options: `attribute` (the element attribute;
   `false` for a property only), `type` (attribute conversion, inferred from
-  the default) and `adopt` (an element reads an unset prop from a part's tag,
+  the default), `adopt` (an element reads an unset prop from a part's tag,
   attribute or live DOM property, like Button's `elementType` and `href` and
-  TextField's input `value`; a bindable adopts into its `default<Key>`).
+  TextField's input `value`; a bindable adopts into its `default<Key>`) and
+  `idOf` (the part whose id a plain prop sets, like Field's `controlId`; see
+  DOM, lifecycle and SSR).
 - Event names are camelCase (`pressStart`, `openChange`): the DOM event is
   lowercase (`pressstart`) and the callback prop is `onPressStart`. A
   bindable's change event defaults to `<name>Change`, where the name drops an
@@ -362,6 +371,32 @@ target parts the same way in every adapter (`runtime/define.ts`:
   Consumers can override every id, except an item part's, which is made from
   its component's id and the item's key and moves with them (Listbox spec,
   Resolved questions 1).
+- **A part keeps an id already on its element** (owner, 2026-10-19), in
+  both adapters, and every reference to the part (`for`, `aria-labelledby`,
+  `aria-describedby`, `aria-controls`, `aria-activedescendant`, item ids made
+  from a list's id) follows it. A part's id is, in order: the id its element
+  carries, its `idOf` prop (`controlId`, `inputId`, `listId`, `triggerId`),
+  then `<instance id>-<part>`. The binder writes an id only on a part whose
+  element has none. It reads the element's id as the element attaches,
+  before every write and on a change (a mutation observer while started),
+  and hands it to the instance (`instance.adoptId()`), so `ctx.ids` is live:
+  read it where it is used. An id the consumer changes is followed; one they
+  remove gives the part back its own. An id equal to the part's own, or one
+  the binder wrote, isn't the consumer's. Item parts never adopt.
+- In React the consumer's id goes after the part spread
+  (`<label {...ui.parts.label} id="email-label">`). The first render can't
+  see the element, so server HTML references the id the part has without
+  one (its `idOf` prop, else generated) until hydration attaches the parts;
+  an `idOf` prop gives the right id before then. React keeps an id it once
+  adopted while the JSX drops it, since the part props then render it, as
+  React Aria's `mergeIds` does. A custom element no longer copies a part's
+  id into the `*Id` prop: the part keeps it, and the prop stays the
+  consumer's.
+- A composed component's part (Popover's trigger on Button, NumberField's
+  steppers, Combobox's button) writes its id only where the element has
+  none, so Button's "the consumer owns `id`" holds. Two instances bound to
+  one element (a nested component's root that is also the outer's part)
+  agree on whichever id the element carries: the second adopts the first's.
 - Document, window and root node come from the part elements
   (`ownerDocument`, `defaultView`, `getRootNode()`), and before any element
   from `ctx.env.document`, so components work in shadow roots and iframes.
@@ -433,7 +468,8 @@ target parts the same way in every adapter (`runtime/define.ts`:
   because the page outside it is inert.
 - Attribute ownership is per part: the element owns ARIA state, `data-state`
   and the part markers; the consumer owns content, classes other than the
-  root's `uni-<name>`, and every other attribute.
+  root's `uni-<name>`, and every other attribute, `id` included: UniAria
+  writes an id only on a part that has none.
   A part can be declared element-owned: the consumer leaves it empty and
   UniAria writes its content, in both adapters. Select's displayed value
   (its text) and its hidden `<select>` (its `<option>`s) are the two (Select

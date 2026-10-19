@@ -52,12 +52,12 @@ Not part of Tooltip:
 
 ## Anatomy
 
-| Part    | Element                                                                   | Attributes UniAria owns                                                                                          | Notes                                                                                                                                         |
-| ------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| trigger | a focusable element that isn't another component's part; usually `button` | `aria-describedby` (`aria-labelledby` with `relation="label"`) while enabled                                     | Optional. A UniAria component linked to the tooltip takes its place (Resolved questions 2). Hover, focus and presses on it drive the tooltip. |
-| anchor  | any                                                                       | none                                                                                                             | Optional. The tooltip is placed against it instead of the trigger (UI Kit's `targetRef`).                                                     |
-| root    | any; usually `div`                                                        | `id`, `popover="manual"`, `role="tooltip"`, `data-placement`; state attributes; positioning styles (Positioning) | Hidden while closed. Text only: development warns when it holds a focusable element.                                                          |
-| arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                | Optional, as Popover's.                                                                                                                       |
+| Part    | Element                                                                   | Attributes UniAria owns                                                                                                              | Notes                                                                                                                                         |
+| ------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| trigger | a focusable element that isn't another component's part; usually `button` | `aria-describedby` (`aria-labelledby` with `relation="label"`) while enabled                                                         | Optional. A UniAria component linked to the tooltip takes its place (Resolved questions 2). Hover, focus and presses on it drive the tooltip. |
+| anchor  | any                                                                       | none                                                                                                                                 | Optional. The tooltip is placed against it instead of the trigger (UI Kit's `targetRef`).                                                     |
+| root    | any; usually `div`                                                        | `id` (unless it has one), `popover="manual"`, `role="tooltip"`, `data-placement`; state attributes; positioning styles (Positioning) | Hidden while closed. Text only: development warns when it holds a focusable element.                                                          |
+| arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                                    | Optional, as Popover's.                                                                                                                       |
 
 State attributes on the root and the arrow: `data-open` while open,
 `data-entering` for the first frame after opening, `data-exiting` while
@@ -69,6 +69,10 @@ belongs to the tooltip.
 Render the root always; it is hidden while closed. Render it next to the
 trigger: inside a modal Dialog or a modal Popover it must be inside their
 element, or it is inert or hidden from assistive technology.
+
+A part keeps an `id` the consumer gives its element, in both adapters, and
+every reference to the part follows it; UniAria writes an `id` only on a
+part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 ## Props
 

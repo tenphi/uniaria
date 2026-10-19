@@ -27,7 +27,12 @@ for internal state". Local rules:
   `click`, before a cancelled click is undone), `class` → `className`, `for`
   → `htmlFor`, `tabindex` → `tabIndex`.
 - Warn in development when a consumer passes an attribute the binder owns
-  (checked in the part's ref, against what React just rendered).
+  (checked in the part's ref, against what React just rendered). A named
+  part's `id` isn't one: the consumer's, after the spread, is kept, and the
+  binder points every reference at it (root AGENTS.md → DOM, lifecycle and
+  SSR). An item part's is.
+- The conformance adapter renders a template's `id` after the part spread,
+  as a consumer overriding the part's id writes it.
 - Tests: render counts (zero for internal interactions), StrictMode (double
   mount), SSR + hydration.
 - `src/conformance-adapter.tsx` implements the mount contract (inside

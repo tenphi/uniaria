@@ -50,17 +50,21 @@ Not part of Field:
 All parts are optional; a part counts once its element is rendered (see
 Linking).
 
-| Part        | Element                                                        | Attributes UniAria owns                                                                        | Notes                                                                                                                                                   |
-| ----------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`                                             | the `uni-field` class, `data-invalid`, `data-required`, `data-disabled`                        | Optional wrapper for styling. No role.                                                                                                                  |
-| label       | `label` by default; any element through `labelElementType`     | `id`, `for` (only on a `label`), state attributes                                              | The consumer owns the content. A required mark such as `*` must be `aria-hidden`: the control announces "required".                                     |
-| control     | any control: `input`, `textarea`, `select`, or a custom widget | `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`, state attributes | The consumer, or the UniAria input composing Field, owns everything else: `name`, `type`, `value`, `disabled`, `readonly`, the role of a custom widget. |
-| description | any                                                            | `id`, state attributes                                                                         |                                                                                                                                                         |
-| error       | any                                                            | `id`, `hidden` while the error is not shown, state attributes                                  | Shown while `isInvalid` and not `isDisabled`. The consumer owns the content.                                                                            |
+| Part        | Element                                                        | Attributes UniAria owns                                                                                            | Notes                                                                                                                                                   |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`                                             | the `uni-field` class, `data-invalid`, `data-required`, `data-disabled`                                            | Optional wrapper for styling. No role.                                                                                                                  |
+| label       | `label` by default; any element through `labelElementType`     | `id` (unless it has one), `for` (only on a `label`), state attributes                                              | The consumer owns the content. A required mark such as `*` must be `aria-hidden`: the control announces "required".                                     |
+| control     | any control: `input`, `textarea`, `select`, or a custom widget | `id` (unless it has one), `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`, state attributes | The consumer, or the UniAria input composing Field, owns everything else: `name`, `type`, `value`, `disabled`, `readonly`, the role of a custom widget. |
+| description | any                                                            | `id` (unless it has one), state attributes                                                                         |                                                                                                                                                         |
+| error       | any                                                            | `id` (unless it has one), `hidden` while the error is not shown, state attributes                                  | Shown while `isInvalid` and not `isDisabled`. The consumer owns the content.                                                                            |
 
 State attributes are `data-invalid`, `data-required` and `data-disabled`,
 written on every part, so a design system can style the label, the control
 and the messages without reading state.
+
+A part keeps an `id` the consumer gives its element, in both adapters, and
+every reference to the part follows it; UniAria writes an `id` only on a
+part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 ## Props
 
@@ -69,7 +73,7 @@ and the messages without reading state.
 | isInvalid        | `boolean`             | `false`   | no       | —            | `aria-invalid="true"` on the control, removed when false (never `"false"`: it reads "not invalid"). Shows and links the error.                                                                                         |
 | isRequired       | `boolean`             | `false`   | no       | —            | `aria-required="true"` on the control, removed when false. Never the native `required`, which would start the browser's own validation.                                                                                |
 | isDisabled       | `boolean`             | `false`   | no       | —            | `data-disabled` on every part, and hides the error, as Cube UI Kit does. It doesn't disable the control (see Summary).                                                                                                 |
-| controlId        | `string \| undefined` | generated | no       | —            | The control's `id`. Cube UI Kit derives it from the form field's name. The element adopts the control's `id` attribute on upgrade.                                                                                     |
+| controlId        | `string \| undefined` | generated | no       | —            | The control's `id` where the control has none of its own (Linking). Cube UI Kit derives it from the form field's name.                                                                                                 |
 | labelElementType | `string`              | `'label'` | no       | —            | `for` goes on the label only when it is a `label`. Components whose control can't be labelled natively (a group, a listbox) default to another tag and drop `for` whatever the tag. The element reads the label's tag. |
 | labelledBy       | `string \| undefined` | —         | no       | —            | More ids for the control's `aria-labelledby`, after the label.                                                                                                                                                         |
 | describedBy      | `string \| undefined` | —         | no       | —            | More ids for the control's `aria-describedby`, after Field's own: a tooltip, or a hint outside the field.                                                                                                              |
@@ -104,6 +108,16 @@ Field has no events.
   commit, in a layout effect before paint: server HTML has every `id` and the
   label's `for`, and gains the references on hydration. Custom elements link
   on upgrade and whenever a part is added or removed.
+- **Ids.** A part keeps an `id` the consumer gives its element, and every
+  reference follows it (owner, 2026-10-19): `for`, `aria-labelledby` and
+  `aria-describedby` name the consumer's ids. UniAria writes an `id` only on
+  a part that has none: the control's is `controlId`, else generated, and
+  the other parts' are generated. An id the consumer changes or removes
+  later is followed too. In React, place the `id` after the part spread
+  (`<label {...ui.parts.label} id="email-label">`); the first render can't
+  see the element, so server HTML references the id the part would have
+  without it (`controlId`, or the generated one) until hydration attaches
+  the parts. Pass `controlId` for a `for` that is right before hydration.
 - **A hidden error is unlinked.** Screen readers read content an
   `aria-describedby` points at even when it is `hidden` (the virtual screen
   reader does), so the error leaves `aria-describedby` whenever Field hides
@@ -210,7 +224,7 @@ return (
 
 Element attributes: `invalid`, `required`, `disabled`, `labelled-by`,
 `described-by`. There is no `control-id` or `label-element-type` attribute:
-the element adopts the control's `id` and reads the label's tag. Set
+the control keeps its own `id`, and the element reads the label's tag. Set
 `invalid` from the form's validation; the error stays hidden until then.
 
 Composed into a UniAria input, Field's parts become the input's parts. TextField,
