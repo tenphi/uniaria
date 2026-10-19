@@ -51,7 +51,7 @@ uniaria/
 │   ├── core/
 │   │   ├── src/
 │   │   │   ├── index.ts            Runtime public API (re-exports runtime/)
-│   │   │   ├── runtime/            Store, bindables, defineComponent, machine — DOM-free
+│   │   │   ├── runtime/            Store, bindables, defineComponent, instances — DOM-free
 │   │   │   ├── collections/        Keys, navigation, selection, typeahead — DOM-free
 │   │   │   ├── dom/                Interaction layer and positioning
 │   │   │   └── components/<name>/  spec.md, definition, tests (created per component)
@@ -228,9 +228,10 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
      elements, like HTML's `for` (`<uni-radio group="plan">`), resolved in
      the instance's root node; the instance itself in an `owner` prop in
      React.
-  2. **React instance context.** `useComponent` provides its instance through
-     a context that holds only the stable instance, so first render and SSR
-     know the owner. React context crosses portals.
+  2. **React instance context.** `OwnerProvider` provides an instance (or
+     the handle `useComponent` returned) through a context that holds only
+     the stable instance, so first render and SSR know the owner. React
+     context crosses portals.
   3. **Nearest DOM ancestor.** The child dispatches a bubbling request event
      on connect, following the Context Community Protocol's shape
      (`references/community-protocols/proposals/context.md`). An owner that
@@ -281,7 +282,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 type PartProps = {
   attrs: Record<string, string | undefined>; // ARIA values as strings; undefined removes
   on?: Partial<Record<keyof HTMLElementEventMap, (event: Event) => void>>; // DOM event names
-  style?: Record<`--${string}`, string>; // CSS custom properties only
+  style?: Record<string, string | undefined>; // CSS custom properties, and layout a definition owns (virtual rows)
   properties?: Record<string, string | number | boolean | undefined>; // live DOM properties
   className?: string; // the root's `uni-<name>` (Part markers)
 };
@@ -344,8 +345,9 @@ target parts the same way in every adapter (`runtime/define.ts`:
   Consumers can override every id, except an item part's, which is made from
   its component's id and the item's key and moves with them (Listbox spec,
   Resolved questions 1).
-- Document, window and root node come from `ctx.env`, so components work in
-  shadow roots and iframes.
+- Document, window and root node come from the part elements
+  (`ownerDocument`, `defaultView`, `getRootNode()`), and before any element
+  from `ctx.env.document`, so components work in shadow roots and iframes.
 - Global singletons (layer stack, focus-visible modality) are keyed on
   `Symbol.for('@uniaria/…')` so duplicate installs share one instance.
   The modality tracker wraps `HTMLElement.prototype.focus` once per window,

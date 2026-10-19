@@ -15,17 +15,17 @@ for internal state". Local rules:
   post-commit `sync()` when it already rendered the value that notification
   brings: React records the rendered snapshot only in a passive effect, so
   otherwise every prop change it reads would render twice.
-- `useComponent` will provide its instance through a React context whose
-  value never changes (the instance, never state), with the first composed
-  component. Children take an explicit `owner` prop first, then this
-  context, then the DOM ancestor after mount.
+- `OwnerProvider` provides an owner through a React context whose value
+  never changes (the instance, never state). Children take an explicit
+  `owner` prop first, then this context, then the DOM ancestor after mount.
 - Handlers are stable wrappers that call the latest `connect()` handler with
   `event.nativeEvent`.
 - Ids with `useId`. Call `setProps()` during render (silent) and
   `service.sync()` in a layout effect.
 - Map neutral part props to React props: `focusin` → `onFocus`, `focusout` →
-  `onBlur`, `input` → `onChange`, `class` → `className`, `for` → `htmlFor`,
-  `tabindex` → `tabIndex`.
+  `onBlur`, `input` → `onInput` (never `onChange`: a checkbox's fires on
+  `click`, before a cancelled click is undone), `class` → `className`, `for`
+  → `htmlFor`, `tabindex` → `tabIndex`.
 - Warn in development when a consumer passes an attribute the binder owns
   (checked in the part's ref, against what React just rendered).
 - Tests: render counts (zero for internal interactions), StrictMode (double

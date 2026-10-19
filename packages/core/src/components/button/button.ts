@@ -3,8 +3,6 @@
  * `<a href>` in link mode, or any element with `role="button"`, with one
  * `press` event for every input and state attributes for styling. It takes
  * a tooltip through its `tooltip` link (Tooltip spec, Resolved questions 2).
- *
- * Still to come with the interaction layer: nested pressables.
  */
 
 import {

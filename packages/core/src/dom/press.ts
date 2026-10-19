@@ -22,10 +22,11 @@
  * and nested pressables.
  *
  * Nested pressables: only the innermost one handles a press. UniAria can't stop
- * propagation, and the element adapter's capture-phase delegation shows an
- * outer instance the event before an inner one, so every pressable element
- * joins a per-window registry (`Symbol.for`) and a pressable ignores events
- * whose target sits inside a nearer one. That works in any order.
+ * propagation, and both adapters hand an event to every part on its path
+ * (React's listeners on each element, the element adapter's delegation from
+ * the root), so every pressable element joins a per-window registry
+ * (`Symbol.for`) and a pressable ignores events whose target sits inside a
+ * nearer one. That works in any order.
  *
  * Order on activation: `pressstart`, `pressend`, `press`. A cancelled press
  * fires `pressstart` and `pressend` only.
