@@ -252,19 +252,20 @@ export const numberField = defineComponent({
     const isPartial = (text: string) =>
       parser().isValidPartialNumber(text, min(), max());
 
-    // The committed value. Adopted markup text is parsed here, so it
-    // follows the locale the input turns out to have.
+    /**
+     * A value as the field reads it: adopted markup text arrives as a
+     * string, parsed here, so it follows the locale the input turns out to
+     * have.
+     */
+    const numberOf = (raw: unknown, current: NumberParser): number | null => {
+      const value =
+        typeof raw === 'string' ? (raw.trim() ? current.parse(raw) : NaN) : raw;
+      return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+    };
+    // The committed value.
     const committed = ctx.memo(
       () => [props.value.get() as unknown, parser()] as const,
-      (raw, current) => {
-        const value =
-          typeof raw === 'string'
-            ? raw.trim()
-              ? current.parse(raw)
-              : NaN
-            : raw;
-        return typeof value === 'number' && !Number.isNaN(value) ? value : null;
-      },
+      numberOf,
     );
 
     // Bumped to write the parts again where the element and the state may
@@ -272,14 +273,20 @@ export const numberField = defineComponent({
     const resync = ctx.state(0);
     const writeAgain = () => resync.set(resync.get() + 1);
     /**
-     * Reports a new value with the hidden input already holding it, since
-     * the binder writes parts only after the event: a `valueChange`
-     * listener's `FormData` has the value, as a native field's has in its
-     * `change`. A controlled value the consumer didn't take goes back after.
+     * Writes a value about to be reported to the hidden input, since the
+     * binder writes parts only after the event: a `valueChange` listener's
+     * `FormData` has the value, as a native field's has in its `change`.
      */
-    const report = (value: number | null) => {
+    const writeHidden = (value: number | null) => {
       const hidden = partElement(ctx, 'hiddenInput') as HTMLInputElement | null;
       if (hidden) hidden.value = formValue(value);
+    };
+    /**
+     * Reports a new value with the hidden input already holding it. A
+     * controlled value the consumer didn't take goes back after.
+     */
+    const report = (value: number | null) => {
+      writeHidden(value);
       props.value.set(value);
       if (props.value.isControlled()) writeAgain();
     };
@@ -621,8 +628,10 @@ export const numberField = defineComponent({
       ctx.emit('focusChange', isFocused);
     });
 
-    // Form reset goes back to the value the field mounted with, its
-    // defaultValue when uncontrolled, as TextField's does.
+    // Form reset goes back to the default, as TextField's does: defaultValue
+    // when uncontrolled, even one set after mount, and for a controlled
+    // field without one, the value it mounted with, reported as `report()`
+    // does.
     let initial: number | null | undefined;
     partEffect(ctx, 'input', (element) => {
       if (initial === undefined) initial = committed();
@@ -633,7 +642,12 @@ export const numberField = defineComponent({
         if (event.defaultPrevented) return;
         ctx.batch(() => {
           draft.set(undefined);
-          if (!Object.is(initial, committed())) report(initial!);
+          props.value.reset({
+            fallback: initial,
+            readDefault: (raw) => numberOf(raw, parser()),
+            beforeReport: writeHidden,
+          });
+          if (props.value.isControlled()) writeAgain();
         });
         // The native reset runs after this event and puts back the value
         // attribute, so the text is written again after it.

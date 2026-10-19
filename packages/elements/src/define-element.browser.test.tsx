@@ -1057,6 +1057,51 @@ describe('<uni-number-field>', () => {
     expect(values).toEqual([2.5]);
     expect(input.value).toBe('2,5');
   });
+
+  it('goes back on a form reset to a default set after it connected, in the form data inside valuechange', async () => {
+    const container = mount(`<form>${field('lang="en-US"', '')}</form>`);
+    const host = container.querySelector('uni-number-field')!;
+    const input = host.querySelector('input')!;
+    const form = container.querySelector('form')!;
+    const submitted: unknown[] = [];
+    host.addEventListener('valuechange', (event) =>
+      submitted.push([
+        (event as CustomEvent).detail,
+        new FormData(form).get('menge'),
+      ]),
+    );
+    host.defaultValue = 5;
+    expect(input.value).toBe('5');
+
+    await resetForm(form);
+    expect(input.value).toBe('5');
+    expect(host.instance.getState().value).toBe(5);
+    expect(submitted).toEqual([]);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    await resetForm(form);
+    expect(submitted).toEqual([
+      [6, '6'],
+      [5, '5'],
+    ]);
+    expect(input.value).toBe('5');
+  });
+
+  it('reports the markup text it goes back to on a form reset as a number', async () => {
+    const container = mount(`<form>${field()}</form>`);
+    const host = container.querySelector('uni-number-field')!;
+    const input = host.querySelector('input')!;
+    const form = container.querySelector('form')!;
+    const values = details(host, 'valuechange');
+
+    await resetForm(form);
+    expect(values).toEqual([]);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    await resetForm(form);
+    expect(values).toEqual([1235, 1234.5]);
+    expect(input.value).toBe('1.234,5');
+  });
 });
 
 describe('<uni-checkbox>', () => {
@@ -2126,6 +2171,43 @@ describe('<uni-select>', () => {
     expect(submitted.at(-1)).toEqual(['apple']);
     expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
   });
+
+  it('goes back on a form reset to a default set after it connected, in the form data inside valuechange', async () => {
+    const container = mount(`<form>${FRUIT}</form>`);
+    const { host, part, option } = selectIn(container);
+    const form = container.querySelector('form')!;
+    const submitted: unknown[] = [];
+    host.addEventListener('valuechange', (event) =>
+      submitted.push([
+        (event as CustomEvent).detail,
+        new FormData(form).getAll('fruit'),
+      ]),
+    );
+    host.defaultValue = ['lemon'];
+    expect(part('value').textContent).toBe('Lemon');
+
+    await resetForm(form);
+    expect(host.instance.getState().value).toEqual(['lemon']);
+    expect(part('value').textContent).toBe('Lemon');
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+    expect(submitted).toEqual([]);
+
+    option('apple').click();
+    await resetForm(form);
+    expect(host.instance.getState().value).toEqual(['lemon']);
+    expect(part('value').textContent).toBe('Lemon');
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+    expect(submitted).toEqual([
+      [['apple'], ['apple']],
+      [['lemon'], ['lemon']],
+    ]);
+
+    // Controlled: a reset asks for the default, and the value stays.
+    host.value = ['apple'];
+    await resetForm(form);
+    expect(submitted.at(-1)).toEqual([['lemon'], ['lemon']]);
+    expect(new FormData(form).getAll('fruit')).toEqual(['apple']);
+  });
 });
 
 describe('<uni-combobox>', () => {
@@ -2208,5 +2290,42 @@ describe('<uni-combobox>', () => {
     option('apple').click();
     expect(submitted.at(-1)).toEqual(['apple']);
     expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+  });
+
+  it('goes back on a form reset to a default set after it connected, in the form data inside valuechange', async () => {
+    const container = mount(`<form>${FRUIT}</form>`);
+    const { host, part, option } = comboboxIn(container);
+    const form = container.querySelector('form')!;
+    const submitted: unknown[] = [];
+    host.addEventListener('valuechange', (event) =>
+      submitted.push([
+        (event as CustomEvent).detail,
+        new FormData(form).getAll('fruit'),
+      ]),
+    );
+    host.defaultValue = ['lemon'];
+    expect((part('input') as HTMLInputElement).value).toBe('Lemon');
+
+    await resetForm(form);
+    expect(host.instance.getState().value).toEqual(['lemon']);
+    expect((part('input') as HTMLInputElement).value).toBe('Lemon');
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+    expect(submitted).toEqual([]);
+
+    option('apple').click();
+    await resetForm(form);
+    expect(host.instance.getState().value).toEqual(['lemon']);
+    expect((part('input') as HTMLInputElement).value).toBe('Lemon');
+    expect(new FormData(form).getAll('fruit')).toEqual(['lemon']);
+    expect(submitted).toEqual([
+      [['apple'], ['apple']],
+      [['lemon'], ['lemon']],
+    ]);
+
+    // Controlled: a reset asks for the default, and the value stays.
+    host.value = ['apple'];
+    await resetForm(form);
+    expect(submitted.at(-1)).toEqual([['lemon'], ['lemon']]);
+    expect(new FormData(form).getAll('fruit')).toEqual(['apple']);
   });
 });

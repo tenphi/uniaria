@@ -168,9 +168,10 @@ first `<option>` and one `<option>` per item, keeps its selection, `multiple`,
   in multiple mode.
 - With `isRequired`, the browser blocks submitting nothing and focus moves to
   the trigger.
-- Resetting the form goes back to the value the select had when it mounted.
-  On the element, that is its value when it connects, so set `defaultValue`
-  before `@uniaria/elements/select` defines it.
+- Resetting the form goes back to `defaultValue`, even one set after the
+  select rendered, and `valueChange` reports it. A controlled select gets a
+  `valueChange` asking for `defaultValue`, or without one the value it
+  mounted with.
 - Browser autofill sets the value.
 
 ### Multiple selection

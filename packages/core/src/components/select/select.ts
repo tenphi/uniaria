@@ -572,13 +572,20 @@ export const select = defineComponent({
         });
       // Validation and autofill may focus it: the trigger takes focus.
       const onFocus = () => triggerElement()?.focus();
-      // Form reset goes back to the value it mounted with, as NumberField's.
+      // Form reset goes back to the default, as NumberField's does:
+      // defaultValue when uncontrolled, even one set after mount, and for a
+      // controlled select without one, the value it mounted with, reported
+      // as `setValue()` does.
       const form = element.form;
       const onReset = (resetEvent: Event) => {
         if (resetEvent.defaultPrevented || initial === undefined) return;
-        const restored = initial;
         ctx.batch(() => {
-          if (!isSameKeys(restored, value.get())) setValue(restored);
+          value.reset({
+            fallback: initial,
+            isEqual: isSameKeys,
+            beforeReport: (next) => syncHiddenSelect(element, next),
+          });
+          if (value.isControlled()) syncHiddenSelect(element);
         });
       };
       element.addEventListener('change', onChange);

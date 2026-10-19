@@ -246,9 +246,11 @@ empty string, never the formatted text. The hidden input is disabled with the
 field, so a disabled field submits nothing.
 
 Enter commits before the form submits, and a press on a submit button commits
-by moving focus out of the input. On the form's `reset`, the value goes back
-to `defaultValue`, or without one to the value the field started with, and
-`valueChange` reports it. See [Forms](../guide/forms.md).
+by moving focus out of the input. On the form's `reset`, an uncontrolled
+field goes back to `defaultValue` (empty without one), even one set after it
+rendered, and `valueChange` reports it. A controlled field reports
+`defaultValue`, or without one the value it started with. See
+[Forms](../guide/forms.md).
 
 ### Other languages
 

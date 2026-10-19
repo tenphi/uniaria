@@ -734,21 +734,31 @@ export const combobox = defineComponent({
       close();
     });
 
-    // Form reset goes back to the value the combo box mounted with, and its
-    // text, as NumberField's.
+    // Form reset goes back to the default and its text, as NumberField's
+    // does: defaultValue when uncontrolled, even one set after mount, and
+    // for a controlled combo box without one, the value it mounted with.
     let initial: readonly string[] | undefined;
     const resync = ctx.state(0);
     /**
-     * Sets the value with the hidden input already holding it, as a native
-     * field does before its `change`: a `valueChange` listener's FormData
-     * has the new value. A controlled value the consumer didn't take goes
-     * back on the flush this asks for.
+     * Writes a value about to be reported to the hidden input, as a native
+     * field holds it before its `change`: a `valueChange` listener's
+     * FormData has the new value.
      */
-    const setValue = (next: readonly string[]) => {
+    const writeHidden = (next: readonly string[]) => {
       const hidden = partElement(ctx, 'hiddenInput') as HTMLInputElement | null;
       if (hidden) hidden.value = next[0] ?? '';
+    };
+    /** A controlled value the consumer didn't take goes back on this flush. */
+    const putBack = () => {
+      if (partElement(ctx, 'hiddenInput') && value.isControlled()) {
+        resync.set(resync.get() + 1);
+      }
+    };
+    /** Sets the value with the hidden input already holding it. */
+    const setValue = (next: readonly string[]) => {
+      writeHidden(next);
       value.set(next);
-      if (hidden && value.isControlled()) resync.set(resync.get() + 1);
+      putBack();
     };
     partEffect(ctx, 'input', (element) => {
       initial ??= value.get();
@@ -757,12 +767,16 @@ export const combobox = defineComponent({
       let timer: ReturnType<typeof setTimeout> | undefined;
       const onReset = (resetEvent: Event) => {
         if (resetEvent.defaultPrevented || initial === undefined) return;
-        const restored = initial;
         ctx.batch(() => {
           dropDraft();
           isFiltering.set(false);
           close();
-          if (!isSameKeys(restored, value.get())) setValue(restored);
+          const restored = value.reset({
+            fallback: initial,
+            isEqual: isSameKeys,
+            beforeReport: writeHidden,
+          });
+          putBack();
           setText(textOf(restored));
         });
         // The native reset runs after this event and puts back the value

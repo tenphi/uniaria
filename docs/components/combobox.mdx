@@ -198,9 +198,10 @@ text, else empty.
 - With `isRequired`, the visible input gets the native `required`: its text is
   empty exactly when the value is, so the browser blocks an empty submit and
   focuses the input.
-- Resetting the form goes back to the value and text the combo box had when it
-  mounted. On the element, that is its value when it connects, so set
-  `defaultValue` before `@uniaria/elements/combobox` defines it.
+- Resetting the form goes back to `defaultValue` and its text, even a
+  `defaultValue` set after the combo box rendered, and `valueChange` reports
+  it. A controlled combo box gets a `valueChange` asking for `defaultValue`,
+  or without one the value it mounted with.
 
 ### Controlled value and text
 
