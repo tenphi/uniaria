@@ -340,6 +340,33 @@ export const listboxConformance = defineConformance<ListboxProps, ListboxState>(
       );
 
       scenario(
+        'keeps the ids the consumer gives the label and the list; option ids follow the list',
+        async ({ mount }) => {
+          const template = fruit({ list: { id: 'fruit-list' } });
+          const root = template[0]!;
+          const label = root.children[0] as TemplateElement;
+          const labelled: TemplateElement = {
+            ...root,
+            children: [
+              { ...label, attrs: { ...label.attrs, id: 'fruit-label' } },
+              ...root.children.slice(1),
+            ],
+          };
+          const mounted = await mount({
+            template: [labelled, ...template.slice(1)],
+            props: { items: FRUIT },
+          });
+          const list = mounted.part('list');
+          expect(mounted.part('label').id).toBe('fruit-label');
+          expect(list.id).toBe('fruit-list');
+          expect(list.getAttribute('aria-labelledby')).toBe('fruit-label');
+          expect(option(mounted, 'apple').id).toBe('fruit-list-option-apple');
+          expect(option(mounted, 'date').id).toBe('fruit-list-option-date');
+        },
+        PHASE,
+      );
+
+      scenario(
         'option ids follow listId and encode the key',
         async ({ mount }) => {
           const items = [

@@ -224,6 +224,40 @@ export const dialogConformance = defineConformance<DialogProps, DialogState>(
       );
 
       scenario(
+        'keeps the ids the consumer gives the dialog, its title and its description',
+        async ({ mount, pointer, spoken }) => {
+          const mounted = await mount({
+            template: [
+              h('button', { part: 'trigger' }, 'Delete file'),
+              h(
+                'dialog',
+                { part: 'root', id: 'delete-dialog' },
+                h('h2', { part: 'title', id: 'delete-title' }, 'Delete file'),
+                h(
+                  'p',
+                  { part: 'description', id: 'delete-text' },
+                  "This can't be undone.",
+                ),
+                h('button', { part: 'close' }, 'Cancel'),
+              ),
+            ],
+          });
+          const dialog = root(mounted);
+          expect(dialog.id).toBe('delete-dialog');
+          expect(mounted.part('title').id).toBe('delete-title');
+          expect(mounted.part('description').id).toBe('delete-text');
+          expect(dialog.getAttribute('aria-labelledby')).toBe('delete-title');
+          expect(dialog.getAttribute('aria-describedby')).toBe('delete-text');
+
+          await pointer.click(mounted.part('trigger'));
+          expect(await spoken()).toContain(
+            "dialog, Delete file, This can't be undone.",
+          );
+        },
+        PHASE,
+      );
+
+      scenario(
         'references only rendered parts, plus labelledBy and describedBy',
         async ({ mount }) => {
           const mounted = await mount({

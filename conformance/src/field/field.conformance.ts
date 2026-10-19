@@ -165,6 +165,50 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
       );
 
       scenario(
+        'keeps the ids the consumer gives its parts, and links them by those ids',
+        async ({ mount, spoken }) => {
+          const mounted = await mount({
+            template: h(
+              'div',
+              { part: 'root' },
+              h('label', { part: 'label', id: 'email-label' }, 'Email'),
+              h('input', { part: 'control', id: 'email', type: 'email' }),
+              h(
+                'p',
+                { part: 'description', id: 'email-hint' },
+                'We never share it',
+              ),
+              h(
+                'p',
+                { part: 'error', id: 'email-error' },
+                'Enter a valid email',
+              ),
+            ),
+            props: { isInvalid: true },
+          });
+          const label = mounted.part('label');
+          const control = mounted.part('control');
+          const description = mounted.part('description');
+          const error = mounted.part('error');
+
+          expect(label.id).toBe('email-label');
+          expect(control.id).toBe('email');
+          expect(description.id).toBe('email-hint');
+          expect(error.id).toBe('email-error');
+          expect(label.getAttribute('for')).toBe('email');
+          expect(idList(control, 'aria-labelledby')).toEqual(['email-label']);
+          expect(idList(control, 'aria-describedby')).toEqual([
+            'email-hint',
+            'email-error',
+          ]);
+          expect(await spoken()).toContain(
+            'textbox, Email, We never share it Enter a valid email, invalid',
+          );
+        },
+        PHASE,
+      );
+
+      scenario(
         'links the description, and the error only while it is shown',
         async ({ mount }) => {
           const mounted = await mount({ template: email() });

@@ -249,6 +249,41 @@ export const numberFieldConformance = defineConformance<
     );
 
     scenario(
+      'keeps the ids the consumer gives the label, the input and the buttons, and references them',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: h(
+            'div',
+            { part: 'root', lang: 'en-US' },
+            h('label', { part: 'label', id: 'quantity-label' }, 'Quantity'),
+            h(
+              'div',
+              { part: 'wrapper' },
+              h('input', { part: 'input', id: 'quantity' }),
+              h('button', { part: 'decrement', id: 'fewer' }, '−'),
+              h('button', { part: 'increment', id: 'more' }, '+'),
+            ),
+          ),
+        });
+        const input = inputOf(mounted);
+        expect(input.id).toBe('quantity');
+        expect(mounted.part('label').getAttribute('for')).toBe('quantity');
+        expect(input.getAttribute('aria-labelledby')).toBe('quantity-label');
+        for (const id of ['more', 'fewer']) {
+          const button = mounted.part(
+            id === 'more' ? 'increment' : 'decrement',
+          );
+          expect(button.id).toBe(id);
+          expect(button.getAttribute('aria-labelledby'), id).toBe(
+            `${id} quantity-label`,
+          );
+          expect(button.getAttribute('aria-controls'), id).toBe('quantity');
+        }
+      },
+      PHASE,
+    );
+
+    scenario(
       'labelledBy joins the buttons’ names; without a label part they are just their word',
       async ({ mount }) => {
         const withExtra = await mount({

@@ -91,6 +91,8 @@ interface SizeOptions {
   readonly hasClose?: boolean;
   /** Attributes the consumer puts on the popover. */
   readonly rootAttrs?: Readonly<Record<string, string>>;
+  /** Attributes the consumer puts on the trigger. */
+  readonly triggerAttrs?: Readonly<Record<string, string>>;
   /** Extra classes on the trigger. */
   readonly triggerClass?: string;
   /** Markup before the page content, such as a stylesheet. */
@@ -109,6 +111,7 @@ function size({
   content = [h('input', { id: 'width', 'aria-label': 'Width' })],
   hasClose = true,
   rootAttrs = {},
+  triggerAttrs = {},
   triggerClass = '',
   head = [],
 }: SizeOptions = {}): TemplateNode[] {
@@ -121,7 +124,11 @@ function size({
       ? [
           h(
             'button',
-            { part: 'trigger', class: `sc-trigger ${triggerClass}`.trim() },
+            {
+              part: 'trigger',
+              class: `sc-trigger ${triggerClass}`.trim(),
+              ...triggerAttrs,
+            },
             'Size',
           ),
         ]
@@ -375,6 +382,29 @@ export const popoverConformance = defineConformance<PopoverProps, PopoverState>(
             }),
           });
           expect(root(labelled).hasAttribute('aria-labelledby')).toBe(false);
+        },
+        PHASE,
+      );
+
+      scenario(
+        'keeps the ids the consumer gives the trigger and the popover, and references them',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: size({
+              hasTitle: false,
+              triggerAttrs: { id: 'size-button' },
+              rootAttrs: { id: 'column-size' },
+            }),
+          });
+          const popover = root(mounted);
+          const trigger = mounted.part('trigger');
+          expect(trigger.id).toBe('size-button');
+          expect(popover.id).toBe('column-size');
+          expect(popover.getAttribute('aria-labelledby')).toBe('size-button');
+
+          await pointer.click(trigger);
+          expect(isInTopLayer(popover)).toBe(true);
+          expect(trigger.getAttribute('aria-controls')).toBe('column-size');
         },
         PHASE,
       );
