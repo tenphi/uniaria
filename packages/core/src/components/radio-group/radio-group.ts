@@ -179,17 +179,23 @@ export const radioGroup = defineComponent({
       };
     });
 
-    /** The group's radios in DOM order inside the root. */
-    const radios = (root: Element) =>
+    /**
+     * The group's radios in DOM order: the native group of one of them, the
+     * radios of its name in its form, so those linked from outside the root
+     * count too.
+     */
+    const radios = (radio: HTMLInputElement) =>
       Array.from(
-        root.querySelectorAll<HTMLInputElement>('input[type="radio"]'),
-      ).filter((radio) => radio.name === name());
+        (radio.getRootNode() as ParentNode).querySelectorAll<HTMLInputElement>(
+          'input[type="radio"]',
+        ),
+      ).filter((each) => each.name === radio.name && each.form === radio.form);
 
     // Tab leaves the group from an unselected radio (read-only, or a
     // focusable disabled one). Chromium would stop on the selected radio
     // ahead, so it gives up its tab stop for this one key, as in UI Kit.
-    const leaveOnTab = (from: HTMLInputElement, root: Element) => {
-      const selected = radios(root).find((radio) => radio.checked);
+    const leaveOnTab = (from: HTMLInputElement) => {
+      const selected = radios(from).find((radio) => radio.checked);
       if (!selected || selected === from || selected.tabIndex < 0) return;
       const { tabIndex } = selected;
       selected.tabIndex = -1;
@@ -204,7 +210,7 @@ export const radioGroup = defineComponent({
       if (!root || from.localName !== 'input' || from.type !== 'radio') return;
       if (from.name !== name()) return;
       if (keyEvent.altKey || keyEvent.ctrlKey || keyEvent.metaKey) return;
-      if (keyEvent.key === 'Tab') return leaveOnTab(from, root);
+      if (keyEvent.key === 'Tab') return leaveOnTab(from);
       let step = NEXT[keyEvent.key];
       if (step === undefined) return;
       keyEvent.preventDefault();
@@ -219,7 +225,7 @@ export const radioGroup = defineComponent({
       ) {
         step = -step;
       }
-      const enabled = radios(root).filter((radio) => !radio.disabled);
+      const enabled = radios(from).filter((radio) => !radio.disabled);
       const index = enabled.indexOf(from);
       if (index < 0 || enabled.length < 2) return;
       const next = enabled.at((index + step) % enabled.length)!;
@@ -228,6 +234,11 @@ export const radioGroup = defineComponent({
       // focusable disabled radio cancels it as it would a pointer's.
       next.click();
     };
+    // The root takes the keys of the radios inside it; a radio linked from
+    // outside it passes its own. React bubbles a portalled radio's keys to
+    // the root as well, so each side keeps to its own.
+    const isInRoot = (keyEvent: KeyboardEvent) =>
+      partElement(ctx, 'root')?.contains(keyEvent.target as Node) ?? false;
 
     return {
       field: labelling,
@@ -245,7 +256,15 @@ export const radioGroup = defineComponent({
         labelling.api.isErrorShown() && labelling.api.isRendered('error')
           ? ctx.ids.error
           : undefined,
-      handlers: { keydown: onKeyDown },
+      /** A radio's keydown, which the group handles outside its root. */
+      onRadioKeyDown: (keyEvent: KeyboardEvent) => {
+        if (!isInRoot(keyEvent)) onKeyDown(keyEvent);
+      },
+      handlers: {
+        keydown: (keyEvent: KeyboardEvent) => {
+          if (isInRoot(keyEvent)) onKeyDown(keyEvent);
+        },
+      },
     };
   },
   expose({ props, api }) {

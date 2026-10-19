@@ -214,6 +214,9 @@ export const radio = defineComponent({
       handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
         input: onInput,
         click: onClick,
+        // The group's arrow keys reach a radio linked from outside its root.
+        keydown: (keyEvent: KeyboardEvent) =>
+          group()?.api.onRadioKeyDown(keyEvent),
       }),
     };
   },

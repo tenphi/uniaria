@@ -1,10 +1,12 @@
 import type { Instance } from '@uniaria/core';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { pointer, releaseInput } from '@uniaria/testing/browser';
+import { radio } from '@uniaria/core/radio';
+import { radioGroup } from '@uniaria/core/radio-group';
+import { keyboard, pointer, releaseInput } from '@uniaria/testing/browser';
 import { StrictMode } from 'react';
 import type { ReactNode } from 'react';
-import { flushSync } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
@@ -133,5 +135,59 @@ describe('owners in React', () => {
       false,
       true,
     ]);
+  });
+});
+
+function Radio(props: {
+  readonly value: string;
+  readonly owner?: Instance<typeof radioGroup>;
+}) {
+  const ui = useComponent(radio, {
+    value: props.value,
+    owner: props.owner,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...ui.parts.root}>
+      <input {...ui.parts.input} />
+      <span {...ui.parts.label}>{props.value}</span>
+    </label>
+  );
+}
+
+describe('radios outside their group’s root', () => {
+  it('take the arrow keys once each, portalled or linked by the owner prop', async () => {
+    const elsewhere = document.createElement('div');
+    let group: Instance<typeof radioGroup> | undefined;
+    function Plan() {
+      const ui = useComponent(radioGroup, { defaultValue: 'free' });
+      group = ui.instance;
+      return (
+        <div {...ui.parts.root}>
+          <OwnerProvider owner={ui}>
+            <Radio value="free" />
+            {/* React bubbles its keys to the root too. */}
+            {createPortal(<Radio value="pro" />, elsewhere)}
+          </OwnerProvider>
+        </div>
+      );
+    }
+    render(<Plan />);
+    document.body.append(elsewhere);
+    const container = render(<Radio value="team" owner={group} />);
+    const free = document.querySelector<HTMLInputElement>('[value="free"]')!;
+    const pro = elsewhere.querySelector('input')!;
+    const team = inputs(container)[0]!;
+
+    free.focus();
+    await keyboard.press('ArrowDown');
+    expect(document.activeElement).toBe(pro);
+    await keyboard.press('ArrowDown');
+    expect(document.activeElement).toBe(team);
+    await keyboard.press('ArrowDown');
+    expect(document.activeElement).toBe(free);
+    await keyboard.press('ArrowUp');
+    expect(document.activeElement).toBe(team);
+    expect(group!.getState().value).toBe('team');
   });
 });

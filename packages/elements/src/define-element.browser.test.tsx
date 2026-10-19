@@ -1309,6 +1309,37 @@ describe('<uni-radio-group>', () => {
     pro.removeAttribute('disabled');
     expect(new FormData(form).getAll('plan')).toEqual(['pro', 'also']);
   });
+
+  it('moves by arrow keys through a radio linked by id from outside its root', async () => {
+    const container = mount(`
+      <uni-radio-group id="plan">
+        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
+      </uni-radio-group>
+      <p>Not in the group's root:</p>
+      ${option('team', 'group="plan"')}`);
+    const [free, pro, team] = Array.from(container.querySelectorAll('input'));
+    const group = container.querySelector('uni-radio-group')!;
+
+    pro!.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(team);
+    expect(group.instance.getState().value).toBe('team');
+    // From the linked radio, wrapping in every browser.
+    await userEvent.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(free);
+    await userEvent.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(team);
+    // Read-only moves focus without selecting, as inside the root.
+    group.setAttribute('readonly', '');
+    await userEvent.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(pro);
+    expect(group.instance.getState().value).toBe('team');
+    expect([free!.checked, pro!.checked, team!.checked]).toEqual([
+      false,
+      false,
+      true,
+    ]);
+  });
 });
 
 describe('<uni-dialog>', () => {
