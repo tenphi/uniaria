@@ -9,8 +9,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
   use are listed in `types/host.d.ts` (owner approval to extend).
 - No framework imports anywhere in this package.
 - `dom/` holds what both adapters share: the DOM binder that writes part
-  attributes after mount (and delegates listeners from a custom-element
-  host), part discovery for elements, and later the owner lookup (request
+  attributes after mount (and delegates a custom-element host's listeners
+  from its root), part discovery for elements, and later the owner lookup (request
   events, id references). Adapters never diff attributes or search the DOM
   themselves. It also holds the interactions definitions build on
   (`createPress`, `createFocus` with focus-visible, `createHover`), the

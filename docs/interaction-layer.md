@@ -90,8 +90,8 @@ These are decided; follow them rather than the catalogue.
   the outside `pointerdown` and `click` of the top overlay (§7.12). Instead,
   every pressable element joins a per-window registry and a pressable ignores
   events whose target sits inside a nearer one, which works whichever
-  instance sees the event first (the element adapter's capture-phase
-  delegation shows the outer one first); nested overlays coordinate through
+  instance sees the event first (the element adapter's delegation, as
+  React's, shows the inner one first); nested overlays coordinate through
   the global layer stack.
 - **Press events.** `pressstart`, `pressend`, `press`; there is no `pressup`
   or `presschange` (§1.1, 1.13, 1.45), no `shouldCancelOnPointerExit` (§1.8)

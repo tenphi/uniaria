@@ -382,9 +382,13 @@ handler with its event.
 - Parts are found by a query that stops at nested UniAria elements of any
   kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
-  host in the capture phase: a bubbling event reaches every part on its
-  path, innermost first, as in React; one that doesn't bubble
-  (`pointerenter`) reaches only the part it targets.
+  host's root (the document or a shadow root), as React delegates from its
+  root container: in the bubble phase for events that bubble, so the
+  consumer's listeners on the path run first, and in the capture phase for
+  those that don't. A bubbling event reaches every part on its path,
+  innermost first; one that doesn't bubble (`pointerenter`) reaches only the
+  part it targets. Never a listener on the host: NVDA reads an element with
+  a `click` or `mousedown` listener as clickable.
 - State goes in through properties and out through events: the `isOpen`
   property means controlled, the `default-open` attribute means uncontrolled,
   and changes come out as `openchange` with the value in `detail`.

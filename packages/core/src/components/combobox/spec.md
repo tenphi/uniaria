@@ -350,7 +350,13 @@ while the input has focus: it reads the active descendant only in the
 combobox's phrase. Whether each screen reader reads the highlighted option
 as it moves (VoiceOver's support is contested: Zag announces it on Apple
 devices, React Aria says VoiceOver reads it natively) is checked with real
-ones at gate 5.
+ones at gate 5. The nightly run in Chromium (2026-10-19): NVDA and
+VoiceOver both move to each highlighted option (their focus reports name
+it) and NVDA reads a later one ("Banana, not selected, 2 of 4"); what
+either says as the list opens varies from run to run. VoiceOver's speech
+for a later highlight isn't captured, with or without a live announcement
+of it or the option count (probed), so Resolved questions 14 (b) waits for
+the manual pass.
 
 ## Adapter surface
 
