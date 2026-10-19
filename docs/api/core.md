@@ -534,6 +534,7 @@ adapters drive one per rendered component, and tests use it directly.
 | `getState()`                                               | What `expose()` returns, cached until state or props change.                                                                      |
 | `connect()`                                                | Part props for every part, with the part markers, every handler batched; cached until state or props change.                      |
 | `getProps()`                                               | The current props.                                                                                                                |
+| `getValue(key)`                                            | A bindable's current value: the consumer's while controlled, else the instance's own. A custom element's property reads it.       |
 | `setProps(props)`                                          | Replaces the props without notifying. Call `sync()` once they are committed. Changing only callbacks doesn't count as a change.   |
 | `sync()`                                                   | Notifies for props changed since the last sync, so watchers and adapters run.                                                     |
 | `start()`, `stop()`, `isStarted()`                         | The live period: effects and watchers run only between `start()` and `stop()`. Both are idempotent.                               |
@@ -594,6 +595,7 @@ browser. See [Testing](./testing.md).
 | `PartProps`                                     | Framework-neutral part props.                                                                              |
 | `SetupContext`, `ViewContext`                   | What `setup()` and `expose()` or `connect()` receive.                                                      |
 | `Bindable<T>`, `Cell<T>`                        | A bindable as `setup()` reads it, and a piece of internal state.                                           |
+| `BindableKeyOf<D>`                              | The keys of a definition's bindables, which `getValue()` takes.                                            |
 | `ResetOptions<T>`                               | The options of a bindable's [`reset()`](#resetting-a-bindable).                                            |
 | `LinkKey<Name, Api>`, `Linked<Api>`, `Owned<D>` | A link key, and what `ctx.link()` and `ctx.owner()` return.                                                |
 

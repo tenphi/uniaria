@@ -14,6 +14,7 @@ import type {
   AnyDefinition,
   ApiOf,
   Bindable,
+  BindableKeyOf,
   Cell,
   ConnectedParts,
   Env,
@@ -30,7 +31,7 @@ import type {
   ViewContext,
 } from './define';
 import { partElement, rootClass } from './define';
-import type { EventsSchema, PropsSchema } from './schema';
+import type { BindableSpec, EventsSchema, PropsSchema } from './schema';
 import { callbackName } from './schema';
 import { createStore } from './store';
 
@@ -57,6 +58,14 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    */
   readonly actions: ActionsOf<D>;
   getProps(): PropsOf<D>;
+  /**
+   * The current value of the bindable `key`: the consumer's while
+   * controlled, else the instance's own, as `setup()` reads it. A custom
+   * element's property reads it, like a native input's `value`.
+   */
+  getValue<K extends BindableKeyOf<D>>(
+    key: K,
+  ): D['props'][K] extends BindableSpec<infer T, infer _Event> ? T : never;
   /** Stores new props without notifying. Call `sync()` once they are committed. */
   setProps(props: PropsOf<D>): void;
   /** Notifies for props changed since the last sync, so watchers and the binder run. */
@@ -551,6 +560,16 @@ export function createInstance<D extends AnyDefinition>(
     api,
     actions,
     getProps: () => props as never,
+    getValue(key) {
+      // Plain props read as functions, bindables as objects.
+      const reader = (view.props as Record<string, unknown>)[key];
+      if (typeof reader !== 'object' || reader === null) {
+        throw new Error(
+          `[uniaria] ${definition.name}: "${key}" is not a bindable.`,
+        );
+      }
+      return (reader as Bindable<never>).get();
+    },
     setProps(next) {
       const previous = props;
       props = next as Readonly<Record<string, unknown>>;

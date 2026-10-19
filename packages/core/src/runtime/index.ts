@@ -43,6 +43,7 @@ export type {
   AnyDefinition,
   ApiOf,
   Bindable,
+  BindableKeyOf,
   Cell,
   ComponentConfig,
   ComposeOptions,

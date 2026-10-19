@@ -329,6 +329,23 @@ describe('createInstance', () => {
       instance.api.setOpen(true);
       expect(onOpenChange.mock.calls).toEqual([[true]]);
     });
+
+    it('reads its current value from outside through getValue()', () => {
+      const instance = createInstance(disclosure, {
+        props: { defaultOpen: true },
+      });
+      expectTypeOf(instance.getValue('isOpen')).toEqualTypeOf<boolean>();
+      expect(instance.getValue('isOpen')).toBe(true);
+
+      click(instance);
+      expect(instance.getValue('isOpen')).toBe(false);
+
+      instance.setProps({ defaultOpen: true, isOpen: true });
+      expect(instance.getValue('isOpen')).toBe(true);
+      expect(() => instance.getValue('isDisabled' as never)).toThrow(
+        '"isDisabled" is not a bindable',
+      );
+    });
   });
 
   describe('bindable reset', () => {

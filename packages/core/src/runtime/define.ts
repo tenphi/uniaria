@@ -384,6 +384,15 @@ export type ActionsOf<D extends AnyDefinition> = Pick<
   Extract<NonNullable<D['actions']>[number], keyof ApiOf<D>>
 >;
 export type StateOf<D extends AnyDefinition> = ReturnType<D['expose']>;
+/** The keys of a definition's bindables: `isOpen`, `value`. */
+export type BindableKeyOf<D extends AnyDefinition> = {
+  [K in keyof D['props'] & string]: D['props'][K] extends BindableSpec<
+    infer _T,
+    infer _Event
+  >
+    ? K
+    : never;
+}[keyof D['props'] & string];
 export type PropsOf<D extends AnyDefinition> = InputProps<
   D['props'],
   D['events']
