@@ -505,6 +505,85 @@ const accordionItem = defineComponent({
   },
 });
 
+describe('actions', () => {
+  const panel = defineComponent({
+    name: 'panel',
+    parts: ['root'],
+    props: { isOpen: bindable(false) },
+    actions: ['open', 'close'],
+    setup(ctx) {
+      const open = () => ctx.props.isOpen.set(true);
+      const close = () => ctx.props.isOpen.set(false);
+      return { open, close, internal: () => 'internal' };
+    },
+    expose: ({ props }) => ({ isOpen: props.isOpen.get() }),
+    connect: () => ({ root: { attrs: {} } }),
+  });
+
+  it('exposes only the listed members of setup(), typed', () => {
+    const instance = createInstance(panel);
+    expect(Object.keys(instance.actions)).toEqual(['open', 'close']);
+    expectTypeOf(instance.actions).toEqualTypeOf<{
+      open: () => void;
+      close: () => void;
+    }>();
+    expectTypeOf<
+      keyof ReturnType<typeof createInstance<typeof disclosure>>['actions']
+    >().toEqualTypeOf<never>();
+  });
+
+  it('runs each action in a batch, so it notifies once', () => {
+    const instance = createInstance(panel);
+    instance.start();
+    const listener = vi.fn();
+    instance.subscribe(listener);
+    instance.actions.open();
+    expect(instance.getState().isOpen).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    instance.actions.close();
+    expect(instance.getState().isOpen).toBe(false);
+  });
+
+  it('requests through the bindable when controlled', () => {
+    const onOpenChange = vi.fn();
+    const instance = createInstance(panel, {
+      props: { isOpen: false, onOpenChange },
+    });
+    instance.actions.open();
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(instance.getState().isOpen).toBe(false);
+  });
+
+  it('rejects an action setup() does not return as a function', () => {
+    const broken = defineComponent({
+      name: 'broken',
+      parts: ['root'],
+      props: {},
+      actions: ['open'],
+      setup: () => ({ open: 'not a function' }),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    expect(() => createInstance(broken)).toThrow(
+      'broken: action "open" is not a function setup() returns.',
+    );
+  });
+
+  it('rejects an action named like a prop', () => {
+    expect(() =>
+      defineComponent({
+        name: 'clash',
+        parts: ['root'],
+        props: { isOpen: bindable(false) },
+        actions: ['isOpen'],
+        setup: () => ({ isOpen: () => undefined }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      }),
+    ).toThrow('"isOpen" is defined twice');
+  });
+});
+
 describe('ctx.use', () => {
   const clickItem = (
     instance: ReturnType<typeof createInstance<typeof accordionItem>>,

@@ -10,6 +10,7 @@
  */
 
 import type {
+  ActionsOf,
   AnyDefinition,
   ApiOf,
   Bindable,
@@ -42,8 +43,17 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   readonly definition: D;
   readonly id: string;
   readonly ids: Readonly<Record<PartOf<D>, string>>;
-  /** What `setup()` returned. */
+  /**
+   * Internal: what `setup()` returned, for composing definitions, owned
+   * components, adapters and tests. Consumers call `actions` and read
+   * `getState()` instead.
+   */
   readonly api: ApiOf<D>;
+  /**
+   * The definition's public actions (its `actions`), such as an overlay's
+   * `open()` and `close()`. Each runs in a batch, so it notifies once.
+   */
+  readonly actions: ActionsOf<D>;
   getProps(): PropsOf<D>;
   /** Stores new props without notifying. Call `sync()` once they are committed. */
   setProps(props: PropsOf<D>): void;
@@ -472,11 +482,23 @@ export function createInstance<D extends AnyDefinition>(
   let exposed:
     { changes: number; propsVersion: number; state: unknown } | undefined;
 
+  const actions: Record<string, (...args: unknown[]) => unknown> = {};
+  for (const name of definition.actions ?? []) {
+    const action = (api as Record<string, unknown>)[name];
+    if (typeof action !== 'function') {
+      throw new Error(
+        `[uniaria] ${definition.name}: action "${name}" is not a function setup() returns.`,
+      );
+    }
+    actions[name] = (...args) => store.batch(() => action(...args));
+  }
+
   const instance: Instance<AnyDefinition> = {
     definition,
     id,
     ids,
     api,
+    actions,
     getProps: () => props as never,
     setProps(next) {
       const previous = props;

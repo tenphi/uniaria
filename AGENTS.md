@@ -185,12 +185,20 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `expose()` and `connect()` fold in its `state()` and `connect()`. Separate instances that work
   together (a field and its control, a radio group and its radios) link
   through `ctx.owner(def)` instead (see Composition between instances).
-- `setup(ctx)` runs once per instance and returns actions and readers;
-  `expose()` and `connect()` receive them as `api`, and consumers see them as
-  `instance.api`. `connect()` is a pure function of current state that
-  returns part props; the DOM binder runs it after every store flush, so keep
-  it cheap. `expose()` returns the public state selectors read (`isOpen`,
-  `isPressed`, …); it is public API, and the spec documents it.
+- `setup(ctx)` runs once per instance and returns the definition's internal
+  API: actions and readers that `expose()`, `connect()`, composing definitions
+  and owned components receive as `api`. It is never public (owner,
+  2026-10-19): `instance.api` exists for definitions, adapters and tests only.
+  `connect()` is a pure function of current state that returns part props;
+  the DOM binder runs it after every store flush, so keep it cheap.
+  `expose()` returns the public state selectors read (`isOpen`, `isPressed`,
+  …); it is public API, and the spec documents it.
+- `actions` lists the members of `api` consumers may call, each run in a
+  batch: `instance.actions`, the React handle's `actions`, and one method per
+  action on the custom element (`element.open()`). Only the overlays have any:
+  `open` and `close` on Dialog, Popover, Tooltip, Select and Combobox (owner,
+  2026-10-19). An action is public API, and its spec's Actions section
+  documents it.
 - `createInstance(definition, { props, id, env })` in the runtime is the
   instance both adapters drive. Node tests use it directly: call part
   handlers from `instance.connect()` and read `attrs` and `getState()`

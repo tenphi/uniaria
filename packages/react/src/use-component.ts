@@ -7,8 +7,8 @@
  */
 
 import type {
+  ActionsOf,
   AnyDefinition,
-  ApiOf,
   Instance,
   ItemPartOf,
   OwnerLink,
@@ -49,8 +49,8 @@ export type ReactPartProps = Readonly<Record<string, unknown>> & {
 export interface ComponentHandle<D extends AnyDefinition> {
   /** The stable instance: pass it to `useComponentState` or as an `owner`. */
   readonly instance: Instance<D>;
-  /** What the definition's `setup()` returned. */
-  readonly api: ApiOf<D>;
+  /** The component's public actions, such as a popover's `open()` and `close()`. */
+  readonly actions: ActionsOf<D>;
   /** Props for each part, from this render. */
   readonly parts: Readonly<Record<PartOf<D>, ReactPartProps>>;
   /**
@@ -422,7 +422,7 @@ export function useComponent<D extends AnyDefinition>(
 
   return {
     instance,
-    api: instance.api,
+    actions: instance.actions,
     parts: internal.rendered.parts as ComponentHandle<D>['parts'],
     getItemProps: internal.getItemProps as ComponentHandle<D>['getItemProps'],
   };

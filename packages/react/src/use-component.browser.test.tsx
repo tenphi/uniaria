@@ -157,6 +157,31 @@ describe('useComponent', () => {
 
     expect(seen).toEqual([true]);
   });
+
+  it("returns the public actions, never setup()'s internal API", () => {
+    const panel = defineComponent({
+      name: 'test-panel',
+      parts: ['root'],
+      props: { label: prop('') },
+      actions: ['show'],
+      setup: () => {
+        let count = 0;
+        return { show: () => ++count, internal: () => count };
+      },
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    let handle: ComponentHandle<typeof panel> | undefined;
+    function Panel() {
+      handle = useComponent(panel, {});
+      return <div {...handle.parts.root} />;
+    }
+    render(<Panel />);
+    expect(Object.keys(handle!.actions)).toEqual(['show']);
+    expect(handle!.actions.show()).toBe(1);
+    expect('api' in handle!).toBe(false);
+    expectTypeOf(handle!.actions).toEqualTypeOf<{ show: () => number }>();
+  });
 });
 
 describe('development warnings', () => {

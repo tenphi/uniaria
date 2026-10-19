@@ -201,6 +201,10 @@ export const elementsAdapter: ConformanceAdapter = {
       },
       state: () =>
         host.instance.getState() as Readonly<Record<string, unknown>>,
+      async call(action) {
+        // The element's own method, as a consumer calls it.
+        (host as unknown as Record<string, () => void>)[action]!();
+      },
       renderCount: () => 0,
       async unmount() {
         container.replaceChildren();

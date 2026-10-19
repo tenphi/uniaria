@@ -4,8 +4,11 @@
  *
  * - `parts` — the named parts the component exposes.
  * - `props` / `events` — the schema (`./schema`).
- * - `setup(ctx)` — runs once per instance; returns the actions and readers
- *   `expose()` and `connect()` use, available to consumers as `api`.
+ * - `setup(ctx)` — runs once per instance; returns the definition's internal
+ *   API (`api`): the actions and readers `expose()`, `connect()`, composing
+ *   definitions and owned components use. Consumers never call it.
+ * - `actions` — the members of `api` consumers may call, such as an
+ *   overlay's `open` and `close` (owner, 2026-10-19). They are public API.
  * - `expose()` — the public state selectors read. It is public API.
  * - `connect()` — a pure function from current state to part props, re-run
  *   after every flush, so keep it cheap.
@@ -263,6 +266,12 @@ export interface ComponentConfig<
   readonly links?: readonly LinkKey[];
   /** Links this component answers, such as a tooltip's. */
   readonly provides?: readonly LinkKey[];
+  /**
+   * The functions in `setup()`'s result that consumers may call:
+   * `instance.actions`, the React handle's `actions`, and methods on the
+   * custom element. Everything else `setup()` returns stays internal.
+   */
+  readonly actions?: readonly (keyof Api & string)[];
   setup(ctx: SetupContext<Part, P, E>): Api;
   expose(ctx: ViewContext<Part, P, Api>): State;
   connect(ctx: ViewContext<Part, P, Api>): ConnectedParts<Part>;
@@ -305,6 +314,11 @@ export type ItemPartOf<D extends AnyDefinition> = NonNullable<
   D['itemParts']
 >[number];
 export type ApiOf<D extends AnyDefinition> = ReturnType<D['setup']>;
+/** The public actions: the members of `api` the definition lists in `actions`. */
+export type ActionsOf<D extends AnyDefinition> = Pick<
+  ApiOf<D>,
+  Extract<NonNullable<D['actions']>[number], keyof ApiOf<D>>
+>;
 export type StateOf<D extends AnyDefinition> = ReturnType<D['expose']>;
 export type PropsOf<D extends AnyDefinition> = InputProps<
   D['props'],
@@ -408,10 +422,12 @@ export function defineComponent<
   O extends OwnerLink | undefined = undefined,
   const L extends readonly LinkKey[] | undefined = undefined,
   const ItemPart extends string = never,
+  const Action extends keyof Api & string = never,
 >(
   config: ComponentConfig<Part, P, E, Api, State> & {
     readonly owner?: O;
     readonly links?: L;
+    readonly actions?: readonly Action[];
     readonly itemParts?: readonly ItemPart[];
     connectItem?(
       ctx: ViewContext<Part, P, Api>,
@@ -423,6 +439,7 @@ export function defineComponent<
   readonly owner: O;
   readonly links: L;
   readonly itemParts: readonly ItemPart[];
+  readonly actions: readonly Action[];
 } {
   if (!NAME.test(config.name)) {
     throw new Error(
@@ -450,6 +467,7 @@ export function defineComponent<
     owners.add(config.owner.definition);
   }
   for (const key of config.links ?? []) callback(key.name);
+  for (const action of config.actions ?? []) callback(action);
   if (config.itemParts && !config.connectItem) {
     throw new Error(`[uniaria] ${config.name}: item parts need connectItem().`);
   }
@@ -470,6 +488,7 @@ export function defineComponent<
     readonly owner: O;
     readonly links: L;
     readonly itemParts: readonly ItemPart[];
+    readonly actions: readonly Action[];
   };
 }
 

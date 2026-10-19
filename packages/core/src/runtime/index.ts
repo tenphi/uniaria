@@ -32,6 +32,7 @@ export type {
 } from './schema';
 export { answers, defineComponent, isOwnerDefinition, itemId } from './define';
 export type {
+  ActionsOf,
   AnyDefinition,
   ApiOf,
   Bindable,

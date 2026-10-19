@@ -12,6 +12,8 @@
  * - Events: every event and bindable change is dispatched on the host as a
  *   bubbling, non-composed `CustomEvent` with the value in `detail`
  *   (`pressStart` → `pressstart`).
+ * - Actions: one method per action the definition lists (`element.open()`),
+ *   calling `instance.actions`.
  * - Parts: `data-part` elements inside the host, minus those inside a nested
  *   UniAria element (of any kind) or a nested host of the same tag, re-scanned
  *   when the subtree changes. The DOM binder writes their attributes and
@@ -27,6 +29,7 @@
  */
 
 import type {
+  ActionsOf,
   AnyDefinition,
   Instance,
   ItemsAdoption,
@@ -74,7 +77,8 @@ export type ElementProperties<D extends AnyDefinition> = {
 };
 
 export type UniElement<D extends AnyDefinition> = HTMLElement &
-  ElementProperties<D> & {
+  ElementProperties<D> &
+  ActionsOf<D> & {
     /** The instance behind the element: `getState()` reads public state. */
     readonly instance: Instance<D>;
   };
@@ -197,6 +201,14 @@ export function defineElement<D extends AnyDefinition>(
       );
     }
   }
+  const actions: readonly string[] = definition.actions ?? [];
+  for (const action of actions) {
+    if (action in HTMLElement.prototype || action === 'instance') {
+      throw new Error(
+        `[uniaria] ${definition.name}: action "${action}" would shadow an element member.`,
+      );
+    }
+  }
 
   class Element extends HTMLElement {
     /** Hosts around this element leave its parts alone. */
@@ -225,6 +237,21 @@ export function defineElement<D extends AnyDefinition>(
           },
           set(this: Element, value: unknown) {
             this.#set(property, value);
+          },
+        });
+      }
+      for (const action of actions) {
+        Object.defineProperty(this.prototype, action, {
+          configurable: true,
+          writable: true,
+          value(this: Element, ...args: unknown[]) {
+            const run = (
+              this.instance.actions as Record<
+                string,
+                (...args: unknown[]) => unknown
+              >
+            )[action]!;
+            return run(...args);
           },
         });
       }

@@ -35,6 +35,9 @@ const fixtureAdapter: ConformanceAdapter = {
         apply();
       },
       state: () => ({ isDisabled: current.isDisabled === true }),
+      async call(action) {
+        throw new Error(`The button has no action "${action}".`);
+      },
       renderCount: () => 0,
       async unmount() {
         root.removeEventListener('click', onClick);

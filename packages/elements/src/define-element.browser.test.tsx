@@ -46,6 +46,7 @@ const disclosure = defineComponent({
       type: 'json',
     }),
   },
+  actions: ['toggle'],
   setup(ctx) {
     return {
       toggle: () => {
@@ -347,6 +348,32 @@ describe('defineElement', () => {
     });
     expect(host.defaultValue).toBe('jane doe');
     expect(input.value).toBe('jane doe');
+  });
+
+  it('calls an action as a method of the element', () => {
+    const container = mount(
+      `<uni-test-disclosure>${MARKUP}</uni-test-disclosure>`,
+    );
+    const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
+    const trigger = host.querySelector('[data-part="trigger"]')!;
+    host.toggle();
+    expect(host.instance.getState().isOpen).toBe(true);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('refuses actions that would shadow element members', () => {
+    const shadowing = defineComponent({
+      name: 'test-shadowing-action',
+      parts: ['root'],
+      props: {},
+      actions: ['focus'],
+      setup: () => ({ focus: () => undefined }),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    expect(() => defineElement(shadowing)).toThrow(
+      'action "focus" would shadow an element member',
+    );
   });
 
   it('refuses props that would shadow element properties', () => {

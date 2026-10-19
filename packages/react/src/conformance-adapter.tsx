@@ -189,7 +189,7 @@ interface HarnessProps {
   readonly props: Readonly<Record<string, unknown>>;
   readonly template: readonly TemplateNode[];
   readonly onRender: () => void;
-  readonly onInstance: (instance: Instance) => void;
+  readonly onInstance: (instance: Instance, actions: object) => void;
 }
 
 function Harness({
@@ -201,7 +201,7 @@ function Harness({
 }: HarnessProps) {
   onRender();
   const ui = useComponent(definition, props as never);
-  onInstance(ui.instance);
+  onInstance(ui.instance, ui.actions);
   // Components nested in the template find this one as their owner.
   return createElement(
     OwnerProvider,
@@ -216,6 +216,7 @@ export const reactAdapter: ConformanceAdapter = {
     const definition = definitionOf(component);
     let renders = 0;
     let instance: Instance | undefined;
+    let actions: object = {};
     let current = resolveProps(props);
     const callbacks: Record<string, (detail: unknown) => void> = {};
     for (const name of events) {
@@ -234,7 +235,10 @@ export const reactAdapter: ConformanceAdapter = {
               props: { ...current, ...callbacks },
               template,
               onRender: () => renders++,
-              onInstance: (next) => (instance = next),
+              onInstance: (next, nextActions) => {
+                instance = next;
+                actions = nextActions;
+              },
             }),
           ),
         ),
@@ -247,6 +251,10 @@ export const reactAdapter: ConformanceAdapter = {
         render();
       },
       state: () => instance!.getState() as Readonly<Record<string, unknown>>,
+      async call(action) {
+        // The handle's `actions`, as a consumer calls them.
+        (actions as Record<string, () => void>)[action]!();
+      },
       renderCount: () => renders,
       async unmount() {
         root.unmount();

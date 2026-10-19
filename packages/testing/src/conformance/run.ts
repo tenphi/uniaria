@@ -167,6 +167,7 @@ export function runConformance(
             state: () => mount.state(),
             setProps: (props) =>
               mount.setProps(props as Record<string, unknown>),
+            call: (action) => mount.call(action),
             renderCount: () => mount.renderCount(),
           };
           return result;
