@@ -1,0 +1,31 @@
+<form class="form" novalidate>
+  <uni-text-field id="username" required>
+    <div class="uni-text-field">
+      <label data-element="Label">Username</label>
+      <div data-element="Wrapper">
+        <span aria-hidden="true">@</span>
+        <input data-element="Input" name="username" autocomplete="username" />
+      </div>
+      <p data-element="Description">Letters, digits and underscores.</p>
+      <p data-element="Error" hidden>
+        Use only letters, digits and underscores.
+      </p>
+    </div>
+  </uni-text-field>
+
+  <uni-text-field id="bio">
+    <div class="uni-text-field">
+      <label data-element="Label">Bio</label>
+      <div data-element="Wrapper">
+        <textarea
+          data-element="Input"
+          name="bio"
+          rows="3"
+          maxlength="160"
+        ></textarea>
+      </div>
+      <p data-element="Description">0 of 160 characters</p>
+    </div>
+  </uni-text-field>
+</form>
+<output id="log">Type a username with a space, then leave the field.</output>

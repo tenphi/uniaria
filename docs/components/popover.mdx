@@ -1,0 +1,469 @@
+---
+title: Popover
+description: A dialog anchored to its trigger in the top layer, closed by Escape or one click outside that still acts on what it hit.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/popover.css?raw';
+import html from './demos/popover.html?raw';
+import javascript from './demos/popover.js?raw';
+
+A popover is a dialog anchored to the element that opens it, such as a picker
+panel, a filter or a share box. It sits over the page without blocking it.
+UniAria shows it in the top layer with the Popover API, as a manual popover
+(`popover="manual"`), places it next to its trigger, and adds what the browser
+leaves out: an open state you can control, Escape and outside dismissal, focus
+on open and close, nesting, and a closing phase for exit animations. Browsers
+without the Popover API get it in place instead.
+
+The APG has no popover pattern. The trigger follows
+[Disclosure](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/)
+(`aria-expanded`), and the popover follows
+[Dialog (Modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+(`role="dialog"`, a name, Escape, focus in and back). [Overlays](../guide/overlays.md)
+covers what Popover shares with Dialog and Tooltip: the layer stack, dismissal
+and the two positioning modes.
+
+<Preview
+  title="A modal and a non-modal popover"
+  height="14rem"
+  scripts={['/demo/popover.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { popover } from '@uniaria/core/popover';
+import { useComponent } from '@uniaria/react';
+
+export function ImageSize() {
+  const size = useComponent(popover, { positionArea: 'bottom span-right' });
+  return (
+    <>
+      <button {...size.parts.trigger}>Size</button>
+      <div {...size.parts.root}>
+        <div {...size.parts.arrow} />
+        <h3 {...size.parts.title}>Image size</h3>
+        <label>
+          Width <input type="number" defaultValue={1280} />
+        </label>
+        <button {...size.parts.close}>Apply</button>
+      </div>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-popover position-area="bottom span-right">
+  <button data-element="Trigger">Size</button>
+  <div class="uni-popover">
+    <div data-element="Arrow"></div>
+    <h3 data-element="Title">Image size</h3>
+    <label>Width <input type="number" value="1280" /></label>
+    <button data-element="Close">Apply</button>
+  </div>
+</uni-popover>
+
+<script type="module">
+  import '@uniaria/elements/popover';
+</script>
+```
+
+The trigger and the root must both be inside `<uni-popover>`.
+
+</Tab>
+</Tabs>
+
+Render the root always: it stays hidden while closed, and opening it renders
+nothing. Keep it right after the trigger in the DOM when you can. UniAria
+passes the trigger to `showPopover()` as its `source`, which puts the popover
+next to it in the Tab order, but browsers that ignore `source` follow the DOM.
+Give the root a margin: it is the gap to the trigger (see
+[Positioning](#positioning)).
+
+### Non-modal popovers
+
+By default a popover is modal for the keyboard and assistive technology: Tab
+wraps inside it, and the rest of the page gets `aria-hidden` until it closes.
+It is never modal for the pointer: the page still takes clicks, and its scroll
+isn't locked. `isNonModal` gives the native behavior instead. Tab continues
+past the popover as if it sat right after its trigger, the page stays exposed,
+and focus moving elsewhere closes it with reason `'blur'`. Use it for content
+that goes with the page, such as help or a share box, and for lists that keep
+focus in a field.
+
+<Tabs label="Non-modal popovers">
+<Tab label="React">
+
+```tsx
+const share = useComponent(popover, { isNonModal: true });
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-popover non-modal>…</uni-popover>
+```
+
+</Tab>
+</Tabs>
+
+### Keeping it open for some clicks
+
+A press outside closes the popover. To keep it open for some targets, such as
+a toast or a toolbar that edits what the popover shows, return `false` from
+`shouldCloseOnInteractOutside`. On the element it is a property only.
+
+<Tabs label="Keeping it open">
+<Tab label="React">
+
+```tsx
+const size = useComponent(popover, {
+  shouldCloseOnInteractOutside: (target) =>
+    !target.closest('[data-popover-keep]'),
+});
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+document.querySelector('#size').shouldCloseOnInteractOutside = (target) =>
+  !target.closest('[data-popover-keep]');
+```
+
+</Tab>
+</Tabs>
+
+### Controlled
+
+Pass `isOpen` and `onOpenChange` to open the popover from your own state, or
+to close it from an action inside, such as a design system's button that
+closes its popover after it runs. A dismissal, the trigger and the close part
+only report the change; the popover stays open until you set `isOpen` to
+`false`. On the element, setting the `isOpen` property makes it controlled:
+update it from `openchange`.
+
+```tsx
+const [isOpen, setOpen] = useState(false);
+const filters = useComponent(popover, { isOpen, onOpenChange: setOpen });
+```
+
+### Positioning
+
+UniAria places the root against the `anchor` part, else the trigger. Its
+options are CSS Anchor Positioning's own, and the page picks one of two modes.
+
+**Script mode**, the default, places the popover in every browser from two
+props:
+
+- `positionArea` is a CSS `position-area` value that puts the popover on one
+  side of the anchor, optionally with the other axis's `center` or a `span-*`
+  keyword. Corners and areas over the anchor aren't supported: the arrow needs
+  a side.
+- `positionTryFallbacks` is a CSS `position-try-fallbacks` value: `none`, or a
+  list of try tactics (`flip-block`, `flip-inline`, `flip-start`, combined as
+  in CSS) and `position-area` values. The default, `flip-block, flip-inline`,
+  tries the opposite side on either axis.
+
+| `positionArea`                | Places the popover                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `'bottom'` (default)          | Below the anchor, centered.                                                  |
+| `'bottom span-right'`         | Below, left edges aligned.                                                   |
+| `'bottom span-left'`          | Below, right edges aligned.                                                  |
+| `'top'`, `'left'`, `'right'`  | On that side, centered.                                                      |
+| `'right span-bottom'`         | To the right, top edges aligned.                                             |
+| `'block-end span-inline-end'` | Below, aligned with the anchor's start edge in the page's writing direction. |
+
+Plain logical keywords follow the page's writing mode, `self-` ones the
+popover's own, as in CSS.
+
+The gaps are the root's margins, from your CSS. The margin facing the anchor
+is the gap, the others keep the popover off the viewport's edges, and a
+fallback flips them with the side, as CSS does: `margin: 8px 0` keeps the
+popover 8px from its trigger above or below. On a `span-*` area a side margin
+also moves it off the anchor's edge, as in CSS. UniAria reads the computed
+margins each time it places the popover, so margins that change with state
+work. It keeps the last option that fit while it still fits, shifts the
+popover into the viewport, and checks every frame while it is open, so it
+follows its trigger as the page scrolls.
+
+**CSS mode** leaves placing the popover to your CSS anchor positioning. Turn
+it on once for the page, before overlays open. It applies to every popover
+and tooltip, and to the lists of Select and Combobox, from the next time one
+opens:
+
+```ts
+import { configure } from '@uniaria/core/dom';
+
+configure({ positioning: 'css' });
+```
+
+```css
+.uni-popover {
+  inset: auto; /* a popover's own is 0 */
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block;
+  margin: 8px 0;
+}
+```
+
+UniAria then links the root to its anchor (an inline `position-anchor`, with a
+generated name added to the anchor's `anchor-name` list), reads back the side
+the browser applied for `data-placement` and `placement`, writes the CSS
+variables and places the arrow. It ignores `positionArea` and
+`positionTryFallbacks`. A browser without CSS anchor positioning leaves the
+popover where your CSS puts it, and development builds warn.
+
+In both modes the popover closes with reason `'scroll'` once its trigger has
+been scrolled out of view.
+
+### Nested popovers
+
+A popover opened from inside another stacks above it:
+
+- Escape closes only the top one.
+- A press inside the outer popover closes only the inner one. A press outside
+  both closes both, top down.
+- Closing a popover closes the popovers opened from inside it, with reason
+  `'parent'`.
+- A press on another popover's trigger closes this popover and opens that one,
+  in one click.
+
+### With a Dialog
+
+A modal [Dialog](./dialog.mdx) makes everything outside it inert, popovers in
+the top layer included. A popover used in a dialog must be inside the
+`<dialog>` element; development builds warn when one opens outside. A dialog
+opened from a popover stacks above it and leaves it open, and closing the
+dialog returns focus into the popover.
+
+### Without the Popover API
+
+In browsers without the Popover API (Chrome before 114, Firefox before 125,
+Safari before 17), the popover opens in place: `hidden` while closed,
+`position: fixed` while open, placed by script mode. Give the root a
+`z-index`. An ancestor with a `transform`, a `filter` or `contain` clips and
+offsets it, as it does any fixed element. Server HTML shows the root in those
+browsers until UniAria starts.
+
+## Anatomy
+
+| Part          | Element                | Notes                                                                                                                                                                                               |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger`     | `button`               | Optional. A press toggles the popover. A [Button](./button.mdx): another element gets Button's role and keys. UniAria writes its `id`, `aria-expanded`, and `aria-controls` while open.             |
+| `anchor`      | any                    | Optional. The popover is placed against it instead of the trigger.                                                                                                                                  |
+| `root`        | any; usually `div`     | Hidden while closed. UniAria writes its `id`, `popover="manual"`, `role="dialog"`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, `data-placement` and its position. Its content is yours. |
+| `arrow`       | any                    | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                   |
+| `title`       | any; usually a heading | Optional. Names the popover through `aria-labelledby`.                                                                                                                                              |
+| `description` | any                    | Optional. Linked through `aria-describedby` while rendered.                                                                                                                                         |
+| `close`       | `button`               | Optional. A press closes the popover, even when it isn't dismissable. A Button too.                                                                                                                 |
+
+The popover's name comes from `labelledBy` and a rendered title, else an
+`aria-label` on the root, else the trigger: a popover opened by "Size" is read
+as "dialog, Size". Development builds warn when it has none of these. The
+custom element has no role of its own and never takes focus.
+
+## Props
+
+| Prop                           | Attribute                                    | Type                           | Default                     | Description                                                                                                                                                               |
+| ------------------------------ | -------------------------------------------- | ------------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                       | — (property: setting it makes it controlled) | `boolean`                      | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                                                                                  |
+| `defaultOpen`                  | `default-open`                               | `boolean`                      | `false`                     | The starting state, uncontrolled. With server rendering, it opens after hydration.                                                                                        |
+| `isNonModal`                   | `non-modal`                                  | `boolean`                      | `false`                     | Tab continues past it, the page stays exposed to assistive technology, and focus leaving closes it.                                                                       |
+| `isDismissable`                | `dismissable`                                | `boolean`                      | `true`                      | Escape, a press outside and, when non-modal, focus leaving close it. `dismissable="false"` turns all three off; the trigger, the close part and your code still close it. |
+| `isKeyboardDismissDisabled`    | `keyboard-dismiss-disabled`                  | `boolean`                      | `false`                     | Escape alone doesn't close it.                                                                                                                                            |
+| `shouldCloseOnInteractOutside` | — (property only)                            | `(target: Element) => boolean` | —                           | Return `false` to keep it open for a press on `target`.                                                                                                                   |
+| `isDisabled`                   | `disabled`                                   | `boolean`                      | `false`                     | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                                                          |
+| `shouldRestoreFocus`           | `restore-focus`                              | `boolean`                      | `true`                      | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                                                 |
+| `shouldFocusOnOpen`            | `focus-on-open`                              | `boolean`                      | `true`                      | Focus moves into the popover when it opens. Off, focus stays where it is. `focus-on-open="false"` turns it off.                                                           |
+| `positionArea`                 | `position-area`                              | `PositionArea`                 | `'bottom'`                  | A CSS `position-area` on one side of the anchor. Script mode only.                                                                                                        |
+| `positionTryFallbacks`         | `position-try-fallbacks`                     | `string`                       | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                                                                                         |
+| `labelledBy`                   | `labelled-by`                                | `string`                       | —                           | More ids for `aria-labelledby`.                                                                                                                                           |
+| `describedBy`                  | `described-by`                               | `string`                       | —                           | More ids for `aria-describedby`.                                                                                                                                          |
+| `tooltip`                      | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`         | —                           | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-popover>` sits in directly links too.                                            |
+
+`PositionArea` is exported from `@uniaria/core/popover` as a type.
+
+## Events
+
+| Event        | React prop     | Detail                | When                                                                                                 |
+| ------------ | -------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `openchange` | `onOpenChange` | `boolean`             | The trigger, a dismissal or the close part asks to open or close it. Never when you set `isOpen`.    |
+| `dismiss`    | `onDismiss`    | `PopoverDismissEvent` | The user, or a popover it was opened from, asked to close it, just before `openchange` with `false`. |
+
+```ts
+interface PopoverDismissEvent {
+  reason:
+    | 'escape' // Escape in the popover or on its trigger
+    | 'outside' // a press outside
+    | 'trigger' // a press on its own trigger
+    | 'close' // the close part
+    | 'blur' // focus left a non-modal popover
+    | 'scroll' // its trigger was scrolled out of view
+    | 'parent' // the popover it was opened from closed
+    | 'browser'; // it was removed from the page while open
+}
+```
+
+A close for `'scroll'` leaves focus alone, since moving it would scroll the
+page back. The custom element dispatches both events on itself, bubbling, with
+the value in `detail`.
+
+## Actions
+
+| Action    | What it does                                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `open()`  | Opens the popover, as its trigger does, and moves focus inside unless `shouldFocusOnOpen` is off. `isDisabled` only disables the trigger, so `open()` still works. |
+| `close()` | Closes it after its exit animations and returns focus. Reports `openChange`, but no `dismiss`: no user asked.                                                      |
+
+In React they are on the handle (`size.actions.open()`); on the custom
+element they are methods (`document.querySelector('uni-popover').open()`).
+While `isOpen` is controlled, each only reports `openChange` and leaves the
+change to you.
+
+## State
+
+| Field        | Type                                                  | Meaning                                                                       |
+| ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `isOpen`     | `boolean`                                             | The popover is open.                                                          |
+| `isEntering` | `boolean`                                             | The first frames after opening, for enter transitions.                        |
+| `isExiting`  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
+| `placement`  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
+
+```tsx
+const placement = useComponentState(size, (state) => state.placement);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                                                             | On                        | When                                                                        |
+| ------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------- |
+| `class="uni-popover"`                                                                 | root                      | Always.                                                                     |
+| `data-scope="popover"`, `data-element`                                                | every other part          | Always.                                                                     |
+| `data-open`                                                                           | every part but the anchor | The popover is open.                                                        |
+| `data-entering`                                                                       | every part but the anchor | The first frames after opening.                                             |
+| `data-exiting`                                                                        | every part but the anchor | It is closing, until its exit animations end.                               |
+| `data-placement`                                                                      | root, arrow               | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`. |
+| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close            | As on a [Button](./button.mdx).                                             |
+
+| CSS variable                              | On   | Value                                                                                                                                     |
+| ----------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--anchor-width`                          | root | The anchor's width, in pixels: `min-width: var(--anchor-width)` makes the popover at least as wide as its trigger.                        |
+| `--available-width`, `--available-height` | root | The most room the popover could take in any of its options, in pixels, for `max-width` and `max-height`, so a cap never stops a fallback. |
+
+Nothing caps the popover's size unless you use them. A popover's default
+`overflow: auto` clips an arrow outside its box: give the root
+`overflow: visible`, and scroll an element inside it instead.
+
+```css
+.uni-popover {
+  min-width: var(--anchor-width);
+  max-height: var(--available-height);
+  margin: 8px 0;
+  overflow: visible;
+}
+.uni-popover [data-element='Arrow'] {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+}
+/* Rotate a child of the arrow: UniAria measures the arrow itself. */
+.uni-popover [data-element='Arrow']::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: Canvas;
+  rotate: 45deg;
+}
+[data-element='Arrow'][data-placement='bottom'] {
+  top: -8px;
+}
+[data-element='Arrow'][data-placement='top'] {
+  bottom: -8px;
+}
+```
+
+UniAria measures the arrow's box, transforms included, to center it on the
+anchor. Rotating the arrow part itself would move it off center by a few
+pixels, so rotate a pseudo-element or a child, as here.
+
+Exit animations work as in [Dialog](./dialog.mdx#styling): style the hidden
+look on `[data-entering]` and `[data-exiting]`, and UniAria calls
+`hidePopover()` once the animations running on the root and inside it end.
+
+Inline styles UniAria writes, and puts back when the popover closes: in script
+mode, `position: fixed` and the `top`, `right`, `bottom` and `left` longhands
+on the root; in CSS mode, `position-anchor` on the root and an `anchor-name`
+entry on the anchor; in both, the CSS variables and the arrow's `left` or
+`top`. The trigger and close parts get Button's `touch-action`.
+
+## Keyboard
+
+| Key            | Behavior                                                                                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Enter, Space   | On the trigger, toggles the popover. On the close part, closes it.                                                                                                                                                 |
+| Escape         | With focus in the open popover or on its trigger, closes the top popover when it is dismissable and keyboard dismissal isn't disabled. A widget inside that handles Escape and prevents its default keeps it open. |
+| Tab, Shift+Tab | In a modal popover, move through its tabbable elements and wrap at both ends.                                                                                                                                      |
+| Tab            | In a non-modal popover, continues as if the popover sat right after its trigger: from its last element, focus goes to what follows the trigger, and the popover closes.                                            |
+| Shift+Tab      | In a non-modal popover, from its first element, focus goes to the element before the trigger, and the popover closes.                                                                                              |
+
+## Accessibility
+
+- **Focus on open.** Focus goes to the first element marked `autofocus` or
+  `data-autofocus`, else to the popover itself, so a screen reader reads its
+  name first. With `shouldFocusOnOpen` off, focus stays where it is.
+- **While a modal popover is open**, Tab wraps inside it. A press outside that
+  closes the popover lets focus go where the press puts it, and the press acts
+  on what it hit; focus that leaves any other way is brought back.
+- **Focus on close**, after the exit animation: the trigger, else the element
+  focused before it opened. Focus stays put when it has already moved to an
+  element outside the popover and its trigger: after a click on a field
+  outside, it stays on the field. Natively it would land on the body.
+- **The page behind a modal popover** gets `aria-hidden="true"`, never
+  `inert`, so the pointer still works. Live regions stay exposed.
+- **Spoken output.** "button, Size, not expanded" on the closed trigger;
+  "dialog, Size" when it opens, named by the trigger, or "dialog, Image size"
+  with a title.
+- **Trigger ARIA.** `aria-expanded` always and `aria-controls` while open, but
+  no `aria-haspopup`: screen readers read most of its values as "menu".
+  UniAria doesn't use `popovertarget`, which would toggle the popover behind
+  the open state.
+- **Touch screen readers** can't press outside a modal popover they're in.
+  Render a close part, visually hidden if it shouldn't show.
+- **Tooltips inside.** A [Tooltip](./tooltip.mdx)'s Escape closes the tooltip
+  first; the next Escape closes the popover.
+
+## Compared with other libraries
+
+- **One click outside closes it and acts on what it hit**, as the native
+  popover does. React Aria swallows that click, so a second click acts. One
+  click on another popover's trigger switches popovers.
+- **Modal for the keyboard and screen readers only.** React Aria's popover
+  makes the page inert, locks scroll and adds an underlay; Zag's and the
+  native popover are non-modal, which `isNonModal` gives.
+- **The top layer, no portal**, with `popover="manual"`: UniAria owns every
+  close, so a controlled popover can refuse one, and an unrelated popover
+  opening doesn't close it, as it would with `popover="auto"`.
+- **CSS Anchor Positioning's options** and the root's margins instead of
+  `placement`, `offset`, `crossOffset` and `shouldFlip`. React Aria's
+  `'bottom start'` is `'bottom span-right'`.
+- **Scrolling** moves it with its trigger and closes it once the trigger
+  leaves view. React Aria closes a non-modal popover on any scroll.
+- **A press outside nested popovers** closes every popover it is outside of,
+  as the native popover does. React Aria closes only the top one.

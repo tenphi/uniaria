@@ -1,0 +1,232 @@
+---
+title: Button
+description: Runs an action or follows a link when pressed, with one press event for mouse, touch, keyboard and screen readers.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/button.css?raw';
+import html from './demos/button.html?raw';
+import javascript from './demos/button.js?raw';
+
+A button runs an action, or in link mode follows a link, when pressed. A native
+`<button>` sits underneath (an `<a href>` in link mode), so form submission,
+navigation and semantics stay native. UniAria adds one `press` event that
+behaves the same for mouse, pen, touch, keyboard and screen-reader clicks, and
+hover, pressed and focus-visible states for your CSS.
+
+It follows the WAI-ARIA [Button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/).
+
+<Preview
+  title="Buttons"
+  scripts={['/demo/button.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/react';
+
+export function SaveButton(props: { isSaving: boolean; onSave(): void }) {
+  const save = useComponent(button, {
+    onPress: props.onSave,
+    isDisabled: props.isSaving,
+    isFocusableWhenDisabled: true,
+  });
+  return (
+    <button {...save.parts.root}>{props.isSaving ? 'Saving…' : 'Save'}</button>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-button id="save">
+  <button class="uni-button">Save</button>
+</uni-button>
+
+<script type="module">
+  import '@uniaria/elements/button';
+
+  document.querySelector('#save').addEventListener('press', (event) => {
+    console.log('Pressed with', event.detail.pointerType);
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+### Link mode
+
+With `href`, the root is a native link: link semantics, native navigation
+(including modifier clicks, middle click and "open in new tab"), and the same
+press events and state attributes as a button. There is no separate Link
+component, so an action and a link can share one look while screen readers
+still list them correctly.
+
+<Tabs label="Link mode">
+<Tab label="React">
+
+```tsx
+const docs = useComponent(button, { href: '/docs' });
+return <a {...docs.parts.root}>Docs</a>;
+```
+
+Render your router's link component as the root and spread the part props onto
+it for client-side routing.
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-button>
+  <a class="uni-button" href="/docs">Docs</a>
+</uni-button>
+```
+
+The element reads `href` from the link, so it works before JavaScript runs.
+Set the `href` property to change it later.
+
+</Tab>
+</Tabs>
+
+## Anatomy
+
+| Part   | Element                                                                  | Notes                                                                                                                                                          |
+| ------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root` | `button` by default, `a` in link mode, any element through `elementType` | You own the content, `id`, your classes, labelling, popup attributes (`aria-haspopup`, `aria-expanded`), form attributes and link attributes such as `target`. |
+
+A root that isn't a `button`, `input` or `a` gets `role="button"`, a
+`tabindex` and keyboard handling. The custom element has no role of its own and
+never takes focus.
+
+## Props
+
+| Prop                        | Attribute                 | Type                              | Default    | Description                                                                                                                                        |
+| --------------------------- | ------------------------- | --------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isDisabled`                | `disabled`                | `boolean`                         | `false`    | Native `disabled` on a `button`; `aria-disabled="true"` and no tab stop elsewhere. No press events fire.                                           |
+| `isFocusableWhenDisabled`   | `focusable-when-disabled` | `boolean`                         | `false`    | While disabled, keeps the root focusable with `aria-disabled` instead of `disabled`, so focus stays put. Presses and form submission stay blocked. |
+| `href`                      | `href`                    | `string`                          | —          | Link mode. Removed while disabled.                                                                                                                 |
+| `type`                      | `type`                    | `'button' \| 'submit' \| 'reset'` | `'button'` | For a native `button` root. Deliberately not HTML's `submit` default.                                                                              |
+| `elementType`               | — (read from the tag)     | `string`                          | `'button'` | The tag you render as the root. React warns in development when it doesn't match.                                                                  |
+| `shouldExcludeFromTabOrder` | `exclude-from-tab-order`  | `boolean`                         | `false`    | `tabindex="-1"`: focusable by pointer and script, skipped by Tab.                                                                                  |
+| `shouldPreventFocusOnPress` | `prevent-focus-on-press`  | `boolean`                         | `false`    | A pointer press leaves focus where it was, for buttons that act on something else, such as a toolbar over an editor.                               |
+
+## Events
+
+| Event         | React prop      | Detail       | When                                                                         |
+| ------------- | --------------- | ------------ | ---------------------------------------------------------------------------- |
+| `pressstart`  | `onPressStart`  | `PressEvent` | A press begins: pointer down, Enter or Space down, or a screen-reader click. |
+| `pressend`    | `onPressEnd`    | `PressEvent` | A press ends, whether or not it activates.                                   |
+| `press`       | `onPress`       | `PressEvent` | The button activates: released over the root, or the key released on it.     |
+| `focuschange` | `onFocusChange` | `boolean`    | The root gained or lost focus.                                               |
+
+On activation the order is `pressstart`, `pressend`, `press`. A cancelled
+press (the pointer leaves, a scroll takes over the touch) fires `pressstart`
+and `pressend` only. Exactly one `press` fires per activation, on every input.
+
+```ts
+interface PressEvent {
+  type: 'pressstart' | 'pressend' | 'press';
+  pointerType: 'mouse' | 'pen' | 'touch' | 'keyboard' | 'virtual';
+  target: Element; // the root part
+  shiftKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+  key?: string; // keyboard presses only
+  x: number; // relative to the root
+  y: number;
+}
+```
+
+`virtual` is a click without a real pointer: a screen reader's, or a script's
+`element.click()`. The custom element dispatches each event on itself, bubbling,
+with the press event in `detail`.
+
+## State
+
+| Field            | Type      | Meaning                                                                        |
+| ---------------- | --------- | ------------------------------------------------------------------------------ |
+| `isPressed`      | `boolean` | A pointer or key is down on the root, and releasing it now would activate.     |
+| `isHovered`      | `boolean` | A mouse or pen is over the root. Never from touch, never while disabled.       |
+| `isFocused`      | `boolean` | The root has focus.                                                            |
+| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or a screen reader. |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                         |
+
+Most of the time the state attributes below are all you need. To render
+something from state in React, select it, and the component renders again only
+when that value changes:
+
+```tsx
+const isPressed = useComponentState(save, (state) => state.isPressed);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute            | When                                                   |
+| -------------------- | ------------------------------------------------------ |
+| `class="uni-button"` | Always.                                                |
+| `data-hovered`       | A mouse or pen is over the root.                       |
+| `data-pressed`       | The button is pressed.                                 |
+| `data-focused`       | The root has focus.                                    |
+| `data-focus-visible` | The root has focus from a keyboard or a screen reader. |
+| `data-disabled`      | The button is disabled.                                |
+
+State attributes are present or absent, never `"false"`. UniAria also sets
+`touch-action: pan-x pan-y pinch-zoom` on the root: it removes the double-tap
+delay on touch screens and lets a scroll cancel a press.
+
+## Keyboard
+
+| Key   | Behavior                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------- |
+| Space | Presses on keydown and activates on keyup. The page doesn't scroll. Does nothing on a link, as natively.      |
+| Enter | Presses on keydown and activates on keyup. On a link the browser navigates on keydown, natively.              |
+| Tab   | Moves focus normally. The root is a tab stop unless disabled (without `isFocusableWhenDisabled`) or excluded. |
+
+Holding a key down never presses again, and a keyup that lands elsewhere
+because focus moved ends the press without activating.
+
+## Accessibility
+
+- **Focus.** Pressing never moves focus on its own: the action decides, as the
+  APG describes. Opening a dialog moves focus into it; a plain action leaves it
+  on the button. A pointer press focuses the button in every browser, Safari
+  included, unless `shouldPreventFocusOnPress` is set.
+- **Disabling while busy.** Natively disabling a focused button drops focus to
+  the page. While an action runs, use `isDisabled` with
+  `isFocusableWhenDisabled`, so focus stays and screen readers say "disabled".
+- **Screen readers.** VoiceOver, TalkBack, NVDA and JAWS click without a real
+  pointer; UniAria recognizes those clicks and fires the press events with
+  `pointerType: 'virtual'`.
+- **Spoken output.** "button, Save"; "button, Save, disabled" while disabled,
+  focusable or not; "link, Docs" in link mode. UniAria never writes
+  `aria-disabled="false"`, so a re-enabled button isn't announced as "not
+  disabled".
+- **Tooltips.** Give the button a [Tooltip](./tooltip.mdx) through its link,
+  and the tooltip's text becomes its description.
+
+## Compared with other libraries
+
+- **Enter activates on keyup**, as in React Aria. The APG's example activates
+  on keydown; if a keydown opened a dialog, the keyup would land on whatever
+  the dialog focused.
+- **`type` defaults to `button`**, as in React Aria, not HTML's `submit`.
+- **Toggle buttons** are a separate component, [ToggleButton](./toggle-button.mdx),
+  so a button's role never changes under the user.
+- **No pending state.** `isDisabled` with `isFocusableWhenDisabled` covers it
+  without dropping focus; a spinner stays with your design system.

@@ -1,0 +1,156 @@
+---
+title: Getting started
+description: Install UniAria and render your first component in React or as a custom element.
+---
+
+import { Callout, Tab, Tabs } from '@tenphi/cookbook/components';
+
+<Callout kind="caution" title="Not published yet">
+  UniAria is pre-alpha and its packages aren't on npm yet. This page describes
+  how they will be used.
+</Callout>
+
+## Install
+
+Pick the adapter for your stack. Both bring `@uniaria/core`, where the
+component definitions live.
+
+<Tabs label="Install">
+<Tab label="React">
+
+```sh
+pnpm add @uniaria/core @uniaria/react
+```
+
+React 18 or 19.
+
+</Tab>
+<Tab label="Custom elements">
+
+```sh
+pnpm add @uniaria/core @uniaria/elements
+```
+
+For plain HTML, server templates, and any framework that renders HTML.
+
+</Tab>
+</Tabs>
+
+The packages are ES modules only and target ES2022. They support the browsers
+in [Baseline widely available](./browser-support.md), and every entry imports
+safely on a server.
+
+## React
+
+Import a component's definition from its subpath of `@uniaria/core`, pass it
+to `useComponent` with props, and spread each part's props onto your element:
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/react';
+
+export function SaveButton({ onSave }: { onSave(): void }) {
+  const save = useComponent(button, { onPress: onSave });
+  return <button {...save.parts.root}>Save</button>;
+}
+```
+
+`save.parts.root` carries the attributes, event handlers, a `ref` and the
+class `uni-button`, which your CSS can select. Add your own attributes next to
+it, and keep UniAria's class when you add yours:
+``className={`${save.parts.root.className} primary`}``. Leave ARIA state and
+the `data-*` state attributes to UniAria: it writes them itself, and warns in
+development when you pass one.
+
+A component with several parts gives you one set of props per part:
+
+```tsx
+import { toggleSwitch } from '@uniaria/core/switch';
+import { useComponent } from '@uniaria/react';
+
+export function WifiSwitch() {
+  const wifi = useComponent(toggleSwitch, {
+    defaultSelected: true,
+    labelElementType: 'span',
+    onSelectedChange: (isSelected) => console.log(isSelected),
+  });
+  return (
+    <label {...wifi.parts.root}>
+      <input {...wifi.parts.input} name="wifi" />
+      <span {...wifi.parts.indicator} />
+      <span {...wifi.parts.label}>Wi-Fi</span>
+    </label>
+  );
+}
+```
+
+Hovering, pressing or toggling the switch doesn't render `WifiSwitch` again:
+UniAria writes the new state straight to the elements. When your render needs
+a value, select it with `useComponentState`. See [State](./state.md).
+
+## Custom elements
+
+Import a component's registering entry once, anywhere on the page. It defines
+the element, `<uni-` plus the component name, and wraps your markup. Mark the
+root part with the class `uni-` plus the component name, and every other part
+with `data-element`, its name capitalized (`Input`, `Indicator`):
+
+```html
+<uni-button id="save">
+  <button class="uni-button">Save</button>
+</uni-button>
+
+<script type="module">
+  import '@uniaria/elements/button';
+
+  document.querySelector('#save').addEventListener('press', () => save());
+</script>
+```
+
+The element has no shadow root and renders nothing: your `<button>` stays the
+button, styled by your CSS. Props become attributes in kebab case, without an
+`is` or `should` prefix (`isDisabled` is `disabled`), and properties with the
+prop's own name (`element.isDisabled`). Events are lowercase DOM events with
+the value in `detail` (`pressstart`, `selectedchange`).
+
+The element reads its starting state from your markup where HTML has it, such
+as a checkbox's `checked` or a link's `href`, so server-rendered HTML works
+before JavaScript runs.
+
+### Another prefix
+
+To register a component under your own name, call `defineElement` with its
+definition instead of importing the registering entry:
+
+```ts
+import { button } from '@uniaria/core/button';
+import { defineElement } from '@uniaria/elements';
+
+defineElement(button, { prefix: 'acme' }); // <acme-button>
+```
+
+The parts keep their markers: the root's class is still `uni-button`.
+
+### In other frameworks
+
+The elements work wherever HTML does. Tell your framework that `uni-*` tags
+are custom elements if it asks (Vue's `compilerOptions.isCustomElement`, for
+example), listen for the lowercase events, and set controlled values as
+properties:
+
+```html
+<!-- Vue -->
+<uni-switch :isSelected="wifi" @selectedchange="wifi = $event.detail">
+  <label class="uni-switch">
+    <input data-element="Input" type="checkbox" />
+    <span data-element="Indicator"></span>
+    <span data-element="Label">Wi-Fi</span>
+  </label>
+</uni-switch>
+```
+
+## Next steps
+
+- [Styling](./styling.md): the attributes and variables your CSS can target.
+- [State](./state.md): controlled values, events and reading state.
+- [Components](../components/index.mdx): every component with a live demo.

@@ -1,5 +1,6 @@
 // @ts-check
 import eslint from '@eslint/js';
+import tasty from '@tenphi/eslint-plugin-tasty';
 import prettier from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -37,6 +38,8 @@ export default defineConfig(
       'coverage/**',
       'specs/**',
       'references/**',
+      'apps/docs/.astro/**',
+      'apps/docs/public/demo/**',
     ],
   },
   eslint.configs.recommended,
@@ -66,9 +69,26 @@ export default defineConfig(
     },
   },
   {
-    files: ['scripts/**/*.mjs', '*.config.{js,ts}', 'packages/*/bench/**/*.ts'],
+    files: [
+      'scripts/**/*.mjs',
+      '*.config.{js,ts}',
+      'packages/*/bench/**/*.ts',
+      'apps/*/scripts/**/*.mjs',
+      'apps/*/*.config.ts',
+    ],
     languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
+  },
+  // The documentation site's live demos run in the browser.
+  {
+    files: ['docs/**/*.js'],
+    languageOptions: { globals: globals.browser },
+  },
+  // Tasty styles, checked against the tokens, states and presets the nearest
+  // `tasty.config.ts` lists (the documentation site's comes from its theme).
+  {
+    ...tasty.configs.strict,
+    files: ['apps/docs/**/*.{ts,tsx}'],
   },
 
   // Architecture boundaries (AGENTS.md → Architecture rules). Each block encodes

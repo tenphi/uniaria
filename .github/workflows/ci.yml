@@ -65,6 +65,33 @@ jobs:
       - name: Test
         run: pnpm test
 
+  # The documentation site (apps/docs): type check, Cookbook's content and
+  # link checks, the production build with its demo bundles, and the built
+  # output's checks. It isn't published anywhere yet.
+  docs:
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate and build
+        run: pnpm -C apps/docs validate
+
   # Conformance scenarios and implementation never change in the same commit
   # or pull request (AGENTS.md → Conformance). On pull requests it re-runs
   # when labels change, so the owner's `conformance-approved` label takes

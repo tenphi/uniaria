@@ -1,0 +1,312 @@
+---
+title: CheckboxGroup
+description: A labelled set of checkboxes whose value is the list of the selected ones.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/checkbox-group.css?raw';
+import html from './demos/checkbox-group.html?raw';
+import javascript from './demos/checkbox-group.js?raw';
+
+A checkbox group is a labelled set of checkboxes whose value is the list of
+the selected ones, such as the channels a user wants notifications on. Its
+root becomes a `role="group"`, named by the group's label and described by its
+description and error message (as [Field](./field.mdx) does). Each checkbox
+stays a [Checkbox](./checkbox.mdx), a native `<input type="checkbox">`, that
+finds its group and takes from it its selected state, its `name`, and the
+group's disabled, read-only, required and invalid states.
+
+It follows the WAI-ARIA [Checkbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/)
+for a group of checkboxes.
+
+<Preview
+  title="Notification channels"
+  scripts={['/demo/checkbox-group.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import type { ReactNode } from 'react';
+import { checkbox } from '@uniaria/core/checkbox';
+import { checkboxGroup } from '@uniaria/core/checkbox-group';
+import { OwnerProvider, useComponent } from '@uniaria/react';
+
+export function Notifications(props: {
+  value: readonly string[];
+  onValueChange(value: readonly string[]): void;
+}) {
+  const group = useComponent(checkboxGroup, {
+    name: 'notify',
+    isRequired: true,
+    isInvalid: props.value.length === 0,
+    value: props.value,
+    onValueChange: props.onValueChange,
+  });
+  return (
+    <div {...group.parts.root}>
+      <span {...group.parts.label}>Notifications</span>
+      <OwnerProvider owner={group}>
+        <Channel value="email">Email</Channel>
+        <Channel value="sms">SMS</Channel>
+      </OwnerProvider>
+      <span {...group.parts.error}>Pick at least one.</span>
+    </div>
+  );
+}
+
+function Channel(props: { value: string; children: ReactNode }) {
+  const channel = useComponent(checkbox, {
+    value: props.value,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...channel.parts.root}>
+      <input {...channel.parts.input} />
+      <span {...channel.parts.indicator} />
+      <span {...channel.parts.label}>{props.children}</span>
+    </label>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-checkbox-group id="notify" name="notify" required>
+  <div class="uni-checkbox-group">
+    <span data-element="Label">Notifications</span>
+    <uni-checkbox value="email">
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" checked />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">Email</span>
+      </label>
+    </uni-checkbox>
+    <uni-checkbox value="sms">
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">SMS</span>
+      </label>
+    </uni-checkbox>
+    <span data-element="Error" hidden>Pick at least one.</span>
+  </div>
+</uni-checkbox-group>
+
+<script type="module">
+  import '@uniaria/elements/checkbox-group';
+  import '@uniaria/elements/checkbox';
+
+  const group = document.querySelector('#notify');
+  group.addEventListener('valuechange', (event) => {
+    group.isInvalid = event.detail.length === 0;
+  });
+</script>
+```
+
+The checkboxes checked in the markup, or clicked before the script loaded,
+make the group's starting value: `['email']` here.
+
+</Tab>
+</Tabs>
+
+Every checkbox in a group needs a `value`: its key in the group's value,
+which UniAria also writes to the input. A `fieldset` root with a `legend`
+label works too (pass `labelElementType: 'legend'` in React).
+
+### Finding the group
+
+A checkbox finds its group in one of three ways:
+
+- **Inside it.** A `<uni-checkbox>` inside a `<uni-checkbox-group>` finds it
+  on its own. In React, render the checkboxes inside
+  `<OwnerProvider owner={group}>`: they are linked from their first render,
+  so server HTML already has the right boxes checked. Without the provider,
+  a React checkbox inside the group's root links after it mounts.
+- **Elsewhere, by id.** A `<uni-checkbox group="notify">` joins the
+  `<uni-checkbox-group id="notify">` from anywhere in the same document or
+  shadow root.
+- **Elsewhere, in React.** Pass the group's instance as the checkbox's
+  `owner` prop: `useComponent(checkbox, { value: 'sms', owner: group.instance })`.
+
+A checkbox can move in or out of a group at any time. See
+[Composition](../guide/composition.md).
+
+### Select all
+
+A "select all" checkbox stays outside the group, with no `value`, and you
+compute its state from the group's value:
+
+```tsx
+const all = useComponent(checkbox, {
+  labelElementType: 'span',
+  isSelected: value.length === channels.length,
+  isIndeterminate: value.length > 0 && value.length < channels.length,
+  onSelectedChange: (isSelected) => setValue(isSelected ? channels : []),
+});
+```
+
+See [Checkbox](./checkbox.mdx) for the indeterminate state.
+
+### In a form
+
+- **Submission.** The group writes its `name` to every checkbox while set,
+  so the form submits each selected `value` under it. There is no generated
+  name; without `name`, the checkboxes keep their own.
+- **Reset.** A form reset returns the group to the value it mounted with,
+  `defaultValue` when uncontrolled, and the checkboxes follow; a controlled
+  group gets a `valuechange` asking for it.
+- **Disabled.** Every checkbox is disabled natively and none is submitted.
+- **Validation.** The group never validates: `isRequired` and `isInvalid`
+  only mark it. You decide when it is invalid and set `isInvalid`, as the
+  demo does when nothing is selected.
+
+See [Forms](../guide/forms.md).
+
+## Anatomy
+
+| Part          | Element                                                   | Notes                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | Any; usually `div`                                        | Gets `role="group"`, an `id` and `aria-labelledby`, `aria-describedby` and `aria-disabled`. The outermost element: holds the label, the description, the error and the checkboxes. A `fieldset` works too. |
+| `label`       | `span` by default, any element through `labelElementType` | Names the group. Not a `label`: a group can't be labelled natively.                                                                                                                                        |
+| `description` | Any                                                       | Optional. Read when focus enters the group.                                                                                                                                                                |
+| `error`       | Any                                                       | Optional. Hidden unless invalid; announced when it appears, and linked to every checkbox.                                                                                                                  |
+
+The checkboxes aren't parts of the group: they are
+[Checkbox](./checkbox.mdx) components with their own parts. You own the
+content of every part.
+
+A checkbox in a group takes from it:
+
+- **Selected:** whether the group's value holds its `value`. A toggle adds
+  the value (last) or removes it through the group. The checkbox's own
+  `isSelected`, `defaultSelected` and form reset are unused; development
+  warns about a controlled `isSelected` and a missing `value`.
+- **Name:** the group's `name`, while set.
+- **Disabled and read-only:** the group's, or its own.
+- **Required:** `aria-required` while the group is required and its value is
+  empty.
+- **Invalid:** the group's, or its own, with the group's error added to its
+  `aria-describedby` while shown.
+- **Indeterminate** stays its own.
+
+## Props
+
+| Prop               | Attribute             | Type                | Default  | Description                                                                                       |
+| ------------------ | --------------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `value`            | — (property)          | `readonly string[]` | —        | The selected checkboxes' values, controlled. Pair it with `onValueChange`.                        |
+| `defaultValue`     | — (property)          | `readonly string[]` | `[]`     | The starting value, uncontrolled. The element starts from the checkboxes checked in its markup.   |
+| `name`             | `name`                | `string`            | —        | Written to every checkbox's input while set.                                                      |
+| `isDisabled`       | `disabled`            | `boolean`           | `false`  | Disables every checkbox natively, and writes `aria-disabled="true"` on the root. Hides the error. |
+| `isReadOnly`       | `readonly`            | `boolean`           | `false`  | Makes every checkbox read-only.                                                                   |
+| `isRequired`       | `required`            | `boolean`           | `false`  | `aria-required="true"` on every checkbox while the value is empty.                                |
+| `isInvalid`        | `invalid`             | `boolean`           | `false`  | `aria-invalid="true"` on every checkbox; shows and announces the error.                           |
+| `labelElementType` | — (read from the tag) | `string`            | `'span'` | The label part's tag.                                                                             |
+| `labelledBy`       | `labelled-by`         | `string`            | —        | More ids for the root's `aria-labelledby`, after the label part's.                                |
+| `describedBy`      | `described-by`        | `string`            | —        | More ids for the root's `aria-describedby`, after the description's and the error's.              |
+
+## Events
+
+| Event         | React prop      | Detail              | When                                                                                                         |
+| ------------- | --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `valuechange` | `onValueChange` | `readonly string[]` | A checkbox in the group was toggled, or a form reset asks for the default. A newly selected value goes last. |
+| `focuschange` | `onFocusChange` | `boolean`           | Focus entered or left the group, such as for a form that validates on blur.                                  |
+
+`valuechange` never fires for a value you set. The custom element dispatches
+each event on itself, bubbling, with the value in `detail`. The checkboxes'
+own `focuschange` events bubble through the group element too, so check
+`event.target` when you listen there.
+
+## State
+
+| Field            | Type                | Meaning                                                    |
+| ---------------- | ------------------- | ---------------------------------------------------------- |
+| `value`          | `readonly string[]` | The current value.                                         |
+| `isDisabled`     | `boolean`           | The `isDisabled` prop.                                     |
+| `isReadOnly`     | `boolean`           | The `isReadOnly` prop.                                     |
+| `isRequired`     | `boolean`           | The `isRequired` prop.                                     |
+| `isInvalid`      | `boolean`           | The `isInvalid` prop.                                      |
+| `isErrorShown`   | `boolean`           | The error part is shown: invalid and not disabled.         |
+| `isFocusWithin`  | `boolean`           | A checkbox in the group has focus.                         |
+| `isFocusVisible` | `boolean`           | Focus within came from a keyboard or assistive technology. |
+
+To render something from state in React, select it, and the component renders
+again only when that value changes:
+
+```tsx
+const count = useComponentState(group, (state) => state.value.length);
+```
+
+On the custom element, read `element.instance.getState()`. The `value`
+property holds only the value you set, not the current state. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                              | When                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| `class="uni-checkbox-group"`                           | On the root, always.                                  |
+| `data-scope="checkbox-group"`, `data-element="<Part>"` | On every other part, always.                          |
+| `data-disabled`                                        | The group is disabled.                                |
+| `data-readonly`                                        | The group is read-only.                               |
+| `data-invalid`                                         | The group is invalid.                                 |
+| `data-required`                                        | The group is required.                                |
+| `data-focus-within`                                    | A checkbox in the group has focus.                    |
+| `data-focus-visible`                                   | Focus within came from a keyboard or a screen reader. |
+
+Every part of the group carries them, so you can draw a ring around the whole
+group with `data-focus-within` and limit it to keyboard focus with
+`data-focus-visible`. The checkboxes' parts carry their own
+[state attributes](./checkbox.mdx), including the group's disabled,
+read-only, required and invalid states. UniAria writes no styles.
+
+## Keyboard
+
+The group handles no keys. Each checkbox is a tab stop of its own, as native
+checkboxes are and as the APG describes, and Space toggles it.
+
+| Key   | Behavior                                                         |
+| ----- | ---------------------------------------------------------------- |
+| Tab   | Moves to the next checkbox, natively, and leaves after the last. |
+| Space | Toggles the focused checkbox, natively. Nothing when read-only.  |
+| Enter | Nothing on a checkbox: it submits the form, natively.            |
+
+## Accessibility
+
+- **Spoken output.** Entering the group reads "group, Notifications, Where
+  we tell you about new orders", then each checkbox reads as usual, such as
+  "checkbox, Email, checked". A disabled group reads "group, Notifications,
+  disabled".
+- **Required and invalid are read on each checkbox.** Screen readers ignore
+  `aria-required` and `aria-invalid` on a group, so UniAria writes them on
+  the checkboxes: "checkbox, Email, not checked, required" while nothing is
+  selected, and "checkbox, Email, Pick at least one, not checked, invalid"
+  with the error. A required group can sound as if each checkbox were
+  required; there is no better place screen readers read.
+- **The description is read once,** when focus enters the group, and not on
+  each checkbox. The error is linked to each, so focus anywhere explains it.
+- **Label the group** with a label part or `labelledBy`: a group without a
+  name tells screen reader users nothing about the checkboxes in it.
+- **Focus.** The group moves no focus.
+
+## Compared with other libraries
+
+- **Only the error goes on each checkbox.** React Aria adds the group's
+  description too, so it is read again on every checkbox.
+- **Required on each checkbox while empty**, as in React Aria and Cube UI
+  Kit.
+- **A newly selected value goes last**, as in React Aria. A value with no
+  checkbox stays in the value, and a removed checkbox keeps its value there.
+- **No context to wire up for elements.** A checkbox finds its group through
+  the DOM, React context or an id, and can move between groups.
+- **No orientation prop.** Cube UI Kit's only switches the layout; a row of
+  checkboxes is your CSS.

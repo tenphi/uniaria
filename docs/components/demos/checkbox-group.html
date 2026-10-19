@@ -1,0 +1,29 @@
+<uni-checkbox-group id="notify" name="notify" required>
+  <div class="uni-checkbox-group">
+    <span data-element="Label">Notifications</span>
+    <span data-element="Description">Where we tell you about new orders.</span>
+    <uni-checkbox value="email">
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" checked />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">Email</span>
+      </label>
+    </uni-checkbox>
+    <uni-checkbox value="sms">
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">SMS</span>
+      </label>
+    </uni-checkbox>
+    <uni-checkbox value="push">
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">Push</span>
+      </label>
+    </uni-checkbox>
+    <span data-element="Error" hidden>Pick at least one.</span>
+  </div>
+</uni-checkbox-group>
+<output id="log">Clear every channel to see the error.</output>

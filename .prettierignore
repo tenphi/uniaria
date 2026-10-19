@@ -4,3 +4,5 @@ coverage/
 **/CHANGELOG.md
 .changeset/*.md
 specs/
+apps/docs/.astro/
+apps/docs/public/demo/

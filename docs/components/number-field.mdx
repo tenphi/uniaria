@@ -1,0 +1,439 @@
+---
+title: NumberField
+description: A text input for a number, formatted and parsed for the locale, with stepper buttons, keys, the wheel and announcements.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/number-field.css?raw';
+import html from './demos/number-field.html?raw';
+import javascript from './demos/number-field.js?raw';
+
+A number field is a text input for a number, with optional increment and
+decrement buttons. It parses and formats the number for the locale and your
+format (currencies, percentages, units, other numbering systems), keeps it
+within `minValue` and `maxValue` and on `step`, and steps it with the arrow
+keys, the buttons held down and, while focused, the mouse wheel. It has
+[Field](./field.mdx) built in for the label, description and error.
+
+The input is a native `<input type="text">`, not `type="number"`, which can't
+show a currency symbol, a percent sign or grouping. Parsing and formatting
+come from `@internationalized/number`.
+
+NumberField follows the keys and buttons of the WAI-ARIA
+[Spinbutton pattern](https://www.w3.org/WAI/ARIA/apg/patterns/spinbutton/);
+its input is a text box rather than a `spinbutton` (see
+[Accessibility](#accessibility)).
+
+<Preview
+  title="Number fields"
+  scripts={['/demo/number-field.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { numberField } from '@uniaria/core/number-field';
+import { useComponent } from '@uniaria/react';
+
+export function QuantityField(props: {
+  onQuantityChange(quantity: number | null): void;
+}) {
+  const quantity = useComponent(numberField, {
+    defaultValue: 1,
+    minValue: 1,
+    maxValue: 99,
+    onValueChange: props.onQuantityChange,
+  });
+  return (
+    <div {...quantity.parts.root}>
+      <label {...quantity.parts.label}>Quantity</label>
+      <div {...quantity.parts.wrapper}>
+        <button {...quantity.parts.decrement}>−</button>
+        <input {...quantity.parts.input} />
+        <button {...quantity.parts.increment}>+</button>
+      </div>
+      <input {...quantity.parts.hiddenInput} name="quantity" />
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-number-field id="quantity" min-value="1" max-value="99" default-value="1">
+  <div class="uni-number-field">
+    <label data-element="Label">Quantity</label>
+    <div data-element="Wrapper">
+      <button data-element="Decrement">−</button>
+      <input data-element="Input" />
+      <button data-element="Increment">+</button>
+    </div>
+    <input type="hidden" data-element="HiddenInput" name="quantity" />
+  </div>
+</uni-number-field>
+
+<script type="module">
+  import '@uniaria/elements/number-field';
+
+  document
+    .querySelector('#quantity')
+    .addEventListener('valuechange', (event) => {
+      console.log(event.detail); // a number, or null when cleared
+    });
+</script>
+```
+
+Without `default-value`, the element takes the input's text as its default,
+parsed for the field's locale: the markup's `value`, or what the user typed
+before the script loaded.
+
+</Tab>
+</Tabs>
+
+The value is a `number`, or `null` when the field is empty. It changes when
+the text is committed and on each step, never on each keystroke. The buttons
+are optional: leave them out for a plain formatted input.
+
+### Typing and committing
+
+- **Each edit is checked before the browser applies it.** It stays only if the
+  text it leaves can still become a number for the locale and format: digits,
+  the format's symbols (a currency sign, `%`, unit words), group separators,
+  one decimal separator when the format shows fractions, and a minus sign at
+  the start when `minValue` is unset or below 0. Typing `1a` leaves `1`. Undo
+  and redo are never refused.
+- **Typing reports nothing.** The text is committed when the input loses
+  focus, on Enter, and right after a paste that replaces all of it, so pasting
+  `$1,234.50` into a dollar field works.
+- **A commit** turns empty text into `null` and puts back text that isn't a
+  number. A number is kept within `minValue` and `maxValue`, moved to the
+  nearest step when `step` is set (counted from `minValue`, or 0, and never
+  past the last step below `maxValue`), and rounded to the precision the
+  format shows: 3 decimals for plain numbers by default. The text is then
+  formatted again, and `valueChange` reports the value if it changed.
+
+### Stepping
+
+The arrow and page keys, Home and End, the buttons and the wheel step the
+value. Each step commits at once: the value, the text and `valueChange`
+together.
+
+- A step is `step`, else 1, or 1% for `style: 'percent'`. A page is
+  `pageStep`, or 10 steps.
+- Steps go from the text as typed, committed or not. From an empty field,
+  increment goes to `minValue` and decrement to `maxValue`, else both to 0.
+- A value off the step goes to the next step that way: from 2 with steps of
+  5, up is 5.
+- At a bound a step does nothing, and its button is disabled.
+- Steps add in decimal, so 0.1 plus 0.2 shows 0.3.
+
+A press on a button steps at once and, held for 400 ms, again every 60 ms
+until released or at the bound. A touch steps on release instead, or repeats
+after 600 ms, and a scroll that takes over the touch cancels it. The wheel
+steps while focus is in the field and the pointer is over the input: one step
+per event, up increments, and the page doesn't scroll. Turn it off with
+`isWheelDisabled`.
+
+### Formatting and locale
+
+<Tabs label="Formatting and locale">
+<Tab label="React">
+
+```tsx
+const price = useComponent(numberField, {
+  locale: 'de-DE',
+  formatOptions: { style: 'currency', currency: 'EUR' },
+  minValue: 0,
+});
+// 12.5 shows as "12,50 €"
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-number-field id="price" locale="de-DE" min-value="0">…</uni-number-field>
+
+<script type="module">
+  document.querySelector('#price').formatOptions = {
+    style: 'currency',
+    currency: 'EUR',
+  };
+</script>
+```
+
+`formatOptions` is a property only.
+
+</Tab>
+</Tabs>
+
+- **`formatOptions`** are `Intl.NumberFormat` options: `style` (`currency`,
+  `percent`, `unit`), fraction digits, grouping, `signDisplay`,
+  `currencySign`. They are compared by value, so a new object with the same
+  options changes nothing. A percentage's value is the fraction: `25%` is
+  `0.25`.
+- **The locale** is the `locale` prop, else the language of the input (its
+  nearest `lang` attribute), else the browser's. On the server, without
+  `locale`, the text is formatted for `en-US` and formatted again after
+  hydration, so pass `locale` when you render on the server.
+- **Other numbering systems.** Arabic, Devanagari, Bengali, Han and
+  full-width digits are read too, and text typed in one keeps it after the
+  commit.
+- A new locale or format formats the text again. The text stays formatted
+  while focused: there is no separate editing format.
+
+### Controlled value
+
+<Tabs label="Controlled value">
+<Tab label="React">
+
+```tsx
+function AmountField({ limit }: { limit: number }) {
+  const [amount, setAmount] = useState<number | null>(0);
+  const field = useComponent(numberField, {
+    value: amount,
+    onValueChange: setAmount,
+    minValue: 0,
+    maxValue: limit,
+    // The limit can drop below a stored amount.
+    isInvalid: amount !== null && amount > limit,
+  });
+  // …
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<script type="module">
+  const amount = document.querySelector('#amount');
+  amount.value = 0; // setting the property makes it controlled
+  amount.addEventListener('valuechange', (event) => {
+    amount.value = event.detail;
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+The text shows your value, formatted, and follows it when it changes, even
+while the input has focus. After a commit or a step, the field reports the new
+value and keeps showing yours until you answer; a value you don't take is
+replaced by yours.
+
+Your value is shown as given, even off the step or out of range: UniAria
+never changes it without reporting. Commits and steps always land in range,
+so a value out of range comes from you (a new `maxValue`, a stored value).
+Mark it with `isInvalid` and an error that says why, as above. Leaving the
+field without editing doesn't correct it; a step moves it into range.
+
+### In a form
+
+Put `name` on the `hiddenInput` part, not on the visible input. The form then
+gets the committed number as plain digits (`1234.5`, `0.25` for 25%), or an
+empty string, never the formatted text. The hidden input is disabled with the
+field, so a disabled field submits nothing.
+
+Enter commits before the form submits, and a press on a submit button commits
+by moving focus out of the input. On the form's `reset`, the value goes back
+to `defaultValue`, or without one to the value the field started with, and
+`valueChange` reports it. See [Forms](../guide/forms.md).
+
+### Other languages
+
+The buttons are named "Increase" and "Decrease" followed by the field's
+label, and the input gets the role description "Number field" in English.
+For another language, pass whole names: they replace the English ones, so the
+label can go anywhere in them.
+
+```tsx
+const menge = useComponent(numberField, {
+  locale: 'de-DE',
+  incrementLabel: 'Menge erhöhen',
+  decrementLabel: 'Menge verringern',
+  roleDescription: 'Zahlenfeld',
+});
+```
+
+Outside English the input has no role description unless you pass one, and a
+screen reader says its own word for a text box.
+
+## Anatomy
+
+| Part          | Element               | Notes                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any; usually `div`    | Optional. The outermost element, around the other parts. No role.                                                                                                                                                                                                                                                                                                                       |
+| `wrapper`     | any; usually `div`    | Optional. The box around the input and the buttons. No role. A press on it outside any control focuses the input.                                                                                                                                                                                                                                                                       |
+| `label`       | `label` by default    | As [Field](./field.mdx)'s label. It also names the buttons.                                                                                                                                                                                                                                                                                                                             |
+| `input`       | `input`               | UniAria writes Field's `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`, plus `type="text"`, `inputmode`, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `aria-roledescription`, `disabled`, `readonly` and the `value` property (the text). You own `placeholder`, `size`, `autofocus`, `enterkeyhint` and `form`. Give it no `name`. |
+| `increment`   | `button`              | Optional. UniAria writes `type="button"`, `tabindex="-1"`, `id`, `aria-label`, `aria-labelledby`, `aria-controls` (the input), and `aria-disabled` while it can't step. You own the content, such as an icon.                                                                                                                                                                           |
+| `decrement`   | `button`              | Optional. As `increment`.                                                                                                                                                                                                                                                                                                                                                               |
+| `hiddenInput` | `input type="hidden"` | Optional. UniAria writes `type="hidden"`, `disabled` while the field is, and the `value` property: the committed number, or `''`. Put `name` here.                                                                                                                                                                                                                                      |
+| `description` | any                   | As Field's description.                                                                                                                                                                                                                                                                                                                                                                 |
+| `error`       | any                   | As Field's error: hidden until `isInvalid`.                                                                                                                                                                                                                                                                                                                                             |
+
+The parts link as [Field's](./field.mdx#anatomy) do. Set `disabled` and
+`readonly` through the props, not on the input: UniAria writes those
+attributes and removes yours.
+
+## Props
+
+| Prop                     | Attribute                                                 | Type                       | Default                     | Description                                                                                                                       |
+| ------------------------ | --------------------------------------------------------- | -------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `number \| null`           | `null`                      | The committed number; `null` when empty. Changes come from `valueChange`.                                                         |
+| `minValue`               | `min-value`                                               | `number`                   | —                           | Commits and steps stay at or above it. A minus sign can be typed only when it is unset or below 0.                                |
+| `maxValue`               | `max-value`                                               | `number`                   | —                           | Commits and steps stay at or below it.                                                                                            |
+| `step`                   | `step`                                                    | `number`                   | —                           | When set, a commit moves to the nearest step, counted from `minValue` (or 0). Steps move by it, else by 1, or 1% for percentages. |
+| `pageStep`               | `page-step`                                               | `number`                   | 10 steps                    | What PageUp and PageDown move by.                                                                                                 |
+| `formatOptions`          | — (property only)                                         | `Intl.NumberFormatOptions` | `{}`                        | How the number is shown and read.                                                                                                 |
+| `locale`                 | `locale`                                                  | `string`                   | the input's language        | A BCP 47 tag, such as `de-DE`.                                                                                                    |
+| `isWheelDisabled`        | `wheel-disabled`                                          | `boolean`                  | `false`                     | Turns off stepping with the wheel.                                                                                                |
+| `isDisabled`             | `disabled`                                                | `boolean`                  | `false`                     | Native `disabled` on the input and the hidden input. The buttons can't step. Marks every part and hides the error.                |
+| `isReadOnly`             | `readonly`                                                | `boolean`                  | `false`                     | Native `readonly` on the input: no key, button or wheel changes the value.                                                        |
+| `isRequired`             | `required`                                                | `boolean`                  | `false`                     | `aria-required="true"` on the input, never the native `required`.                                                                 |
+| `isInvalid`              | `invalid`                                                 | `boolean`                  | `false`                     | `aria-invalid="true"` on the input. Shows, links and announces the error.                                                         |
+| `incrementLabel`         | `increment-label`                                         | `string`                   | "Increase" and the label    | The increment button's whole name.                                                                                                |
+| `decrementLabel`         | `decrement-label`                                         | `string`                   | "Decrease" and the label    | The decrement button's whole name.                                                                                                |
+| `roleDescription`        | `role-description`                                        | `string`                   | `'Number field'` in English | The input's `aria-roledescription`. None in other languages unless you pass one.                                                  |
+| `inputId`                | — (read from the input's `id`)                            | `string`                   | generated                   | The input's `id`, which the label's `for` and the buttons' `aria-controls` point at.                                              |
+| `labelElementType`       | — (read from the label's tag)                             | `string`                   | `'label'`                   | The label's tag; `for` goes on a `label` only.                                                                                    |
+| `labelledBy`             | `labelled-by`                                             | `string`                   | —                           | More ids for the input's `aria-labelledby`, after the label's. They also follow the buttons' default names.                       |
+| `describedBy`            | `described-by`                                            | `string`                   | —                           | More ids for the input's `aria-describedby`, after the description and the error.                                                 |
+| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance       | —                           | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly.                  |
+
+An attribute that isn't a number, and a `step` or `pageStep` of 0 or less,
+count as unset.
+
+## Events
+
+| Event         | React prop      | Detail           | When                                                                                                   |
+| ------------- | --------------- | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `valuechange` | `onValueChange` | `number \| null` | A commit or a step changed the value, or a form reset asks for the default. Never for a value you set. |
+| `focuschange` | `onFocusChange` | `boolean`        | The input gained or lost focus.                                                                        |
+
+The custom element dispatches each event on itself, bubbling, with the value
+in `detail`. In React, the input's `onFocus`, `onBlur`, `onKeyDown`,
+`onInput`, `onPaste`, `onPointerEnter`, `onPointerLeave`,
+`onCompositionStart` and `onCompositionEnd` come from UniAria, and passing
+your own replaces them.
+
+## State
+
+| Field            | Type             | Meaning                                                                            |
+| ---------------- | ---------------- | ---------------------------------------------------------------------------------- |
+| `value`          | `number \| null` | The committed value.                                                               |
+| `canIncrement`   | `boolean`        | A step up would change the value: not at the maximum, not read-only, not disabled. |
+| `canDecrement`   | `boolean`        | The same, down.                                                                    |
+| `isFocused`      | `boolean`        | The input has focus.                                                               |
+| `isFocusVisible` | `boolean`        | The input has focus from a keyboard or a screen reader.                            |
+| `isHovered`      | `boolean`        | A mouse or pen is over the input.                                                  |
+| `isDisabled`     | `boolean`        | The `isDisabled` prop.                                                             |
+| `isReadOnly`     | `boolean`        | The `isReadOnly` prop.                                                             |
+| `isRequired`     | `boolean`        | The `isRequired` prop.                                                             |
+| `isInvalid`      | `boolean`        | The `isInvalid` prop.                                                              |
+| `isErrorShown`   | `boolean`        | The error is shown: invalid and not disabled.                                      |
+
+`canIncrement` and `canDecrement` follow the text as it is typed: typing 100
+with a maximum of 15 makes `canIncrement` false before the text is committed.
+Typing, stepping, hovering and focusing never render your component again. To
+render something from state in React, select it:
+
+```tsx
+const canIncrement = useComponentState(quantity, (state) => state.canIncrement);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                                                                                               | On                                              | When                                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `class="uni-number-field"`                                                                                              | root                                            | Always.                                                                                       |
+| `data-scope="number-field"`, `data-element`                                                                             | every other part                                | Always.                                                                                       |
+| `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, wrapper, label, input, description, error | As [TextField](./text-field.mdx#styling): the input's hover and focus, and the field's state. |
+| `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`                                                    | increment, decrement                            | The button's own, as [Button](./button.mdx#styling)'s.                                        |
+| `data-disabled`                                                                                                         | increment, decrement                            | The button can't step: at a bound, read-only or disabled.                                     |
+
+The error part also gets `hidden` while it isn't shown. As on every pressable
+part, UniAria sets `touch-action: pan-x pan-y pinch-zoom` on the buttons, so
+a scroll can cancel a touch press.
+
+## Keyboard
+
+On the input:
+
+| Key                | Behavior                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| ArrowUp, ArrowDown | One step up or down. Held, it repeats with the key.                                                           |
+| PageUp, PageDown   | `pageStep` up or down, 10 steps by default.                                                                   |
+| Home, End          | To `minValue`, or to the last step at or below `maxValue`, when that bound is set. Otherwise the caret moves. |
+| Enter              | Commits the text, then the form submits as usual.                                                             |
+| Escape             | Not handled: it reaches your handlers and closes a dialog around the field.                                   |
+| Tab                | Moves focus to and from the input. The buttons are out of the Tab order.                                      |
+
+Keys with a modifier keep their native meaning (Shift+ArrowUp selects text).
+No key steps while an input method is composing text, or while the field is
+read-only or disabled. A key whose default is already prevented is left
+alone, so you can take a key over: with a `keydown` listener on the input
+element, or `onKeyDownCapture` in React.
+
+On phones, `inputmode` picks a keyboard that has what can be typed. On an
+iPhone, whose number keyboards have no minus sign, it is `text` when a minus
+sign is allowed, else `decimal` when the format shows fractions, else
+`numeric`. On Android it is `numeric` when a minus sign is allowed, else
+`decimal` or `numeric` the same way. Elsewhere it is `numeric`.
+
+## Accessibility
+
+- **A text box, not a spin button.** The input keeps its text box role, with
+  `aria-roledescription="Number field"`, and has no `aria-valuenow`: VoiceOver
+  can't edit a spinbutton's text, and a text box reads the formatted text as
+  it is. A screen reader reads "Number field, Quantity, 1,024", or "Number
+  field, Price, €12.50" for a currency. On iOS the role description is left
+  off, so VoiceOver reads the required state.
+- **Announcements.** A text box's value changing under it isn't read, so after
+  a step, and after a commit that changed what was typed (clamped, snapped,
+  rounded or formatted), NumberField announces the new text through UniAria's
+  live announcer. A minus sign is announced as "minus". Typing announces
+  nothing: the screen reader already echoes it.
+- **Buttons.** They are out of the Tab order, since the arrow keys do the
+  same, but touch, voice control and a screen reader's browse mode reach them.
+  They read "button, Increase Quantity". At a bound they get `aria-disabled`
+  and stay focusable, so someone who pressed up to the maximum keeps focus and
+  hears "disabled".
+- **Focus.** A mouse press on a button focuses the input. A touch or screen
+  reader press focuses the button, so no on-screen keyboard opens and the
+  reading position stays. If the input already has focus, it keeps it.
+- **Errors.** A value out of range is yours to report: set `isInvalid` and
+  write an error that says why, which Field announces and links.
+
+## Compared with other libraries
+
+- **React Aria** makes the same role choice. NumberField differs where its
+  users noticed: buttons at a bound stay focusable with `aria-disabled`
+  instead of `disabled`; PageUp and PageDown move 10 steps, not one; Home and
+  End move the caret when there is no bound; the wheel turned up increments,
+  as in Chromium's number input; only steps and corrected commits are
+  announced, not each keystroke; empty is `null`, not `NaN`; a value you pass
+  is shown as given rather than clamped for display; and there is no
+  `commitBehavior: 'validate'`.
+- **Strings.** React Aria ships translations for 34 locales. UniAria has
+  English defaults and props for your own.
+- **The APG and Zag** use the `spinbutton` role with `aria-valuenow`. Zag
+  steps 10 at a time with Shift and an arrow key, has a drag-to-change
+  scrubber and an opt-in wheel; NumberField has none of these.
+- **Native `type="number"`** can't show currencies or grouping, and Firefox
+  and WebKit don't step it with the wheel. The form still gets a plain number
+  through the hidden input part.

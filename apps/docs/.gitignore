@@ -1,0 +1,6 @@
+# Astro
+.astro/
+dist/
+
+# The demo bundle, built from the workspace by `pnpm demo`
+public/demo/

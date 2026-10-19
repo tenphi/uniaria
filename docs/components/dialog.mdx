@@ -1,0 +1,499 @@
+---
+title: Dialog
+description: A modal window on the native dialog element that takes focus, keeps it and leaves the page inert until it closes.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/dialog.css?raw';
+import html from './demos/dialog.html?raw';
+import javascript from './demos/dialog.js?raw';
+
+A dialog is a modal window over the page. UniAria opens a native `<dialog>` with
+`showModal()`, so the browser puts it in the top layer, makes the rest of the
+page inert for the pointer, the keyboard and screen readers, and draws its
+`::backdrop`. UniAria adds what the browser leaves out or does differently in
+each engine: an open state you can control, Escape and backdrop dismissal, Tab
+wrapping, page scroll lock, initial focus, focus restore and a closing phase
+for exit animations.
+
+It follows the WAI-ARIA [Dialog (Modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+and [Alert Dialog](https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/)
+patterns. A dialog is always modal; for a non-modal one next to its trigger,
+use a [Popover](./popover.mdx) with `isNonModal`. [Overlays](../guide/overlays.md)
+covers what every overlay shares: the top layer, the layer stack and dismissal.
+
+<Preview
+  title="A confirmation dialog"
+  height="18rem"
+  scripts={['/demo/dialog.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { dialog } from '@uniaria/core/dialog';
+import { useComponent } from '@uniaria/react';
+
+export function DeleteFile(props: { onDelete(): void }) {
+  const confirm = useComponent(dialog, {
+    onDismiss: (event) => {
+      if (event.returnValue === 'delete') props.onDelete();
+    },
+  });
+  return (
+    <>
+      <button {...confirm.parts.trigger}>Delete file…</button>
+      <dialog {...confirm.parts.root}>
+        <h2 {...confirm.parts.title}>Delete “report.pdf”?</h2>
+        <p {...confirm.parts.description}>It stays in the trash for 30 days.</p>
+        <form method="dialog">
+          <button {...confirm.parts.close}>Cancel</button>
+          <button value="delete">Delete</button>
+        </form>
+      </dialog>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-dialog id="delete-file">
+  <button data-element="Trigger">Delete file…</button>
+  <dialog class="uni-dialog">
+    <h2 data-element="Title">Delete “report.pdf”?</h2>
+    <p data-element="Description">It stays in the trash for 30 days.</p>
+    <form method="dialog">
+      <button data-element="Close">Cancel</button>
+      <button value="delete">Delete</button>
+    </form>
+  </dialog>
+</uni-dialog>
+
+<script type="module">
+  import '@uniaria/elements/dialog';
+
+  document
+    .querySelector('#delete-file')
+    .addEventListener('dismiss', (event) => {
+      if (event.detail.returnValue === 'delete') console.log('Delete the file');
+    });
+</script>
+```
+
+The trigger and the `<dialog>` must both be inside `<uni-dialog>`. To open a
+dialog from elsewhere, control it (see [Controlled](#controlled)).
+
+</Tab>
+</Tabs>
+
+Render the `<dialog>` always: it stays hidden while closed, and opening it
+renders nothing. Don't put `open` on it, which opens a dialog non-modally;
+use `defaultOpen` instead. Delete submits the form, which closes the dialog
+with the button's `value` (below); Cancel is the close part.
+
+### Forms in dialogs
+
+A `<form method="dialog">` closes the dialog when it is submitted, as in HTML,
+but through the dialog's state: the dialog reports `dismiss` with reason
+`'submit'` and the submitter's `value` as `returnValue`, then closes with its
+closing phase. Your own `submit` handlers run first; one that calls
+`preventDefault()` keeps the dialog open, for example while validation fails.
+Enter in a field submits the form as usual. Only a `method="dialog"`
+submission (or a submitter with `formmethod="dialog"`) closes the dialog.
+
+<Tabs label="Forms in dialogs">
+<Tab label="React">
+
+```tsx
+export function RenameFile(props: {
+  name: string;
+  onRename(name: string): void;
+}) {
+  const rename = useComponent(dialog, {});
+  return (
+    <>
+      <button {...rename.parts.trigger}>Rename…</button>
+      <dialog {...rename.parts.root}>
+        <h2 {...rename.parts.title}>Rename file</h2>
+        <form
+          method="dialog"
+          onSubmit={(event) => {
+            const data = new FormData(event.currentTarget);
+            props.onRename(String(data.get('name')));
+          }}
+        >
+          <label>
+            Name{' '}
+            <input
+              name="name"
+              defaultValue={props.name}
+              required
+              data-autofocus
+            />
+          </label>
+          <button {...rename.parts.close}>Cancel</button>
+          <button value="rename">Rename</button>
+        </form>
+      </dialog>
+    </>
+  );
+}
+```
+
+React doesn't write `autoFocus` as an attribute (it focuses the element on
+mount, while the dialog is still closed), so mark the field with
+`data-autofocus`.
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-dialog id="rename">
+  <button data-element="Trigger">Rename…</button>
+  <dialog class="uni-dialog">
+    <h2 data-element="Title">Rename file</h2>
+    <form method="dialog">
+      <label for="new-name">Name</label>
+      <input id="new-name" name="name" value="report.pdf" required autofocus />
+      <button data-element="Close">Cancel</button>
+      <button value="rename">Rename</button>
+    </form>
+  </dialog>
+</uni-dialog>
+
+<script type="module">
+  import '@uniaria/elements/dialog';
+
+  const rename = document.querySelector('#rename');
+  rename.addEventListener('dismiss', (event) => {
+    if (event.detail.returnValue === 'rename') {
+      console.log('Renamed to', rename.querySelector('input').value);
+    }
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+The close part is a Button with `type="button"`, so Cancel never submits.
+
+### Alert dialogs
+
+For a message that needs an answer, set `role` to `'alertdialog'` and turn
+dismissal off, so only the buttons close it. Give it a description: screen
+readers read it with the title when the dialog opens. Mark the least
+destructive action to take focus.
+
+<Tabs label="Alert dialogs">
+<Tab label="React">
+
+```tsx
+const discard = useComponent(dialog, {
+  role: 'alertdialog',
+  isDismissable: false,
+  onDismiss: (event) => {
+    if (event.returnValue === 'discard') props.onDiscard();
+  },
+});
+return (
+  <>
+    <button {...discard.parts.trigger}>Close editor</button>
+    <dialog {...discard.parts.root}>
+      <h2 {...discard.parts.title}>Discard changes?</h2>
+      <p {...discard.parts.description}>
+        Your edits to this page will be lost.
+      </p>
+      <form method="dialog">
+        <button {...discard.parts.close} data-autofocus>
+          Keep editing
+        </button>
+        <button value="discard">Discard</button>
+      </form>
+    </dialog>
+  </>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-dialog dismissable="false">
+  <button data-element="Trigger">Close editor</button>
+  <dialog class="uni-dialog" role="alertdialog">
+    <h2 data-element="Title">Discard changes?</h2>
+    <p data-element="Description">Your edits to this page will be lost.</p>
+    <form method="dialog">
+      <button data-element="Close" autofocus>Keep editing</button>
+      <button value="discard">Discard</button>
+    </form>
+  </dialog>
+</uni-dialog>
+```
+
+The element reads the role from the `<dialog>`: a `role` on `<uni-dialog>`
+would give the host that role.
+
+</Tab>
+</Tabs>
+
+### Controlled
+
+Pass `isOpen` and `onOpenChange` to open the dialog from anywhere: a menu item,
+a keyboard shortcut, a route. Without a trigger part, focus returns to the
+element focused before the dialog opened. A dismissal, the close part and a
+dialog form only report the change; the dialog stays open until you set
+`isOpen` to `false`.
+
+<Tabs label="Controlled">
+<Tab label="React">
+
+```tsx
+const [isOpen, setOpen] = useState(false);
+const settings = useComponent(dialog, { isOpen, onOpenChange: setOpen });
+return (
+  <>
+    <MenuItem onAction={() => setOpen(true)}>Settings…</MenuItem>
+    <dialog {...settings.parts.root}>…</dialog>
+  </>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+const settings = document.querySelector('#settings');
+
+// Setting the isOpen property makes the element controlled.
+settings.isOpen = true;
+settings.addEventListener('openchange', (event) => {
+  settings.isOpen = event.detail;
+});
+```
+
+</Tab>
+</Tabs>
+
+The live demo above is controlled this way, so its Delete button can close the
+dialog by setting `isOpen`.
+
+### Nested dialogs
+
+A dialog opened from inside another stacks above it. Escape and the backdrop
+close only the top one, page scroll stays locked until the last one closes,
+and closing the top one returns focus into the dialog below. Put the inner
+`<uni-dialog>` (or the inner trigger) inside the outer `<dialog>`: everything
+outside the top dialog is inert.
+
+## Anatomy
+
+| Part          | Element                | Notes                                                                                                                                                                                            |
+| ------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `trigger`     | `button`               | Optional. A press opens the dialog. It is a [Button](./button.mdx), with Button's states.                                                                                                        |
+| `root`        | `dialog`               | Required. Opened with `showModal()`, hidden while closed. UniAria writes its `id`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, and `role` for an alert dialog. Its content is yours. |
+| `title`       | any; usually a heading | Names the dialog through `aria-labelledby`. UniAria writes its `id`.                                                                                                                             |
+| `description` | any                    | Optional. Linked through `aria-describedby` while rendered. Leave it out for long or structured content, which screen readers would read in one go.                                              |
+| `close`       | `button`               | Optional. A press closes the dialog, even when it isn't dismissable. A Button too.                                                                                                               |
+
+`aria-labelledby` and `aria-describedby` reference only the parts you render,
+plus the ids in `labelledBy` and `describedBy`. Development builds warn when
+the dialog has no name (no title, `labelledBy` or `aria-label`), when an alert
+dialog has no description, and when the root isn't a `<dialog>`. The custom
+element has no role of its own and never takes focus.
+
+## Props
+
+| Prop                        | Attribute                                    | Type                        | Default    | Description                                                                                                                                    |
+| --------------------------- | -------------------------------------------- | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                    | — (property: setting it makes it controlled) | `boolean`                   | —          | The open state, controlled. Pair it with `onOpenChange`.                                                                                       |
+| `defaultOpen`               | `default-open`                               | `boolean`                   | `false`    | The starting state, uncontrolled. With server rendering, it opens after hydration: `showModal()` needs a browser.                              |
+| `isDismissable`             | `dismissable`                                | `boolean`                   | `true`     | Escape and a press on the backdrop close it. `dismissable="false"` turns both off; the close part, a dialog form and your code still close it. |
+| `isKeyboardDismissDisabled` | `keyboard-dismiss-disabled`                  | `boolean`                   | `false`    | Escape alone doesn't close it; the backdrop still does.                                                                                        |
+| `role`                      | — (read from the `<dialog>`'s `role`)        | `'dialog' \| 'alertdialog'` | `'dialog'` | `'alertdialog'` for a message that needs an answer.                                                                                            |
+| `isDisabled`                | `disabled`                                   | `boolean`                   | `false`    | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                               |
+| `shouldRestoreFocus`        | `restore-focus`                              | `boolean`                   | `true`     | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                      |
+| `labelledBy`                | `labelled-by`                                | `string`                    | —          | More ids for `aria-labelledby`.                                                                                                                |
+| `describedBy`               | `described-by`                               | `string`                    | —          | More ids for `aria-describedby`.                                                                                                               |
+| `tooltip`                   | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`      | —          | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-dialog>` sits in directly links too.                  |
+
+## Events
+
+| Event        | React prop     | Detail               | When                                                                                                             |
+| ------------ | -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `openchange` | `onOpenChange` | `boolean`            | The trigger, a dismissal, the close part or a dialog form asks to open or close it. Never when you set `isOpen`. |
+| `dismiss`    | `onDismiss`    | `DialogDismissEvent` | The user asked to close it, just before `openchange` with `false`.                                               |
+
+```ts
+interface DialogDismissEvent {
+  reason: 'escape' | 'outside' | 'close' | 'submit' | 'browser';
+  returnValue: string; // the submitter's value for 'submit', else ''
+}
+```
+
+| Reason    | The dialog closed because of                                                                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `escape`  | Escape, or a close request without a key, such as Android's back gesture.                                                                                         |
+| `outside` | A press on the backdrop.                                                                                                                                          |
+| `close`   | A press on the close part.                                                                                                                                        |
+| `submit`  | A `method="dialog"` form submission.                                                                                                                              |
+| `browser` | The browser closing it on its own: a close request Chromium won't let a page cancel (without a recent user action), or the open `<dialog>` removed from the page. |
+
+Setting `isOpen` yourself reports neither event. The custom element
+dispatches both events on itself, bubbling, with the value in `detail`.
+
+## Actions
+
+| Action    | What it does                                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Opens the dialog, as its trigger does, and moves focus inside. `isDisabled` only disables the trigger, so `open()` still works. |
+| `close()` | Closes it after its exit animations and returns focus. Reports `openChange`, but no `dismiss`: no user asked.                   |
+
+In React they are on the handle (`confirm.actions.open()`); on the custom
+element they are methods (`document.querySelector('uni-dialog').open()`).
+While `isOpen` is controlled, each only reports `openChange` and leaves the
+change to you.
+
+## State
+
+| Field        | Type      | Meaning                                                |
+| ------------ | --------- | ------------------------------------------------------ |
+| `isOpen`     | `boolean` | The dialog is open.                                    |
+| `isEntering` | `boolean` | The first frames after opening, for enter transitions. |
+| `isExiting`  | `boolean` | Closed, but still shown until its exit animations end. |
+
+To skip rendering heavy content while the dialog is hidden, render the content,
+not the dialog, from state:
+
+```tsx
+const isShown = useComponentState(
+  settings,
+  (state) => state.isOpen || state.isExiting,
+);
+return <dialog {...settings.parts.root}>{isShown && <SettingsForm />}</dialog>;
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                                                             | On               | When                                          |
+| ------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------- |
+| `class="uni-dialog"`                                                                  | root             | Always.                                       |
+| `data-scope="dialog"`, `data-element`                                                 | every other part | Always.                                       |
+| `data-open`                                                                           | every part       | The dialog is open.                           |
+| `data-entering`                                                                       | every part       | The first frames after opening.               |
+| `data-exiting`                                                                        | every part       | It is closing, until its exit animations end. |
+| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close   | As on a [Button](./button.mdx).               |
+
+The root matches `:modal` the whole time it is shown, closing phase included,
+and its `::backdrop` is the underlay.
+
+To animate, style the hidden look on `[data-entering]` and `[data-exiting]`.
+UniAria waits for the animations and transitions running on the dialog and
+inside it, `::backdrop` included, before it calls `close()`. Nothing waits for
+a fixed time: a dialog with no running animation closes in the next frame, and
+opening it again while it exits cancels the exit.
+
+```css
+.uni-dialog {
+  transition:
+    opacity 150ms,
+    scale 150ms;
+}
+.uni-dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+  transition: opacity 150ms;
+}
+.uni-dialog:is([data-entering], [data-exiting]) {
+  opacity: 0;
+  scale: 0.96;
+}
+.uni-dialog:is([data-entering], [data-exiting])::backdrop {
+  opacity: 0;
+}
+```
+
+While the dialog is shown, UniAria locks page scroll with `overflow: hidden` on
+`<html>`, plus `scrollbar-gutter: stable` when a classic scrollbar would
+disappear (`padding-right` where that's unsupported), so the page doesn't
+shift. Your own inline values come back when the last dialog closes. On iOS
+it also adopts an `overscroll-behavior: contain` rule for every element,
+inside an anonymous `@layer` so your CSS wins. The trigger and close parts get
+Button's `touch-action`.
+
+## Keyboard
+
+| Key            | Behavior                                                                                                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enter, Space   | On the trigger, opens the dialog. On the close part, closes it.                                                                                                                                                                             |
+| Escape         | Closes the top dialog when it is dismissable and keyboard dismissal isn't disabled. Otherwise nothing happens, and the browser doesn't close it either. A widget inside that handles Escape and prevents its default keeps the dialog open. |
+| Tab, Shift+Tab | Move through the dialog's tabbable elements and wrap at both ends. Focus never reaches the page or the browser's own controls.                                                                                                              |
+| Enter          | In a field of a `method="dialog"` form, submits it, which closes the dialog.                                                                                                                                                                |
+
+## Accessibility
+
+- **Focus on open.** Focus goes to the first element marked `autofocus` or
+  `data-autofocus` that can take it, else to the dialog itself, so a screen
+  reader reads its name and description first and nothing is activated by
+  surprise. Focus is visible when the dialog opened from the keyboard.
+- **Focus on close**, after the exit animation: the trigger, when there is
+  one and it can take focus; else the element focused before the dialog
+  opened; else the dialog below, for a nested one. To send focus elsewhere,
+  move it in the `<dialog>`'s `close` event, which fires after that, or turn
+  off `shouldRestoreFocus`.
+- **The page behind** is inert natively, in the browser and the accessibility
+  tree. UniAria sets no `aria-modal`: a dialog opened with `showModal()` is
+  modal for screen readers already.
+- **Spoken output.** "button, Delete file…" on the trigger, then "dialog,
+  Delete “report.pdf”?, It stays in the trash for 30 days." when it opens;
+  "alertdialog, …" for an alert dialog.
+- **No popup ARIA on the trigger.** UniAria sets no `aria-haspopup`,
+  `aria-expanded` or `aria-controls`: the open dialog makes the trigger inert,
+  so "expanded" would never be heard.
+- **Live announcements.** UniAria announces what nothing on screen shows, like
+  a [Field](./field.mdx)'s new error or a [NumberField](./number-field.mdx)'s
+  stepped value, and your own `announce()` calls from `@uniaria/core/dom`,
+  through a hidden live region next to your app. Chromium drops inert live
+  regions from the accessibility tree, so while a modal dialog is open the
+  region moves into the top one, as its last child, and goes back to `<body>`
+  when the last dialog closes. It is visually hidden and absolutely
+  positioned; mind it in `:last-child` selectors inside the dialog.
+- **Overlays inside.** A [Popover](./popover.mdx) or [Tooltip](./tooltip.mdx)
+  used in a dialog must be inside the `<dialog>` element, or the dialog makes
+  it inert. Development builds warn when one opens outside.
+- **A name** is required: a title part, `labelledBy`, or an `aria-label` on
+  the `<dialog>`.
+
+## Compared with other libraries
+
+- **The native `<dialog>`.** React Aria, Zag and Cube UI Kit render a `div` or
+  `section` in a portal; React Aria makes the page inert itself, and Cube UI
+  Kit leaves it exposed. Here the browser makes the page inert, and
+  `::backdrop` is the underlay.
+- **Dismissable by default**, as in Cube UI Kit. React Aria defaults
+  `isDismissable` to `false` and applies it to outside presses only; here it
+  turns off Escape too.
+- **Initial focus** goes to the dialog unless you mark an element. The APG and
+  native `showModal()` focus the first focusable element, which in a
+  confirmation may be the destructive button.
+- **Focus returns to the trigger** after the exit animation. Natively, WebKit
+  often returns it to the body.
+- **One definition** with optional trigger and close parts, instead of
+  DialogTrigger and Dialog. Without a trigger, it is React Spectrum's
+  DialogContainer.
+- **A `dismiss` event with a reason**, as Cube UI Kit's `onDismiss(action)`,
+  and dialog forms that go through the state, so a controlled dialog can
+  refuse to close.

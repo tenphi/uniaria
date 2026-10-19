@@ -1,0 +1,479 @@
+---
+title: Combobox
+description: A text input with a list of suggestions that filters as you type, and a value separate from the text.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/combobox.css?raw';
+import html from './demos/combobox.html?raw';
+import javascript from './demos/combobox.js?raw';
+
+A combo box is a text input with a list of suggestions under it: typing
+filters the options, and choosing one puts its text in the input and makes its
+key the value. Use it instead of `<input list>` with a `<datalist>` when the
+options need markup, groups or a styled popup, or when the value isn't the
+text. Combobox is a [Listbox](./listbox.mdx) inside a
+[Popover](./popover.mdx), plus the input. Focus stays in the input the whole
+time; the highlighted option is the input's `aria-activedescendant`.
+
+It follows the WAI-ARIA [Combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/),
+as in its [list autocomplete example](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-autocomplete-list/).
+
+<Preview
+  title="Combobox"
+  buffer="15rem"
+  scripts={['/demo/combobox.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { combobox } from '@uniaria/core/combobox';
+import { useComponent } from '@uniaria/react';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry' },
+];
+
+export function FruitCombobox() {
+  const fruit = useComponent(combobox, { items: fruits });
+  return (
+    <div {...fruit.parts.root}>
+      <label {...fruit.parts.label}>Fruit</label>
+      <div {...fruit.parts.anchor}>
+        <input {...fruit.parts.input} />
+        <button {...fruit.parts.button}>
+          <ChevronIcon aria-hidden />
+        </button>
+      </div>
+      <div {...fruit.parts.popover}>
+        <div {...fruit.parts.list}>
+          {fruits.map((item) => (
+            <div key={item.key} {...fruit.getItemProps('option', item.key)}>
+              {item.textValue}
+            </div>
+          ))}
+        </div>
+        <p {...fruit.parts.empty}>No fruit matches</p>
+      </div>
+      <input {...fruit.parts.hiddenInput} name="fruit" />
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-combobox>
+  <div class="uni-combobox">
+    <label data-element="Label">Fruit</label>
+    <div data-element="Anchor">
+      <input data-element="Input" />
+      <button data-element="Button"><svg aria-hidden="true">…</svg></button>
+    </div>
+    <div data-element="Popover">
+      <div data-element="List">
+        <div data-element="Option" data-key="apple">Apple</div>
+        <div data-element="Option" data-key="banana">Banana</div>
+        <div data-element="Option" data-key="cherry">Cherry</div>
+      </div>
+      <p data-element="Empty">No fruit matches</p>
+    </div>
+    <input data-element="HiddenInput" name="fruit" />
+  </div>
+</uni-combobox>
+
+<script type="module">
+  import '@uniaria/elements/combobox';
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Render every option, matching or not: UniAria hides the ones the typed text
+leaves out. The options are Listbox's item parts, so keys, groups, option
+labels and descriptions, and items read from the markup work as on
+[Listbox](./listbox.mdx#items-and-keys).
+
+Render the `root` part around everything, the popover included. Combobox
+tracks focus within it: when focus leaves the root, the typed text settles and
+the list closes. Without a root, the text never settles on blur and
+`focuschange` never fires.
+
+### Filtering
+
+By default an option matches when its text contains the typed text, trimmed,
+ignoring case and accents, in the field's language: `locale`, else the
+nearest `lang` attribute, else the browser's. Group labels aren't searched; a
+group with no match left is hidden with its label.
+
+- **When it applies.** Only after the user types. The text a chosen option
+  wrote filters nothing, so opening the list after a choice shows every
+  option. After typing, opening the list shows the matches, or every option
+  when nothing matches.
+- **What it hides.** Options and groups left out get the `hidden` attribute,
+  the arrow keys skip them, and they don't count in the option count. If your
+  CSS sets `display` on options, keep `[hidden]` hiding them.
+- **No matches.** `isEmpty` and `data-empty` are set. With an `empty` part,
+  the list stays open and the part describes it; without one, the list closes
+  until something matches.
+
+Pass your own `filter` to match differently. It gets each option's text and
+the trimmed input text:
+
+```ts
+const startsWith = (textValue: string, inputValue: string) =>
+  textValue.toLowerCase().startsWith(inputValue.toLowerCase());
+```
+
+`filter: false` shows `items` as you give them, for filtering on a server from
+`inputchange`:
+
+```tsx
+const [query, setQuery] = useState('');
+const cities = useCitySearch(query); // your data
+const city = useComponent(combobox, {
+  items: cities,
+  filter: false,
+  onInputChange: setQuery,
+});
+```
+
+On the element, `filter` is a property: `element.filter = startsWith`.
+
+### Choosing and settling
+
+Typing changes only the text and reports `inputchange`. The value changes when
+the user chooses an option, or when the text settles.
+
+- **Choosing** an option, with a press or Enter on the highlighted one,
+  selects it, writes its text into the input and closes the list. Focus stays
+  in the input. Choosing the selected option again just closes the list.
+- **The text settles** on Enter with nothing highlighted, and when focus
+  leaves the root. In order:
+  1. Text equal to an enabled option's text, ignoring case and accents,
+     selects that option.
+  2. After typing, a text that exactly one enabled option matches selects
+     it: "kiw" selects Kiwi.
+  3. Blank text clears the value.
+  4. With `allowsCustomValue`, the trimmed text becomes the value.
+  5. Otherwise the text goes back to the selected option's text, or to empty.
+
+Enter with nothing highlighted isn't prevented, so a form around the combo box
+submits with the settled value.
+
+### Custom values
+
+With `allowsCustomValue` (`allows-custom-value`), text that matches no option
+becomes the value when it settles: typing "Mango smoothie" and pressing Enter
+gives `value: ['Mango smoothie']`, which the hidden input submits. Text that
+names an option still selects the option.
+
+### Opening
+
+| `popoverTrigger` | Opens the list                                            |
+| ---------------- | --------------------------------------------------------- |
+| `'input'`        | Typing non-blank text, the button, ArrowDown and ArrowUp. |
+| `'focus'`        | The same, and focusing the input.                         |
+| `'manual'`       | Only the button, ArrowDown and ArrowUp.                   |
+
+### Forms
+
+Put your `name`, and `form` if needed, on the `hiddenInput` part. UniAria makes
+it `type="hidden"` and keeps its value at the selected key, or the custom
+text, else empty.
+
+- With `isRequired`, the visible input gets the native `required`: its text is
+  empty exactly when the value is, so the browser blocks an empty submit and
+  focuses the input.
+- Resetting the form goes back to the value and text the combo box had when it
+  mounted. On the element, that is its value when it connects, so set
+  `defaultValue` before `@uniaria/elements/combobox` defines it.
+
+### Controlled value and text
+
+<Tabs label="Controlled">
+<Tab label="React">
+
+```tsx
+const [value, setValue] = useState<readonly string[]>([]);
+const [inputValue, setInputValue] = useState('');
+const fruit = useComponent(combobox, {
+  items: fruits,
+  value,
+  onValueChange: setValue,
+  inputValue,
+  onInputChange: setInputValue,
+});
+
+// A clear button of your own.
+const clear = () => {
+  setValue([]);
+  setInputValue('');
+};
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+const fruit = document.querySelector('uni-combobox');
+fruit.value = [];
+fruit.addEventListener('valuechange', (event) => {
+  fruit.value = event.detail;
+});
+```
+
+Setting the `value`, `inputValue` or `isOpen` property makes it controlled.
+Set `defaultValue`, `defaultInputValue` or `defaultOpen` to let the element
+keep its own.
+
+</Tab>
+</Tabs>
+
+Without `inputValue` or `defaultInputValue`, the text starts as the selected
+option's text.
+
+### Translations
+
+The button's name and the option count are English by default. Replace them
+whole:
+
+```tsx
+const fruit = useComponent(combobox, {
+  items: fruits,
+  buttonLabel: 'Vorschläge anzeigen',
+  optionCountAnnouncement: (count) =>
+    count === 1 ? '1 Option verfügbar' : `${count} Optionen verfügbar`,
+});
+```
+
+On the element, `buttonLabel` is the `button-label` attribute and
+`optionCountAnnouncement` a property.
+
+### Virtualization
+
+Combobox takes Listbox's virtualization props and passes them to its list. Put
+the `scroller` part inside the popover, around the list, and render the
+`renderedKeys` state as on [Listbox](./listbox.mdx#virtualization). While the
+user filters, `renderedKeys` holds only matching options. Give the popover a
+width, such as `width: var(--anchor-width)`, since the rows have none of their
+own.
+
+## Anatomy
+
+| Part          | Element                    | Notes                                                                                                                                         |
+| ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any, usually `div`         | Around every other part. Focus leaving it settles the text and closes the list.                                                               |
+| `label`       | `label` by default         | Names the input and the list. UniAria writes its `for`, so a click focuses the input.                                                         |
+| `anchor`      | any, usually `div`         | Optional. The box around the input and the button: the popover is placed against it and `--anchor-width` is its width. Without it, the input. |
+| `input`       | `input`                    | The text. `type` is yours (`text` or `search`); UniAria writes the `value` property.                                                          |
+| `button`      | `button`                   | Optional. Opens and closes the list without taking focus. Its icon is yours, hidden with `aria-hidden`.                                       |
+| `popover`     | any, usually `div`         | Always rendered, after the input. Hidden while closed.                                                                                        |
+| `arrow`       | any, inside the popover    | Optional. Points at the anchor.                                                                                                               |
+| `scroller`    | any, usually `div`         | Only when virtualized: the box that scrolls, around the list.                                                                                 |
+| `list`        | any, usually `div` or `ul` | Inside the popover. Holds the options and groups.                                                                                             |
+| `empty`       | any                        | Optional, inside the popover and outside the list. Shown while no option matches, and keeps the list open then.                               |
+| `description` | any                        | Optional. Describes the input.                                                                                                                |
+| `error`       | any                        | Optional. Shown and announced while `isInvalid`.                                                                                              |
+| `hiddenInput` | `input`                    | Optional. Submits the value; UniAria makes it `type="hidden"` and writes its value.                                                           |
+
+The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
+`group` and `groupLabel`, inside the list and keyed by the item's key (see
+[Listbox](./listbox.mdx#anatomy)). They carry `data-scope="combobox"` and no
+`tabindex`, since they never take focus.
+
+## Props
+
+| Prop                                                                            | Attribute                 | Type                                                            | Default                       | Description                                                                                                                                     |
+| ------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items`, `getKey`, `getTextValue`, `isItemDisabled`, `getChildren`              | — (properties, or markup) |                                                                 |                               | Listbox's: every option, unfiltered, and how to read them. `getTextValue` is also what the filter matches and what the input shows once chosen. |
+| `disabledKeys`                                                                  | `disabled-keys` (JSON)    | `readonly string[]`                                             | `[]`                          | Disabled options, by key. They're filtered like the others.                                                                                     |
+| `value` / `defaultValue`                                                        | — (properties)            | `readonly string[]`                                             | `[]`                          | The selected key, or the custom text: at most one. Changes only when the text settles, never per keystroke.                                     |
+| `inputValue` / `defaultInputValue`                                              | — (properties)            | `string`                                                        | the selected option's text    | The input's text. Changes are reported by `inputchange`.                                                                                        |
+| `isOpen` / `defaultOpen`                                                        | — / `default-open`        | `boolean`                                                       | `false`                       | Whether the list is open.                                                                                                                       |
+| `popoverTrigger`                                                                | `popover-trigger`         | `'input' \| 'focus' \| 'manual'`                                | `'input'`                     | What opens the list besides the button and the arrows.                                                                                          |
+| `filter`                                                                        | — (property)              | `((textValue: string, inputValue: string) => boolean) \| false` | contains                      | Which options match the typed text. `false` shows every item.                                                                                   |
+| `allowsCustomValue`                                                             | `allows-custom-value`     | `boolean`                                                       | `false`                       | Text that matches no option becomes the value when it settles.                                                                                  |
+| `isDisabled`                                                                    | `disabled`                | `boolean`                                                       | `false`                       | The input and the button are natively disabled.                                                                                                 |
+| `isReadOnly`                                                                    | `readonly`                | `boolean`                                                       | `false`                       | The input is natively read-only. The list opens from the button and the arrows and the highlight moves, but nothing is selected.                |
+| `isRequired`                                                                    | `required`                | `boolean`                                                       | `false`                       | `aria-required` and the native `required` on the input.                                                                                         |
+| `isInvalid`                                                                     | `invalid`                 | `boolean`                                                       | `false`                       | `aria-invalid` on the input, and shows the `error` part.                                                                                        |
+| `shouldFocusWrap`                                                               | `focus-wrap`              | `boolean`                                                       | `false`                       | The arrows wrap from the last option to the first.                                                                                              |
+| `positionArea`                                                                  | `position-area`           | `PositionArea`                                                  | `'block-end span-inline-end'` | Where the popover goes: below the field, aligned to its start edge. See [Popover](./popover.mdx).                                               |
+| `positionTryFallbacks`                                                          | `position-try-fallbacks`  | `string`                                                        | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                                            |
+| `locale`                                                                        | `locale`                  | `string`                                                        | the nearest `lang`            | The default filter's language. Without a `lang`, the browser's.                                                                                 |
+| `buttonLabel`                                                                   | `button-label`            | `string`                                                        | `'Show suggestions'`          | The button's own name, read before the label: "Show suggestions Fruit".                                                                         |
+| `optionCountAnnouncement`                                                       | — (property)              | `(count: number) => string`                                     | `'N options available'`       | The announcement of the option count; `'1 option available'` for one.                                                                           |
+| `inputId`                                                                       | — (the input's `id`)      | `string`                                                        | generated                     | The input's id.                                                                                                                                 |
+| `listId`                                                                        | — (the list's `id`)       | `string`                                                        | generated                     | The list's id. Option ids are made from it.                                                                                                     |
+| `labelElementType`                                                              | — (the label's tag)       | `string`                                                        | `'label'`                     | The tag you render as the label. Only a `label` gets `for`.                                                                                     |
+| `labelledBy`                                                                    | `labelled-by`             | `string`                                                        | —                             | Ids of more elements that name the input and the list.                                                                                          |
+| `describedBy`                                                                   | `described-by`            | `string`                                                        | —                             | Ids of more elements that describe the input.                                                                                                   |
+| `virtualizer`, `itemSize`, `shouldMeasureItems`, `overscan`, `initialItemCount` | as on Listbox             |                                                                 |                               | Listbox's virtualization, passed to the list.                                                                                                   |
+
+The list always highlights options on hover and is vertical; the popover is
+always non-modal, dismissable, and leaves focus in the input when it opens.
+Development builds warn when the input has no name: no `label` part, no
+`labelledBy` and no `aria-label` on the input.
+
+## Events
+
+| Event                | React prop             | Detail                                                     | When                                                                                                                        |
+| -------------------- | ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `valuechange`        | `onValueChange`        | `readonly string[]`                                        | The value settled to something new: an option chosen, or the text settling. Never per keystroke, never for a value you set. |
+| `inputchange`        | `onInputChange`        | `string`                                                   | The text changed: typing, pasting, a chosen option's text written in, or the text going back as it settles.                 |
+| `openchange`         | `onOpenChange`         | `boolean`                                                  | The user opened or closed the list. Once per change, never for an `isOpen` you set.                                         |
+| `focuschange`        | `onFocusChange`        | `boolean`                                                  | Focus entered or left the root. The input, the button and the popup count as one.                                           |
+| `renderedkeyschange` | `onRenderedKeysChange` | `{ keys: readonly string[]; sections: readonly string[] }` | The set of options to render changed. Only virtualized lists need it.                                                       |
+
+## Actions
+
+| Action    | What it does                                                                                                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Opens the list, as a press on the button does, without moving focus: the selected option is highlighted, and every option shows when the text matches none. Does nothing while disabled. |
+| `close()` | Closes the list and leaves the text as it is.                                                                                                                                            |
+
+In React they are on the handle (`fruit.actions.open()`); on the custom
+element they are methods (`document.querySelector('uni-combobox').open()`).
+While `isOpen` is controlled, each only reports `openChange` and leaves the
+change to you.
+
+## State
+
+| Field                                                 | Type                | Meaning                                                        |
+| ----------------------------------------------------- | ------------------- | -------------------------------------------------------------- |
+| `value`                                               | `readonly string[]` | The selected key, or the custom text.                          |
+| `inputValue`                                          | `string`            | The input's text.                                              |
+| `isOpen`                                              | `boolean`           | The list is open.                                              |
+| `focusedKey`                                          | `string \| null`    | The highlighted option, or `null`. Always `null` while closed. |
+| `isEmpty`                                             | `boolean`           | No option matches the text, or there are no items.             |
+| `isDisabled`, `isReadOnly`, `isRequired`, `isInvalid` | `boolean`           | The props of the same names.                                   |
+| `isErrorShown`                                        | `boolean`           | The `error` part is shown: invalid and not disabled.           |
+| `isFocusWithin`                                       | `boolean`           | Focus is in the root.                                          |
+| `isFocusVisible`                                      | `boolean`           | That focus came from the keyboard.                             |
+| `isVirtualized`, `renderedKeys`, `renderedSections`   |                     | Listbox's virtualization state.                                |
+
+Select what you render, and the component renders again only when it changes:
+
+```tsx
+const inputValue = useComponentState(fruit, (state) => state.inputValue);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                                         | On               | When                                                                                    |
+| ----------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
+| `class="uni-combobox"`                                            | root             | Always.                                                                                 |
+| `data-scope="combobox"`, `data-element`                           | every other part | Always.                                                                                 |
+| `data-open`                                                       | named parts      | The list is open.                                                                       |
+| `data-entering`, `data-exiting`                                   | named parts      | The first frames after opening; closing, until your exit animations on the popover end. |
+| `data-empty`                                                      | named parts      | No option matches the text.                                                             |
+| `data-disabled`, `data-readonly`, `data-required`, `data-invalid` | named parts      | The combo box is disabled, read-only, required or invalid.                              |
+| `data-focus-within`, `data-focus-visible`                         | named parts      | Focus is in the root, and from the keyboard.                                            |
+| `data-pressed`, `data-hovered`                                    | button           | As on [Button](./button.mdx).                                                           |
+| `data-placement`                                                  | popover, arrow   | The side the popover opened on: `top`, `bottom`, `left` or `right`.                     |
+| `data-focused`                                                    | option           | The option is highlighted, by the keys or the mouse.                                    |
+| `data-focus-visible`                                              | option           | The highlight came from the keys.                                                       |
+| `data-selected`, `data-hovered`, `data-pressed`, `data-disabled`  | option           | Listbox's.                                                                              |
+| `hidden`                                                          | option, group    | The typed text leaves it out.                                                           |
+
+"Named parts" are every part except `scroller` and `hiddenInput`. State
+attributes are present or absent, never `"false"`. The input also has the
+native `required`, `readonly` and `disabled`, for `:required`, `:read-only` and
+`:disabled`.
+
+The popover gets Popover's custom properties, as on
+[Select](./select.mdx#styling): `--anchor-width` (the anchor's width, else the
+input's), `--available-width` and `--available-height`. Use them on the
+popover:
+
+```css
+[data-scope='combobox'][data-element='Popover'] {
+  min-width: var(--anchor-width);
+  max-height: min(15rem, var(--available-height));
+  margin: 4px 0; /* the gap from the field */
+  overflow: auto;
+}
+```
+
+## Keyboard
+
+On the input. Keys with Ctrl or Meta, and every key while an input method is
+composing, stay with the browser.
+
+| Key                                | Closed                                                                                                                 | Open                                                                            |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ArrowDown                          | Opens and highlights the selected option, else the first.                                                              | Highlights the next option; from none, the first. Wraps with `shouldFocusWrap`. |
+| ArrowUp                            | Opens and highlights the selected option, else the last.                                                               | Highlights the previous option; from none, the last.                            |
+| Alt+ArrowDown                      | Opens with nothing highlighted.                                                                                        | Nothing.                                                                        |
+| Alt+ArrowUp                        | Nothing.                                                                                                               | Closes, keeping the text.                                                       |
+| PageDown, PageUp                   | The browser's.                                                                                                         | With an option highlighted, moves the highlight by the list's visible height.   |
+| Home, End, ArrowLeft, ArrowRight   | The browser's: the caret moves.                                                                                        | The caret moves and the highlight clears.                                       |
+| Enter                              | Settles the text. Not prevented, so a form submits.                                                                    | Chooses the highlighted option. With none, settles the text and closes.         |
+| Escape                             | Puts back the settled text if the user changed it. Otherwise not handled, so it reaches a dialog around the combo box. | Closes, keeping the text.                                                       |
+| Tab, Shift+Tab                     | The browser's. The text settles as focus leaves.                                                                       | The same. The list closes without choosing the highlighted option.              |
+| Typing, Backspace, Delete, pasting | Edits the text; with `popoverTrigger` `'input'` or `'focus'` and non-blank text, opens the list.                       | Edits the text. The filter follows it and the highlight clears.                 |
+
+## Accessibility
+
+- **Focus stays in the input.** The highlighted option is the input's
+  `aria-activedescendant`, written only once the option's element exists. The
+  list and options never take focus, and a press on an option leaves focus in
+  the input. A highlight moved by the keys scrolls into view, which browsers
+  don't do for `aria-activedescendant`.
+- **Nothing is highlighted while typing.** Enter then settles the text, and
+  ArrowDown starts highlighting. NVDA stops reading typed characters while an
+  active descendant is set.
+- **The option count** is announced politely when the list opens and when
+  typing changes it while open: "3 options available". Matching disabled
+  options count too. Translate it with `optionCountAnnouncement`.
+- **Spoken output.** The input reads "combobox, Fruit, has popup listbox, not
+  expanded, autocomplete in list", and while an option is highlighted, "active
+  descendant Banana". Filtered-out options aren't read.
+- **The button** isn't a tab stop and never takes focus; a press on it
+  focuses the input, which brings up the on-screen keyboard on touch screens.
+  It reads "button, Show suggestions Fruit".
+- **The label** is a `<label for>`, so clicking it focuses the input.
+- **The popup is non-modal.** The page stays exposed to assistive technology,
+  Tab leaves the combo box as usual, and one press outside closes the list
+  and acts on what it hit.
+- **The root part** is needed: focus leaving it is what settles the text.
+
+## Compared with other libraries
+
+- **No highlight while typing**, as in React Aria, Zag and the APG's list
+  example. Cube UI Kit highlights the first match, which makes a custom value
+  that is part of an option's text impossible to enter with Enter.
+- **Enter with nothing highlighted settles the text** and lets a form submit.
+  The APG's example always prevents Enter.
+- **Blur selects an exact or only match**, as Cube UI Kit does. React Aria
+  reverts the text, or keeps it as a custom value.
+- **A custom value is the value** (`value: ['Mango smoothie']`), which a form
+  submits. React Aria keeps the value empty and the text in `inputValue`.
+- **Home and End move the caret**, as the APG says. React Aria moves the
+  highlight while the list is open.
+- **Escape on a closed combo box** puts back the settled text, else reaches a
+  dialog around it. The APG clears the text.
+- **Tab doesn't choose the highlighted option.** React Aria and the APG's
+  example choose it.
+- **The page stays exposed** while the list is open. React Aria hides
+  everything but the field and the popup from assistive technology.
+- **Compared with `<datalist>`**, options can hold markup and groups, the
+  value can differ from the text, and filtering and keys work the same in
+  every browser.

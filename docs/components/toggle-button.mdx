@@ -1,0 +1,235 @@
+---
+title: ToggleButton
+description: A button that switches something on or off, such as Bold in an editor, announced as pressed or not pressed.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/toggle-button.css?raw';
+import html from './demos/toggle-button.html?raw';
+import javascript from './demos/toggle-button.js?raw';
+
+A toggle button switches something on or off, such as Bold in an editor
+toolbar or Mute in a player. It is a [Button](./button.mdx) with one more piece
+of state, `isSelected`, which UniAria writes to `aria-pressed`. A native
+`<button>` sits underneath. Every press toggles the state and reports
+`selectedchange`; the label stays the same in both states.
+
+It follows the toggle-button variant of the WAI-ARIA
+[Button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/).
+
+<Preview
+  title="Toggle buttons"
+  scripts={['/demo/toggle-button.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { toggleButton } from '@uniaria/core/toggle-button';
+import { useComponent } from '@uniaria/react';
+
+export function BoldButton(props: {
+  isBold: boolean;
+  onBoldChange(isBold: boolean): void;
+}) {
+  const bold = useComponent(toggleButton, {
+    isSelected: props.isBold,
+    onSelectedChange: props.onBoldChange,
+    shouldPreventFocusOnPress: true,
+  });
+  return <button {...bold.parts.root}>Bold</button>;
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-toggle-button id="mute" default-selected>
+  <button class="uni-toggle-button" aria-pressed="true">Mute</button>
+</uni-toggle-button>
+
+<script type="module">
+  import '@uniaria/elements/toggle-button';
+
+  document
+    .querySelector('#mute')
+    .addEventListener('selectedchange', (event) => {
+      document.querySelector('video').muted = event.detail;
+    });
+</script>
+```
+
+The `aria-pressed` in the markup only matters before the script runs, so the
+button is announced correctly from the start. UniAria owns the attribute once
+the element upgrades.
+
+</Tab>
+</Tabs>
+
+### Controlled and uncontrolled
+
+Uncontrolled, the toggle button keeps its own state: seed it with
+`defaultSelected` (the `default-selected` attribute) and listen to
+`selectedchange`. Controlled, you pass `isSelected` and `selectedchange` only
+reports the request: the state changes when you pass the new value back. A
+value you set yourself never fires `selectedchange`. See
+[State](../guide/state.md).
+
+<Tabs label="Controlled">
+<Tab label="React">
+
+```tsx
+const [isMuted, setMuted] = useState(false);
+const mute = useComponent(toggleButton, {
+  isSelected: isMuted,
+  onSelectedChange: setMuted,
+});
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+const mute = document.querySelector('#mute');
+mute.isSelected = false; // controlled from now on
+mute.addEventListener('selectedchange', (event) => {
+  if (canMute()) mute.isSelected = event.detail;
+});
+```
+
+Set the `isSelected` property to control the element. Setting it to
+`undefined` makes it uncontrolled again.
+
+</Tab>
+</Tabs>
+
+## Anatomy
+
+| Part   | Element                                                | Notes                                                                                                                                            |
+| ------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `root` | `button` by default, any element through `elementType` | You own the content, `id`, your classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). The root is always `type="button"`. |
+
+A root that isn't a `button` or `input` gets `role="button"`, a `tabindex`
+and keyboard handling, as in Button. The custom element has no role of its
+own and never takes focus.
+
+## Props
+
+| Prop                        | Attribute                 | Type      | Default    | Description                                                                                                           |
+| --------------------------- | ------------------------- | --------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| `isSelected`                | — (property)              | `boolean` | —          | The state, controlled. Pair it with `onSelectedChange`.                                                               |
+| `defaultSelected`           | `default-selected`        | `boolean` | `false`    | The starting state, uncontrolled.                                                                                     |
+| `isDisabled`                | `disabled`                | `boolean` | `false`    | Native `disabled` on a `button`; `aria-disabled="true"` and no tab stop elsewhere. Keeps its state and never toggles. |
+| `isFocusableWhenDisabled`   | `focusable-when-disabled` | `boolean` | `false`    | While disabled, keeps the root focusable with `aria-disabled` instead of `disabled`. It still never toggles.          |
+| `elementType`               | — (read from the tag)     | `string`  | `'button'` | The tag you render as the root. React warns in development when it doesn't match.                                     |
+| `shouldExcludeFromTabOrder` | `exclude-from-tab-order`  | `boolean` | `false`    | `tabindex="-1"`: focusable by pointer and script, skipped by Tab.                                                     |
+| `shouldPreventFocusOnPress` | `prevent-focus-on-press`  | `boolean` | `false`    | A pointer press toggles and leaves focus where it was, such as in the editor a formatting toggle acts on.             |
+
+There is no `href` and no `type`: a link can't be pressed, and the root never
+submits a form. ToggleButton has no `name` or `value` either; use a
+[Checkbox](./checkbox.mdx) or a [Switch](./switch.mdx) for a value a form
+submits.
+
+## Events
+
+| Event            | React prop         | Detail       | When                                                                                        |
+| ---------------- | ------------------ | ------------ | ------------------------------------------------------------------------------------------- |
+| `pressstart`     | `onPressStart`     | `PressEvent` | A press begins, as in Button.                                                               |
+| `pressend`       | `onPressEnd`       | `PressEvent` | A press ends, whether or not it activates.                                                  |
+| `selectedchange` | `onSelectedChange` | `boolean`    | A press asks to toggle. The detail is the requested value, the opposite of the current one. |
+| `press`          | `onPress`          | `PressEvent` | The button activates, after `selectedchange`.                                               |
+| `focuschange`    | `onFocusChange`    | `boolean`    | The root gained or lost focus.                                                              |
+
+On activation the order is `pressstart`, `pressend`, `selectedchange`,
+`press`, so a `press` handler that reads the state sees the value just
+toggled. A cancelled press (released outside the root, or a scroll took over
+the touch) fires `pressstart` and `pressend` only and leaves the state alone.
+`PressEvent` is [Button's](./button.mdx), exported as a type from
+`@uniaria/core/toggle-button`. The custom element dispatches each event on
+itself, bubbling, with the detail in `detail`.
+
+## State
+
+| Field            | Type      | Meaning                                                                      |
+| ---------------- | --------- | ---------------------------------------------------------------------------- |
+| `isSelected`     | `boolean` | The toggle is on: the controlled value, or the uncontrolled one.             |
+| `isPressed`      | `boolean` | A pointer or key is down on the root. Unrelated to selection.                |
+| `isHovered`      | `boolean` | A mouse or pen is over the root. Never from touch, never while disabled.     |
+| `isFocused`      | `boolean` | The root has focus.                                                          |
+| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or screen reader. |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                       |
+
+To render something from state in React, select it, and the component renders
+again only when that value changes:
+
+```tsx
+const isBold = useComponentState(bold, (state) => state.isSelected);
+```
+
+On the custom element, read `element.instance.getState()`. The `isSelected`
+property holds only the value you set, not the current state. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                   | When                                                   |
+| --------------------------- | ------------------------------------------------------ |
+| `class="uni-toggle-button"` | Always.                                                |
+| `data-selected`             | The toggle is on.                                      |
+| `data-hovered`              | A mouse or pen is over the root.                       |
+| `data-pressed`              | A pointer or key is down on the root.                  |
+| `data-focused`              | The root has focus.                                    |
+| `data-focus-visible`        | The root has focus from a keyboard or a screen reader. |
+| `data-disabled`             | The toggle button is disabled.                         |
+
+Style the on state with `data-selected`, not `data-pressed`, which only means
+a press is in progress. State attributes are present or absent, never
+`"false"`. As in Button, UniAria sets `touch-action: pan-x pan-y pinch-zoom`
+on the root, and `user-select: none` while a touch press lasts.
+
+## Keyboard
+
+| Key   | Behavior                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------- |
+| Space | Presses on keydown and toggles on keyup. The page doesn't scroll.                                             |
+| Enter | Presses on keydown and toggles on keyup.                                                                      |
+| Tab   | Moves focus normally. The root is a tab stop unless disabled (without `isFocusableWhenDisabled`) or excluded. |
+
+Holding a key down never toggles again.
+
+## Accessibility
+
+- **Spoken output.** "button, Bold, not pressed", then "button, Bold,
+  pressed" once on; "button, Bold, disabled, pressed" when disabled. Screen
+  readers announce the new state when it changes.
+- **`aria-pressed` is always present**, as `"true"` or `"false"`: without it
+  the root would be read as a plain button.
+- **Keep the label fixed.** The state is announced, so a label that changes
+  with it ("Mute" and "Unmute") would be read twice and confuse. If the
+  label must change, use a plain [Button](./button.mdx) instead.
+- **Focus.** Toggling never moves focus. With `shouldPreventFocusOnPress`, a
+  pointer press leaves focus in the editor the toggle formats.
+- **Tooltips.** Give the toggle button a [Tooltip](./tooltip.mdx) through its
+  link, as a Button. To explain a disabled toggle, add
+  `isFocusableWhenDisabled` so keyboard users can reach it.
+
+## Compared with other libraries
+
+- **Toggles on keyup**, as Button activates. The APG's toggle example sets
+  `aria-pressed` on keydown.
+- **`selectedchange`** is React Aria's `onChange`: same value, same order
+  (toggle first, then `press`). `data-selected` matches React Aria
+  Components.
+- **No mixed state**, link mode or form value. React Aria has none of them
+  either.
+- **No group.** A set of exclusive toggles (React Aria's
+  `ToggleButtonGroup`) is not in UniAria yet; a
+  [RadioGroup](./radio-group.mdx) styled as buttons covers a single choice.

@@ -1,0 +1,40 @@
+<div class="row">
+  <uni-combobox disabled-keys='["durian"]'>
+    <div class="uni-combobox">
+      <label data-element="Label">Fruit</label>
+      <div data-element="Anchor">
+        <input data-element="Input" placeholder="Type to search" />
+        <button data-element="Button">
+          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
+            <path
+              d="M4 6l4 4 4-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+        </button>
+      </div>
+      <div data-element="Popover">
+        <div data-element="List">
+          <div data-element="Option" data-key="apple">Apple</div>
+          <div data-element="Option" data-key="apricot">Apricot</div>
+          <div data-element="Option" data-key="banana">Banana</div>
+          <div data-element="Option" data-key="blueberry">Blueberry</div>
+          <div data-element="Option" data-key="cherry">Cherry</div>
+          <div data-element="Option" data-key="durian">Durian</div>
+          <div data-element="Option" data-key="grape">Grape</div>
+          <div data-element="Option" data-key="kiwi">Kiwi</div>
+          <div data-element="Option" data-key="lemon">Lemon</div>
+          <div data-element="Option" data-key="mango">Mango</div>
+          <div data-element="Option" data-key="orange">Orange</div>
+          <div data-element="Option" data-key="peach">Peach</div>
+          <div data-element="Option" data-key="pear">Pear</div>
+        </div>
+        <p data-element="Empty">No fruit matches.</p>
+      </div>
+      <input data-element="HiddenInput" name="fruit" />
+    </div>
+  </uni-combobox>
+  <output id="log">Type “an”, then use the arrows and Enter.</output>
+</div>

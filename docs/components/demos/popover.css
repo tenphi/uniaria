@@ -1,0 +1,112 @@
+:root {
+  color-scheme: light dark;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  margin: 1.5rem;
+}
+.row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
+  border-radius: 0.5rem;
+  background: Canvas;
+  color: CanvasText;
+  font: inherit;
+  cursor: pointer;
+}
+[data-scope='popover'][data-hovered] {
+  background: color-mix(in srgb, CanvasText 6%, Canvas);
+}
+[data-scope='popover'][data-element='Trigger'][data-open] {
+  background: color-mix(in srgb, CanvasText 12%, Canvas);
+}
+[data-scope='popover'][data-focus-visible] {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+
+.uni-popover {
+  --line: color-mix(in srgb, CanvasText 20%, Canvas);
+  /* The gap to the trigger: UniAria reads it and flips it with the side. */
+  margin: 12px 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: Canvas;
+  color: CanvasText;
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
+  overflow: visible;
+  outline: none;
+  transition: opacity 120ms;
+}
+.uni-popover:is([data-entering], [data-exiting]) {
+  opacity: 0;
+}
+
+/* UniAria sets the arrow's offset along the edge; CSS puts it on the side. */
+.uni-popover [data-element='Arrow'] {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+}
+.uni-popover [data-element='Arrow']::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid;
+  border-color: var(--line) transparent transparent var(--line);
+  background: Canvas;
+  rotate: 45deg;
+}
+[data-element='Arrow'][data-placement='bottom'] {
+  top: -8px;
+}
+[data-element='Arrow'][data-placement='top'] {
+  bottom: -8px;
+}
+[data-element='Arrow'][data-placement='top']::before {
+  rotate: 225deg;
+}
+[data-element='Arrow'][data-placement='right'] {
+  left: -8px;
+}
+[data-element='Arrow'][data-placement='right']::before {
+  rotate: -45deg;
+}
+[data-element='Arrow'][data-placement='left'] {
+  right: -8px;
+}
+[data-element='Arrow'][data-placement='left']::before {
+  rotate: 135deg;
+}
+
+.uni-popover [data-element='Title'] {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.fields {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+label {
+  display: grid;
+  font-size: 0.875rem;
+}
+input {
+  width: 6rem;
+  font: inherit;
+}
+p {
+  margin: 0 0 0.5rem;
+}

@@ -1,0 +1,384 @@
+---
+title: RadioGroup
+description: A labelled set of native radio buttons, of which at most one is selected, with the same arrow keys in every browser.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/radio-group.css?raw';
+import html from './demos/radio-group.html?raw';
+import javascript from './demos/radio-group.js?raw';
+
+A radio group is a labelled set of options of which at most one is selected,
+such as a billing plan. Its value is the selected radio's `value`. It comes as two
+definitions:
+
+- **RadioGroup** (`radioGroup`) holds the value. Its root becomes a
+  `role="radiogroup"`, named by the group's label and described by its
+  description and error message (as [Field](./field.mdx) does). It gives
+  every radio the same `name` and handles the arrow keys.
+- **Radio** (`radio`) is one option: a native `<input type="radio">` with its
+  own label and description. It finds its group and takes from it its
+  checked state, its `name` and the group's disabled and read-only modes. A
+  radio works only in a group.
+
+It follows the WAI-ARIA [Radio Group pattern](https://www.w3.org/WAI/ARIA/apg/patterns/radio/),
+with the native inputs' role and state in place of `role="radio"` and
+`aria-checked`.
+
+<Preview
+  title="Plan"
+  scripts={['/demo/radio-group.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import type { ReactNode } from 'react';
+import { radio } from '@uniaria/core/radio';
+import { radioGroup } from '@uniaria/core/radio-group';
+import { OwnerProvider, useComponent } from '@uniaria/react';
+
+export function PlanPicker(props: {
+  plan: string | null;
+  onPlanChange(plan: string | null): void;
+}) {
+  const plan = useComponent(radioGroup, {
+    name: 'plan',
+    value: props.plan,
+    onValueChange: props.onPlanChange,
+  });
+  return (
+    <div {...plan.parts.root}>
+      <span {...plan.parts.label}>Plan</span>
+      <OwnerProvider owner={plan}>
+        <Option value="free">Free</Option>
+        <Option value="pro">Pro</Option>
+        <Option value="team">Team</Option>
+      </OwnerProvider>
+    </div>
+  );
+}
+
+function Option(props: { value: string; children: ReactNode }) {
+  const option = useComponent(radio, {
+    value: props.value,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...option.parts.root}>
+      <input {...option.parts.input} />
+      <span {...option.parts.indicator} />
+      <span {...option.parts.label}>{props.children}</span>
+    </label>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-radio-group id="plan" name="plan">
+  <div class="uni-radio-group">
+    <span data-element="Label">Plan</span>
+    <uni-radio value="free">
+      <label class="uni-radio">
+        <input data-element="Input" type="radio" />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">Free</span>
+      </label>
+    </uni-radio>
+    <uni-radio value="pro">
+      <label class="uni-radio">
+        <input data-element="Input" type="radio" checked />
+        <span data-element="Indicator"></span>
+        <span data-element="Label">Pro</span>
+      </label>
+    </uni-radio>
+  </div>
+</uni-radio-group>
+
+<script type="module">
+  import '@uniaria/elements/radio-group';
+  import '@uniaria/elements/radio';
+
+  document.querySelector('#plan').addEventListener('valuechange', (event) => {
+    console.log('Plan:', event.detail);
+  });
+</script>
+```
+
+The radio checked in the markup, or clicked before the script loaded, gives
+the group its starting value: `'pro'` here.
+
+</Tab>
+</Tabs>
+
+Every radio needs a `value`: its key in the group's value, which UniAria
+writes to the input. As with [Checkbox](./checkbox.mdx), a `label` makes the
+whole row select the radio (with a `span` label part, and
+`labelElementType: 'span'` in React): the root, or the `wrapper` part inside
+the root when the radio has a description, which stays outside the `label`.
+A `div` root with a `label` label part works too. The group's root is its
+outermost element, around its label, description and error. A `fieldset`
+root with a `legend` label works for the group (pass
+`labelElementType: 'legend'` in React).
+
+### The value
+
+The value is a `string`, or `null` when no radio is selected. An
+uncontrolled group starts at `defaultValue`, `null` by default; on elements,
+the radio checked in the markup sets it. Controlled, pass `value` and
+`valuechange` reports each request: a change you don't accept by the end of
+its event goes back, and `null` clears the selection. A value that matches
+no radio checks none, and every radio stays reachable by Tab. See
+[State](../guide/state.md).
+
+### Finding the group
+
+A radio finds its group in one of three ways:
+
+- **Inside it.** A `<uni-radio>` inside a `<uni-radio-group>` finds it on its
+  own. In React, render the radios inside `<OwnerProvider owner={plan}>`:
+  they are linked from their first render, so server HTML already has the
+  right radio checked. Without the provider, a React radio inside the
+  group's root links after it mounts.
+- **Elsewhere, by id.** The `group` attribute names the id of the
+  `<uni-radio-group>` element, in the same document or shadow root:
+
+  ```html
+  <uni-radio-group id="plan" name="plan">…</uni-radio-group>
+  <uni-radio value="custom" group="plan">…</uni-radio>
+  ```
+
+- **Elsewhere, in React.** Pass the group's instance as the radio's `owner`
+  prop: `useComponent(radio, { value: 'custom', owner: plan.instance })`.
+
+The arrow keys move only between the radios inside the group's root. A radio
+linked from outside it still joins the value, the `name` and the tab stop,
+but gets the browser's own arrow keys. See
+[Composition](../guide/composition.md).
+
+### Orientation
+
+`orientation` (`'horizontal'` or `'vertical'`) writes `aria-orientation` and
+`data-orientation`, and only when you set it. All four arrow keys work either
+way. In a right-to-left horizontal group, ArrowLeft and ArrowRight swap, so
+ArrowLeft moves to the next radio. A row of radios styled as segmented
+buttons is the same two definitions with other CSS.
+
+### In a form
+
+- **Submission.** The group writes its `name` to every radio, so they form
+  one native group and the form submits the selected `value` under it.
+  Without `name`, the group generates one from its id. A `name` in a radio's
+  markup is overwritten: put it on the group.
+- **Reset.** A form reset returns the group to the value it mounted with,
+  `defaultValue` when uncontrolled; a controlled group gets a `valuechange`
+  asking for it.
+- **Disabled.** The user can't select a disabled radio, and a natively
+  disabled one is never submitted.
+- **Validation.** The group never validates. `isRequired` and `isInvalid`
+  write `aria-required` and `aria-invalid` on the radiogroup, never the
+  native `required`; you decide when it is invalid.
+
+See [Forms](../guide/forms.md).
+
+## Anatomy
+
+RadioGroup:
+
+| Part          | Element                                                   | Notes                                                                                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | Any; usually `div`                                        | Gets `role="radiogroup"`, an `id`, `aria-labelledby`, `aria-describedby`, and `aria-required`, `aria-invalid`, `aria-disabled`, `aria-readonly` and `aria-orientation` when they apply. The outermost element: holds the label, the description, the error and the radios. |
+| `label`       | `span` by default, any element through `labelElementType` | Names the group. Not a `label`: a group can't be labelled natively.                                                                                                                                                                                                        |
+| `description` | Any                                                       | Optional. Read when focus enters the group.                                                                                                                                                                                                                                |
+| `error`       | Any                                                       | Optional. Hidden unless invalid; announced when it appears, and linked to every radio.                                                                                                                                                                                     |
+
+Radio:
+
+| Part          | Element                                                    | Notes                                                                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `root`        | Any; usually `div`                                         | Optional. The outermost element, around the wrapper and the description. No role. Without a wrapper, a `label` root makes its whole area select the radio.                                                               |
+| `wrapper`     | Any; a `label` makes its whole area select the radio       | Optional. The area around the input, the indicator and the label. No role.                                                                                                                                               |
+| `input`       | `input`                                                    | Required. UniAria writes `type="radio"`, the group's `name`, `value`, `tabindex`, `disabled` (or `aria-disabled`), its `id` and ARIA references, and the `checked` property. You own `form` and the `checked` attribute. |
+| `indicator`   | Any; usually `span`                                        | Optional. The circle and dot you draw in place of the input. Gets `aria-hidden="true"`.                                                                                                                                  |
+| `label`       | `label` by default, any element through `labelElementType` | Names the radio. A `span` inside a `label` wrapper or root.                                                                                                                                                              |
+| `description` | Any                                                        | Optional. Outside a `label` wrapper or root.                                                                                                                                                                             |
+
+A radio has no error part: required, invalid and the error belong to the
+group. You own every part's content.
+
+## Props
+
+RadioGroup:
+
+| Prop               | Attribute             | Type                         | Default   | Description                                                                                         |
+| ------------------ | --------------------- | ---------------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| `value`            | — (property)          | `string \| null`             | —         | The selected radio's `value`, controlled; `null` is none. Pair it with `onValueChange`.             |
+| `defaultValue`     | — (property)          | `string \| null`             | `null`    | The starting value, uncontrolled. The element starts from the radio checked in its markup.          |
+| `name`             | `name`                | `string`                     | generated | Written to every radio's input.                                                                     |
+| `isDisabled`       | `disabled`            | `boolean`                    | `false`   | Disables every radio natively, and writes `aria-disabled="true"` on the root. Hides the error.      |
+| `isReadOnly`       | `readonly`            | `boolean`                    | `false`   | `aria-readonly="true"` on the root. Arrows move focus but select nothing, and clicks are cancelled. |
+| `isRequired`       | `required`            | `boolean`                    | `false`   | `aria-required="true"` on the root.                                                                 |
+| `isInvalid`        | `invalid`             | `boolean`                    | `false`   | `aria-invalid="true"` on the root; shows and announces the error, and links it to every radio.      |
+| `orientation`      | `orientation`         | `'horizontal' \| 'vertical'` | —         | `aria-orientation` and `data-orientation`. Only swaps the horizontal arrows in right to left.       |
+| `labelElementType` | — (read from the tag) | `string`                     | `'span'`  | The label part's tag.                                                                               |
+| `labelledBy`       | `labelled-by`         | `string`                     | —         | More ids for the root's `aria-labelledby`, after the label part's.                                  |
+| `describedBy`      | `described-by`        | `string`                     | —         | More ids for the root's `aria-describedby`, after the description's and the error's.                |
+
+Radio:
+
+| Prop                      | Attribute                 | Type       | Default   | Description                                                                                                                              |
+| ------------------------- | ------------------------- | ---------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`                   | `value`                   | `string`   | —         | Its key in the group's value, written to the input. Required; development warns when it is missing.                                      |
+| `isDisabled`              | `disabled`                | `boolean`  | `false`   | Disables this radio natively: skipped by Tab and the arrow keys, never selected.                                                         |
+| `isFocusableWhenDisabled` | `focusable-when-disabled` | `boolean`  | `false`   | While disabled, `aria-disabled` instead of `disabled`: the arrow keys stop on it, so a tooltip can explain it, but it is never selected. |
+| `owner`                   | `group` (an id)           | `Instance` | —         | The group of a radio that isn't inside it.                                                                                               |
+| `inputId`                 | — (read from the input)   | `string`   | generated | The input's `id`.                                                                                                                        |
+| `labelElementType`        | — (read from the tag)     | `string`   | `'label'` | The label part's tag. `'span'` inside a `label` wrapper or root; only a `label` gets `for`.                                              |
+| `labelledBy`              | `labelled-by`             | `string`   | —         | More ids for the input's `aria-labelledby`, after the label part's.                                                                      |
+| `describedBy`             | `described-by`            | `string`   | —         | More ids for the input's `aria-describedby`, after the description's.                                                                    |
+
+## Events
+
+| Component  | Event         | React prop      | Detail           | When                                                                                          |
+| ---------- | ------------- | --------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| RadioGroup | `valuechange` | `onValueChange` | `string \| null` | A radio was selected by a click, Space or an arrow key, or a form reset asks for the default. |
+| RadioGroup | `focuschange` | `onFocusChange` | `boolean`        | Focus entered or left the group, such as for a form that validates on blur.                   |
+| Radio      | `focuschange` | `onFocusChange` | `boolean`        | The radio's input gained or lost focus.                                                       |
+
+`valuechange` never fires for a value you set. Each selection also fires the
+native `input` and `change` events on the radio, arrow keys included. The
+custom elements dispatch each event on themselves, bubbling, with the value
+in `detail`; a radio's `focuschange` bubbles through the group element too,
+so check `event.target` when you listen there. In React, UniAria's part props
+include the radio input's `onInput`, `onClick`, `onFocus` and `onBlur`, and
+the group root's `onKeyDown`: don't replace them.
+
+## State
+
+RadioGroup:
+
+| Field            | Type             | Meaning                                                    |
+| ---------------- | ---------------- | ---------------------------------------------------------- |
+| `value`          | `string \| null` | The current value.                                         |
+| `isDisabled`     | `boolean`        | The `isDisabled` prop.                                     |
+| `isReadOnly`     | `boolean`        | The `isReadOnly` prop.                                     |
+| `isRequired`     | `boolean`        | The `isRequired` prop.                                     |
+| `isInvalid`      | `boolean`        | The `isInvalid` prop.                                      |
+| `isErrorShown`   | `boolean`        | The error part is shown: invalid and not disabled.         |
+| `isFocusWithin`  | `boolean`        | A radio in the group has focus.                            |
+| `isFocusVisible` | `boolean`        | Focus within came from a keyboard or assistive technology. |
+
+Radio:
+
+| Field            | Type      | Meaning                                                                                        |
+| ---------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `isSelected`     | `boolean` | The group's value is this radio's `value`.                                                     |
+| `isFocused`      | `boolean` | The input has focus.                                                                           |
+| `isFocusVisible` | `boolean` | The input has focus from a keyboard or assistive technology.                                   |
+| `isHovered`      | `boolean` | A mouse or pen is over the wrapper (without one, the root) or the input. Never while disabled. |
+| `isDisabled`     | `boolean` | Disabled, by its own prop or the group's.                                                      |
+| `isReadOnly`     | `boolean` | The group is read-only.                                                                        |
+| `isInvalid`      | `boolean` | The group is invalid.                                                                          |
+
+To render something from state in React, select it, and the component renders
+again only when that value changes:
+
+```tsx
+const selected = useComponentState(plan, (state) => state.value);
+```
+
+On the custom elements, read `element.instance.getState()`. The group's
+`value` property holds only the value you set, not the current state. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                           | On                       | When                                                                             |
+| --------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
+| `class="uni-radio-group"`                           | The group's root         | Always.                                                                          |
+| `data-scope="radio-group"`, `data-element="<Part>"` | Other group parts        | Always.                                                                          |
+| `class="uni-radio"`                                 | A radio's root           | Always.                                                                          |
+| `data-scope="radio"`, `data-element="<Part>"`       | Other radio parts        | Always.                                                                          |
+| `data-selected`                                     | Radio parts              | The radio is selected.                                                           |
+| `data-hovered`                                      | Radio parts              | A mouse or pen is over the radio's wrapper (without one, its root) or its input. |
+| `data-focused`                                      | Radio parts              | The radio's input has focus.                                                     |
+| `data-focus-visible`                                | Radio parts              | The input has focus from a keyboard or screen reader.                            |
+| `data-focus-within`                                 | Group parts              | A radio in the group has focus.                                                  |
+| `data-focus-visible`                                | Group parts              | Focus within came from a keyboard or screen reader.                              |
+| `data-disabled`                                     | Group parts, radio parts | The group is disabled; on a radio, it or the group.                              |
+| `data-readonly`                                     | Group parts, radio parts | The group is read-only.                                                          |
+| `data-invalid`                                      | Group parts, radio parts | The group is invalid.                                                            |
+| `data-required`                                     | Group parts              | The group is required.                                                           |
+| `data-orientation`                                  | Group parts              | `orientation` is set; its value.                                                 |
+
+Every part carries its component's state attributes, so the circle, the
+labels and the messages can be styled without reading state. The group's
+`data-focus-visible` draws a ring around a whole row of segmented buttons.
+State attributes are present or absent, never `"false"`, except
+`data-orientation`, which holds its value. UniAria writes no styles.
+
+## Keyboard
+
+| Key                             | Behavior                                                                                                                                              |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab                  | Enters at the selected radio; with none, at the first (Tab) or the last (Shift+Tab). Leaves the group from any radio.                                 |
+| ArrowDown, ArrowRight           | Focuses and selects the next enabled radio, wrapping from the last to the first. Read-only, or on a radio focusable while disabled: moves focus only. |
+| ArrowUp, ArrowLeft              | The same, to the previous radio.                                                                                                                      |
+| Space                           | Selects the focused radio, natively. Nothing when read-only.                                                                                          |
+| Enter                           | Nothing on a radio: it submits the form, natively.                                                                                                    |
+| Alt, Ctrl or Meta with an arrow | Left to the browser, which may use it as a shortcut.                                                                                                  |
+
+UniAria handles the arrows itself, the same in every browser: natively,
+WebKit doesn't wrap, the engines disagree in right to left, and Safari
+doesn't Tab to radios without a `tabindex`. Each radio's `tabindex` is `0` for the tab stop
+and `-1` otherwise. Radios of another name inside the root keep their own
+keys, so a group nested in an option works.
+
+## Accessibility
+
+- **Spoken output.** Entering the group reads "radiogroup, Plan, Billed
+  monthly", then the radio: "radio, Pro, checked, position 2, set size 3".
+  Position and set size come from the shared `name`, one more reason the
+  group always writes one.
+- **States are read on the group.** Required, invalid, read-only, disabled
+  and the orientation go on the `radiogroup`, where ARIA allows them and
+  screen readers read them: "radiogroup, Plan, required". The group's error
+  is also linked to each radio while shown: "radio, Free, Pick a plan, not
+  checked, position 1, set size 3".
+- **The description is read once,** when focus enters the group, and not on
+  each radio.
+- **Label the group and every radio.** The group with a label part or
+  `labelledBy`, each radio with its label part or an `aria-label` on the
+  input.
+- **Disabled with a reason.** A natively disabled radio is skipped by Tab
+  and the arrows. To explain one with a [Tooltip](./tooltip.mdx), set
+  `isFocusableWhenDisabled` and link the tooltip through the `tooltip` prop
+  (React) or attribute (an id). The arrows then stop on it, which the APG
+  doesn't do.
+- **Native state.** UniAria never writes `aria-checked`; screen readers read
+  the input's `checked` state.
+
+## Compared with other libraries
+
+- **The arrow keys are UniAria's**, as in React Aria: they wrap everywhere,
+  swap in right to left, and a roving `tabindex` lets Safari reach the
+  group. Native radios behave differently in each browser.
+- **`aria-orientation` only when set.** React Aria always writes it,
+  vertical by default, which adds "orientated vertically" to every group.
+- **`null` is no selection**, as in React Aria. Cube UI Kit turns `null`
+  into `undefined`, which makes the group uncontrolled.
+- **Only the error goes on each radio.** React Aria adds the group's
+  description too, so it is read again on every radio.
+- **Read-only moves focus without selecting**, as in React Aria. Zag
+  disables the inputs instead, which takes them out of the tab order.
+- **A generated `name`** when you set none, as React Aria and Zag do.

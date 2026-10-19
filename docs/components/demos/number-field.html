@@ -1,0 +1,40 @@
+<form id="order">
+  <div class="row">
+    <uni-number-field
+      id="quantity"
+      min-value="1"
+      max-value="10"
+      default-value="2"
+    >
+      <div class="uni-number-field">
+        <label data-element="Label">Quantity</label>
+        <div data-element="Wrapper">
+          <button data-element="Decrement">−</button>
+          <input data-element="Input" />
+          <button data-element="Increment">+</button>
+        </div>
+        <input type="hidden" data-element="HiddenInput" name="quantity" />
+        <p data-element="Description">Up to 10 per order.</p>
+      </div>
+    </uni-number-field>
+
+    <uni-number-field
+      id="price"
+      locale="de-DE"
+      min-value="0"
+      default-value="12.5"
+    >
+      <div class="uni-number-field">
+        <label data-element="Label">Price</label>
+        <div data-element="Wrapper">
+          <input data-element="Input" />
+        </div>
+        <input type="hidden" data-element="HiddenInput" name="price" />
+        <p data-element="Description">In euros, formatted for German.</p>
+      </div>
+    </uni-number-field>
+  </div>
+
+  <button type="submit">Add to cart</button>
+</form>
+<output id="log">Step with the arrow keys, the buttons or the wheel.</output>

@@ -1,0 +1,66 @@
+:root {
+  color-scheme: light dark;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+#sample {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.bold {
+  font-weight: 700;
+}
+.italic {
+  font-style: italic;
+}
+.underline {
+  text-decoration: underline;
+}
+
+.uni-toggle-button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
+  border-radius: 0.5rem;
+  background: Canvas;
+  color: CanvasText;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition:
+    transform 80ms,
+    background-color 80ms;
+}
+.uni-toggle-button[data-hovered] {
+  background: color-mix(in srgb, CanvasText 6%, Canvas);
+}
+.uni-toggle-button[data-selected] {
+  border-color: CanvasText;
+  background: CanvasText;
+  color: Canvas;
+}
+.uni-toggle-button[data-selected][data-hovered] {
+  background: color-mix(in srgb, CanvasText 85%, Canvas);
+}
+.uni-toggle-button[data-pressed] {
+  transform: scale(0.97);
+}
+.uni-toggle-button[data-focus-visible] {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+.uni-toggle-button[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,257 @@
+---
+title: Switch
+description: An on/off control, a native checkbox with the switch role, with its label, description and error message.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/switch.css?raw';
+import html from './demos/switch.html?raw';
+import javascript from './demos/switch.js?raw';
+
+A switch turns a setting on or off, such as Wi-Fi. A native
+`<input type="checkbox">` with `role="switch"` sits underneath, and the browser
+keeps doing the toggling. Switch is [Checkbox](./checkbox.mdx) without the
+indeterminate state or a group: the same labelling, description and error
+message (as [Field](./field.mdx) does), read-only mode, controlled use, form
+reset and state attributes. Only the role and the drawing differ.
+
+It follows the WAI-ARIA [Switch pattern](https://www.w3.org/WAI/ARIA/apg/patterns/switch/),
+in its checkbox-based form.
+
+<Preview
+  title="Switches"
+  scripts={['/demo/switch.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+The definition is exported as `toggleSwitch`, since `switch` is a reserved
+word in JavaScript. Its element and markers still say `switch`:
+`<uni-switch>`, `class="uni-switch"`, `data-scope="switch"`.
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { toggleSwitch } from '@uniaria/core/switch';
+import { useComponent } from '@uniaria/react';
+
+export function WifiSwitch(props: {
+  isOn: boolean;
+  onChange(isOn: boolean): void;
+}) {
+  const wifi = useComponent(toggleSwitch, {
+    labelElementType: 'span',
+    isSelected: props.isOn,
+    onSelectedChange: props.onChange,
+  });
+  return (
+    <label {...wifi.parts.root}>
+      <input {...wifi.parts.input} name="wifi" />
+      <span {...wifi.parts.indicator}>
+        <span data-element="Thumb" />
+      </span>
+      <span {...wifi.parts.label}>Wi-Fi</span>
+    </label>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-switch id="wifi">
+  <label class="uni-switch">
+    <input data-element="Input" type="checkbox" name="wifi" checked />
+    <span data-element="Indicator"><span data-element="Thumb"></span></span>
+    <span data-element="Label">Wi-Fi</span>
+  </label>
+</uni-switch>
+
+<script type="module">
+  import '@uniaria/elements/switch';
+
+  document
+    .querySelector('#wifi')
+    .addEventListener('selectedchange', (event) => {
+      console.log('Wi-Fi', event.detail ? 'on' : 'off');
+    });
+</script>
+```
+
+The input's `checked` in the markup, or a click before the script loaded,
+becomes the element's starting state.
+
+</Tab>
+</Tabs>
+
+The indicator part is the track. The thumb is your own markup inside it, named
+with `data-element="Thumb"` like a part, and styled from the track's state
+attributes, such as `[data-selected] > [data-element='Thumb']`. Thumb isn't
+one of Switch's parts, so UniAria leaves it alone.
+
+Everything else works as in Checkbox:
+
+- **Layouts.** A `label` (with a `span` label part, and
+  `labelElementType: 'span'` in React) makes the whole row toggle. It is the
+  root of a plain switch, or the `wrapper` part inside the root when the
+  switch has a description or an error, which stay outside the `label`, as
+  in the demo. A `div` root with a `label` label part toggles from the input
+  and the label only. See [Checkbox](./checkbox.mdx).
+- **Hiding the input.** Lay it over the `label` with `opacity: 0`, or clip it.
+  Never `display: none`, which takes it out of the tab order and the
+  accessibility tree.
+- **Controlled.** Pass `isSelected` (the `isSelected` property on the
+  element). A toggle you don't accept by the end of its event goes back. See
+  [State](../guide/state.md).
+
+### In a form
+
+- **Submission.** While on, the form submits the input's `name` with its
+  `value` (`on` when it has none). You write both on the input.
+- **Reset.** A form reset returns the switch to the state it mounted with,
+  `defaultSelected` when uncontrolled; a controlled one gets a
+  `selectedchange` asking for it.
+- **Disabled.** A disabled switch is never submitted, and neither is one
+  disabled with `isFocusableWhenDisabled`. A read-only one is submitted.
+- **Validation.** Switch never validates. `isRequired` writes
+  `aria-required`, not the native `required`; you decide when it is invalid
+  and set `isInvalid`.
+
+See [Forms](../guide/forms.md).
+
+## Anatomy
+
+| Part          | Element                                                    | Notes                                                                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `root`        | Any; usually `div`                                         | Optional. The outermost element, around the wrapper, the description and the error. No role. Without a wrapper, a `label` root makes its whole area toggle the switch.                                                   |
+| `wrapper`     | Any; a `label` makes its whole area toggle the switch      | Optional. The area around the input, the indicator and the label. No role.                                                                                                                                               |
+| `input`       | `input`                                                    | Required. UniAria writes `type="checkbox"`, `role="switch"`, its `id` and ARIA attributes, `disabled`, and the `checked` property. You own `name`, `value`, `form`, `autofocus`, `tabindex` and the `checked` attribute. |
+| `indicator`   | Any; usually `span`                                        | Optional. The track you draw in place of the input, with your thumb inside. Gets `aria-hidden="true"`.                                                                                                                   |
+| `label`       | `label` by default, any element through `labelElementType` | Names the switch. A `span` inside a `label` wrapper or root.                                                                                                                                                             |
+| `description` | Any                                                        | Optional. Outside a `label` wrapper or root.                                                                                                                                                                             |
+| `error`       | Any                                                        | Optional. Outside a `label` wrapper or root. Hidden unless invalid.                                                                                                                                                      |
+
+You own every part's content. UniAria fills none of them.
+
+## Props
+
+| Prop                      | Attribute                 | Type      | Default   | Description                                                                                                                  |
+| ------------------------- | ------------------------- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `isSelected`              | — (property)              | `boolean` | —         | On or off, controlled. Pair it with `onSelectedChange`.                                                                      |
+| `defaultSelected`         | `default-selected`        | `boolean` | `false`   | The starting state, uncontrolled. The element adopts the input's `checked`.                                                  |
+| `isDisabled`              | `disabled`                | `boolean` | `false`   | Native `disabled`: not focusable, never toggles, not submitted. Hides the error.                                             |
+| `isFocusableWhenDisabled` | `focusable-when-disabled` | `boolean` | `false`   | While disabled, `aria-disabled` instead of `disabled`: focusable, so a tooltip can explain it, but never toggles or submits. |
+| `isReadOnly`              | `readonly`                | `boolean` | `false`   | `aria-readonly="true"`, and every toggle is cancelled. Focusable and submitted.                                              |
+| `isRequired`              | `required`                | `boolean` | `false`   | `aria-required="true"`, not the native `required`.                                                                           |
+| `isInvalid`               | `invalid`                 | `boolean` | `false`   | `aria-invalid="true"`, and shows and announces the error.                                                                    |
+| `inputId`                 | — (read from the input)   | `string`  | generated | The input's `id`.                                                                                                            |
+| `labelElementType`        | — (read from the tag)     | `string`  | `'label'` | The label part's tag. `'span'` inside a `label` wrapper or root; only a `label` gets `for`.                                  |
+| `labelledBy`              | `labelled-by`             | `string`  | —         | More ids for `aria-labelledby`, after the label part's.                                                                      |
+| `describedBy`             | `described-by`            | `string`  | —         | More ids for `aria-describedby`, after the description's and the error's.                                                    |
+
+Switch has no `value` prop and no `isIndeterminate`: the input's `value` is
+yours, and a switch is either on or off.
+
+## Events
+
+| Event            | React prop         | Detail    | When                                                                                                  |
+| ---------------- | ------------------ | --------- | ----------------------------------------------------------------------------------------------------- |
+| `selectedchange` | `onSelectedChange` | `boolean` | The user toggled the switch (right before the native `change`), or a form reset asks for its default. |
+| `focuschange`    | `onFocusChange`    | `boolean` | The input gained or lost focus.                                                                       |
+
+`selectedchange` never fires for a value you set. The custom element
+dispatches each event on itself, bubbling, with the value in `detail`. In
+React, UniAria's part props include the input's `onInput`, `onClick`,
+`onFocus` and `onBlur`: use the events above rather than replacing them.
+
+## State
+
+| Field            | Type      | Meaning                                                                                        |
+| ---------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `isSelected`     | `boolean` | On: the controlled value, or the uncontrolled one.                                             |
+| `isFocused`      | `boolean` | The input has focus.                                                                           |
+| `isFocusVisible` | `boolean` | The input has focus from a keyboard or assistive technology.                                   |
+| `isHovered`      | `boolean` | A mouse or pen is over the wrapper (without one, the root) or the input. Never while disabled. |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                                         |
+| `isReadOnly`     | `boolean` | The `isReadOnly` prop.                                                                         |
+| `isRequired`     | `boolean` | The `isRequired` prop.                                                                         |
+| `isInvalid`      | `boolean` | The `isInvalid` prop.                                                                          |
+| `isErrorShown`   | `boolean` | The error part is shown: invalid and not disabled.                                             |
+
+To render something from state in React, select it, and the component renders
+again only when that value changes:
+
+```tsx
+const isOn = useComponentState(wifi, (state) => state.isSelected);
+```
+
+On the custom element, read `element.instance.getState()`. The `isSelected`
+property holds only the value you set, not the current state. See
+[State](../guide/state.md).
+
+## Styling
+
+Every part carries the state attributes, so the track, the label and the
+messages can be styled without reading state.
+
+| Attribute                                      | When                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| `class="uni-switch"`                           | On the root, always.                                                     |
+| `data-scope="switch"`, `data-element="<Part>"` | On every other part, always.                                             |
+| `data-selected`                                | The switch is on.                                                        |
+| `data-hovered`                                 | A mouse or pen is over the wrapper (without one, the root) or the input. |
+| `data-focused`                                 | The input has focus.                                                     |
+| `data-focus-visible`                           | The input has focus from a keyboard or a screen reader.                  |
+| `data-disabled`                                | The switch is disabled.                                                  |
+| `data-readonly`                                | The switch is read-only.                                                 |
+| `data-invalid`                                 | The switch is invalid.                                                   |
+| `data-required`                                | The switch is required.                                                  |
+
+State attributes are present or absent, never `"false"`. There is no pressed
+state; use `:active`. UniAria writes no styles.
+
+## Keyboard
+
+| Key   | Behavior                                                                                      |
+| ----- | --------------------------------------------------------------------------------------------- |
+| Space | Toggles, natively. Nothing when read-only or focusable while disabled.                        |
+| Enter | Nothing on the switch: it submits the form, natively. The APG makes Enter optional.           |
+| Tab   | Moves focus, natively. A disabled switch is skipped, unless `isFocusableWhenDisabled` is set. |
+
+Switch handles no keys itself.
+
+## Accessibility
+
+- **Spoken output.** "switch, Wi-Fi", then the state: VoiceOver, JAWS and
+  current NVDA say "on" and "off", other readers "checked" and "not
+  checked". The description follows the name; "read only", "required", "invalid" and
+  "disabled" follow the state. Screen readers announce a toggle themselves,
+  so UniAria announces nothing.
+- **Keep the label fixed.** The state is announced, so a label that changes
+  ("Wi-Fi on") reads the state twice. Put "On" and "Off" text, if you show
+  it, inside the indicator, which is hidden from screen readers.
+- **A set of switches** is your markup: a `fieldset` with a `legend`, or a
+  `role="group"` named by its heading. There is no switch group.
+- **Indeterminate.** Don't set the input's `indeterminate` property: Chromium
+  exposes an indeterminate switch as "mixed", which ARIA treats as off.
+- **Disabled with a reason.** To explain a disabled switch with a
+  [Tooltip](./tooltip.mdx), set `isFocusableWhenDisabled` and link the
+  tooltip through the `tooltip` prop (React) or attribute (an id).
+
+## Compared with other libraries
+
+- **A native checkbox with `role="switch"`**, as in React Aria and the APG's
+  checkbox-based example. UniAria never writes `aria-checked`.
+- **Enter doesn't toggle**, as in React Aria and Spectrum Web Components.
+- **One `indicator` part.** Zag has `control` and `thumb` parts; here the
+  thumb is your markup inside the track.
+- **Description, error, required and invalid stay.** React Aria
+  Components' `Switch` leaves them out.
+- **`selectedchange`** is React Aria's `onChange`, with the same
+  `isSelected` and `defaultSelected`.

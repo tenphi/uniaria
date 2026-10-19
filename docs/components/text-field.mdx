@@ -1,0 +1,311 @@
+---
+title: TextField
+description: A native input or textarea with a label, a description and an error message, an uncontrolled or controlled value, and state attributes for every part.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/text-field.css?raw';
+import html from './demos/text-field.html?raw';
+import javascript from './demos/text-field.js?raw';
+
+A text field is a native `<input>` or `<textarea>` with a label, a description
+and an error message. It has [Field](./field.mdx) built in for the labelling,
+and adds the value, read-only mode, form reset, and hover and focus state on
+every part. The browser keeps doing the editing: typing, selection, input
+methods, autofill, undo, Enter submitting the form from an `<input>` and adding
+a line in a `<textarea>`.
+
+A native text control needs no WAI-ARIA pattern. Labelling follows the APG
+practice on
+[names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
+
+<Preview
+  title="Text fields"
+  scripts={['/demo/text-field.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { textField } from '@uniaria/core/text-field';
+import { useComponent } from '@uniaria/react';
+
+export function EmailField(props: {
+  error?: string;
+  onEmailChange(email: string): void;
+}) {
+  const email = useComponent(textField, {
+    isRequired: true,
+    isInvalid: props.error !== undefined,
+    onValueChange: props.onEmailChange,
+  });
+  return (
+    <div {...email.parts.root}>
+      <label {...email.parts.label}>Email</label>
+      <div {...email.parts.wrapper}>
+        <input {...email.parts.input} name="email" type="email" />
+      </div>
+      <p {...email.parts.description}>We never share it</p>
+      <p {...email.parts.error}>{props.error}</p>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-text-field id="email" required>
+  <div class="uni-text-field">
+    <label data-element="Label">Email</label>
+    <div data-element="Wrapper">
+      <input data-element="Input" name="email" type="email" />
+    </div>
+    <p data-element="Description">We never share it</p>
+    <p data-element="Error" hidden>Enter a valid email</p>
+  </div>
+</uni-text-field>
+
+<script type="module">
+  import '@uniaria/elements/text-field';
+
+  document.querySelector('#email').addEventListener('valuechange', (event) => {
+    console.log(event.detail);
+  });
+</script>
+```
+
+The element takes the input's current text as its default: the markup's
+`value`, or what the user typed before the script loaded.
+
+</Tab>
+</Tabs>
+
+Without `value`, the field is uncontrolled: it keeps the typed text and
+reports each change. `defaultValue` (the `default-value` attribute) sets the
+text it starts with.
+
+### Multiple lines
+
+Render a `<textarea>` as the input part. Nothing else changes: there is no
+separate TextArea component, and Enter adds a line instead of submitting.
+
+```html
+<uni-text-field>
+  <label data-element="Label">Bio</label>
+  <textarea data-element="Input" name="bio" rows="3" maxlength="160"></textarea>
+</uni-text-field>
+```
+
+Native attributes such as `maxlength`, `pattern` or `rows` are yours and keep
+their native effects. Growing a textarea with its content isn't built in.
+
+### Prefixes and suffixes
+
+The `wrapper` part is the box around the input, where icons, units, a prefix
+or a clear button go. A press anywhere on it outside the input and outside any
+other control (a link, a button, a label) focuses the input, so the whole box
+behaves like the input. Hover and focus are written on every part, so the box
+can show the hover and focus styles.
+
+```html
+<uni-text-field>
+  <label data-element="Label">Website</label>
+  <div data-element="Wrapper">
+    <span aria-hidden="true">https://</span>
+    <input data-element="Input" name="website" />
+  </div>
+</uni-text-field>
+```
+
+### Controlled value
+
+Pass `value` and update it from `onValueChange`. You can change what the user
+typed, for example to upper case:
+
+<Tabs label="Controlled value">
+<Tab label="React">
+
+```tsx
+const [code, setCode] = useState('');
+const coupon = useComponent(textField, {
+  value: code,
+  onValueChange: (next) => setCode(next.toUpperCase()),
+});
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<script type="module">
+  const coupon = document.querySelector('#coupon');
+  coupon.value = ''; // setting the property makes it controlled
+  coupon.addEventListener('valuechange', (event) => {
+    coupon.value = event.detail.toUpperCase();
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+A controlled field keeps the typed text on screen while you answer, so a store
+that updates late loses no keystrokes and the caret stays put:
+
+- A new `value` that echoes what the field reported leaves the input alone.
+- Any other `value`, such as a transformed one or one set from elsewhere,
+  replaces the text at once, and the caret moves to the end.
+- Text you never accept goes back to your `value` when the input loses focus.
+- While an input method is composing text, a new `value` waits until the
+  composition ends.
+
+### In a form
+
+Put `name` on the input: the native input is what the form submits. On the
+form's `reset`, the field goes back to `defaultValue`, or without one to the
+value it started with, and reports it through `valueChange`. A controlled
+field reports it and keeps your value until you accept. A reset cancelled
+with `preventDefault()` before it reaches the form changes nothing.
+
+TextField doesn't validate. Set `isInvalid` from your own checks, for example
+when `focusChange` reports `false`, as the demo does. See
+[Forms](../guide/forms.md).
+
+## Anatomy
+
+| Part          | Element               | Notes                                                                                                                                                                                                                                                |
+| ------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any; usually `div`    | Optional. The outermost element, around the other parts. No role.                                                                                                                                                                                    |
+| `wrapper`     | any; usually `div`    | Optional. The box around the input and your prefix or suffix. No role. A press on it outside any control focuses the input.                                                                                                                          |
+| `label`       | `label` by default    | As [Field](./field.mdx)'s label.                                                                                                                                                                                                                     |
+| `input`       | `input` or `textarea` | UniAria writes Field's `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`, plus `disabled`, `readonly` and the `value` property. You own `name`, `type`, `placeholder`, `autocomplete` and the other native attributes. |
+| `description` | any                   | As Field's description.                                                                                                                                                                                                                              |
+| `error`       | any                   | As Field's error: hidden until `isInvalid`.                                                                                                                                                                                                          |
+
+Every part but the input is optional. The parts link as
+[Field's](./field.mdx#anatomy) do. Set `disabled` and `readonly` through the
+props, not on the input: UniAria writes those attributes and removes yours.
+
+## Props
+
+| Prop                     | Attribute                                                 | Type                 | Default   | Description                                                                                                      |
+| ------------------------ | --------------------------------------------------------- | -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `string`             | `''`      | The text. Changes come from `valueChange`.                                                                       |
+| `isDisabled`             | `disabled`                                                | `boolean`            | `false`   | Native `disabled` on the input. Marks every part and hides the error.                                            |
+| `isReadOnly`             | `readonly`                                                | `boolean`            | `false`   | Native `readonly`: the input stays focusable and selectable, but can't be edited.                                |
+| `isRequired`             | `required`                                                | `boolean`            | `false`   | `aria-required="true"` on the input, never the native `required`.                                                |
+| `isInvalid`              | `invalid`                                                 | `boolean`            | `false`   | `aria-invalid="true"` on the input. Shows, links and announces the error.                                        |
+| `inputId`                | — (read from the input's `id`)                            | `string`             | generated | The input's `id`, which the label's `for` points at.                                                             |
+| `labelElementType`       | — (read from the label's tag)                             | `string`             | `'label'` | The label's tag; `for` goes on a `label` only.                                                                   |
+| `labelledBy`             | `labelled-by`                                             | `string`             | —         | More ids for the input's `aria-labelledby`, after the label's.                                                   |
+| `describedBy`            | `described-by`                                            | `string`             | —         | More ids for the input's `aria-describedby`, after the description and the error.                                |
+| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance | —         | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly. |
+
+## Events
+
+| Event         | React prop      | Detail    | When                                                                                                                                                 |
+| ------------- | --------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valuechange` | `onValueChange` | `string`  | The user changed the text (every `input` event, input-method composition included), or a form reset asks for the default. Never for a value you set. |
+| `focuschange` | `onFocusChange` | `boolean` | The input gained or lost focus. A good moment to validate.                                                                                           |
+
+The custom element dispatches each event on itself, bubbling, with the value
+in `detail`. In React, the input's `onFocus`, `onBlur`, `onInput`,
+`onPointerEnter`, `onPointerLeave`, `onCompositionStart` and
+`onCompositionEnd` come from UniAria, and passing your own replaces them: use
+the events above instead. `onChange`, `onKeyDown` and the rest are yours.
+
+## State
+
+| Field            | Type      | Meaning                                                                                                     |
+| ---------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
+| `value`          | `string`  | The current value. When controlled, your `value`, even while the input shows text you haven't accepted yet. |
+| `isFocused`      | `boolean` | The input has focus.                                                                                        |
+| `isFocusVisible` | `boolean` | The input has focus from a keyboard or a screen reader. Typing after a click doesn't set it.                |
+| `isHovered`      | `boolean` | A mouse or pen is over the input (not the label or the wrapper's padding).                                  |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                                                      |
+| `isReadOnly`     | `boolean` | The `isReadOnly` prop.                                                                                      |
+| `isRequired`     | `boolean` | The `isRequired` prop.                                                                                      |
+| `isInvalid`      | `boolean` | The `isInvalid` prop.                                                                                       |
+| `isErrorShown`   | `boolean` | The error is shown: invalid and not disabled.                                                               |
+
+Typing, hovering and focusing never render your component again. To render
+something from state in React, select it:
+
+```tsx
+const isFocused = useComponentState(email, (state) => state.isFocused);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                                          | When                                                    |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| `class="uni-text-field"`                           | On the root, always.                                    |
+| `data-scope="text-field"`, `data-element="<Part>"` | On every other part, always.                            |
+| `data-hovered`                                     | A mouse or pen is over the input.                       |
+| `data-focused`                                     | The input has focus.                                    |
+| `data-focus-visible`                               | The input has focus from a keyboard or a screen reader. |
+| `data-disabled`                                    | The field is disabled.                                  |
+| `data-readonly`                                    | The field is read-only.                                 |
+| `data-invalid`                                     | The field is invalid.                                   |
+| `data-required`                                    | The field is required.                                  |
+
+Every state attribute goes on every part, so the box, the label and the
+messages can follow the input: draw the focus ring on the wrapper with
+`[data-focused]`, color the label with `[data-invalid]`. The error part also
+gets `hidden` while it isn't shown. TextField sets no inline styles.
+
+## Keyboard
+
+TextField handles no keys; the input keeps its native editing.
+
+| Key    | Behavior                                                                            |
+| ------ | ----------------------------------------------------------------------------------- |
+| Enter  | In an `<input>`, submits its form, natively. In a `<textarea>`, adds a line.        |
+| Escape | Not handled: it reaches your handlers and closes a dialog around the field.         |
+| Tab    | Moves focus normally. A disabled input leaves the Tab order; a read-only one stays. |
+
+## Accessibility
+
+- **Spoken output.** A field labelled "Email" reads "textbox, Email" when
+  empty, "textbox, Email, jane@example.com" with a value, "textbox, Email,
+  jane@example.com, read only" while read-only and "textbox, Email, disabled"
+  while disabled. A `<textarea>` is a textbox too; `type="search"` reads
+  "searchbox". The description, the error and the required and invalid
+  states follow, as in [Field](./field.mdx#accessibility).
+- **Labels.** A placeholder isn't a label: always render the label part, or
+  pass `labelledBy`.
+- **Errors.** Setting `isInvalid` shows the error and announces it, as Field
+  does. Don't add `role="alert"` to the error part.
+- **Read-only or disabled.** A read-only input stays in the Tab order and is
+  read with its value. A disabled one leaves it, so prefer read-only for a
+  value the user should still be able to find and copy.
+- **Tooltips.** A [Tooltip](./tooltip.mdx) linked through `tooltip` describes
+  the input, and typing closes it.
+
+## Compared with other libraries
+
+- **Controlled typing is buffered.** React and React Aria put a refused value
+  back right after the keystroke. TextField keeps the typed text until the
+  input loses focus, so an echo that arrives late doesn't move the caret or
+  drop keystrokes. A transformed value still replaces the text at once.
+- **One component for both elements.** As in React Aria, a `<textarea>` is a
+  TextField; there is no `elementType` to set.
+- **The box focuses the input.** A press on the wrapper outside any control
+  focuses the input. React Aria has no such part.
+- **No native validation.** There is no `validate` or
+  `validationBehavior="native"`: pass `isInvalid`. Native attributes such as
+  `pattern` still work if you use the browser's validation yourself.
+- **Form reset** goes back to the value the field started with, as in React
+  Aria.

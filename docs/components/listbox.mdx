@@ -1,0 +1,598 @@
+---
+title: Listbox
+description: A list of options to select one or several from, with keyboard navigation, typeahead, groups and optional virtualization.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/listbox.css?raw';
+import html from './demos/listbox.html?raw';
+import javascript from './demos/listbox.js?raw';
+
+A listbox shows a list of options and lets the user select one, or several in
+multiple mode. There is no native element underneath: `<select size>` can't
+hold styled options, groups with headings or descriptions. The list gets
+`role="listbox"` and each option `role="option"`; UniAria moves focus between
+the options and handles the arrows, Home and End, the page keys, typeahead,
+and ranges in multiple mode.
+
+Options are data: each item has a key, and you render one element per item.
+[Select](./select.mdx) and [Combobox](./combobox.mdx) use the same Listbox for
+their popup, so everything on this page about items, keys and option markup
+applies to them too. [Collections](../guide/collections.md) covers keys,
+selection, typeahead and virtualization across all three.
+
+It follows the WAI-ARIA [Listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/).
+
+<Preview
+  title="Listboxes"
+  scripts={['/demo/listbox.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { listbox } from '@uniaria/core/listbox';
+import { useComponent } from '@uniaria/react';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry', isDisabled: true },
+];
+
+export function FruitList(props: { onChange(keys: readonly string[]): void }) {
+  const fruit = useComponent(listbox, {
+    items: fruits,
+    defaultValue: ['banana'],
+    onValueChange: props.onChange,
+  });
+  return (
+    <div {...fruit.parts.root}>
+      <span {...fruit.parts.label}>Fruit</span>
+      <ul {...fruit.parts.list}>
+        {fruits.map((item) => (
+          <li key={item.key} {...fruit.getItemProps('option', item.key)}>
+            {item.textValue}
+          </li>
+        ))}
+      </ul>
+      <p {...fruit.parts.empty}>No fruit</p>
+    </div>
+  );
+}
+```
+
+`getItemProps(part, key)` returns the props of one item part. Moving focus or
+changing the selection later doesn't render the list again: UniAria writes the
+change to the option elements.
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-listbox id="fruit" disabled-keys='["cherry"]'>
+  <span data-element="Label">Fruit</span>
+  <div data-element="List">
+    <div data-element="Option" data-key="apple">Apple</div>
+    <div data-element="Option" data-key="banana">Banana</div>
+    <div data-element="Option" data-key="cherry">Cherry</div>
+  </div>
+  <p data-element="Empty">No fruit</p>
+</uni-listbox>
+
+<script type="module">
+  import '@uniaria/elements/listbox';
+
+  const fruit = document.querySelector('#fruit');
+  fruit.defaultValue = ['banana'];
+  fruit.addEventListener('valuechange', (event) => {
+    console.log('Selected', event.detail);
+  });
+</script>
+```
+
+The element reads its items from the markup (see below). `value` and
+`defaultValue` are arrays, so they are properties with no attribute.
+
+</Tab>
+</Tabs>
+
+### Items and keys
+
+`items` is an array in display order. Every item needs a key, a string that is
+unique in the list; `value` is a list of those keys, in the order they were
+selected. Without accessors, an item is read as
+`{ key, textValue, isDisabled?, items? }`. For other data, pass accessors
+instead of copying it:
+
+```tsx
+const people = useComponent(listbox, {
+  items: users,
+  getKey: (user: User) => user.id,
+  getTextValue: (user: User) => user.name,
+  isItemDisabled: (user: User) => !user.isActive,
+});
+```
+
+`getTextValue` is what typeahead matches, so give every option one.
+`disabledKeys` disables options by key, besides `isItemDisabled`. A key in
+`value` with no item stays selected, so a value can arrive before its items.
+
+### Items from markup
+
+Without an `items` property, `<uni-listbox>` reads its items from the markup:
+
+- Every `option` part, in document order, is an item. Its key is its
+  `data-key`, and its text is its `data-text-value`, else its own text with
+  whitespace collapsed.
+- Every `group` part is a section holding the options inside it.
+- `disabled-keys` (a JSON array) disables options.
+
+The element reads them again when you add or remove options or change a
+`data-key`, so the markup can come from a server template or a framework's
+loop. Setting the `items` property takes over from the markup; each item still
+needs an option element with its `data-key`.
+
+Every item part carries a `data-key`: the option's key on `option`,
+`optionLabel` and `optionDescription`, the group's key on `group` and
+`groupLabel`. A part without one, or with a key used twice, is left alone.
+
+### Groups
+
+An item with children is a section, rendered as a `group` whose first child is
+its `groupLabel`. Its options are the section's children. Groups don't nest.
+
+<Tabs label="Groups">
+<Tab label="React">
+
+```tsx
+const produce = [
+  { key: 'apple', textValue: 'Apple' },
+  {
+    key: 'citrus',
+    textValue: 'Citrus',
+    items: [
+      { key: 'lemon', textValue: 'Lemon' },
+      { key: 'lime', textValue: 'Lime' },
+    ],
+  },
+];
+
+const fruit = useComponent(listbox, { items: produce });
+return (
+  <div {...fruit.parts.list}>
+    {produce.map((item) =>
+      item.items ? (
+        <div key={item.key} {...fruit.getItemProps('group', item.key)}>
+          <span {...fruit.getItemProps('groupLabel', item.key)}>
+            {item.textValue}
+          </span>
+          {item.items.map((child) => (
+            <div key={child.key} {...fruit.getItemProps('option', child.key)}>
+              {child.textValue}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div key={item.key} {...fruit.getItemProps('option', item.key)}>
+          {item.textValue}
+        </div>
+      ),
+    )}
+  </div>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<div data-element="List">
+  <div data-element="Option" data-key="apple">Apple</div>
+  <div data-element="Group" data-key="citrus">
+    <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+    <div data-element="Option" data-key="lemon">Lemon</div>
+    <div data-element="Option" data-key="lime">Lime</div>
+  </div>
+</div>
+```
+
+</Tab>
+</Tabs>
+
+Use `div`s for groups: a `ul` inside a `ul` needs `role="presentation"` on the
+inner list. A listbox may only contain options and groups, so a separator
+between groups is a border in your CSS.
+
+### Labels and descriptions in options
+
+An option is named by its text. Render an `optionLabel` part inside it to name
+it by that part alone, and an `optionDescription` part to describe it, so
+badges and secondary text stay out of the name:
+
+```html
+<div data-element="Option" data-key="lemon" data-text-value="Lemon">
+  <span data-element="OptionLabel" data-key="lemon">Lemon</span>
+  <span data-element="OptionDescription" data-key="lemon">Sour, yellow</span>
+</div>
+```
+
+In markup, give such an option a `data-text-value`; its own text would include
+the description. Options can't hold buttons, links or other controls: that is
+a grid, not a listbox.
+
+### Multiple selection
+
+With `selectionMode: 'multiple'` (`selection-mode="multiple"`), a press, Enter
+or Space toggles an option, and no key needs a modifier. Shift with a press,
+Space, an arrow or a page key selects a range from the option selected last,
+and Ctrl+A (Cmd+A on Apple platforms) selects every enabled option. `value`
+keeps the order of selection; a range adds its options in list order.
+
+### Controlled value
+
+<Tabs label="Controlled value">
+<Tab label="React">
+
+```tsx
+const [value, setValue] = useState<readonly string[]>([]);
+const fruit = useComponent(listbox, {
+  items: fruits,
+  selectionMode: 'multiple',
+  value,
+  onValueChange: setValue,
+});
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+const fruit = document.querySelector('#fruit');
+fruit.value = [];
+fruit.addEventListener('valuechange', (event) => {
+  // Accept the change, or set something else.
+  fruit.value = event.detail;
+});
+```
+
+Setting the `value` property makes the element controlled: it reports
+`valuechange` and waits for you to set the new value. Set `defaultValue`
+instead to let it keep its own.
+
+</Tab>
+</Tabs>
+
+### Virtualization
+
+A list of thousands of options can render only the ones in and near the view.
+Pass `virtualizer` from `@uniaria/core/virtual`, wrap the list in a `scroller`
+part that has a height and `overflow: auto`, and render the keys in the
+`renderedKeys` state instead of every item. UniAria positions the rows, keeps
+the focused option rendered, and scrolls to options outside the view when the
+keyboard or typeahead moves there. Lists that don't virtualize never load
+`@uniaria/core/virtual`.
+
+<Tabs label="Virtualization">
+<Tab label="React">
+
+```tsx
+import { listbox } from '@uniaria/core/listbox';
+import { virtualizer } from '@uniaria/core/virtual';
+import type { ComponentHandle } from '@uniaria/react';
+import { useComponent, useComponentState } from '@uniaria/react';
+
+export function UserList({ users }: { users: readonly User[] }) {
+  const list = useComponent(listbox, {
+    items: users,
+    getKey: (user: User) => user.id,
+    getTextValue: (user: User) => user.name,
+    virtualizer,
+    itemSize: 32,
+  });
+  return (
+    <div {...list.parts.root}>
+      <span {...list.parts.label}>Users</span>
+      <div {...list.parts.scroller} className="scroller">
+        <div {...list.parts.list}>
+          <UserRows list={list} users={users} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The rows render again when the rendered set changes; the list doesn't.
+function UserRows(props: {
+  list: ComponentHandle<typeof listbox>;
+  users: readonly User[];
+}) {
+  const keys = useComponentState(props.list, (state) => state.renderedKeys);
+  const byId = new Map(props.users.map((user) => [user.id, user]));
+  return keys.map((key) => (
+    <div key={key} {...props.list.getItemProps('option', key)}>
+      {byId.get(key)!.name}
+    </div>
+  ));
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-listbox id="users" item-size="32">
+  <span data-element="Label">Users</span>
+  <div data-element="Scroller" class="scroller">
+    <div data-element="List"></div>
+  </div>
+</uni-listbox>
+
+<script type="module">
+  import '@uniaria/elements/listbox';
+  import { virtualizer } from '@uniaria/core/virtual';
+  import { users } from './users.js'; // [{ id, name }, …]
+
+  const byId = new Map(users.map((user) => [user.id, user]));
+  const element = document.querySelector('#users');
+  const list = element.querySelector('[data-element="List"]');
+  const rows = new Map();
+
+  // Rows that stay aren't moved, so the focused one keeps focus.
+  function render(keys) {
+    const wanted = new Set(keys);
+    for (const [key, row] of rows) {
+      if (wanted.has(key)) continue;
+      row.remove();
+      rows.delete(key);
+    }
+    let next = list.firstElementChild;
+    for (const key of keys) {
+      let row = rows.get(key);
+      if (!row) {
+        row = document.createElement('div');
+        row.dataset.part = 'option';
+        row.dataset.key = key;
+        row.textContent = byId.get(key).name;
+        rows.set(key, row);
+      }
+      if (row === next) next = next.nextElementSibling;
+      else list.insertBefore(row, next);
+    }
+  }
+
+  element.addEventListener('renderedkeyschange', (event) => {
+    render(event.detail.keys);
+  });
+  element.virtualizer = virtualizer;
+  element.items = users.map((user) => ({ key: user.id, textValue: user.name }));
+</script>
+```
+
+The markup can't hold every item, so a virtualized element needs the `items`
+property. Render the rows synchronously in the `renderedkeyschange` listener,
+so an option the keyboard moves to exists before the next paint.
+
+</Tab>
+</Tabs>
+
+- **Sizes.** `itemSize` is every row's exact size in pixels, or a function of
+  the key. Without it, or with `shouldMeasureItems`, rows are measured as they
+  render. Gaps between rows belong in the size: rows are absolutely
+  positioned, so margins and the list's `gap` don't apply.
+- **Width.** Positioned rows have no width of their own: give options
+  `inset-inline-end: 0` or `inline-size: 100%`, and the list a width from its
+  container.
+- **Groups.** `renderedSections` lists the groups to render. Render each with
+  its `groupLabel` and the options of `renderedKeys` that belong to it. A
+  section's label row is `itemSize` long too.
+- **Before layout.** Until the scroller has a size (on the server, or in a
+  closed popover), the first `initialItemCount` options render.
+
+## Anatomy
+
+| Part          | Element                                                   | Notes                                                                                                                                                   |
+| ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any, usually `div`                                        | Optional wrapper around the label, list and messages.                                                                                                   |
+| `label`       | `span` by default; any element through `labelElementType` | Optional. Names the list through `aria-labelledby`. Not a `<label>`: a listbox isn't labelable.                                                         |
+| `scroller`    | any, usually `div`                                        | Only when virtualized: the box that scrolls, around the list. Give it a height or a max height and `overflow: auto`.                                    |
+| `list`        | any, usually `ul` or `div`                                | Holds the options and groups. Always rendered, even when empty.                                                                                         |
+| `description` | any                                                       | Optional. Describes the list.                                                                                                                           |
+| `error`       | any                                                       | Optional. Shown and announced while `isInvalid`; hidden otherwise.                                                                                      |
+| `empty`       | any, outside the list                                     | Optional. Your "No items" text. UniAria hides it while there are options, and while there are none it describes the list. A listbox can't contain text. |
+
+Item parts repeat once per item and are keyed by the item's key: in React you
+pass it to `getItemProps(part, key)`, on the element each part carries it as
+`data-key`.
+
+| Part                | Element                    | Notes                                                                                |
+| ------------------- | -------------------------- | ------------------------------------------------------------------------------------ |
+| `option`            | any, usually `li` or `div` | One per item that isn't a section. Named by its text, or by its `optionLabel`.       |
+| `optionLabel`       | any, inside the option     | Optional. Names the option instead of its whole text.                                |
+| `optionDescription` | any, inside the option     | Optional. Describes the option.                                                      |
+| `group`             | any, usually `div`         | One per section. Holds its label and its options.                                    |
+| `groupLabel`        | any, first in the group    | Names the group. Gets `role="presentation"`, since a listbox can't contain headings. |
+
+You own the content, your classes and other attributes. UniAria writes roles,
+ids, `tabindex`, the ARIA states and the state attributes, and option ids are
+made from the list's id and the key (`<list id>-option-<key>`).
+
+## Props
+
+| Prop                     | Attribute               | Type                                     | Default                    | Description                                                                                                                         |
+| ------------------------ | ----------------------- | ---------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `items`                  | — (property, or markup) | `readonly Item[]`                        | `[]`                       | The options and sections, in order. The element reads them from its markup while the property is unset.                             |
+| `getKey`                 | — (function)            | `(item) => string`                       | `item.key`                 | The item's key, unique in the list.                                                                                                 |
+| `getTextValue`           | — (function)            | `(item) => string`                       | `item.textValue`           | The text typeahead matches.                                                                                                         |
+| `isItemDisabled`         | — (function)            | `(item) => boolean`                      | `item.isDisabled === true` | Disables an option: it can't be focused or selected, and the keys skip it.                                                          |
+| `getChildren`            | — (function)            | `(item) => readonly Item[] \| undefined` | `item.items`               | A section's options. An item with children is a section.                                                                            |
+| `disabledKeys`           | `disabled-keys` (JSON)  | `readonly string[]`                      | `[]`                       | More disabled options, by key.                                                                                                      |
+| `value` / `defaultValue` | — (properties)          | `readonly string[]`                      | `[]`                       | The selected keys, in the order they were selected; at most one in single mode. Changes are reported by `valuechange`.              |
+| `selectionMode`          | `selection-mode`        | `'single' \| 'multiple'`                 | `'single'`                 | Multiple mode toggles options and adds ranges.                                                                                      |
+| `isDisabled`             | `disabled`              | `boolean`                                | `false`                    | Disables the list and every option. Nothing takes focus.                                                                            |
+| `isReadOnly`             | `readonly`              | `boolean`                                | `false`                    | Focus moves, but nothing is selected and no `action` is reported.                                                                   |
+| `isRequired`             | `required`              | `boolean`                                | `false`                    | `aria-required` on the list. A listbox has no native form value; read `value` in your form.                                         |
+| `isInvalid`              | `invalid`               | `boolean`                                | `false`                    | `aria-invalid` on the list, and shows the `error` part.                                                                             |
+| `orientation`            | `orientation`           | `'vertical' \| 'horizontal'`             | `'vertical'`               | Which arrow keys move focus.                                                                                                        |
+| `shouldFocusWrap`        | `focus-wrap`            | `boolean`                                | `false`                    | The arrows wrap from the last option to the first and back. Home, End and the page keys never wrap.                                 |
+| `shouldFocusOnHover`     | `focus-on-hover`        | `boolean`                                | `false`                    | A hovering mouse focuses the option, unless the keyboard is in use. Select turns it on.                                             |
+| `shouldUseVirtualFocus`  | — (property)            | `boolean`                                | `false`                    | For a component that keeps focus in its own input, as Combobox does: options take no focus, and `data-focused` follows a highlight. |
+| `listId`                 | — (the list's `id`)     | `string`                                 | generated                  | The list's id. Option ids are made from it.                                                                                         |
+| `labelElementType`       | — (the label's tag)     | `string`                                 | `'span'`                   | The tag you render as the label.                                                                                                    |
+| `labelledBy`             | `labelled-by`           | `string`                                 | —                          | Ids of more elements that name the list.                                                                                            |
+| `describedBy`            | `described-by`          | `string`                                 | —                          | Ids of more elements that describe the list.                                                                                        |
+| `virtualizer`            | — (property)            | `Virtualizer`                            | —                          | `virtualizer` from `@uniaria/core/virtual`. Set, the list virtualizes.                                                              |
+| `itemSize`               | `item-size` (a number)  | `number \| ((key: string) => number)`    | —                          | A row's size along the list in pixels: an option's, or a section's label row. Unset, rows are measured, estimated at 32.            |
+| `shouldMeasureItems`     | `measure-items`         | `boolean`                                | `false`                    | Treats `itemSize` as an estimate and measures each rendered row.                                                                    |
+| `overscan`               | `overscan`              | `number`                                 | `10`                       | Options rendered beyond each edge of the view.                                                                                      |
+| `initialItemCount`       | `initial-item-count`    | `number`                                 | `20`                       | Options rendered before the scroller has a size.                                                                                    |
+
+Development builds warn when the list has no name: no `label` part, no
+`labelledBy` and no `aria-label` on the list.
+
+## Events
+
+| Event                | React prop             | Detail                                                     | When                                                                                                                                        |
+| -------------------- | ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `valuechange`        | `onValueChange`        | `readonly string[]`                                        | The user changed the selection: a press, Enter, Space, a range or Ctrl+A. Never for a value you set.                                        |
+| `action`             | `onAction`             | `string`                                                   | The user chose an option with a press, Enter or Space, after any `valuechange`, also when the selection didn't change. Not while read-only. |
+| `focuschange`        | `onFocusChange`        | `boolean`                                                  | Focus entered or left the list, for validating on blur.                                                                                     |
+| `renderedkeyschange` | `onRenderedKeysChange` | `{ keys: readonly string[]; sections: readonly string[] }` | The set of options to render changed. Only virtualized lists need it.                                                                       |
+
+The element dispatches each event on itself, bubbling, with the detail in
+`event.detail`.
+
+## State
+
+| Field              | Type                     | Meaning                                                                |
+| ------------------ | ------------------------ | ---------------------------------------------------------------------- |
+| `value`            | `readonly string[]`      | The selected keys.                                                     |
+| `selectionMode`    | `'single' \| 'multiple'` | The `selectionMode` prop.                                              |
+| `focusedKey`       | `string \| null`         | The option with focus, or the one the list focuses next on Tab.        |
+| `isEmpty`          | `boolean`                | The list has no options. Groups don't count.                           |
+| `isDisabled`       | `boolean`                | The `isDisabled` prop.                                                 |
+| `isReadOnly`       | `boolean`                | The `isReadOnly` prop.                                                 |
+| `isRequired`       | `boolean`                | The `isRequired` prop.                                                 |
+| `isInvalid`        | `boolean`                | The `isInvalid` prop.                                                  |
+| `isErrorShown`     | `boolean`                | The `error` part is shown: invalid and not disabled.                   |
+| `isFocusWithin`    | `boolean`                | Focus is on the list or an option.                                     |
+| `isFocusVisible`   | `boolean`                | That focus came from the keyboard.                                     |
+| `isVirtualized`    | `boolean`                | A `virtualizer` is set.                                                |
+| `renderedKeys`     | `readonly string[]`      | The options to render, in list order: every option unless virtualized. |
+| `renderedSections` | `readonly string[]`      | The sections whose groups to render: those holding a rendered option.  |
+
+To show something from state in React, select it. Per option, select what that
+option needs, and the component renders again only when that value changes:
+
+```tsx
+const isBananaSelected = useComponentState(fruit, (state) =>
+  state.value.includes('banana'),
+);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                              | On                   | When                                                           |
+| -------------------------------------- | -------------------- | -------------------------------------------------------------- |
+| `class="uni-listbox"`                  | root                 | Always.                                                        |
+| `data-scope="listbox"`, `data-element` | every other part     | Always.                                                        |
+| `data-selected`                        | option               | The option is selected.                                        |
+| `data-focused`                         | option               | The option has focus.                                          |
+| `data-focus-visible`                   | option, named parts  | The option, or the list, has focus from the keyboard.          |
+| `data-focus-within`                    | named parts          | Focus is on the list or an option.                             |
+| `data-hovered`                         | option               | A mouse or pen is over an enabled option.                      |
+| `data-pressed`                         | option               | The option is being pressed.                                   |
+| `data-disabled`                        | named and item parts | On an option: the option is disabled. Everywhere: the list is. |
+| `data-readonly`                        | named and item parts | The list is read-only.                                         |
+| `data-required`, `data-invalid`        | named parts          | The list is required, or invalid.                              |
+| `data-multiple`                        | named parts          | Multiple mode, for checkbox-like options.                      |
+| `data-orientation`                     | named parts          | `vertical` or `horizontal`. Always present.                    |
+| `data-empty`                           | named parts          | The list has no options.                                       |
+| `data-virtualized`                     | root, list, scroller | A `virtualizer` is set.                                        |
+
+"Named parts" are `root`, `label`, `list`, `description`, `error` and `empty`;
+the scroller gets only `data-virtualized`. State attributes are present or
+absent, never `"false"`. Listbox writes no CSS custom properties.
+
+UniAria sets `hidden` on the `empty` part while there are options. While
+virtualized it also writes inline styles: `position: relative` and the total
+length on the list, `position: absolute` and a `translate` on each option and
+group, and `overflow-anchor: none` on the scroller. `translate` leaves
+`transform` free for your own effects.
+
+## Keyboard
+
+Keys act on the focused option. In a horizontal list, ArrowLeft and ArrowRight
+take the place of ArrowUp and ArrowDown, swapped in right-to-left text.
+
+| Key                                       | Behavior                                                                                                                                |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab                            | The list is one tab stop. It enters at the option focused last; before that, at the first selected option, else the first enabled one.  |
+| ArrowDown, ArrowUp                        | Focuses the next or previous enabled option, across groups. Stops at the ends unless `shouldFocusWrap`.                                 |
+| Home, End                                 | Focuses the first or last enabled option.                                                                                               |
+| PageDown, PageUp                          | Focuses the option one visible height further down or up; without scrolling, the last or first option.                                  |
+| Space, Enter                              | Selects the focused option (single mode) or toggles it (multiple mode). Space joins a typeahead query typed in the last second instead. |
+| Printable characters                      | Typeahead: focuses the next enabled option whose text starts with what was typed in the last second. Selects nothing.                   |
+| Shift+ArrowDown, Shift+ArrowUp            | Multiple mode: moves focus and selects from the option selected last to the new one.                                                    |
+| Shift+Space, Shift+PageDown, Shift+PageUp | Multiple mode: selects a range from the option selected last, as above.                                                                 |
+| Ctrl+Shift+Home, Ctrl+Shift+End           | Multiple mode: selects a range to the first or last option and focuses it. Cmd instead of Ctrl on Apple platforms.                      |
+| Ctrl+A                                    | Multiple mode: selects every enabled option. Cmd+A on Apple platforms. Never deselects.                                                 |
+| Escape                                    | Not handled, so it reaches a popover or dialog around the list.                                                                         |
+
+Moving focus never changes the selection. Keys the list doesn't use, and keys
+with Alt, Ctrl or Meta that it doesn't name, stay with the browser.
+
+## Accessibility
+
+- **Focus.** DOM focus moves to the option itself (a roving `tabindex`), so
+  `:focus-visible` works and mobile screen readers follow it. After a key the
+  option scrolls into view; after a pointer press nothing scrolls. When the
+  focused option is removed or disabled, focus moves to the next enabled
+  option, else the previous one, else the list.
+- **A name.** Render a `label` part, pass `labelledBy`, or put an
+  `aria-label` on the list. The label names the list with `aria-labelledby`;
+  clicking it doesn't focus the list.
+- **Spoken output.** The list reads as "listbox, Fruit, orientated
+  vertically", with "multi-selectable" in multiple mode. An option reads as
+  "option, Apple, not selected": UniAria writes `aria-selected="false"` on
+  every unselected option, as the APG asks. A group reads as "group, Citrus".
+- **Empty lists.** While the list has no options it takes the tab stop and the
+  `empty` part describes it: "listbox, Fruit, No fruit".
+- **Selection follows the user, not focus.** Arrowing through a list never
+  selects, so a selection with side effects only happens when the user asks.
+- **Multiple mode** uses `aria-selected`, as React Aria and Zag do. The APG
+  suggests `aria-checked`, but browsers still expose a selected state with it,
+  so options would read "not selected, checked".
+- **Virtualized lists** write `aria-posinset` and `aria-setsize` on each
+  option, so screen readers count the whole list rather than the rendered
+  rows. Options outside the rendered set can't be reached in browse mode or
+  found with the browser's find in page.
+
+## Compared with other libraries
+
+- **The value is an array of keys** in both modes, as in Zag. React Aria uses a
+  `Set` or `'all'`; UniAria has no `'all'`, and Ctrl+A selects every enabled
+  key.
+- **Choosing the selected option again** keeps it selected in single mode, as
+  `<select>` does, and still reports `action`. React Aria deselects it.
+- **Escape is left alone.** React Aria clears the selection on the first
+  Escape; here it closes the popover or dialog around the list at once.
+- **A press selects on release**, for every pointer, as Cube UI Kit does.
+  React Aria selects a mouse press on `mousedown`.
+- **The empty state** is an `empty` part that describes the list, not an
+  option standing in for one.
+- **Typeahead** keeps its query for a second, even after a key that matches
+  nothing, as `<select>` does in Chromium and Firefox. React Aria starts over
+  after a miss.
+- **Shift+Arrow** selects a range, as the APG's own example, React Aria and
+  `<select multiple>` do. The APG's text describes toggling the next option.

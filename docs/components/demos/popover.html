@@ -1,0 +1,23 @@
+<output id="log">Open one, then press Escape or click elsewhere.</output>
+<div class="row">
+  <uni-popover non-modal>
+    <button data-element="Trigger">Share</button>
+    <div class="uni-popover">
+      <div data-element="Arrow"></div>
+      <p>Anyone with the link can view.</p>
+      <button class="copy">Copy link</button>
+    </div>
+  </uni-popover>
+  <uni-popover position-area="bottom span-right">
+    <button data-element="Trigger">Size</button>
+    <div class="uni-popover">
+      <div data-element="Arrow"></div>
+      <h3 data-element="Title">Image size</h3>
+      <div class="fields">
+        <label>Width <input type="number" value="1280" /></label>
+        <label>Height <input type="number" value="720" /></label>
+      </div>
+      <button data-element="Close">Apply</button>
+    </div>
+  </uni-popover>
+</div>

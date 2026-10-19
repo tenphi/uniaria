@@ -1,0 +1,56 @@
+---
+title: Components
+description: Every UniAria component, the WAI-ARIA pattern it follows, and its entry points.
+sidebar:
+  label: Overview
+---
+
+Each component is one definition in `@uniaria/core/<name>`, rendered in React
+with `useComponent` and registered as a custom element by
+`@uniaria/elements/<name>`. Every page has a live demo running the custom
+element, the React and HTML usage, and the full reference.
+
+## Buttons
+
+| Component                           | What it does                                    | Pattern                                                             | Element               |
+| ----------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------- | --------------------- |
+| [Button](./button.mdx)              | Runs an action, or follows a link in link mode. | [Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)          | `<uni-button>`        |
+| [ToggleButton](./toggle-button.mdx) | A button that stays on or off.                  | [Button](https://www.w3.org/WAI/ARIA/apg/patterns/button/) (toggle) | `<uni-toggle-button>` |
+
+## Forms
+
+| Component                             | What it does                                             | Pattern                                                                                     | Element                            |
+| ------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------- |
+| [Field](./field.mdx)                  | Label, description and error for any control.            | [Names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/) | `<uni-field>`                      |
+| [TextField](./text-field.mdx)         | A text input or text area with its field.                | None needed: a native `<input>` or `<textarea>`                                             | `<uni-text-field>`                 |
+| [NumberField](./number-field.mdx)     | A locale-aware number input with stepper buttons.        | [Spinbutton](https://www.w3.org/WAI/ARIA/apg/patterns/spinbutton/)                          | `<uni-number-field>`               |
+| [Checkbox](./checkbox.mdx)            | A checkbox, with an indeterminate state.                 | [Checkbox](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/)                              | `<uni-checkbox>`                   |
+| [CheckboxGroup](./checkbox-group.mdx) | A labelled group of checkboxes with one array value.     | [Checkbox](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/)                              | `<uni-checkbox-group>`             |
+| [Switch](./switch.mdx)                | An on/off switch.                                        | [Switch](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)                                  | `<uni-switch>`                     |
+| [RadioGroup](./radio-group.mdx)       | Radios where one is selected, with arrow-key navigation. | [Radio group](https://www.w3.org/WAI/ARIA/apg/patterns/radio/)                              | `<uni-radio-group>`, `<uni-radio>` |
+
+## Overlays
+
+| Component                | What it does                                                             | Pattern                                                                                                                                         | Element         |
+| ------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| [Dialog](./dialog.mdx)   | A modal `<dialog>` or alert dialog, with focus management and dismissal. | [Dialog (modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/), [Alert dialog](https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/) | `<uni-dialog>`  |
+| [Popover](./popover.mdx) | A positioned panel opened from a trigger, in the top layer.              | [Disclosure](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) trigger, dialog content                                                      | `<uni-popover>` |
+| [Tooltip](./tooltip.mdx) | A short description shown on hover and keyboard focus.                   | [Tooltip](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/)                                                                                    | `<uni-tooltip>` |
+
+## Collections
+
+| Component                  | What it does                                                             | Pattern                                                                                                  | Element          |
+| -------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------- |
+| [Listbox](./listbox.mdx)   | A list of options, single or multiple selection, optionally virtualized. | [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)                                             | `<uni-listbox>`  |
+| [Select](./select.mdx)     | A button that opens a listbox to pick a value.                           | [Select-only combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/) | `<uni-select>`   |
+| [Combobox](./combobox.mdx) | A text input that filters a listbox of suggestions.                      | [Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) with list autocomplete                    | `<uni-combobox>` |
+
+## Shared behavior
+
+- [Styling](../guide/styling.md): the parts and state attributes every
+  component writes.
+- [State](../guide/state.md): controlled values, events and selectors.
+- [Composition](../guide/composition.md): groups, radios and tooltips.
+- [Forms](../guide/forms.md), [Overlays](../guide/overlays.md) and
+  [Collections](../guide/collections.md): what the components in each family
+  share.

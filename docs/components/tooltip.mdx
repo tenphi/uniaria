@@ -1,0 +1,435 @@
+---
+title: Tooltip
+description: A short description of a control, shown on hover and keyboard focus, linked to a UniAria component or to any focusable element.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/tooltip.css?raw';
+import html from './demos/tooltip.html?raw';
+
+A tooltip is a short text that describes a control. It shows when the pointer
+rests on the control and when the control takes keyboard focus. UniAria shows
+it in the top layer as a manual popover (`popover="manual"`) and places it next
+to its trigger as [Popover](./popover.mdx) does. The tooltip never takes focus
+and holds no interactive content. One tooltip shows at a time, and once one
+has shown, the next opens without waiting.
+
+It follows the WAI-ARIA [Tooltip pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/),
+which the APG still marks as a work in progress: `role="tooltip"`, a reference
+from the trigger, Escape to dismiss, and focus that stays on the trigger.
+[Overlays](../guide/overlays.md) covers the top layer and the positioning
+modes it shares with Popover.
+
+<Preview
+  title="Tooltips on a toolbar"
+  scripts={['/demo/tooltip.js']}
+  html={html}
+  css={css}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/react';
+
+export function SaveButton(props: { onSave(): void }) {
+  const hint = useComponent(tooltip, {});
+  const save = useComponent(button, {
+    onPress: props.onSave,
+    tooltip: hint.instance,
+  });
+  return (
+    <>
+      <button {...save.parts.root}>Save</button>
+      <div {...hint.parts.root}>
+        Saves the file
+        <div {...hint.parts.arrow} />
+      </div>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip>
+  <uni-button>
+    <button class="uni-button">Save</button>
+  </uni-button>
+  <div class="uni-tooltip">
+    Saves the file
+    <div data-element="Arrow"></div>
+  </div>
+</uni-tooltip>
+
+<script type="module">
+  import '@uniaria/elements/button';
+  import '@uniaria/elements/tooltip';
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Render the root always, next to its trigger: it stays hidden while closed. In
+a modal [Dialog](./dialog.mdx) or a modal Popover, render it inside their
+element, or the tooltip is inert or hidden from assistive technology.
+
+### How it links to its trigger
+
+A tooltip never writes to an element another component owns. Instead, the
+component it describes links to it. That component puts the tooltip's id in
+its focusable part's `aria-describedby` (so it is in the server HTML), lets
+the tooltip listen for hover on its visible part and for focus and presses on
+its focusable part, and is the tooltip's anchor.
+
+- **In React**, pass the tooltip's `instance` as the component's `tooltip`
+  prop, as above. The two can live in different components: pass the instance
+  down.
+- **On elements**, a UniAria element sitting directly in `<uni-tooltip>`
+  (with no other UniAria element between them) links itself. One elsewhere
+  names the tooltip by id with a `tooltip` attribute, looked up in its
+  document or shadow root.
+
+```html
+<uni-button tooltip="save-hint">
+  <button class="uni-button">Save</button>
+</uni-button>
+
+<uni-tooltip id="save-hint">
+  <div class="uni-tooltip">Saves the file</div>
+</uni-tooltip>
+```
+
+When the element sits inside `<uni-tooltip>`, define it first: import its
+entry before `@uniaria/elements/tooltip`. A `<uni-tooltip>` that upgrades
+around an element that isn't defined yet takes the parts of it that share a
+name with its own for itself, such as a Popover's `trigger`.
+
+| Component               | Hover counts on        | Focus, presses and the relation on |
+| ----------------------- | ---------------------- | ---------------------------------- |
+| Button, ToggleButton    | `root`                 | `root`                             |
+| Checkbox, Switch, Radio | `wrapper`, else `root` | `input`                            |
+| TextField, NumberField  | `input`                | `input`                            |
+| Dialog, Popover         | `trigger`              | `trigger`                          |
+
+A tooltip describes one component. A second component that links to it is
+refused, with a development warning.
+
+### On any other element
+
+Anything that isn't a UniAria component's part, such as a link or an icon,
+is the tooltip's `trigger` part. It gets the relation and nothing else.
+
+<Tabs label="Trigger part">
+<Tab label="React">
+
+```tsx
+const hint = useComponent(tooltip, {});
+return (
+  <>
+    <a {...hint.parts.trigger} href="/pricing">
+      Pricing
+    </a>
+    <div {...hint.parts.root}>Plans and billing</div>
+  </>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip>
+  <a data-element="Trigger" href="/pricing">Pricing</a>
+  <div class="uni-tooltip">Plans and billing</div>
+</uni-tooltip>
+```
+
+</Tab>
+</Tabs>
+
+Keyboard users need the trigger focusable; one that can't take focus, such as
+a truncated label, gets the tooltip on hover only. Don't make another
+component's part the trigger part: link that component instead.
+
+### Label or description
+
+`relation` decides what the tooltip is to its trigger:
+
+- `'description'`, the default: the trigger's `aria-describedby` references
+  the tooltip, and screen readers read it after the name: "button, Save,
+  Saves the file".
+- `'label'`: the trigger's `aria-labelledby` references it, and the tooltip
+  becomes the name. Use it for an icon-only button, whose name would otherwise
+  be repeated as its description: "button, Bold".
+
+The relation is there while the tooltip is closed, too: screen readers read a
+hidden element that `aria-describedby` or `aria-labelledby` references, so
+the text reaches users however they get to the trigger. `isDisabled` takes it
+off.
+
+<Tabs label="Label or description">
+<Tab label="React">
+
+```tsx
+const hint = useComponent(tooltip, { relation: 'label' });
+const bold = useComponent(toggleButton, { tooltip: hint.instance });
+return (
+  <>
+    <button {...bold.parts.root}>
+      <BoldIcon aria-hidden />
+    </button>
+    <div {...hint.parts.root}>Bold</div>
+  </>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip relation="label">
+  <uni-toggle-button>
+    <button class="uni-toggle-button"><svg aria-hidden="true">…</svg></button>
+  </uni-toggle-button>
+  <div class="uni-tooltip">Bold</div>
+</uni-tooltip>
+```
+
+</Tab>
+</Tabs>
+
+### Disabled controls
+
+A tooltip that says why a control is disabled is the common case, so the
+tooltip ignores its trigger's disabled state. Hover reaches natively disabled
+controls in every engine, but the keyboard can't focus them: give the control
+`isFocusableWhenDisabled` (Button, ToggleButton, Checkbox, Switch and Radio
+have it), as the Publish button in the demo does. Screen readers then read
+"button, Publish, Nothing to publish yet, disabled".
+
+The tooltip's own `isDisabled` is different: the tooltip has nothing to say,
+for example while a label fits and isn't truncated.
+
+### Focus only
+
+`trigger: 'focus'` (`trigger="focus"`) opens the tooltip on keyboard focus
+only; hover neither opens it nor keeps it open.
+
+### Delays and warm-up
+
+Hover opens a tooltip after `delay` (250 ms), and leaving the trigger and the
+tooltip closes it after `closeDelay` (500 ms); coming back in time keeps it
+open. Once a tooltip has shown, the page is warm while one is open and for
+500 ms or `closeDelay`, whichever is longer, after the last one started
+closing. While warm, hover opens a tooltip at once and marks it with
+`data-instant`, so CSS can skip its entrance. Moving to another trigger while
+waiting starts the wait again for that one. Focus always opens a tooltip at
+once and makes the page warm.
+
+A tooltip that opens closes the open one at once, without its closing phase.
+Every copy of UniAria on the page shares this, so tooltips from different
+bundles take turns too.
+
+### Positioning
+
+A tooltip is placed like a popover, against the `anchor` part, else the
+linked component, else the trigger part. `positionArea` defaults to `'top'`,
+`positionTryFallbacks` to `'flip-block, flip-inline'`, and the gap is the
+root's margin. In CSS mode, set with `configure({ positioning: 'css' })`, give
+the root `inset: auto`, a `position-area` and fallbacks in your CSS. See
+[Popover](./popover.mdx#positioning) for both modes.
+
+<Tabs label="Positioning">
+<Tab label="React">
+
+```tsx
+const hint = useComponent(tooltip, { positionArea: 'right' });
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip position-area="right">…</uni-tooltip>
+```
+
+</Tab>
+</Tabs>
+
+### Controlled
+
+`isOpen` and `onOpenChange` work as on other overlays: every close only
+reports `openchange`, and the tooltip stays open until you set `isOpen` to
+`false`. A controlled tooltip kept open stays open beside the next one that
+shows.
+
+## Anatomy
+
+| Part      | Element                               | Notes                                                                                                                                                                                                                                     |
+| --------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger` | a focusable element; usually `button` | Optional. For an element that isn't a UniAria component's part; a linked component takes its place. UniAria writes `aria-describedby` (`aria-labelledby` with `relation: 'label'`) while the tooltip is enabled, and no state attributes. |
+| `anchor`  | any                                   | Optional. The tooltip is placed against it instead of the trigger.                                                                                                                                                                        |
+| `root`    | any; usually `div`                    | The text. Hidden while closed. UniAria writes its `id`, `popover="manual"`, `role="tooltip"`, `data-placement` and its position. Text only: development builds warn when it holds a focusable element.                                    |
+| `arrow`   | any                                   | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                                         |
+
+The root gets no `tabindex`, and the trigger no `aria-expanded`,
+`aria-haspopup` or `aria-controls`: a tooltip isn't a popup the user opens.
+
+## Props
+
+| Prop                   | Attribute                                    | Type                       | Default                     | Description                                                                                               |
+| ---------------------- | -------------------------------------------- | -------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `isOpen`               | — (property: setting it makes it controlled) | `boolean`                  | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                  |
+| `defaultOpen`          | `default-open`                               | `boolean`                  | `false`                     | The starting state, uncontrolled.                                                                         |
+| `isDisabled`           | `disabled`                                   | `boolean`                  | `false`                     | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say. |
+| `delay`                | `delay`                                      | `number`                   | `250`                       | Milliseconds the pointer rests on the trigger before it opens, while the page isn't warm.                 |
+| `closeDelay`           | `close-delay`                                | `number`                   | `500`                       | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                       |
+| `trigger`              | `trigger`                                    | `'hover' \| 'focus'`       | `'hover'`                   | `'focus'` opens it on keyboard focus only.                                                                |
+| `relation`             | `relation`                                   | `'description' \| 'label'` | `'description'`             | `'label'` makes the tooltip its trigger's name, for an icon-only button.                                  |
+| `positionArea`         | `position-area`                              | `PositionArea`             | `'top'`                     | A CSS `position-area` on one side of the anchor. Script mode only.                                        |
+| `positionTryFallbacks` | `position-try-fallbacks`                     | `string`                   | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                         |
+
+On the element, the `trigger` property is this prop; the trigger part is the
+element marked `data-element="Trigger"`.
+
+## Events
+
+| Event        | React prop     | Detail    | When                                                                                                                       |
+| ------------ | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `openchange` | `onOpenChange` | `boolean` | Hover, focus, Escape, a press, scrolling or another tooltip opening asks to open or close it. Never when you set `isOpen`. |
+
+There is no `dismiss` event: a tooltip closes for too many ordinary reasons,
+like the pointer moving on, for a reason to help.
+
+## Actions
+
+| Action    | What it does                                                                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open()`  | Shows the tooltip at once, without its delay. Does nothing while disabled. It stays open until `close()` or one of its usual closes: Escape, a press on the trigger, or hover or focus on the trigger ending. |
+| `close()` | Closes it. Unlike Escape, it doesn't keep the tooltip closed: the next hover opens it as usual.                                                                                                               |
+
+In React they are on the handle (`hint.actions.open()`); on the custom
+element they are methods (`document.querySelector('uni-tooltip').open()`).
+While `isOpen` is controlled, each only reports `openChange` and leaves the
+change to you.
+
+## State
+
+| Field        | Type                                                  | Meaning                                                                       |
+| ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `isOpen`     | `boolean`                                             | The tooltip is open.                                                          |
+| `isEntering` | `boolean`                                             | The first frames after opening, for enter transitions.                        |
+| `isExiting`  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
+| `isInstant`  | `boolean`                                             | Open, and opened without its delay because the page was warm.                 |
+| `placement`  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
+
+```tsx
+const placement = useComponentState(hint, (state) => state.placement);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                              | On               | When                                                                                    |
+| -------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
+| `class="uni-tooltip"`                  | root             | Always.                                                                                 |
+| `data-scope="tooltip"`, `data-element` | every other part | Always.                                                                                 |
+| `data-open`                            | root, arrow      | The tooltip is open.                                                                    |
+| `data-entering`                        | root, arrow      | The first frames after opening.                                                         |
+| `data-exiting`                         | root, arrow      | It is closing, until its exit animations end. Skipped when another tooltip replaces it. |
+| `data-instant`                         | root, arrow      | It opened without its delay: skip the entrance.                                         |
+| `data-placement`                       | root, arrow      | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.             |
+
+The root also gets `--anchor-width`, `--available-width` and
+`--available-height`, as a [Popover](./popover.mdx#styling)'s does, and the
+same inline position styles, put back when it closes. Keep pointer events on
+the root: the pointer can move onto the tooltip and keep it open.
+
+```css
+.uni-tooltip {
+  margin: 8px; /* the gap, and the room from the viewport's edges */
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: CanvasText;
+  color: Canvas;
+  overflow: visible;
+  transition:
+    opacity 150ms,
+    translate 150ms;
+}
+.uni-tooltip:is([data-entering], [data-exiting]) {
+  opacity: 0;
+  translate: 0 2px;
+}
+.uni-tooltip[data-instant] {
+  transition: none;
+}
+```
+
+The arrow works as a popover's: position it on the side `data-placement` names
+and rotate a pseudo-element inside it, since UniAria measures the arrow part
+itself.
+
+## Keyboard
+
+| Key                               | Behavior                                                                                                                                                                                  |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab, Shift+Tab                    | Onto the trigger, opens it at once. Off the trigger, closes it, unless the pointer is over the trigger or the tooltip.                                                                    |
+| Escape                            | Anywhere, while it is open, closes it and prevents the key's default, so a Popover or Dialog around it stays open. A second Escape closes that. Ignored while composing text with an IME. |
+| Any other key but a lone modifier | On the trigger, closes it, as a press does.                                                                                                                                               |
+
+After Escape or a press, the tooltip stays closed until the pointer leaves the
+trigger and the tooltip and comes back, or focus leaves and comes back.
+
+## Accessibility
+
+- **Focus never moves.** The tooltip can't take focus, and focus stays on the
+  trigger the whole time. Interactive content belongs in a non-modal
+  [Popover](./popover.mdx).
+- **Which focus opens it.** Visible focus only: from the keyboard, or a screen
+  reader moving focus. Not focus from a pointer press, not focus an overlay
+  gives back as it closes (a Popover closed with Escape doesn't pop up its
+  trigger's tooltip), and not focus coming back with the window.
+- **Hover and focus each keep it open**, as the APG describes: a keyboard
+  user's tooltip doesn't close because the mouse crossed the trigger.
+- **Hoverable and dismissable** (WCAG 1.4.13): the pointer can move onto the
+  tooltip without it closing, `closeDelay` covers the gap, and Escape closes
+  it without moving the pointer or focus.
+- **Touch never opens it**, and neither do the mouse events a tap emulates. A
+  description that matters on touch belongs in the page or in a Popover.
+- **Spoken output.** "button, Save, Saves the file" on the trigger, whether
+  the tooltip is open or not; "tooltip, Saves the file" when browsing past the
+  open tooltip; "button, Bold" with `relation: 'label'`.
+- **Scrolling.** The tooltip follows its trigger and closes once the trigger
+  is scrolled out of view.
+
+## Compared with other libraries
+
+- **The component links to the tooltip**, as Cube UI Kit's `tooltip` props do.
+  React Aria's TooltipTrigger wraps a focusable child and reaches it through
+  context.
+- **Delays of 250 and 500 ms** with warm-up, where React Aria waits 1500 ms.
+- **The relation stays while closed.** React Aria, Zag and Cube UI Kit add
+  `aria-describedby` only while the tooltip is open.
+- **`relation: 'label'`** for icon-only buttons, which React Aria doesn't
+  offer.
+- **Escape is prevented, not stopped**, so the first Escape closes the tooltip
+  and the next one the popover around it. React Aria, Zag and Cube UI Kit stop
+  its propagation.
+- **Hover and focus each keep it open**, and it is always hoverable. React
+  Aria closes it when either ends; Cube UI Kit's tooltips ignore the pointer
+  unless `isMaterial`.
+- **Disabled triggers keep their tooltips.** React Aria shows none.

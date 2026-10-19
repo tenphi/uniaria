@@ -1,0 +1,37 @@
+<form id="order" class="row">
+  <uni-select placeholder="Pick a fruit" required>
+    <div class="uni-select">
+      <span data-element="Label">Fruit</span>
+      <button data-element="Trigger">
+        <span data-element="Value"></span>
+        <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
+          <path
+            d="M4 6l4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+      </button>
+      <div data-element="Popover">
+        <div data-element="List">
+          <div data-element="Option" data-key="apple">Apple</div>
+          <div data-element="Option" data-key="banana">Banana</div>
+          <div data-element="Option" data-key="blueberry">Blueberry</div>
+          <div data-element="Group" data-key="citrus">
+            <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+            <div data-element="Option" data-key="lemon">Lemon</div>
+            <div data-element="Option" data-key="lime">Lime</div>
+            <div data-element="Option" data-key="orange">Orange</div>
+          </div>
+          <div data-element="Option" data-key="kiwi">Kiwi</div>
+          <div data-element="Option" data-key="mango">Mango</div>
+          <div data-element="Option" data-key="peach">Peach</div>
+        </div>
+      </div>
+      <select data-element="HiddenSelect" name="fruit"></select>
+    </div>
+  </uni-select>
+  <button type="submit">Order</button>
+  <output id="log">Pick a fruit, then order.</output>
+</form>

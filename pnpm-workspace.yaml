@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - conformance
+  - apps/*
 
 # Supply-chain guard: never install a version published less than 14 days ago.
 minimumReleaseAge: 20160 # 14 days, in minutes
@@ -10,3 +11,10 @@ minimumReleaseAgeIgnoreMissingTime: false
 # Remove once 3.19.6 is 14 days old (2026-10-30).
 minimumReleaseAgeExclude:
   - '@tanstack/virtual-core@3.19.6'
+  # The owner's own packages (owner, 2026-10-19): Cookbook, which builds the
+  # documentation site, and the Tasty and Glaze it styles with.
+  - '@tenphi/*'
+# Install scripts run only when listed true here. esbuild's (through Astro)
+# just checks its platform binary, which pnpm installs anyway.
+allowBuilds:
+  esbuild: false

@@ -1,0 +1,31 @@
+<form id="signup" novalidate>
+  <uni-field id="email-field" required>
+    <div class="uni-field">
+      <label data-element="Label"
+        >Email <span aria-hidden="true">*</span></label
+      >
+      <input
+        data-element="Control"
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+      />
+      <p data-element="Description">We send the receipt here.</p>
+      <p data-element="Error" hidden>Enter your email.</p>
+    </div>
+  </uni-field>
+
+  <uni-checkbox id="terms" required>
+    <div class="uni-checkbox">
+      <label data-element="Wrapper">
+        <input data-element="Input" type="checkbox" name="terms" />
+        <span data-element="Label">I accept the terms</span>
+      </label>
+      <p data-element="Error" hidden>Accept the terms to continue.</p>
+    </div>
+  </uni-checkbox>
+
+  <button type="submit">Sign up</button>
+</form>
+<output id="log">Submit the form empty to see the errors.</output>

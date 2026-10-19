@@ -1,0 +1,357 @@
+---
+title: Checkbox
+description: A native checkbox with its label, description and error message, plus indeterminate and read-only states.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/checkbox.css?raw';
+import html from './demos/checkbox.html?raw';
+import javascript from './demos/checkbox.js?raw';
+
+A checkbox turns one option on or off. A native `<input type="checkbox">` sits
+underneath, and the browser keeps doing the toggling: a click on the input or
+its label, or Space, toggles it, and the form submits it. UniAria labels it
+and links its description and error message (as [Field](./field.mdx) does),
+and adds the indeterminate and read-only states, controlled use, and state
+attributes on every part for your CSS.
+
+It follows the WAI-ARIA [Checkbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/),
+with the native input's role and state in place of `role="checkbox"` and
+`aria-checked`.
+
+<Preview
+  title="Select all"
+  scripts={['/demo/checkbox.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { checkbox } from '@uniaria/core/checkbox';
+import { useComponent } from '@uniaria/react';
+
+export function TermsCheckbox(props: {
+  isInvalid: boolean;
+  onAcceptedChange(isAccepted: boolean): void;
+}) {
+  const terms = useComponent(checkbox, {
+    labelElementType: 'span',
+    isRequired: true,
+    isInvalid: props.isInvalid,
+    onSelectedChange: props.onAcceptedChange,
+  });
+  return (
+    <div {...terms.parts.root}>
+      <label {...terms.parts.wrapper}>
+        <input {...terms.parts.input} name="terms" />
+        <span {...terms.parts.indicator} />
+        <span {...terms.parts.label}>Accept the terms</span>
+      </label>
+      <p {...terms.parts.error}>You must accept the terms to continue.</p>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-checkbox id="terms" required>
+  <div class="uni-checkbox">
+    <label data-element="Wrapper">
+      <input data-element="Input" type="checkbox" name="terms" />
+      <span data-element="Indicator"></span>
+      <span data-element="Label">Accept the terms</span>
+    </label>
+    <p data-element="Error" hidden>You must accept the terms to continue.</p>
+  </div>
+</uni-checkbox>
+
+<script type="module">
+  import '@uniaria/elements/checkbox';
+
+  const terms = document.querySelector('#terms');
+  terms.addEventListener('selectedchange', (event) => {
+    terms.isInvalid = !event.detail;
+  });
+</script>
+```
+
+The input's `checked` in the markup, or a click before the script loaded,
+becomes the element's starting state.
+
+</Tab>
+</Tabs>
+
+The error part shows only while the checkbox is invalid and not disabled;
+UniAria toggles its `hidden` attribute and announces it when it appears. See
+[Field](./field.mdx) for labelling, descriptions and errors.
+
+### Two layouts
+
+A click toggles the checkbox natively in both, with no script:
+
+- **A `label` around the input**, the indicator and a `span` label part, so
+  a click anywhere in it toggles. Labels can't nest, so in React pass
+  `labelElementType: 'span'`; the custom element reads the tag itself. The
+  `label` is the `wrapper` part, and the root goes around it, the
+  description and the error, which stay outside the `label` so a click on
+  them doesn't toggle. The usage above has this layout. A checkbox with
+  neither can make the `label` its root, with no wrapper, as the demo does.
+- **A `div` root** with a `label` label part, whose `for` UniAria points at
+  the input. Only the input and the label toggle; an indicator outside the
+  label doesn't.
+
+<Tabs label="Two layouts">
+<Tab label="React">
+
+```tsx
+const newsletter = useComponent(checkbox, { defaultSelected: true });
+return (
+  <div {...newsletter.parts.root}>
+    <input {...newsletter.parts.input} name="newsletter" />
+    <label {...newsletter.parts.label}>Subscribe to the newsletter</label>
+    <p {...newsletter.parts.description}>One email a month.</p>
+  </div>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-checkbox>
+  <div class="uni-checkbox">
+    <input data-element="Input" type="checkbox" name="newsletter" checked />
+    <label data-element="Label">Subscribe to the newsletter</label>
+    <p data-element="Description">One email a month.</p>
+  </div>
+</uni-checkbox>
+```
+
+</Tab>
+</Tabs>
+
+To draw your own box, hide the native input from sight but not from the
+page: lay it over the `label` with `opacity: 0`, as the demo does, or clip
+it. Never `display: none`, `visibility: hidden` or `hidden`, which take it out
+of the tab order and the accessibility tree.
+
+### Indeterminate
+
+`isIndeterminate` shows a dash: it sets the input's `indeterminate` property
+and `data-indeterminate` on every part. It is presentational and independent
+of `isSelected`. A click selects an indeterminate checkbox that isn't
+selected, as the browser does, and the dash stays as long as the prop is
+true: you clear it. A "select all" checkbox computes both from its rows.
+
+<Tabs label="Indeterminate">
+<Tab label="React">
+
+```tsx
+const all = useComponent(checkbox, {
+  labelElementType: 'span',
+  isSelected: selected.length === toppings.length,
+  isIndeterminate: selected.length > 0 && selected.length < toppings.length,
+  onSelectedChange: (isSelected) => setSelected(isSelected ? toppings : []),
+});
+```
+
+</Tab>
+<Tab label="HTML">
+
+```js
+function update() {
+  const count = rows.filter((row) => row.isSelected).length;
+  all.isSelected = count === rows.length;
+  all.isIndeterminate = count > 0 && count < rows.length;
+}
+all.addEventListener('selectedchange', (event) => {
+  for (const row of rows) row.isSelected = event.detail;
+  update();
+});
+```
+
+The `indeterminate` attribute on `<uni-checkbox>` sets it from markup. The
+demo above has the whole script.
+
+</Tab>
+</Tabs>
+
+For a list of checkboxes with one value, use a
+[CheckboxGroup](./checkbox-group.mdx).
+
+### Controlled
+
+Pass `isSelected` and the checkbox shows that value. A click still toggles the
+input natively and fires `selectedchange` with the new state; if you don't
+pass it back by the end of that event (React's state update included), the
+checkbox goes back to `isSelected`. On the element, set the `isSelected`
+property, and set it again in a `selectedchange` listener to accept a change.
+See [State](../guide/state.md).
+
+### In a form
+
+- **Submission.** The input is a native checkbox: while checked, the form
+  submits its `name` with its `value` (`on` when it has none). You write
+  both; the `value` prop writes the input's `value` for you, which a
+  [CheckboxGroup](./checkbox-group.mdx) needs.
+- **Reset.** A form reset returns the checkbox to the state it mounted with,
+  `defaultSelected` when uncontrolled; a controlled one gets a
+  `selectedchange` asking for it. It leaves `indeterminate` alone, as the
+  browser does.
+- **Disabled.** A disabled checkbox is never submitted, and neither is one
+  disabled with `isFocusableWhenDisabled`. A read-only one is submitted.
+- **Validation.** Checkbox never validates. `isRequired` writes
+  `aria-required`, not the native `required`, so the browser shows no
+  message of its own; you decide when it is invalid and set `isInvalid`.
+
+See [Forms](../guide/forms.md).
+
+## Anatomy
+
+| Part          | Element                                                    | Notes                                                                                                                                                                                                                                                          |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | Any; usually `div`                                         | Optional. The outermost element, around the wrapper, the description and the error. No role. Without a wrapper, a `label` root makes its whole area toggle the checkbox.                                                                                       |
+| `wrapper`     | Any; a `label` makes its whole area toggle the checkbox    | Optional. The area around the input, the indicator and the label. No role.                                                                                                                                                                                     |
+| `input`       | `input`                                                    | Required. UniAria writes `type="checkbox"`, its `id` and ARIA attributes, `disabled`, and the `checked` and `indeterminate` properties. You own `name`, `value` (unless the `value` prop is set), `form`, `autofocus`, `tabindex` and the `checked` attribute. |
+| `indicator`   | Any; usually `span`                                        | Optional. The box you draw in place of the input, with the check or the dash. Gets `aria-hidden="true"`.                                                                                                                                                       |
+| `label`       | `label` by default, any element through `labelElementType` | Names the checkbox. A `span` inside a `label` wrapper or root.                                                                                                                                                                                                 |
+| `description` | Any                                                        | Optional. Outside a `label` wrapper or root.                                                                                                                                                                                                                   |
+| `error`       | Any                                                        | Optional. Outside a `label` wrapper or root. Hidden unless invalid.                                                                                                                                                                                            |
+
+You own every part's content. UniAria fills none of them.
+
+## Props
+
+| Prop                      | Attribute                 | Type       | Default   | Description                                                                                                                  |
+| ------------------------- | ------------------------- | ---------- | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `isSelected`              | — (property)              | `boolean`  | —         | The state, controlled. Pair it with `onSelectedChange`.                                                                      |
+| `defaultSelected`         | `default-selected`        | `boolean`  | `false`   | The starting state, uncontrolled. The element adopts the input's `checked`.                                                  |
+| `isIndeterminate`         | `indeterminate`           | `boolean`  | `false`   | Shows the dash. See Indeterminate.                                                                                           |
+| `isDisabled`              | `disabled`                | `boolean`  | `false`   | Native `disabled`: not focusable, never toggles, not submitted. Hides the error.                                             |
+| `isFocusableWhenDisabled` | `focusable-when-disabled` | `boolean`  | `false`   | While disabled, `aria-disabled` instead of `disabled`: focusable, so a tooltip can explain it, but never toggles or submits. |
+| `isReadOnly`              | `readonly`                | `boolean`  | `false`   | `aria-readonly="true"`, and every toggle is cancelled. Focusable and submitted.                                              |
+| `isRequired`              | `required`                | `boolean`  | `false`   | `aria-required="true"`, not the native `required`.                                                                           |
+| `isInvalid`               | `invalid`                 | `boolean`  | `false`   | `aria-invalid="true"`, and shows and announces the error.                                                                    |
+| `value`                   | `value`                   | `string`   | —         | The checkbox's key in a CheckboxGroup's value, written to the input's `value`. Required in a group.                          |
+| `owner`                   | `group` (an id)           | `Instance` | —         | The [CheckboxGroup](./checkbox-group.mdx) of a checkbox that isn't inside it.                                                |
+| `inputId`                 | — (read from the input)   | `string`   | generated | The input's `id`.                                                                                                            |
+| `labelElementType`        | — (read from the tag)     | `string`   | `'label'` | The label part's tag. `'span'` inside a `label` wrapper or root; only a `label` gets `for`.                                  |
+| `labelledBy`              | `labelled-by`             | `string`   | —         | More ids for `aria-labelledby`, after the label part's.                                                                      |
+| `describedBy`             | `described-by`            | `string`   | —         | More ids for `aria-describedby`, after the description's and the error's.                                                    |
+
+## Events
+
+| Event            | React prop         | Detail    | When                                                                                                    |
+| ---------------- | ------------------ | --------- | ------------------------------------------------------------------------------------------------------- |
+| `selectedchange` | `onSelectedChange` | `boolean` | The user toggled the checkbox (right before the native `change`), or a form reset asks for its default. |
+| `focuschange`    | `onFocusChange`    | `boolean` | The input gained or lost focus.                                                                         |
+
+`selectedchange` never fires for a value you set. A checkbox in a group
+reports through the group's `valuechange` instead. The custom element
+dispatches each event on itself, bubbling, with the value in `detail`. In
+React, UniAria's part props include the input's `onInput`, `onClick`,
+`onFocus` and `onBlur`: use the events above rather than replacing them.
+
+## State
+
+| Field             | Type      | Meaning                                                                                        |
+| ----------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| `isSelected`      | `boolean` | The current state: the controlled value, the uncontrolled one, or the group's.                 |
+| `isIndeterminate` | `boolean` | The `isIndeterminate` prop.                                                                    |
+| `isFocused`       | `boolean` | The input has focus.                                                                           |
+| `isFocusVisible`  | `boolean` | The input has focus from a keyboard or assistive technology.                                   |
+| `isHovered`       | `boolean` | A mouse or pen is over the wrapper (without one, the root) or the input. Never while disabled. |
+| `isDisabled`      | `boolean` | Disabled, by the prop or the group.                                                            |
+| `isReadOnly`      | `boolean` | Read-only, by the prop or the group.                                                           |
+| `isRequired`      | `boolean` | Required, by the prop or the group.                                                            |
+| `isInvalid`       | `boolean` | Invalid, by the prop or the group.                                                             |
+| `isErrorShown`    | `boolean` | The error part is shown: invalid and not disabled.                                             |
+
+To render something from state in React, select it, and the component renders
+again only when that value changes:
+
+```tsx
+const isAccepted = useComponentState(terms, (state) => state.isSelected);
+```
+
+On the custom element, read `element.instance.getState()`. The `isSelected`
+property holds only the value you set, not the current state. See
+[State](../guide/state.md).
+
+## Styling
+
+Every part carries the state attributes, so the box, the label and the
+messages can be styled without reading state.
+
+| Attribute                                        | When                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------ |
+| `class="uni-checkbox"`                           | On the root, always.                                                     |
+| `data-scope="checkbox"`, `data-element="<Part>"` | On every other part, always.                                             |
+| `data-selected`                                  | The checkbox is selected.                                                |
+| `data-indeterminate`                             | `isIndeterminate` is true.                                               |
+| `data-hovered`                                   | A mouse or pen is over the wrapper (without one, the root) or the input. |
+| `data-focused`                                   | The input has focus.                                                     |
+| `data-focus-visible`                             | The input has focus from a keyboard or a screen reader.                  |
+| `data-disabled`                                  | The checkbox is disabled.                                                |
+| `data-readonly`                                  | The checkbox is read-only.                                               |
+| `data-invalid`                                   | The checkbox is invalid.                                                 |
+| `data-required`                                  | The checkbox is required.                                                |
+
+A checkbox can be both selected and indeterminate: put the dash's rules after
+the check's so the dash wins. State attributes are present or absent, never
+`"false"`. There is no pressed state; use `:active`. UniAria writes no styles.
+
+## Keyboard
+
+| Key   | Behavior                                                                                        |
+| ----- | ----------------------------------------------------------------------------------------------- |
+| Space | Toggles, natively. Nothing when read-only or focusable while disabled.                          |
+| Enter | Nothing on the checkbox: it submits the form, natively.                                         |
+| Tab   | Moves focus, natively. A disabled checkbox is skipped, unless `isFocusableWhenDisabled` is set. |
+
+Checkbox handles no keys itself.
+
+## Accessibility
+
+- **Native state.** Screen readers read the input's own role and `checked`
+  and `indeterminate` state ("mixed"), and announce a toggle themselves, so
+  UniAria never writes `aria-checked` and announces nothing on a toggle.
+- **Spoken output.** "checkbox, Accept terms, not checked", then "checked".
+  The description follows the name; "read only", "required", "invalid" and
+  "disabled" follow the state. An invalid checkbox reads its error as its
+  description.
+- **Labelling.** Give every checkbox a label part, or an `aria-label` on the
+  input. A link inside the `label` wrapper or root ("I accept the terms")
+  keeps its own click.
+- **Focus.** Checkbox never moves focus. Whether a click focuses the input is
+  the browser's choice: Safari doesn't, so `focuschange` may not fire on a
+  click there.
+- **Disabled with a reason.** Natively disabled checkboxes can't be reached
+  by keyboard. To explain one with a [Tooltip](./tooltip.mdx), set
+  `isFocusableWhenDisabled` and link the tooltip through the `tooltip` prop
+  (React) or attribute (an id).
+
+## Compared with other libraries
+
+- **A native input.** The APG examples build `role="checkbox"` with
+  `aria-checked`; UniAria keeps the native checkbox, as React Aria does.
+- **`selectedchange`** is React Aria's `onChange`, with the same
+  `isSelected`, `defaultSelected` and `isIndeterminate`.
+- **Read-only cancels the click**, as in Zag; React Aria lets the toggle
+  happen and reverts it. No `input` or `change` event fires.
+- **A label press doesn't focus the input.** React Aria and Zag focus it;
+  UniAria follows the platform.
+- **The `checked` attribute stays the default.** Zag reflects the state into
+  it, which leaves a native form reset nothing to restore.
+- **No validation.** React Aria can validate natively; UniAria shows
+  `isInvalid` and leaves the decision to your form.

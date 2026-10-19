@@ -1,0 +1,32 @@
+<div class="row">
+  <uni-listbox id="fruit" disabled-keys='["cherry"]'>
+    <span data-element="Label">Fruit</span>
+    <div data-element="List">
+      <div data-element="Option" data-key="apple">Apple</div>
+      <div data-element="Option" data-key="banana">Banana</div>
+      <div data-element="Option" data-key="cherry">Cherry</div>
+      <div data-element="Group" data-key="citrus">
+        <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+        <div data-element="Option" data-key="lemon">Lemon</div>
+        <div data-element="Option" data-key="lime">Lime</div>
+        <div data-element="Option" data-key="orange">Orange</div>
+      </div>
+      <div data-element="Option" data-key="kiwi">Kiwi</div>
+      <div data-element="Option" data-key="mango">Mango</div>
+    </div>
+  </uni-listbox>
+
+  <uni-listbox id="toppings" selection-mode="multiple">
+    <span data-element="Label">Toppings</span>
+    <div data-element="List">
+      <div data-element="Option" data-key="cheese">Cheese</div>
+      <div data-element="Option" data-key="mushrooms">Mushrooms</div>
+      <div data-element="Option" data-key="olives">Olives</div>
+      <div data-element="Option" data-key="onions">Onions</div>
+      <div data-element="Option" data-key="peppers">Peppers</div>
+      <div data-element="Option" data-key="basil">Basil</div>
+    </div>
+    <p data-element="Empty">No toppings</p>
+  </uni-listbox>
+</div>
+<output id="log">Click an option, or Tab in and use the keys.</output>

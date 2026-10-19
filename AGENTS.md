@@ -63,6 +63,7 @@ uniaria/
 │   ├── elements/
 │   └── testing/
 ├── conformance/                    Scenarios; owner approval required (see Conformance)
+├── apps/docs/                      The documentation site (Cookbook); see Documentation
 ├── docs/                           The site's pages (Markdown and MDX)
 │   └── _internal/                  Not published: the spec template, and
 │                                   interaction-layer.md (what dom/ must do; status)
@@ -93,6 +94,8 @@ uniaria/
 | `pnpm check:conformance`                         | Check that no unpushed commit changes both conformance and implementation. CI runs it too. |
 | `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).                                 |
 | `pnpm changeset`                                 | Create a changeset entry. Not used until the first release.                                |
+| `pnpm -C apps/docs dev`                          | The documentation site with live reload (see Documentation).                               |
+| `pnpm -C apps/docs validate`                     | Type check, Cookbook's checks, the production build and its output checks. CI runs it.     |
 
 ## Stack
 
@@ -468,6 +471,11 @@ virtualization scenarios. 3.19.6 itself was a one-time owner exception to
 that policy (2026-10-18): its `minimumReleaseAgeExclude` entry in
 `pnpm-workspace.yaml` goes once it is 14 days old, on 2026-10-30.
 
+The documentation site's (owner, 2026-10-19): `@tenphi/cookbook`, `astro`
+and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root. The
+owner's own `@tenphi/*` packages are exempt from the 14-day release age
+(`minimumReleaseAgeExclude` in `pnpm-workspace.yaml`).
+
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
 `@guidepup/guidepup`, `@guidepup/playwright`, and `react-aria` in
 `@uniaria/react` for the comparison with React Aria only (owner request,
@@ -512,7 +520,8 @@ One component per task, small commits, in this order:
    `tsdown.config.ts` entry, `package.json` `exports`, and
    `src/ssr-safety.test.ts`.
 4. **Adapters and docs.** Element registering entry, React sugar only if
-   needed, docs and a demo per adapter.
+   needed, and the component's page in `docs/components/` with a live demo
+   (see Documentation).
 
 Naming: folder and subpath in kebab-case (`checkbox-group`,
 `@uniaria/core/checkbox-group`); definition export in camelCase
@@ -694,11 +703,41 @@ its latest default branch and discards local changes, so never edit them.
 - To add a repository, add it to `scripts/fetch-references.mjs` and this
   table, with the owner's approval.
 
+## Documentation
+
+The site is built by `apps/docs` with [Cookbook](https://cookbook.tenphi.me),
+an Astro toolkit, from the pages in `docs/` (owner, 2026-10-19). It isn't
+published yet: CI only validates and builds it. `docs/contributing/` is the
+readable overview of this file for people; this file stays the binding one.
+
+- **Pages.** `docs/guide/`, `docs/components/<name>.mdx` (one per component,
+  in the order and shape of `docs/components/button.mdx`), `docs/api/` and
+  `docs/contributing/`. Navigation tabs are in `apps/docs/docs.config.ts`.
+  Folders starting with `_` aren't published: `docs/_internal/` holds what
+  agents need and readers don't.
+- **Accuracy.** Pages are written for people using UniAria, from the code
+  first and the spec second; no "Resolved questions", owner decisions or
+  internal names outside `docs/contributing/`. A change to a component's
+  behavior or API updates its page in the same commit.
+- **Live demos** run the custom elements: `docs/components/demos/<page>.html`,
+  `.css` and `.js`, imported with `?raw` into Cookbook's `<Preview>`, whose
+  `scripts` prop inlines `/demo/<page>.js` into the sandboxed frame.
+  `apps/docs/demo/<page>.ts` imports the elements a page's demos register;
+  `apps/docs/scripts/build-demo.mjs` bundles each from the workspace sources
+  into `apps/docs/public/demo/` (gitignored) before `dev` and `build`. Demo
+  CSS uses system colors and the state attributes, since it doubles as a
+  styling example.
+- **The site's own styling** is Tasty only: Cookbook's build rejects any other
+  CSS. `eslint.config.js` lints `apps/docs` with the Tasty plugin's strict
+  rules, against the tokens, states and presets `apps/docs/tasty.config.ts`
+  reads from the theme.
+
 ## Not set up yet
 
 Planned by the design, added when the owner asks: public API reports (API
 Extractor), size budgets per subpath (size-limit), the release workflow (npm
-trusted publishing), Custom Elements Manifest generation, and demo pages.
+trusted publishing), Custom Elements Manifest generation, and publishing the
+documentation site.
 
 ## Before pushing changes
 

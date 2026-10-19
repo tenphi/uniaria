@@ -1,0 +1,121 @@
+---
+title: UniAria
+description: Accessible component behavior written once, for React, custom elements and any framework.
+template: splash
+seo:
+  title: UniAria — accessible component behavior, written once
+hero:
+  title: Accessible behavior, written once
+  tagline: UniAria is a headless component library. Each component's keyboard handling, focus management, ARIA and state are written once in plain TypeScript and used from React, as custom elements, or from any framework. Your design system keeps the look.
+  image:
+    html: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><circle cx="32" cy="32" r="9" fill="#fff"/><circle cx="32" cy="12.5" r="4.5" fill="#fff" opacity=".85"/><circle cx="49" cy="42" r="4.5" fill="#fff" opacity=".85"/><circle cx="15" cy="42" r="4.5" fill="#fff" opacity=".85"/><path d="M32 17v6M45 39.5l-5.2-3M19 39.5l5.2-3" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/></svg>'
+  actions:
+    - text: Get started
+      link: /guide/getting-started/
+      variant: primary
+    - text: Browse components
+      link: /components/
+      variant: secondary
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { Callout, Card } from '@tenphi/cookbook/components';
+
+<Callout kind="caution" title="Pre-alpha">
+  Nothing is published to npm yet. The APIs on this site are the ones under
+  review for the first release.
+</Callout>
+
+## Why UniAria
+
+- **One implementation for every framework.** A component is one definition:
+  its parts, props, events and behavior. Generic adapters bind it to
+  [React](./api/react.md) and to [light-DOM custom elements](./api/elements.md),
+  which work in any framework or none.
+- **No re-renders for internal state.** Hover, press, focus, a highlighted
+  option, an opening popover: UniAria writes these straight to the DOM. A React
+  component renders again only for the state it
+  [selects](./guide/state.md#reading-state).
+- **Accessibility you can check.** Every component follows its
+  [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/patterns/)
+  pattern. The same conformance scenarios run in Chromium, Firefox and WebKit,
+  through both adapters, with a virtual screen reader on every push, and with
+  VoiceOver and NVDA every night. [How it's tested](./guide/accessibility.md).
+- **Native elements first.** A real `<button>`, `<input>` or `<dialog>` sits
+  under each component, and overlays open in the browser's top layer: no
+  portals, no moved nodes.
+- **Headless, with hooks for your CSS.** A component's root carries the
+  class `uni-<name>` and its other parts `data-element`, all with state
+  attributes such as `data-pressed` and `data-focus-visible`. Style them with
+  any CSS you like, or with Tasty. [Styling](./guide/styling.md).
+
+## What it looks like
+
+The same Switch, from React and as a custom element:
+
+```tsx
+import { toggleSwitch } from '@uniaria/core/switch';
+import { useComponent } from '@uniaria/react';
+
+function WifiSwitch() {
+  const wifi = useComponent(toggleSwitch, {
+    defaultSelected: true,
+    labelElementType: 'span',
+  });
+  return (
+    <label {...wifi.parts.root}>
+      <input {...wifi.parts.input} name="wifi" />
+      <span {...wifi.parts.indicator}>
+        <span data-element="Thumb" />
+      </span>
+      <span {...wifi.parts.label}>Wi-Fi</span>
+    </label>
+  );
+}
+```
+
+```html
+<script type="module">
+  import '@uniaria/elements/switch';
+</script>
+
+<uni-switch>
+  <label class="uni-switch">
+    <input data-element="Input" type="checkbox" name="wifi" checked />
+    <span data-element="Indicator"><span data-element="Thumb"></span></span>
+    <span data-element="Label">Wi-Fi</span>
+  </label>
+</uni-switch>
+```
+
+You write the markup and the CSS. UniAria writes `role="switch"`, the label
+and description links, `data-selected`, `data-focus-visible` and the other
+state attributes, and keeps them up to date. The custom element reads its
+starting state from your markup: the input's `checked` attribute here.
+
+## Components
+
+The first release covers fifteen components.
+
+<Card title="Buttons" href="/components/button/">
+  Button (and links) and ToggleButton.
+</Card>
+
+<Card title="Forms" href="/components/field/">
+  Field, TextField, NumberField, Checkbox, CheckboxGroup, Switch and RadioGroup.
+</Card>
+
+<Card title="Overlays" href="/components/dialog/">
+  Dialog, Popover and Tooltip, in the top layer.
+</Card>
+
+<Card title="Collections" href="/components/listbox/">
+  Listbox, Select and Combobox, with typeahead and optional virtualization.
+</Card>
+
+## Next
+
+Read the [introduction](./guide/introduction.md) for the ideas behind UniAria,
+or go straight to [getting started](./guide/getting-started.mdx).

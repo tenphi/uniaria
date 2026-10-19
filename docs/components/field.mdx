@@ -1,0 +1,306 @@
+---
+title: Field
+description: Gives any form control a label, a description and an error message, linked with ids and ARIA, and announces a new error.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/field.css?raw';
+import html from './demos/field.html?raw';
+import javascript from './demos/field.js?raw';
+
+A field gives a form control its label, description and error message, and
+links them with ids and ARIA, so a screen reader reads the label, the
+description, the error and the required and invalid states when the control
+gets focus. Field renders no control of its own: its `control` part goes on a
+native `<input>`, `<textarea>` or `<select>`, or on a custom widget.
+
+Field shows validation state; it doesn't validate. Your form decides when a
+field is invalid and passes `isInvalid`. See [Forms](../guide/forms.md) for the
+whole picture.
+
+There is no WAI-ARIA pattern for a field. Field follows the APG practice on
+[names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
+
+<Preview
+  title="Sign-up form"
+  scripts={['/demo/field.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { field } from '@uniaria/core/field';
+import { useComponent } from '@uniaria/react';
+
+export function EmailField(props: { error?: string }) {
+  const email = useComponent(field, {
+    isInvalid: props.error !== undefined,
+    isRequired: true,
+  });
+  return (
+    <div {...email.parts.root}>
+      <label {...email.parts.label}>
+        Email <span aria-hidden="true">*</span>
+      </label>
+      <input {...email.parts.control} name="email" type="email" />
+      <p {...email.parts.description}>We never share it</p>
+      <p {...email.parts.error}>{props.error}</p>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-field id="email-field" required>
+  <label data-element="Label">Email <span aria-hidden="true">*</span></label>
+  <input data-element="Control" id="email" name="email" type="email" />
+  <p data-element="Description">We never share it</p>
+  <p data-element="Error" hidden>Enter a valid email</p>
+</uni-field>
+
+<script type="module">
+  import '@uniaria/elements/field';
+
+  const email = document.querySelector('#email');
+  email.addEventListener('change', () => {
+    const isValid = email.value !== '' && email.validity.valid;
+    document.querySelector('#email-field').toggleAttribute('invalid', !isValid);
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Render the error part every time: Field hides it with `hidden` while the
+field is valid.
+
+### Showing errors
+
+When `isInvalid` turns on, Field shows the error, links it to the control and
+announces its text, as `role="alert"` would. While the error stays shown, new
+text in it is announced too, so one error part can say "Enter your email" and
+then "Enter a valid email". The timing is yours: validate on submit, on blur,
+or as the user types.
+
+An error already shown when the field starts isn't announced: the screen
+reader reads it when the control gets focus. Nothing is announced while the
+field is disabled, or for an error part that is missing or empty.
+
+### A control that isn't an input
+
+Only a native control can be labelled by a `<label>`. For anything else, such
+as an element with `role="radiogroup"` or a custom widget, render the label as
+another element and pass its tag as `labelElementType`. The label then gets no
+`for`, and names the control through `aria-labelledby` only. A click on it
+doesn't focus the control.
+
+<Tabs label="A control that isn't an input">
+<Tab label="React">
+
+```tsx
+const plan = useComponent(field, {
+  labelElementType: 'span',
+  isRequired: true,
+});
+return (
+  <>
+    <span {...plan.parts.label}>Plan</span>
+    <div {...plan.parts.control} role="radiogroup">
+      {/* your radios */}
+    </div>
+  </>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-field required>
+  <span data-element="Label">Plan</span>
+  <div data-element="Control" role="radiogroup">
+    <!-- your radios -->
+  </div>
+</uni-field>
+```
+
+The element reads the label's tag, so there is no attribute for it.
+
+</Tab>
+</Tabs>
+
+For radios and checkboxes, [RadioGroup](./radio-group.mdx) and
+[CheckboxGroup](./checkbox-group.mdx) already do this.
+
+### Extra labels and descriptions
+
+`labelledBy` and `describedBy` add ids of other elements after Field's own,
+for a hint that sits elsewhere on the page or a unit next to the control.
+Don't write `aria-labelledby` or `aria-describedby` on the control yourself:
+Field owns them and replaces them.
+
+```html
+<p id="password-rules">At least 12 characters.</p>
+<uni-field described-by="password-rules">…</uni-field>
+```
+
+### In UniAria components
+
+Every UniAria form component has Field built in: its label, description and
+error are parts of the component itself, with the same props, the same
+linking and the same error announcements. Field's `control` is the element
+the component's label names:
+
+| Component                             | Field's control | Label element by default | Notes                                                                                                                                 |
+| ------------------------------------- | --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [TextField](./text-field.mdx)         | `input`         | `label`                  | An `<input>` or a `<textarea>`.                                                                                                       |
+| [NumberField](./number-field.mdx)     | `input`         | `label`                  | The label also names the stepper buttons.                                                                                             |
+| [Checkbox](./checkbox.mdx)            | `input`         | `label`                  | Inside a `<label>` wrapper or root, the label part is a `<span>`. In a group, each checkbox also links the group's error while shown. |
+| [Switch](./switch.mdx)                | `input`         | `label`                  | As Checkbox.                                                                                                                          |
+| [RadioGroup](./radio-group.mdx)       | `root`          | `span`                   | The `radiogroup`. Each radio links its own label and description, and the group's error while shown.                                  |
+| [CheckboxGroup](./checkbox-group.mdx) | `root`          | `span`                   | The `group`.                                                                                                                          |
+| [Listbox](./listbox.mdx)              | `list`          | `span`                   |                                                                                                                                       |
+| [Select](./select.mdx)                | `trigger`       | `span`                   |                                                                                                                                       |
+| [Combobox](./combobox.mdx)            | `input`         | `label`                  |                                                                                                                                       |
+
+The component's state attributes (`data-scope="text-field"` and so on) go on
+those parts, so style them through the component, not through `field`. Where
+you can choose the control's id, the prop is named after the part: `inputId`,
+`triggerId`, `listId`.
+
+Use Field itself only for native and third-party controls. Don't wrap a
+UniAria component in `<uni-field>`: the field doesn't look inside another
+UniAria element, so its label would link to nothing, and in development it
+warns. To build your own component on Field, see
+[Custom components](../guide/custom-components.md).
+
+## Anatomy
+
+| Part          | Element                                                        | Notes                                                                                                                                                                                      |
+| ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `root`        | any; usually `div`                                             | Optional. The outermost element, around the other parts, for styling. No role.                                                                                                             |
+| `label`       | `label` by default; any element through `labelElementType`     | You own the content. UniAria writes its `id`, and `for` when it is a `label`.                                                                                                              |
+| `control`     | any control: `input`, `textarea`, `select`, or a custom widget | UniAria writes `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`. You own the rest: `name`, `type`, `value`, `disabled`, `readonly`, a custom widget's role. |
+| `description` | any                                                            | UniAria writes its `id`.                                                                                                                                                                   |
+| `error`       | any                                                            | UniAria writes its `id`, and `hidden` while the error isn't shown. You own the content.                                                                                                    |
+
+Every part is optional. The ids of the label, the description and the error
+are UniAria's; don't set your own. The control's id is yours to choose: pass
+`controlId` in React, or write `id` on the control for the element, which
+reads it on upgrade. Without one, UniAria generates it.
+
+The parts link like this:
+
+- **Label.** The label gets an `id`, and `for` pointing at the control when it
+  is a `<label>`, so a click on it focuses the control and a native control is
+  named before JavaScript runs. The control gets `aria-labelledby` with the
+  label's id, then `labelledBy`. While the label is rendered, it names the
+  control, so an `aria-label` on the control is ignored.
+- **Description and error.** The control's `aria-describedby` lists the
+  description, then the error while it is shown, then `describedBy`. A hidden
+  error is left out, since screen readers read hidden content a reference
+  points at.
+- **Only rendered parts.** An id goes into a reference only once its part is
+  rendered, so no reference points at nothing. In React that happens right
+  after the first commit, before paint: server HTML has every `id` and the
+  label's `for`, and gains the references on hydration. The custom element
+  links on upgrade, and again whenever a part is added or removed.
+
+## Props
+
+| Prop               | Attribute                        | Type      | Default   | Description                                                                                                                    |
+| ------------------ | -------------------------------- | --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `isInvalid`        | `invalid`                        | `boolean` | `false`   | `aria-invalid="true"` on the control, removed when false (never `"false"`). Shows, links and announces the error.              |
+| `isRequired`       | `required`                       | `boolean` | `false`   | `aria-required="true"` on the control. Never the native `required`, which would start the browser's own validation.            |
+| `isDisabled`       | `disabled`                       | `boolean` | `false`   | `data-disabled` on every part, and hides the error. It doesn't disable the control: disable a native control yourself.         |
+| `controlId`        | — (read from the control's `id`) | `string`  | generated | The control's `id`, which the label's `for` points at.                                                                         |
+| `labelElementType` | — (read from the label's tag)    | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                 |
+| `labelledBy`       | `labelled-by`                    | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                              |
+| `describedBy`      | `described-by`                   | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example. |
+
+Field has no events and handles no keys: the control keeps its own.
+
+## State
+
+| Field          | Type      | Meaning                                       |
+| -------------- | --------- | --------------------------------------------- |
+| `isInvalid`    | `boolean` | The `isInvalid` prop.                         |
+| `isRequired`   | `boolean` | The `isRequired` prop.                        |
+| `isDisabled`   | `boolean` | The `isDisabled` prop.                        |
+| `isErrorShown` | `boolean` | The error is shown: invalid and not disabled. |
+
+You rarely need it: the state attributes below cover styling. In React, select
+a value with `useComponentState`, and the component renders again only when it
+changes:
+
+```tsx
+const isErrorShown = useComponentState(email, (state) => state.isErrorShown);
+```
+
+On the custom element, read `element.instance.getState()`. See
+[State](../guide/state.md).
+
+## Styling
+
+| Attribute                            | On               | When                   |
+| ------------------------------------ | ---------------- | ---------------------- |
+| `class="uni-field"`                  | root             | Always.                |
+| `data-scope="field"`, `data-element` | every other part | Always.                |
+| `data-invalid`                       | every part       | `isInvalid` is set.    |
+| `data-required`                      | every part       | `isRequired` is set.   |
+| `data-disabled`                      | every part       | `isDisabled` is set.   |
+| `hidden`                             | `error`          | The error isn't shown. |
+
+The state attributes go on every part, so you can style the label and the
+messages from the field's state without reading it in JavaScript. A required
+mark, an "(optional)" note and a success state are yours to draw.
+
+## Accessibility
+
+- **Spoken output.** For a label "Email", a description "We never share it"
+  and an error "Enter a valid email", a screen reader reads the control as
+  "textbox, Email, We never share it, required" while valid, and "textbox,
+  Email, We never share it Enter a valid email, invalid, required" while
+  invalid. A checkbox control reads "checkbox, Accept terms, You must accept,
+  not checked, invalid, required".
+- **The required mark.** Hide a `*` in the label with `aria-hidden="true"`:
+  the control already announces "required".
+- **Announcements.** Field announces a new error through UniAria's live
+  announcer, a visually hidden region it adds to the page. Don't add
+  `role="alert"` or `aria-live` to the error part, or it is read twice.
+- **Disabled.** `isDisabled` hides the error, since a disabled control can't
+  be fixed. A native control you disable reads "disabled, invalid" without
+  the error text.
+- **Groups.** A `role="group"` control announces neither invalid nor required;
+  ARIA supports both on `radiogroup` but not on `group`. There, the error text
+  in `aria-describedby` is all a screen reader user hears.
+- **Owned attributes.** Pass more ids through `labelledBy` and `describedBy`
+  instead of writing `aria-labelledby` or `aria-describedby`, and set the
+  control's id through `controlId`, or its `id` attribute on the element.
+  React warns in development when you pass an attribute UniAria writes.
+
+## Compared with other libraries
+
+- **React Aria** links errors the same way, through `aria-describedby`, but
+  announces nothing when one appears. Field announces it, as the
+  `role="alert"` messages of many design systems do. Lion makes the error a
+  live region instead.
+- **No validation.** There is no counterpart to React Aria's `validate`,
+  `validationBehavior="native"` or native constraint messages: pass
+  `isInvalid` from your form library or your own checks.
+- **No `aria-errormessage`.** VoiceOver and NVDA don't read it, so the error
+  goes in `aria-describedby`, as React Aria, Lion and Spectrum Web Components
+  do. The APG's spin button example uses `aria-errormessage`.
+- **No native `required`.** Field writes `aria-required` only, so the browser
+  shows no validation bubbles of its own.

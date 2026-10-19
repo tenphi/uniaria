@@ -1,0 +1,76 @@
+:root {
+  color-scheme: light dark;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem;
+}
+
+.uni-radio-group {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+/* The group's parts by scope, which leaves the radios' labels alone. */
+[data-scope='radio-group'][data-element='Label'] {
+  font-weight: 600;
+}
+[data-scope='radio-group'][data-element='Description'] {
+  margin-top: -0.5rem;
+  color: GrayText;
+  font-size: 0.875rem;
+}
+
+/* Each radio: the input lies over its label root, transparent. */
+.uni-radio {
+  position: relative;
+  display: inline-flex;
+  gap: 0.625rem;
+  align-items: center;
+  cursor: pointer;
+}
+.uni-radio [data-element='Input'] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.uni-radio [data-element='Indicator'] {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, CanvasText 45%, transparent);
+  border-radius: 50%;
+  background: Canvas;
+}
+.uni-radio [data-element='Indicator'][data-hovered] {
+  border-color: CanvasText;
+}
+.uni-radio [data-element='Indicator'][data-selected] {
+  border-color: CanvasText;
+}
+.uni-radio [data-element='Indicator'][data-selected]::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: CanvasText;
+}
+.uni-radio [data-element='Indicator'][data-focus-visible] {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+.uni-radio[data-disabled] {
+  color: GrayText;
+  cursor: not-allowed;
+}
+.uni-radio [data-element='Indicator'][data-disabled] {
+  border-color: color-mix(in srgb, GrayText 50%, transparent);
+}

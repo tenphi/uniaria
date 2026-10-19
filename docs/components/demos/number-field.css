@@ -1,0 +1,91 @@
+:root {
+  color-scheme: light dark;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem;
+}
+form {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+button[type='submit'] {
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, CanvasText 6%, Canvas);
+  color: CanvasText;
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-scope='number-field'][data-element='Label'] {
+  display: block;
+  margin-block-end: 0.25rem;
+  font-weight: 600;
+}
+/* The wrapper draws the box; a press on it outside the buttons focuses the
+   input. */
+[data-scope='number-field'][data-element='Wrapper'] {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
+  border-radius: 0.5rem;
+  background: Canvas;
+  overflow: hidden;
+  cursor: text;
+}
+[data-scope='number-field'][data-element='Wrapper'][data-hovered] {
+  border-color: color-mix(in srgb, CanvasText 55%, transparent);
+}
+[data-scope='number-field'][data-element='Wrapper'][data-focused] {
+  border-color: Highlight;
+  box-shadow: 0 0 0 1px Highlight;
+}
+.uni-number-field [data-element='Input'] {
+  inline-size: 7rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: CanvasText;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+.uni-number-field [data-element='Increment'],
+.uni-number-field [data-element='Decrement'] {
+  inline-size: 2.25rem;
+  border: none;
+  background: color-mix(in srgb, CanvasText 6%, Canvas);
+  color: CanvasText;
+  font: inherit;
+  cursor: pointer;
+}
+.uni-number-field [data-element='Increment'][data-hovered],
+.uni-number-field [data-element='Decrement'][data-hovered] {
+  background: color-mix(in srgb, CanvasText 12%, Canvas);
+}
+.uni-number-field [data-element='Increment'][data-pressed],
+.uni-number-field [data-element='Decrement'][data-pressed] {
+  background: color-mix(in srgb, CanvasText 20%, Canvas);
+}
+.uni-number-field [data-element='Increment'][data-disabled],
+.uni-number-field [data-element='Decrement'][data-disabled] {
+  color: GrayText;
+  cursor: not-allowed;
+}
+[data-scope='number-field'][data-element='Description'] {
+  margin: 0.25rem 0 0;
+  color: GrayText;
+  font-size: 0.875rem;
+}

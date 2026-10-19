@@ -1,0 +1,29 @@
+{
+  "name": "@uniaria/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The UniAria documentation site, built with Cookbook from the repository's docs/ folder.",
+  "scripts": {
+    "demo": "node scripts/build-demo.mjs",
+    "dev": "pnpm demo && astro dev",
+    "build": "pnpm demo && astro build",
+    "preview": "astro preview",
+    "doctor": "cookbook doctor",
+    "check-build": "cookbook check-build",
+    "typecheck": "tsc --noEmit",
+    "validate": "pnpm typecheck && cookbook doctor && pnpm build && cookbook check-build"
+  },
+  "dependencies": {
+    "@tenphi/cookbook": "^0.28.0",
+    "astro": "^7.3.2"
+  },
+  "devDependencies": {
+    "@uniaria/elements": "workspace:*",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1"
+  },
+  "engines": {
+    "node": ">=22.19"
+  }
+}
