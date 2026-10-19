@@ -70,8 +70,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           expect(root.tagName).toBe('BUTTON');
           expect(root.getAttribute('type')).toBe('button');
           expect(root.getAttribute('tabindex')).toBe('0');
-          expect(root.classList.contains('uni-button')).toBe(true);
-          expect(root.hasAttribute('data-scope')).toBe(false);
+          expect(root.getAttribute('data-uni')).toBe('button');
           expect(root.hasAttribute('data-element')).toBe(false);
           for (const name of [
             'role',
@@ -134,10 +133,8 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           for (const [name, value] of Object.entries(attributes)) {
             expect(root.getAttribute(name), name).toBe(value);
           }
-          // UniAria adds only its own class beside the consumer's.
-          expect([...root.classList].sort()).toEqual(
-            [classes, 'uni-button'].sort(),
-          );
+          // UniAria adds no class beside the consumer's.
+          expect(root.getAttribute('class')).toBe(classes);
           for (const name of [
             'aria-pressed',
             'aria-expanded',
@@ -601,7 +598,7 @@ export const buttonConformance = defineConformance<ButtonProps, ButtonState>(
           ).part();
           expect(root.getAttribute('href')).toBe('/docs');
           expect(root.getAttribute('tabindex')).toBe('0');
-          expect(root.classList.contains('uni-button')).toBe(true);
+          expect(root.getAttribute('data-uni')).toBe('button');
           for (const name of [
             'role',
             'type',
