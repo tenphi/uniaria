@@ -218,6 +218,10 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 - Uncontrolled: the core commits the change. Controlled: the core only calls
   `onChange` and reads the value back from props on the next render. Never
   assume a requested change took effect.
+- `null` (owner decision, 2026-10-19): only `undefined` leaves a bindable
+  uncontrolled; `null` is a controlled value (a Select's `value: null`
+  selects nothing). A plain prop reads `undefined` and `null` alike, as its
+  default.
 - The core reads props only through getters and never keeps a copy.
 
 ### Composition between instances

@@ -3,9 +3,12 @@
  * the TypeScript props of every adapter, the element's attributes and
  * properties, and the events a component dispatches.
  *
- * - `prop(default)` — a plain value the consumer owns.
+ * - `prop(default)` — a plain value the consumer owns. `undefined` or `null`
+ *   reads as the default.
  * - `bindable(default)` — a stateful value that is controlled when the
  *   consumer passes it and uncontrolled otherwise (`default<Name>` seeds it).
+ *   Only `undefined` leaves it uncontrolled: `null` is a value, so a Select's
+ *   `value: null` is controlled with nothing selected, as in React Aria.
  *   Changes are reported through the `<name>Change` event.
  * - `event<Detail>()` — something the component reports, such as `press`.
  *
