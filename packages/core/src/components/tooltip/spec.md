@@ -462,7 +462,9 @@ Decided by @tenphi on 2026-10-16, each as recommended.
      needs its own reference.
 
    Decided: (a). It gets split controls right by construction, writes no
-   attribute another component owns, and matches UI Kit.
+   attribute another component owns, and matches UI Kit. Changed on
+   2026-10-19 (owner): Checkbox, Switch and Radio route hover from their
+   `wrapper` part, else their root, and are the anchor there.
 
 3. **When the trigger carries the relation.** React Aria, UI Kit, Zag and
    Floating UI set `aria-describedby` only while the tooltip is open; Lion and

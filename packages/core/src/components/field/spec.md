@@ -213,9 +213,9 @@ Element attributes: `invalid`, `required`, `disabled`, `labelled-by`,
 the element adopts the control's `id` and reads the label's tag. Set
 `invalid` from the form's validation; the error stays hidden until then.
 
-Composed into a UniAria input, Field's parts become the input's parts. TextInput,
+Composed into a UniAria input, Field's parts become the input's parts. TextField,
 for example, has `root`, `label`, `input`, `description` and `error`, and
-`input` is Field's `control`.
+`input` is Field's `control`; it adds a `wrapper`, the box around the input.
 
 ## Mapping from Cube UI Kit
 

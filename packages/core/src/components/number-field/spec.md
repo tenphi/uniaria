@@ -59,7 +59,8 @@ Not part of NumberField:
 
 | Part        | Element               | Attributes UniAria owns                                                                                                                                                                                                                                        | Notes                                                                                                                                                                               |
 | ----------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`    | state attributes                                                                                                                                                                                                                                               | Optional wrapper, the box around the input and the buttons. No role (Resolved questions 1). A press on it outside any control focuses the input, as TextField's.                    |
+| root        | any; usually `div`    | state attributes                                                                                                                                                                                                                                               | Optional. The outermost element, around the label, the wrapper, the hidden input, the description and the error. No role (Resolved questions 1).                                    |
+| wrapper     | any; usually `div`    | state attributes                                                                                                                                                                                                                                               | Optional. The box around the input and the buttons. No role. A press on it outside any control focuses the input, as TextField's.                                                   |
 | label       | `label` by default    | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
 | input       | `input`               | as Field's control; `type="text"`, `inputmode` (Keyboard on phones), `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `aria-roledescription` (Resolved questions 1), `disabled`, `readonly`, the `value` property (the text), state attributes | The consumer owns `placeholder`, `autofocus`, `enterkeyhint`, `size`, `tabindex` and `form`. Not `name`: the hidden input carries it, so the form gets the number and not the text. |
 | increment   | `button`              | Button's (`type="button"`); `tabindex="-1"`, `aria-label` (`incrementLabel`, else "Increase"), `aria-labelledby` (itself and the label, with the default name only), `aria-controls` (the input), `aria-disabled` while it can't step (Resolved questions 5)   | Optional. Out of the Tab order, as in the APG, React Aria and Zag: the arrow keys do the same. Still reachable by touch, voice control and a screen reader's browse mode.           |
@@ -68,12 +69,15 @@ Not part of NumberField:
 | description | any                   | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
 | error       | any                   | as Field                                                                                                                                                                                                                                                       |                                                                                                                                                                                     |
 
+Changed on 2026-10-19 (owner): the box is now the `wrapper` part; the root is
+the optional outermost element.
+
 State attributes, as TextField's: `data-hovered` (the pointer is over the
 input), `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`,
-`data-invalid` and `data-required` on the root, label, input, description and
-error. The buttons carry Button's own: `data-pressed`, `data-hovered`,
-`data-focus-visible`, and `data-disabled` while they can't step (at a bound,
-read-only or the field disabled).
+`data-invalid` and `data-required` on the root, wrapper, label, input,
+description and error. The buttons carry Button's own: `data-pressed`,
+`data-hovered`, `data-focus-visible`, and `data-disabled` while they can't
+step (at a bound, read-only or the field disabled).
 
 Without `incrementLabel` and `decrementLabel`, the buttons are named
 "Increase" and "Decrease" followed by the field's label, through
@@ -278,7 +282,8 @@ for the phone after hydration.
   phone's keyboard stays open. Otherwise a mouse press focuses the input, and a
   touch or screen-reader press focuses the button, so no keyboard opens and the
   reading position stays, as React Aria does.
-- **A press on the root** outside any control focuses the input, as TextField's.
+- **A press on the wrapper** outside any control focuses the input, as
+  TextField's.
 - **Wheel**, while focus is in the field and the pointer over the input, unless
   `isWheelDisabled`, read-only or disabled: one step per event, up for a wheel
   turned up, as Chromium's own number input (Resolved questions 7). The page
@@ -321,7 +326,7 @@ The input gets no `aria-valuenow`, `aria-valuemin`, `aria-valuemax` or
 
 ## Focus
 
-Focus stays on the input. NumberField moves it only for a press on the root
+Focus stays on the input. NumberField moves it only for a press on the wrapper
 (to the input) and a button press when the input isn't focused (Pointer, touch
 and wheel). The buttons are out of the Tab order.
 
@@ -330,13 +335,13 @@ and wheel). The buttons are out of the Tab order.
 UniAria is not a styling library: the consumer's CSS comes separately and binds
 to these tokens. UniAria sets no look.
 
-| Token                                                                                                                   | On                                     | Meaning                                                    |
-| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| The `uni-number-field` class                                                                                            | root                                   | The root part.                                             |
-| `data-scope="number-field"`, `data-element`                                                                             | every other part                       | Which part an element is.                                  |
-| `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, label, input, description, error | The field's state, as TextField's.                         |
-| `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                   | Button's own; `data-disabled` while the button can't step. |
-| `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)     | The same, for a framework's own bindings.                  |
+| Token                                                                                                                   | On                                              | Meaning                                                    |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
+| The `uni-number-field` class                                                                                            | root                                            | The root part.                                             |
+| `data-scope="number-field"`, `data-element`                                                                             | every other part                                | Which part an element is.                                  |
+| `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, wrapper, label, input, description, error | The field's state, as TextField's.                         |
+| `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                            | Button's own; `data-disabled` while the button can't step. |
+| `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)              | The same, for a framework's own bindings.                  |
 
 ## Expected spoken output
 
@@ -375,9 +380,11 @@ const quantity = useComponent(numberField, {
 return (
   <div {...quantity.parts.root}>
     <label {...quantity.parts.label}>Quantity</label>
-    <input {...quantity.parts.input} />
-    <button {...quantity.parts.decrement}>−</button>
-    <button {...quantity.parts.increment}>+</button>
+    <div {...quantity.parts.wrapper}>
+      <input {...quantity.parts.input} />
+      <button {...quantity.parts.decrement}>−</button>
+      <button {...quantity.parts.increment}>+</button>
+    </div>
     <input {...quantity.parts.hiddenInput} name="quantity" />
     <p {...quantity.parts.error}>Order at most 99</p>
   </div>
@@ -387,11 +394,15 @@ return (
 ```html
 <!-- Custom element -->
 <uni-number-field min-value="0" max-value="99" lang="de">
-  <label data-element="Label">Menge</label>
-  <input data-element="Input" value="5" />
-  <button data-element="Decrement">−</button>
-  <button data-element="Increment">+</button>
-  <input type="hidden" data-element="HiddenInput" name="quantity" />
+  <div class="uni-number-field">
+    <label data-element="Label">Menge</label>
+    <div data-element="Wrapper">
+      <input data-element="Input" value="5" />
+      <button data-element="Decrement">−</button>
+      <button data-element="Increment">+</button>
+    </div>
+    <input type="hidden" data-element="HiddenInput" name="quantity" />
+  </div>
 </uni-number-field>
 ```
 

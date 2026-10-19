@@ -45,17 +45,21 @@ Not part of TextField:
   off-screen mirror; CSS `field-sizing: content` is not Baseline yet. It can
   come later as a TextField option (Resolved questions 2).
 - **Presentation.** Prefix, suffix, icons, the validation and loading
-  indicators and sizes are consumer markup inside the root.
+  indicators and sizes are consumer markup inside the wrapper.
 
 ## Anatomy
 
 | Part        | Element               | Attributes UniAria owns                                                                                                                                               | Notes                                                                                                                                                                                                               |
 | ----------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; usually `div`    | state attributes                                                                                                                                                      | Optional wrapper, where a design system draws the box around the input, its prefix and suffix. No role. A press on it outside any control focuses the input (Resolved questions 4).                                 |
+| root        | any; usually `div`    | state attributes                                                                                                                                                      | Optional. The outermost element, around the label, the wrapper, the description and the error. No role.                                                                                                             |
+| wrapper     | any; usually `div`    | state attributes                                                                                                                                                      | Optional. Where a design system draws the box around the input, its prefix and suffix. No role. A press on it outside any control focuses the input (Resolved questions 4).                                         |
 | label       | `label` by default    | as Field: `id`, `for`, state attributes                                                                                                                               |                                                                                                                                                                                                                     |
 | input       | `input` or `textarea` | as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled`, `readonly`, the `value` property, state attributes | The consumer owns `name`, `type`, `placeholder`, `autocomplete`, `inputmode`, `maxlength`, `minlength`, `pattern`, `autofocus`, `spellcheck`, `enterkeyhint`, `form`, `rows`, `tabindex` and the `value` attribute. |
 | description | any                   | as Field                                                                                                                                                              |                                                                                                                                                                                                                     |
 | error       | any                   | as Field                                                                                                                                                              |                                                                                                                                                                                                                     |
+
+Changed on 2026-10-19 (owner): the box is now the `wrapper` part; the root is
+the optional outermost element.
 
 State attributes go on every part, as Field's do, so the box, the label and
 the messages can be styled without reading state: `data-hovered`,
@@ -93,7 +97,7 @@ it needs no `elementType`: the input part is whichever the consumer renders.
 | value          | `string`  | The current value.                                                        |
 | isFocused      | `boolean` | The input has focus.                                                      |
 | isFocusVisible | `boolean` | Focus arrived by keyboard or assistive technology; typing doesn't set it. |
-| isHovered      | `boolean` | A mouse is over the input (not the root), as in Cube UI Kit.              |
+| isHovered      | `boolean` | A mouse is over the input (not the wrapper), as in Cube UI Kit.           |
 | isDisabled     | `boolean` | The prop.                                                                 |
 | isReadOnly     | `boolean` | The prop.                                                                 |
 | isRequired     | `boolean` | The prop.                                                                 |
@@ -161,15 +165,16 @@ propagates (a dialog around it closes).
 
 ## Focus
 
-TextField moves focus only for a press on the root outside the input and any
-other control (a prefix icon, the box's padding): the press focuses the input,
-since Cube UI Kit's box already shows a text cursor there (Resolved questions 4).
+TextField moves focus only for a press on the wrapper outside the input and
+any other control (a prefix icon, the box's padding): the press focuses the
+input, since Cube UI Kit's box already shows a text cursor there (Resolved
+questions 4).
 A click on the label focuses the input natively. Hovering and focusing report
 on every part, so the box can show the focus ring.
 
 ## Pointer and touch
 
-None beyond the root press above.
+None beyond the wrapper press above.
 
 ## Expected spoken output
 
@@ -187,8 +192,8 @@ Confirmed with `@guidepup/virtual-screen-reader` on a `label` "Email" and an
 | `<textarea>`                           | `textbox, Email`                              |
 | `type="search"`                        | `searchbox, Email`                            |
 
-The phrase reads the live `value` property. A wrapper root adds nothing when
-the input gets focus.
+The phrase reads the live `value` property. The root and the wrapper add
+nothing when the input gets focus.
 
 ## Adapter surface
 
@@ -198,7 +203,9 @@ const email = useComponent(textField, { isRequired: true, onValueChange });
 return (
   <div {...email.parts.root}>
     <label {...email.parts.label}>Email</label>
-    <input {...email.parts.input} name="email" type="email" />
+    <div {...email.parts.wrapper}>
+      <input {...email.parts.input} name="email" type="email" />
+    </div>
     <p {...email.parts.description}>We never share it</p>
     <p {...email.parts.error}>Enter a valid email</p>
   </div>
@@ -208,14 +215,18 @@ return (
 ```html
 <!-- Custom element -->
 <uni-text-field required>
-  <label data-element="Label">Email</label>
-  <input
-    data-element="Input"
-    name="email"
-    type="email"
-    value="jane@example.com"
-  />
-  <p data-element="Error" hidden>Enter a valid email</p>
+  <div class="uni-text-field">
+    <label data-element="Label">Email</label>
+    <div data-element="Wrapper">
+      <input
+        data-element="Input"
+        name="email"
+        type="email"
+        value="jane@example.com"
+      />
+    </div>
+    <p data-element="Error" hidden>Enter a valid email</p>
+  </div>
 </uni-text-field>
 ```
 
@@ -279,7 +290,7 @@ Decided by @tenphi on 2026-10-15.
    filtering keystrokes belongs to `beforeinput` (NumberField). Cube UI Kit's
    `isBuffered={false}` keeps the typed text until blur too.
 4. **A press on the root focuses the input**, outside the input and any other
-   control.
+   control. Since 2026-10-19 (owner) that is the `wrapper` part.
 5. **Elements adopt a live value into a default.** `adopt` can read a part's
    DOM property and seed a bindable's `default<Key>`: `<uni-text-field>`
    reads the input's `value` property into `defaultValue` on upgrade, so the

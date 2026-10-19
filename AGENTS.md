@@ -325,6 +325,13 @@ target parts the same way in every adapter (`runtime/define.ts`:
   `Trigger`), which is how Tasty names a sub-element. Custom elements find
   these parts by `data-element`. Part names in code don't change
   (`parts.trigger`).
+- **The root is the outermost element** of a component, around every other
+  part (owner, 2026-10-19), so a Tasty component or a `.uni-<name>` style
+  reaches them all. An inner box is a `wrapper` part: TextField's and
+  NumberField's box and the `label` area of Checkbox, Switch and Radio (the
+  hovered area; without a wrapper, the root is). Groups keep their label,
+  description and error inside the root. Overlays are the exception: the
+  panel is the root, and the trigger sits outside it.
 - A composed definition's parts take the outer definition's markers:
   Select's panel is `data-element="Popover"`, ToggleButton's root is
   `uni-toggle-button` only.

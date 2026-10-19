@@ -26,8 +26,9 @@ parts differ.
 - **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
   questions 2): the tooltip instance in React (`tooltip: hint.instance`),
   and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
-  attribute naming one's id. As Checkbox's: hover on the root, focus
-  and presses on the input, which carries the tooltip's id.
+  attribute naming one's id. As Checkbox's: hover on the wrapper
+  (without one, the root), focus and presses on the input, which carries
+  the tooltip's id.
 - **Custom element:** yes, `<uni-switch>`, hosting consumer markup.
 
 Not part of Switch:
@@ -48,19 +49,24 @@ Not part of Switch:
 
 ## Anatomy
 
-| Part        | Element                                                        | Attributes UniAria owns                                                                                                                                                                                                               | Notes                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root        | any; a `label` makes its whole area toggle the switch natively | state attributes                                                                                                                                                                                                                      | Optional. No role.                                                                                                                                       |
-| input       | `input`                                                        | `type="checkbox"`, `role="switch"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled` (or `aria-disabled`), `aria-readonly`, the `checked` property, state attributes | The consumer owns `name`, `value`, `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the root. |
-| indicator   | any; usually `span`                                            | `aria-hidden="true"`, state attributes                                                                                                                                                                                                | Optional. The track drawn in place of the input; the thumb is consumer markup inside it (Resolved questions 1).                                          |
-| label       | `label` by default; any element through `labelElementType`     | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                                           | Names the switch. Inside a `label` root it must be a `span`.                                                                                             |
-| description | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` root.                                                                                                                                  |
-| error       | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` root.                                                                                                                                  |
+| Part        | Element                                                        | Attributes UniAria owns                                                                                                                                                                                                               | Notes                                                                                                                                                                           |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | any; usually `div`; a `label` without a wrapper                | state attributes                                                                                                                                                                                                                      | Optional. The outermost element, around the wrapper, the description and the error. No role. Without a wrapper, a `label` root makes its whole area toggle the switch natively. |
+| wrapper     | any; a `label` makes its whole area toggle the switch natively | state attributes                                                                                                                                                                                                                      | Optional. The area around the input, the indicator and the label. No role.                                                                                                      |
+| input       | `input`                                                        | `type="checkbox"`, `role="switch"`; as Field's control: `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`; plus `disabled` (or `aria-disabled`), `aria-readonly`, the `checked` property, state attributes | The consumer owns `name`, `value`, `form`, `autofocus`, `tabindex`, the `checked` attribute, and the styles that hide the input or lay it over the wrapper or a `label` root.   |
+| indicator   | any; usually `span`                                            | `aria-hidden="true"`, state attributes                                                                                                                                                                                                | Optional. The track drawn in place of the input; the thumb is consumer markup inside it (Resolved questions 1).                                                                 |
+| label       | `label` by default; any element through `labelElementType`     | as Field: `id`, `for` (only on a `label`), state attributes                                                                                                                                                                           | Names the switch. Inside a `label` wrapper or root it must be a `span`.                                                                                                         |
+| description | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` wrapper or root.                                                                                                                                              |
+| error       | any                                                            | as Field                                                                                                                                                                                                                              | Outside a `label` wrapper or root.                                                                                                                                              |
+
+Changed on 2026-10-19 (owner): the `label` area is now the `wrapper` part;
+the root is the optional outermost element.
 
 State attributes go on every part: `data-selected`, `data-hovered`,
 `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`,
 `data-invalid` and `data-required`. The two layouts of Checkbox (a `label`
-root, or a `div` root with a `label` part) work the same way.
+wrapper, or a `div` root with a `label` part) work the same way, and a switch
+with no description or error can make the `label` its root.
 
 ## Props
 
@@ -141,8 +147,8 @@ property gets that.
 ## Focus and pointer
 
 As Checkbox: the input takes focus, Switch moves none, a click on the input
-or a `label` toggles natively, and hover is tracked on the root and the
-input, off while disabled.
+or a `label` toggles natively, and hover is tracked on the wrapper (without
+one, the root) and the input, off while disabled.
 
 ## Expected spoken output
 
