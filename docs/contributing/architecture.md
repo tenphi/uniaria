@@ -286,6 +286,10 @@ after every flush and writes only what differs:
   of step.
 - It owns every attribute `connect()` has ever returned for a part, and
   `undefined` removes one. Every other attribute belongs to the consumer.
+- When an element stops being a part, it removes the attributes and styles
+  it wrote there that still hold what it wrote, unless another part bound to
+  the element writes them too. What it never wrote (the consumer's markers,
+  what React rendered) stays.
 - It sets a live property only when it differs, so an input's caret stays
   where it is.
 - For item parts it rewrites only the keys the instance reports changed.

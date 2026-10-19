@@ -194,9 +194,97 @@ describe('createBinder', () => {
     binder.start();
     expect(root.hasAttribute('data-on')).toBe(true);
     binder.attach('root', null);
+    expect(root.hasAttribute('data-on')).toBe(false);
     instance.api.toggle();
-    expect(root.hasAttribute('data-on')).toBe(true);
+    instance.api.toggle();
+    expect(root.hasAttribute('data-on')).toBe(false);
     expect(instance.element('root')).toBeNull();
+  });
+
+  describe('letting an element go', () => {
+    const panel = defineComponent({
+      name: 'panel',
+      parts: ['trigger', 'panel'],
+      props: { isOpen: prop(false) },
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: ({ props, ids }) => ({
+        trigger: {
+          attrs: {
+            id: ids.trigger,
+            'aria-expanded': String(props.isOpen()),
+            'aria-controls': ids.panel,
+          },
+          style: { '--size': '2' },
+        },
+        panel: { attrs: { id: ids.panel } },
+      }),
+    });
+
+    function mountPanel(html: string) {
+      const { host } = setup(html);
+      const [first, second] = host.querySelectorAll<HTMLElement>('button');
+      const instance = createInstance(panel, { id: 'p' });
+      const binder = createBinder(instance, { host });
+      binder.attach('trigger', first!);
+      instance.start();
+      binder.start();
+      return { first: first!, second: second!, instance, binder };
+    }
+
+    const TWO =
+      '<button data-element="Trigger" class="a">One</button><button data-element="Trigger">Two</button>';
+
+    it('removes what it wrote when another element takes the part', () => {
+      const { first, second, binder } = mountPanel(TWO);
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+
+      binder.attach('trigger', second);
+      for (const name of [
+        'id',
+        'aria-expanded',
+        'aria-controls',
+        'data-scope',
+      ]) {
+        expect(first.hasAttribute(name), name).toBe(false);
+      }
+      expect(first.style.getPropertyValue('--size')).toBe('');
+      // The consumer's markers and classes stay.
+      expect(first.getAttribute('data-element')).toBe('Trigger');
+      expect(first.className).toBe('a');
+      expect(second.getAttribute('aria-expanded')).toBe('false');
+      expect(second.id).toBe('p-trigger');
+    });
+
+    it('leaves what no longer holds what it wrote, and what another part writes', () => {
+      const { first, second, instance, binder } = mountPanel(TWO);
+      first.setAttribute('aria-controls', 'elsewhere');
+      const inner = createInstance(panel, { id: 'i' });
+      const innerBinder = createBinder(inner);
+      innerBinder.attach('trigger', first);
+      inner.start();
+      innerBinder.start();
+      instance.setProps({ isOpen: true });
+      instance.sync();
+      expect(first.getAttribute('aria-expanded')).toBe('true');
+
+      binder.attach('trigger', second);
+      // Still the other instance's to write.
+      expect(first.getAttribute('aria-expanded')).toBe('true');
+      expect(first.style.getPropertyValue('--size')).toBe('2');
+      expect(first.getAttribute('data-scope')).toBe('panel');
+      innerBinder.apply();
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('removes what it wrote from an element it attaches again only once', () => {
+      const { first, binder, instance } = mountPanel(TWO);
+      binder.attach('trigger', null);
+      binder.attach('trigger', first);
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+      expect(first.id).toBe('p-trigger');
+      expect(instance.ids.trigger).toBe('p-trigger');
+    });
   });
 
   it('adds no listeners without a host', () => {
@@ -640,6 +728,29 @@ describe('createBinder with item parts', () => {
     expect(row('a').hasAttribute('aria-labelledby')).toBe(false);
     expect(binder.itemOf(label)).toBeUndefined();
     instance.stop();
+  });
+
+  it('removes what it wrote from an item element it lets go', () => {
+    const { host, row } = setupRows(['a', 'b']);
+    const instance = createInstance(rows);
+    const binder = createBinder(instance, { host });
+    binder.attachItem('row', 'a', row('a'));
+    instance.start();
+    binder.start();
+    row('a').click();
+    expect(row('a').getAttribute('data-active')).toBe('');
+
+    binder.attachItem('row', 'a', row('b'));
+    expect(row('a').hasAttribute('data-active')).toBe(false);
+    expect(row('a').hasAttribute('data-tone')).toBe(false);
+    expect(row('a').hasAttribute('data-scope')).toBe(false);
+    expect(row('a').getAttribute('data-key')).toBe('a');
+    expect(row('a').getAttribute('data-element')).toBe('Row');
+    expect(row('b').getAttribute('data-active')).toBe('');
+
+    binder.attachItem('row', 'a', null);
+    expect(row('b').hasAttribute('data-tone')).toBe(false);
+    binder.stop();
   });
 
   it('stops writing and dispatching to a detached item', () => {

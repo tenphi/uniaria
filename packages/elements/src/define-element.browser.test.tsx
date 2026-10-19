@@ -446,6 +446,50 @@ describe('defineElement', () => {
     expect(host.instance.getState().isOpen).toBe(true);
   });
 
+  it('leaves nothing of its own on a part a nested element defined later takes', async () => {
+    const container = mount(`
+      <uni-test-disclosure>
+        <uni-test-late-panel>
+          <div data-element="Panel" class="box">Inner</div>
+        </uni-test-late-panel>
+      </uni-test-disclosure>`);
+    const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
+    const inner = host.querySelector<HTMLElement>('[data-element="Panel"]')!;
+    expect(inner.hasAttribute('hidden')).toBe(true);
+
+    defineElement(
+      defineComponent({
+        name: 'test-late-panel',
+        parts: ['panel'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ panel: { attrs: { role: 'region' } } }),
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(host.instance.element('panel')).toBeNull();
+    expect(inner.hasAttribute('hidden')).toBe(false);
+    expect(inner.getAttribute('data-scope')).toBe('test-late-panel');
+    expect(inner.getAttribute('role')).toBe('region');
+    expect(inner.getAttribute('data-element')).toBe('Panel');
+    expect(inner.className).toBe('box');
+  });
+
+  it('leaves nothing of its own on a part the consumer renames', async () => {
+    const container = mount(
+      `<uni-test-disclosure>${MARKUP}</uni-test-disclosure>`,
+    );
+    const { host, trigger } = disclosureIn(container);
+    trigger.setAttribute('data-element', 'Other');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(host.instance.element('trigger')).toBeNull();
+    expect(trigger.hasAttribute('aria-expanded')).toBe(false);
+    expect(trigger.hasAttribute('data-scope')).toBe(false);
+    expect(trigger.getAttribute('data-element')).toBe('Other');
+  });
+
   it('finds parts added after it connected', async () => {
     const container = mount(
       '<uni-test-disclosure><button data-element="Trigger">Details</button></uni-test-disclosure>',

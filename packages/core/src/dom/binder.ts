@@ -15,6 +15,14 @@
  * `value`) are set only when they differ from the element, so an input's
  * caret stays put while the two agree; `undefined` leaves one alone.
  *
+ * When an element stops being a part (another element takes the part, or
+ * none), the binder removes the attributes and styles it wrote there and
+ * that still hold what it wrote, unless another part bound to the element,
+ * of this instance or another, writes them too. What it never wrote stays:
+ * the markers the consumer authored (`data-element`, `data-key`, the root's
+ * class), and what a framework rendered from the part props, which React
+ * removes itself.
+ *
  * Except while the browser's own change is on its way to the instance: the
  * browser changes an input's `value`, or a checkbox's or radio's `checked`,
  * before the `input` or `click` event that tells the instance. A consumer's
@@ -77,6 +85,58 @@ interface Bound {
   readonly style: Set<string>;
   /** Each live property as the binder last wrote or found it. */
   readonly properties: Map<string, unknown>;
+  /** Attributes the binder set on the element, with the value it set. */
+  readonly written: Map<string, string>;
+  /** Styles the binder set, with the value the element then held. */
+  readonly writtenStyle: Map<string, string>;
+}
+
+const newBound = (element: Element): Bound => ({
+  element,
+  attrs: new Set(),
+  style: new Set(),
+  properties: new Map(),
+  written: new Map(),
+  writtenStyle: new Map(),
+});
+
+/** Every part bound to each element, by any binder. */
+const boundOn = new WeakMap<Element, Set<Bound>>();
+
+function register(entry: Bound): void {
+  let entries = boundOn.get(entry.element);
+  if (!entries) boundOn.set(entry.element, (entries = new Set()));
+  entries.add(entry);
+}
+
+/**
+ * Removes what the binder wrote on an element that stopped being this part
+ * (see the module comment): only what still holds the value it wrote, and
+ * nothing another part bound to the element writes too.
+ */
+function release(entry: Bound): void {
+  const { element } = entry;
+  const others = boundOn.get(element);
+  others?.delete(entry);
+  if (others?.size === 0) boundOn.delete(element);
+  const isClaimed = (name: string, kind: 'attrs' | 'style') => {
+    for (const other of others ?? []) if (other[kind].has(name)) return true;
+    return false;
+  };
+  for (const [name, value] of entry.written) {
+    if (element.getAttribute(name) === value && !isClaimed(name, 'attrs')) {
+      element.removeAttribute(name);
+    }
+  }
+  const style = (element as HTMLElement).style as
+    CSSStyleDeclaration | undefined;
+  for (const [name, value] of entry.writtenStyle) {
+    if (style?.getPropertyValue(name) === value && !isClaimed(name, 'style')) {
+      style.removeProperty(name);
+    }
+  }
+  entry.written.clear();
+  entry.writtenStyle.clear();
 }
 
 interface BoundItem extends Bound {
@@ -220,7 +280,6 @@ export function createBinder<D extends AnyDefinition>(
   let unsubscribeItems: (() => void) | undefined;
   /** Keys of items to write on the next apply, or `'all'`. */
   let pending: Set<string> | 'all' = 'all';
-
   /**
    * The parts an event reaches, innermost first: every part on the path from
    * the target up to the host for a bubbling event, as the bubble phase
@@ -277,14 +336,16 @@ export function createBinder<D extends AnyDefinition>(
   };
 
   const writeProps = (entry: Bound, props: PartProps): void => {
-    const { element } = entry;
+    const { element, written, writtenStyle } = entry;
     for (const name of Object.keys(props.attrs)) entry.attrs.add(name);
     for (const name of entry.attrs) {
       const value = props.attrs[name];
       if (value === undefined) {
         if (element.hasAttribute(name)) element.removeAttribute(name);
+        written.delete(name);
       } else if (element.getAttribute(name) !== value) {
         element.setAttribute(name, value);
+        written.set(name, value);
       }
     }
     const style = (element as HTMLElement).style as
@@ -293,9 +354,12 @@ export function createBinder<D extends AnyDefinition>(
       for (const name of Object.keys(props.style ?? {})) entry.style.add(name);
       for (const name of entry.style) {
         const value = props.style?.[name];
-        if (value === undefined) style.removeProperty(name);
-        else if (style.getPropertyValue(name) !== value) {
+        if (value === undefined) {
+          style.removeProperty(name);
+          writtenStyle.delete(name);
+        } else if (style.getPropertyValue(name) !== value) {
           style.setProperty(name, value);
+          writtenStyle.set(name, style.getPropertyValue(name));
         }
       }
     }
@@ -329,26 +393,24 @@ export function createBinder<D extends AnyDefinition>(
     const siblings = itemsByKey.get(entry.key);
     siblings?.delete(entry);
     if (siblings?.size === 0) itemsByKey.delete(entry.key);
+    release(entry);
   };
 
   return {
     attach(part, element) {
       const current = bound.get(part);
-      if (current?.element === element) return;
+      if ((current?.element ?? null) === element) return;
       if (current) {
         targets.delete(current.element);
         bound.delete(part);
+        release(current);
       }
       instance.attach(part as never, element);
       if (!element) return;
-      const entry: Bound = {
-        element,
-        attrs: new Set(),
-        style: new Set(),
-        properties: new Map(),
-      };
+      const entry = newBound(element);
       bound.set(part, entry);
       targets.set(element, part);
+      register(entry);
       if (unsubscribe) write(part, entry);
     },
     attachItem(part, key, element) {
@@ -356,14 +418,8 @@ export function createBinder<D extends AnyDefinition>(
       if (current?.element === element) return;
       if (current) detachItem(current);
       if (element) {
-        const entry: BoundItem = {
-          element,
-          part,
-          key,
-          attrs: new Set(),
-          style: new Set(),
-          properties: new Map(),
-        };
+        const entry: BoundItem = { ...newBound(element), part, key };
+        register(entry);
         items.set(itemEntryId(part, key), entry);
         let siblings = itemsByKey.get(key);
         if (!siblings) itemsByKey.set(key, (siblings = new Set()));

@@ -223,8 +223,10 @@ order.
 
 The element writes only what it owns on each part: ARIA attributes,
 `data-scope` and `data-element`, state attributes and the ids and references
-it needs. It never writes `class`: the root's `uni-<name>` comes from your
-markup. Content, your own classes and every other attribute stay yours.
+it needs. When an element stops being a part (you rename its
+`data-element`, or a nested element defined later takes it), the element
+removes what it wrote there. It never writes `class`: the root's
+`uni-<name>` comes from your markup. Content, your own classes and every other attribute stay yours.
 
 Event listeners for parts are delegated from the element's root node (the
 document, or the shadow root it sits in), never added to the host element.
