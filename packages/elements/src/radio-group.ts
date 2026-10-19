@@ -6,12 +6,12 @@
  *
  * ```html
  * <uni-radio-group name="plan" required>
- *   <div data-part="root">
- *     <span data-part="label">Plan</span>
+ *   <div class="uni-radio-group">
+ *     <span data-element="Label">Plan</span>
  *     <uni-radio value="free">
- *       <label data-part="root">
- *         <input data-part="input" type="radio" />
- *         <span data-part="label">Free</span>
+ *       <label class="uni-radio">
+ *         <input data-element="Input" type="radio" />
+ *         <span data-element="Label">Free</span>
  *       </label>
  *     </uni-radio>
  *   </div>

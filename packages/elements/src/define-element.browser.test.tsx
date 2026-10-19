@@ -78,8 +78,8 @@ type Disclosure = UniElement<typeof disclosure>;
 defineElement(disclosure);
 
 const MARKUP = `
-  <button data-part="trigger">Details</button>
-  <div data-part="panel">Content</div>`;
+  <button data-element="Trigger">Details</button>
+  <div data-element="Panel">Content</div>`;
 
 function mount(html: string): HTMLElement {
   const container = document.createElement('div');
@@ -88,10 +88,18 @@ function mount(html: string): HTMLElement {
   return container;
 }
 
+/**
+ * The selector for a part other than the root, by its `data-element`:
+ * `groupLabel` → `[data-element="GroupLabel"]`.
+ */
+function byElement(part: string): string {
+  return `[data-element="${part.charAt(0).toUpperCase()}${part.slice(1)}"]`;
+}
+
 function disclosureIn(container: HTMLElement) {
   const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
-  const trigger = host.querySelector<HTMLElement>('[data-part="trigger"]')!;
-  const panel = host.querySelector<HTMLElement>('[data-part="panel"]')!;
+  const trigger = host.querySelector<HTMLElement>('[data-element="Trigger"]')!;
+  const panel = host.querySelector<HTMLElement>('[data-element="Panel"]')!;
   return { host, trigger, panel };
 }
 
@@ -227,7 +235,7 @@ describe('defineElement', () => {
       }),
     });
     const container = mount(
-      '<uni-test-late><span data-part="root"></span></uni-test-late>',
+      '<uni-test-late><span class="uni-test-late"></span></uni-test-late>',
     );
     const host = container.querySelector('uni-test-late')!;
     (host as unknown as { delay: number }).delay = 200;
@@ -240,15 +248,15 @@ describe('defineElement', () => {
   it('leaves the parts of a nested instance to that instance', () => {
     const container = mount(`
       <uni-test-disclosure id="outer">
-        <button data-part="trigger">Outer</button>
-        <div data-part="panel">
+        <button data-element="Trigger">Outer</button>
+        <div data-element="Panel">
           <uni-test-disclosure id="inner">${MARKUP}</uni-test-disclosure>
         </div>
       </uni-test-disclosure>`);
     const outer = container.querySelector<Disclosure>('#outer')!;
     const inner = container.querySelector<Disclosure>('#inner')!;
     const innerTrigger = inner.querySelector<HTMLElement>(
-      '[data-part="trigger"]',
+      '[data-element="Trigger"]',
     )!;
 
     innerTrigger.click();
@@ -271,9 +279,9 @@ describe('defineElement', () => {
     const container = mount(`
       <uni-test-disclosure>
         <uni-test-wrapper>
-          <button data-part="trigger">Inner</button>
+          <button data-element="Trigger">Inner</button>
         </uni-test-wrapper>
-        <uni-test-wrapper data-part="panel"></uni-test-wrapper>
+        <uni-test-wrapper data-element="Panel"></uni-test-wrapper>
       </uni-test-disclosure>`);
     const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
     const [inner, panel] = host.querySelectorAll('uni-test-wrapper');
@@ -288,11 +296,11 @@ describe('defineElement', () => {
 
   it('finds parts added after it connected', async () => {
     const container = mount(
-      '<uni-test-disclosure><button data-part="trigger">Details</button></uni-test-disclosure>',
+      '<uni-test-disclosure><button data-element="Trigger">Details</button></uni-test-disclosure>',
     );
     const { host } = disclosureIn(container);
     const panel = document.createElement('div');
-    panel.setAttribute('data-part', 'panel');
+    panel.setAttribute('data-element', 'Panel');
     host.append(panel);
 
     await new Promise((resolve) => setTimeout(resolve));
@@ -332,7 +340,7 @@ describe('defineElement', () => {
       }),
     });
     const container = mount(
-      '<uni-test-live><input data-part="input" value="jane" /></uni-test-live>',
+      '<uni-test-live><input data-element="Input" value="jane" /></uni-test-live>',
     );
     const input = container.querySelector('input')!;
     // Typed before the element is defined.
@@ -355,7 +363,7 @@ describe('defineElement', () => {
       `<uni-test-disclosure>${MARKUP}</uni-test-disclosure>`,
     );
     const host = container.querySelector<Disclosure>('uni-test-disclosure')!;
-    const trigger = host.querySelector('[data-part="trigger"]')!;
+    const trigger = host.querySelector('[data-element="Trigger"]')!;
     host.toggle();
     expect(host.instance.getState().isOpen).toBe(true);
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
@@ -386,6 +394,117 @@ describe('defineElement', () => {
       connect: () => ({ root: { attrs: {} } }),
     });
     expect(() => defineElement(shadowing)).toThrow(/shadow/);
+  });
+});
+
+/** A root and a trigger, each writing an attribute that shows it attached. */
+const marked = defineComponent({
+  name: 'test-marked',
+  parts: ['root', 'trigger'],
+  props: {},
+  setup: () => ({}),
+  expose: () => ({}),
+  connect: () => ({
+    root: { attrs: { role: 'group' } },
+    trigger: { attrs: { 'aria-haspopup': 'true' } },
+  }),
+});
+
+type Marked = UniElement<typeof marked>;
+
+defineElement(marked);
+
+describe('part markers', () => {
+  const tick = () => new Promise((resolve) => setTimeout(resolve));
+
+  const markedIn = (container: HTMLElement) => {
+    const host = container.querySelector<Marked>('uni-test-marked')!;
+    const root = host.querySelector<HTMLElement>('#root')!;
+    const button = host.querySelector<HTMLElement>('button')!;
+    const span = host.querySelector<HTMLElement>('span')!;
+    return { host, root, button, span };
+  };
+
+  const MARKED = `
+    <uni-test-marked>
+      <div id="root" class="card uni-test-marked">
+        <button data-element="Trigger">Go</button>
+        <span>Other</span>
+      </div>
+    </uni-test-marked>`;
+
+  it('finds the root by its uni-<name> class and another part by its data-element', () => {
+    const container = mount(`
+      <uni-test-marked>
+        <div id="decoy" class="uni-other" data-element="Root">
+          <div id="root" class="card uni-test-marked">
+            <button data-element="Trigger">Go</button>
+            <span data-element="trigger">Lowercase</span>
+          </div>
+        </div>
+      </uni-test-marked>`);
+    const { host, root, button, span } = markedIn(container);
+    expect(host.instance.element('root')).toBe(root);
+    expect(host.instance.element('trigger')).toBe(button);
+    expect(root.getAttribute('role')).toBe('group');
+    // The root keeps its markup class and gets no other marker.
+    expect(root.getAttribute('class')).toBe('card uni-test-marked');
+    expect(root.hasAttribute('data-scope')).toBe(false);
+    expect(root.hasAttribute('data-element')).toBe(false);
+    expect(button.getAttribute('aria-haspopup')).toBe('true');
+    expect(button.getAttribute('data-scope')).toBe('test-marked');
+    // Neither another component's class, data-element="Root" nor a part name
+    // in the wrong case marks a part.
+    const decoy = host.querySelector('#decoy')!;
+    expect(decoy.hasAttribute('role')).toBe(false);
+    expect(span.hasAttribute('aria-haspopup')).toBe(false);
+  });
+
+  it('scans again when a part’s data-element changes or the root loses its class', async () => {
+    const { host, root, button, span } = markedIn(mount(MARKED));
+    expect(host.instance.element('trigger')).toBe(button);
+
+    button.setAttribute('data-element', 'Other');
+    await tick();
+    expect(host.instance.element('trigger')).toBeNull();
+
+    span.setAttribute('data-element', 'Trigger');
+    await tick();
+    expect(host.instance.element('trigger')).toBe(span);
+    expect(span.getAttribute('aria-haspopup')).toBe('true');
+    expect(span.getAttribute('data-scope')).toBe('test-marked');
+
+    root.classList.remove('uni-test-marked');
+    await tick();
+    expect(host.instance.element('root')).toBeNull();
+
+    root.classList.add('uni-test-marked');
+    await tick();
+    expect(host.instance.element('root')).toBe(root);
+  });
+
+  it('leaves its parts attached, with no scan, when other classes on the root change', async () => {
+    const { host, root, button } = markedIn(mount(MARKED));
+    const scans = vi.spyOn(host, 'querySelectorAll');
+
+    root.classList.add('is-active');
+    root.classList.remove('card');
+    root.className = `${root.className} other`;
+    button.classList.add('pressed');
+    await tick();
+
+    expect(scans).not.toHaveBeenCalled();
+    expect(host.instance.element('root')).toBe(root);
+    expect(host.instance.element('trigger')).toBe(button);
+    expect(root.getAttribute('class')).toBe('uni-test-marked is-active other');
+    expect(root.getAttribute('role')).toBe('group');
+
+    // A change that can move a part scans.
+    button.setAttribute('data-element', 'Other');
+    await tick();
+    expect(scans).toHaveBeenCalled();
+    expect(host.instance.element('trigger')).toBeNull();
+    scans.mockRestore();
   });
 });
 
@@ -432,15 +551,15 @@ defineElement(rows);
 describe('item parts', () => {
   const ROWS = `
     <uni-test-rows>
-      <div data-part="list">
-        <div data-part="row" data-key="apple">Apple</div>
-        <div data-part="section" data-key="citrus">
+      <div data-element="List">
+        <div data-element="Row" data-key="apple">Apple</div>
+        <div data-element="Section" data-key="citrus">
           <span>Citrus</span>
-          <div data-part="row" data-key="lemon" data-text-value="Lemon">
+          <div data-element="Row" data-key="lemon" data-text-value="Lemon">
             Lemon <small>sour</small>
           </div>
         </div>
-        <div data-part="row" data-key="kiwi">  Kiwi
+        <div data-element="Row" data-key="kiwi">  Kiwi
           fruit </div>
       </div>
     </uni-test-rows>`;
@@ -455,7 +574,8 @@ describe('item parts', () => {
   it('writes every item part by its data-key and dispatches its events', () => {
     const { host, row } = rowsIn(mount(ROWS));
     expect(row('apple').getAttribute('role')).toBe('option');
-    expect(row('apple').getAttribute('data-part')).toBe('row');
+    expect(row('apple').getAttribute('data-scope')).toBe('test-rows');
+    expect(row('apple').getAttribute('data-element')).toBe('Row');
     expect(row('citrus').getAttribute('role')).toBe('group');
     expect(row('lemon').getAttribute('aria-selected')).toBe('false');
 
@@ -480,10 +600,10 @@ describe('item parts', () => {
     const items = host.instance.getState().items;
     row('apple').setAttribute('data-key', 'pear');
     const fig = document.createElement('div');
-    fig.setAttribute('data-part', 'row');
+    fig.setAttribute('data-element', 'Row');
     fig.setAttribute('data-key', 'fig');
     fig.textContent = 'Fig';
-    host.querySelector('[data-part="list"]')!.append(fig);
+    host.querySelector('[data-element="List"]')!.append(fig);
     row('kiwi').remove();
 
     await new Promise((resolve) => setTimeout(resolve));
@@ -520,19 +640,19 @@ describe('item parts', () => {
     const { host } = rowsIn(
       mount(`
         <uni-test-rows>
-          <div data-part="row">No key</div>
-          <div data-part="row" data-key="a">A</div>
-          <div data-part="row" data-key="a">Again</div>
+          <div data-element="Row">No key</div>
+          <div data-element="Row" data-key="a">A</div>
+          <div data-element="Row" data-key="a">Again</div>
         </uni-test-rows>`),
     );
-    const [noKey, , again] = host.querySelectorAll('[data-part="row"]');
+    const [noKey, , again] = host.querySelectorAll('[data-element="Row"]');
     expect(noKey!.hasAttribute('role')).toBe(false);
     expect(again!.hasAttribute('role')).toBe(false);
     expect(host.instance.getState().items).toEqual([
       { key: 'a', textValue: 'A' },
     ]);
     expect(spy.mock.calls.map(([message]) => String(message))).toEqual([
-      expect.stringContaining('the row part has no data-key'),
+      expect.stringContaining('the Row part has no data-key'),
       expect.stringContaining('with data-key "a" repeats an earlier one'),
     ]);
     spy.mockRestore();
@@ -566,9 +686,9 @@ describe('links', () => {
   it('links to the host it sits in directly, not through another host', () => {
     const container = mount(`
       <uni-test-hint>
-        <uni-test-linker id="direct"><span data-part="root"></span></uni-test-linker>
+        <uni-test-linker id="direct"><span class="uni-test-linker"></span></uni-test-linker>
         <uni-test-disclosure>
-          <uni-test-linker id="nested"><span data-part="root"></span></uni-test-linker>
+          <uni-test-linker id="nested"><span class="uni-test-linker"></span></uni-test-linker>
         </uni-test-disclosure>
       </uni-test-hint>`);
     const tip =
@@ -581,7 +701,7 @@ describe('links', () => {
 
   it('links by id through the attribute of the key’s name, and unlinks when moved', () => {
     const container = mount(`
-      <uni-test-linker hint="tip"><span data-part="root"></span></uni-test-linker>`);
+      <uni-test-linker hint="tip"><span class="uni-test-linker"></span></uni-test-linker>`);
     const host = container.querySelector<Host>('uni-test-linker')!;
     expect(host.instance.linked(hintLink)).toBeUndefined();
 
@@ -604,12 +724,10 @@ describe('links', () => {
 describe('<uni-button>', () => {
   it('adopts the root tag and its href', () => {
     const container = mount(`
-      <uni-button id="div"><div data-part="root">Save</div></uni-button>
-      <uni-button id="link"><a data-part="root" href="/docs">Docs</a></uni-button>`);
-    const div = container.querySelector('#div [data-part="root"]')!;
-    const link = container.querySelector<HTMLElement>(
-      '#link [data-part="root"]',
-    )!;
+      <uni-button id="div"><div class="uni-button">Save</div></uni-button>
+      <uni-button id="link"><a class="uni-button" href="/docs">Docs</a></uni-button>`);
+    const div = container.querySelector('#div .uni-button')!;
+    const link = container.querySelector<HTMLElement>('#link .uni-button')!;
     const host = container.querySelector<UniElement<never>>('#link')!;
     expect(div.getAttribute('role')).toBe('button');
     expect(link.getAttribute('href')).toBe('/docs');
@@ -634,7 +752,7 @@ describe('<uni-button>', () => {
             { isDisabled },
             createElement(
               'button',
-              { 'data-part': 'root', className: label },
+              { className: `uni-button ${label}` },
               label,
             ),
           ),
@@ -642,16 +760,18 @@ describe('<uni-button>', () => {
       );
 
     render('Save', true);
+    const host = container.querySelector('uni-button')!;
     const button = container.querySelector('button')!;
     expect(button.hasAttribute('disabled')).toBe(true);
-    expect(button.getAttribute('data-scope')).toBe('button');
+    expect(host.instance.element('root')).toBe(button);
 
     render('Saving', false);
     expect(button.textContent).toBe('Saving');
-    expect(button.className).toBe('Saving');
+    expect(button.className).toBe('uni-button Saving');
     expect(button.hasAttribute('disabled')).toBe(false);
-    expect(button.getAttribute('data-scope')).toBe('button');
+    expect(button.hasAttribute('data-scope')).toBe(false);
     expect(button.getAttribute('type')).toBe('button');
+    expect(host.instance.element('root')).toBe(button);
     root.unmount();
   });
 });
@@ -660,13 +780,13 @@ describe('<uni-field>', () => {
   it("adopts the control's id and the label's tag", () => {
     const container = mount(`
       <uni-field>
-        <span data-part="label">Plan</span>
-        <div data-part="control" id="plan" role="radiogroup"></div>
+        <span data-element="Label">Plan</span>
+        <div data-element="Control" id="plan" role="radiogroup"></div>
       </uni-field>`);
     const host =
       container.querySelector<UniElement<typeof field>>('uni-field')!;
-    const label = host.querySelector('[data-part="label"]')!;
-    const control = host.querySelector('[data-part="control"]')!;
+    const label = host.querySelector('[data-element="Label"]')!;
+    const control = host.querySelector('[data-element="Control"]')!;
     expect(host.controlId).toBe('plan');
     expect(host.labelElementType).toBe('span');
     expect(control.id).toBe('plan');
@@ -692,10 +812,10 @@ describe('<uni-field>', () => {
     defineElement(textInput);
     const container = mount(`
       <uni-field>
-        <label data-part="label">Email</label>
+        <label data-element="Label">Email</label>
         <uni-test-text-input>
-          <label data-part="label">Work email</label>
-          <input data-part="input" />
+          <label data-element="Label">Work email</label>
+          <input data-element="Input" />
         </uni-test-text-input>
       </uni-field>`);
     const [outer, inner] = container.querySelectorAll('label');
@@ -715,8 +835,8 @@ describe('<uni-text-field>', () => {
   it('takes the markup value as its default and the readonly attribute', () => {
     const container = mount(`
       <uni-text-field readonly>
-        <label data-part="label">Name</label>
-        <input data-part="input" value="Jane" />
+        <label data-element="Label">Name</label>
+        <input data-element="Input" value="Jane" />
       </uni-text-field>`);
     const host = container.querySelector('uni-text-field')!;
     const input = host.querySelector('input')!;
@@ -733,11 +853,11 @@ describe('<uni-text-field>', () => {
 describe('<uni-number-field>', () => {
   const field = (attributes = '', value = '1.234,5') => `
     <uni-number-field lang="de-DE" ${attributes}>
-      <label data-part="label">Menge</label>
-      <input data-part="input" value="${value}" />
-      <button data-part="decrement">−</button>
-      <button data-part="increment">+</button>
-      <input data-part="hiddenInput" name="menge" />
+      <label data-element="Label">Menge</label>
+      <input data-element="Input" value="${value}" />
+      <button data-element="Decrement">−</button>
+      <button data-element="Increment">+</button>
+      <input data-element="HiddenInput" name="menge" />
     </uni-number-field>`;
 
   it('takes the markup text, parsed for its language, as its default', () => {
@@ -796,9 +916,9 @@ describe('<uni-checkbox>', () => {
   it('takes the markup checked state as its default and reads the label tag', () => {
     const container = mount(`
       <uni-checkbox readonly>
-        <label data-part="root">
-          <input data-part="input" type="checkbox" checked />
-          <span data-part="label">Accept terms</span>
+        <label class="uni-checkbox">
+          <input data-element="Input" type="checkbox" checked />
+          <span data-element="Label">Accept terms</span>
         </label>
       </uni-checkbox>`);
     const host = container.querySelector('uni-checkbox')!;
@@ -819,8 +939,8 @@ describe('<uni-checkbox>', () => {
   it('keeps a click made before upgrade', () => {
     const container = mount(`
       <div>
-        <input data-part="input" type="checkbox" />
-        <label data-part="label">News</label>
+        <input data-element="Input" type="checkbox" />
+        <label data-element="Label">News</label>
       </div>`);
     const markup = container.firstElementChild!;
     (markup.querySelector('input') as HTMLInputElement).click();
@@ -834,7 +954,7 @@ describe('<uni-checkbox>', () => {
   it('takes indeterminate as an attribute', () => {
     const container = mount(`
       <uni-checkbox indeterminate>
-        <input data-part="input" type="checkbox" />
+        <input data-element="Input" type="checkbox" />
       </uni-checkbox>`);
     const host = container.querySelector('uni-checkbox')!;
     expect(host.isIndeterminate).toBe(true);
@@ -845,17 +965,17 @@ describe('<uni-checkbox>', () => {
 describe('<uni-checkbox-group>', () => {
   const option = (value: string, extra = '') => `
     <uni-checkbox value="${value}" ${extra}>
-      <label data-part="root">
-        <input data-part="input" type="checkbox" ${value === 'sms' ? 'checked' : ''} />
-        <span data-part="label">${value}</span>
+      <label class="uni-checkbox">
+        <input data-element="Input" type="checkbox" ${value === 'sms' ? 'checked' : ''} />
+        <span data-element="Label">${value}</span>
       </label>
     </uni-checkbox>`;
 
   it('takes the checkboxes checked in the markup as its default', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div data-part="root">
-          <span data-part="label">Notify</span>
+        <div class="uni-checkbox-group">
+          <span data-element="Label">Notify</span>
           ${option('email')}${option('sms')}
         </div>
       </uni-checkbox-group>`);
@@ -882,7 +1002,7 @@ describe('<uni-checkbox-group>', () => {
     const group = document.createElement('uni-checkbox-group');
     group.id = 'notify';
     group.defaultValue = ['email'];
-    group.innerHTML = '<div data-part="root"></div>';
+    group.innerHTML = '<div class="uni-checkbox-group"></div>';
     container.append(group);
     expect(box.instance.owner()).toBe(group.instance);
     expect(box.querySelector('input')!.checked).toBe(true);
@@ -894,7 +1014,7 @@ describe('<uni-checkbox-group>', () => {
   it('leaves the group when moved out of it', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div data-part="root">${option('email')}</div>
+        <div class="uni-checkbox-group">${option('email')}</div>
       </uni-checkbox-group>`);
     const box = container.querySelector('uni-checkbox')!;
     expect(box.instance.owner()).toBeDefined();
@@ -907,10 +1027,10 @@ describe('<uni-switch>', () => {
   it('takes the markup checked state as its default and sets its role', () => {
     const container = mount(`
       <uni-switch readonly>
-        <label data-part="root">
-          <input data-part="input" type="checkbox" checked />
-          <span data-part="indicator"><span class="thumb"></span></span>
-          <span data-part="label">Wi-Fi</span>
+        <label class="uni-switch">
+          <input data-element="Input" type="checkbox" checked />
+          <span data-element="Indicator"><span class="thumb"></span></span>
+          <span data-element="Label">Wi-Fi</span>
         </label>
       </uni-switch>`);
     const host = container.querySelector('uni-switch')!;
@@ -925,7 +1045,7 @@ describe('<uni-switch>', () => {
     expect(input.getAttribute('aria-readonly')).toBe('true');
     expect(
       host
-        .querySelector('[data-part="indicator"]')!
+        .querySelector('[data-element="Indicator"]')!
         .hasAttribute('data-selected'),
     ).toBe(true);
   });
@@ -933,11 +1053,11 @@ describe('<uni-switch>', () => {
   it('never joins a checkbox group around it', () => {
     const container = mount(`
       <uni-checkbox-group>
-        <div data-part="root">
+        <div class="uni-checkbox-group">
           <uni-switch>
-            <label data-part="root">
-              <input data-part="input" type="checkbox" checked />
-              <span data-part="label">Wi-Fi</span>
+            <label class="uni-switch">
+              <input data-element="Input" type="checkbox" checked />
+              <span data-element="Label">Wi-Fi</span>
             </label>
           </uni-switch>
         </div>
@@ -955,17 +1075,17 @@ describe('<uni-switch>', () => {
 describe('<uni-radio-group>', () => {
   const option = (value: string, extra = '') => `
     <uni-radio value="${value}" ${extra}>
-      <label data-part="root">
-        <input data-part="input" type="radio" ${value === 'pro' ? 'checked' : ''} />
-        <span data-part="label">${value}</span>
+      <label class="uni-radio">
+        <input data-element="Input" type="radio" ${value === 'pro' ? 'checked' : ''} />
+        <span data-element="Label">${value}</span>
       </label>
     </uni-radio>`;
 
   it('takes the radio checked in the markup as its default and names its radios', () => {
     const container = mount(`
       <uni-radio-group name="plan">
-        <div data-part="root">
-          <span data-part="label">Plan</span>
+        <div class="uni-radio-group">
+          <span data-element="Label">Plan</span>
           ${option('free')}${option('pro')}
         </div>
       </uni-radio-group>`);
@@ -989,7 +1109,7 @@ describe('<uni-radio-group>', () => {
   it('gives each radio its own state and focuschange', () => {
     const container = mount(`
       <uni-radio-group>
-        <div data-part="root">${option('free')}${option('pro')}</div>
+        <div class="uni-radio-group">${option('free')}${option('pro')}</div>
       </uni-radio-group>`);
     const [free, pro] = Array.from(container.querySelectorAll('uni-radio'));
     expect(pro!.instance.getState()).toMatchObject({
@@ -1036,27 +1156,29 @@ describe('<uni-radio-group>', () => {
     const group = document.createElement('uni-radio-group');
     group.id = 'plan';
     group.defaultValue = 'free';
-    group.innerHTML = '<div data-part="root"></div>';
+    group.innerHTML = '<div class="uni-radio-group"></div>';
     container.append(group);
     expect(host.instance.owner()).toBe(group.instance);
     expect(input.checked).toBe(true);
     // No name prop: the group's root id, unique on the page.
-    expect(input.name).toBe(group.querySelector('[data-part="root"]')!.id);
+    expect(input.name).toBe(group.querySelector('.uni-radio-group')!.id);
   });
 });
 
 describe('<uni-dialog>', () => {
   const DIALOG = `
-    <button data-part="trigger">Delete file</button>
-    <dialog data-part="root" role="alertdialog">
-      <h2 data-part="title">Delete file</h2>
-      <p data-part="description">This can't be undone.</p>
-      <button data-part="close">Cancel</button>
+    <button data-element="Trigger">Delete file</button>
+    <dialog class="uni-dialog" role="alertdialog">
+      <h2 data-element="Title">Delete file</h2>
+      <p data-element="Description">This can't be undone.</p>
+      <button data-element="Close">Cancel</button>
     </dialog>`;
 
   function dialogIn(container: HTMLElement) {
     const host = container.querySelector('uni-dialog')!;
-    const trigger = host.querySelector<HTMLElement>('[data-part="trigger"]')!;
+    const trigger = host.querySelector<HTMLElement>(
+      '[data-element="Trigger"]',
+    )!;
     const modal = host.querySelector('dialog')!;
     const events: unknown[] = [];
     for (const type of ['dismiss', 'openchange']) {
@@ -1169,14 +1291,14 @@ describe('<uni-dialog>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-dialog id="unnamed">
-        <dialog data-part="root"><button data-part="close">Close</button></dialog>
+        <dialog class="uni-dialog"><button data-element="Close">Close</button></dialog>
       </uni-dialog>
       <uni-dialog id="alert">
-        <dialog data-part="root" role="alertdialog">
-          <h2 data-part="title">Delete file</h2>
+        <dialog class="uni-dialog" role="alertdialog">
+          <h2 data-element="Title">Delete file</h2>
         </dialog>
       </uni-dialog>
-      <uni-dialog id="div"><div data-part="root"></div></uni-dialog>`);
+      <uni-dialog id="div"><div class="uni-dialog"></div></uni-dialog>`);
     const messages = () => warn.mock.calls.map(([message]) => String(message));
     expect(messages().some((message) => message.includes('<div>'))).toBe(true);
 
@@ -1216,26 +1338,30 @@ describe('<uni-dialog>', () => {
 
 describe('<uni-popover>', () => {
   const POPOVER = `
-    <button data-part="trigger">Size</button>
-    <div data-part="root">
-      <h2 data-part="title">Size</h2>
+    <button data-element="Trigger">Size</button>
+    <div class="uni-popover">
+      <h2 data-element="Title">Size</h2>
       <input aria-label="Width" />
-      <button data-part="close">Apply</button>
+      <button data-element="Close">Apply</button>
     </div>`;
 
   type Popover = UniElement<typeof popover>;
 
   /** The popover's parts and its own events, not a nested one's. */
   function popoverIn(host: Popover) {
-    const part = (name: string) =>
-      host.querySelector<HTMLElement>(`:scope > [data-part="${name}"]`)!;
+    const part = (selector: string) =>
+      host.querySelector<HTMLElement>(`:scope > ${selector}`)!;
     const events: unknown[] = [];
     for (const type of ['dismiss', 'openchange']) {
       host.addEventListener(type, (event) => {
         if (event.target === host) events.push((event as CustomEvent).detail);
       });
     }
-    return { trigger: part('trigger'), root: part('root'), events };
+    return {
+      trigger: part(byElement('trigger')),
+      root: part('.uni-popover'),
+      events,
+    };
   }
 
   const hostIn = (container: HTMLElement, selector = 'uni-popover') =>
@@ -1310,11 +1436,11 @@ describe('<uni-popover>', () => {
   it('closes a popover nested in it as it closes, with reason "parent"', async () => {
     const container = mount(`
       <uni-popover id="outer">
-        <button data-part="trigger">Outer</button>
-        <div data-part="root" aria-label="Outer">
+        <button data-element="Trigger">Outer</button>
+        <div class="uni-popover" aria-label="Outer">
           <uni-popover id="inner">
-            <button data-part="trigger">Inner</button>
-            <div data-part="root" aria-label="Inner"><button>Deep</button></div>
+            <button data-element="Trigger">Inner</button>
+            <div class="uni-popover" aria-label="Inner"><button>Deep</button></div>
           </uni-popover>
         </div>
       </uni-popover>`);
@@ -1337,15 +1463,15 @@ describe('<uni-popover>', () => {
     const warn = vi.spyOn(console, 'warn');
     const container = mount(`
       <uni-dialog>
-        <button data-part="trigger">Settings</button>
-        <dialog data-part="root" aria-label="Settings">
+        <button data-element="Trigger">Settings</button>
+        <dialog class="uni-dialog" aria-label="Settings">
           <uni-popover>${POPOVER}</uni-popover>
-          <button data-part="close">Done</button>
+          <button data-element="Close">Done</button>
         </dialog>
       </uni-dialog>`);
     const modal = container.querySelector('dialog')!;
     container
-      .querySelector<HTMLElement>('uni-dialog > [data-part="trigger"]')!
+      .querySelector<HTMLElement>('uni-dialog > [data-element="Trigger"]')!
       .click();
     expect(modal.matches(':modal')).toBe(true);
 
@@ -1374,7 +1500,7 @@ describe('<uni-popover>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-popover id="unnamed">
-        <div data-part="root"><button>Go</button></div>
+        <div class="uni-popover"><button>Go</button></div>
       </uni-popover>
       <uni-popover id="outside">${POPOVER}</uni-popover>
       <dialog id="modal">Modal</dialog>`);
@@ -1415,19 +1541,24 @@ describe('<uni-tooltip>', () => {
   type Tooltip = UniElement<typeof tooltip>;
 
   const TOOLTIP = `
-    <button data-part="trigger">Save</button>
-    <div data-part="root">Saves the file</div>`;
+    <button data-element="Trigger">Save</button>
+    <div class="uni-tooltip">Saves the file</div>`;
 
   /** The tooltip's parts and its `openchange` details. */
   function tooltipIn(container: HTMLElement, selector = 'uni-tooltip') {
     const host = container.querySelector<Tooltip>(selector)!;
-    const part = (name: string) =>
-      host.querySelector<HTMLElement>(`:scope > [data-part="${name}"]`);
+    const part = (selector: string) =>
+      host.querySelector<HTMLElement>(`:scope > ${selector}`);
     const events: unknown[] = [];
     host.addEventListener('openchange', (event) =>
       events.push((event as CustomEvent).detail),
     );
-    return { host, trigger: part('trigger'), root: part('root')!, events };
+    return {
+      host,
+      trigger: part(byElement('trigger')),
+      root: part('.uni-tooltip')!,
+      events,
+    };
   }
 
   const isOpen = (root: Element) => root.matches(':popover-open');
@@ -1444,8 +1575,8 @@ describe('<uni-tooltip>', () => {
 
   it('links a component outside it by id through the tooltip attribute', async () => {
     const container = mount(`
-      <uni-button tooltip="save-tip"><button data-part="root">Save</button></uni-button>
-      <uni-tooltip id="save-tip"><div data-part="root">Saves the file</div></uni-tooltip>`);
+      <uni-button tooltip="save-tip"><button class="uni-button">Save</button></uni-button>
+      <uni-tooltip id="save-tip"><div class="uni-tooltip">Saves the file</div></uni-tooltip>`);
     const button = container.querySelector('button')!;
     const { root, events } = tooltipIn(container);
     expect(button.getAttribute('aria-describedby')).toBe(root.id);
@@ -1474,8 +1605,8 @@ describe('<uni-tooltip>', () => {
     container.insertAdjacentHTML(
       'beforeend',
       `<uni-tooltip id="linked" default-open>
-        <uni-button><button data-part="root">Open</button></uni-button>
-        <div data-part="root">Opens a file</div>
+        <uni-button><button class="uni-button">Open</button></uni-button>
+        <div class="uni-tooltip">Opens a file</div>
       </uni-tooltip>`,
     );
     const linked = tooltipIn(container, '#linked');
@@ -1507,8 +1638,8 @@ describe('<uni-tooltip>', () => {
     const container = mount(`
       <input aria-label="Before" />
       <uni-tooltip>
-        <button data-part="trigger" tabindex="0">Save</button>
-        <div data-part="root">Saves the file</div>
+        <button data-element="Trigger" tabindex="0">Save</button>
+        <div class="uni-tooltip">Saves the file</div>
       </uni-tooltip>`);
     const { trigger, root, events } = tooltipIn(container);
     container.querySelector('input')!.focus();
@@ -1532,14 +1663,14 @@ describe('<uni-tooltip>', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const container = mount(`
       <uni-tooltip id="focusable">
-        <button data-part="trigger">Help</button>
-        <div data-part="root">See <a href="#docs">the docs</a></div>
+        <button data-element="Trigger">Help</button>
+        <div class="uni-tooltip">See <a href="#docs">the docs</a></div>
       </uni-tooltip>
       <uni-tooltip id="both">
-        <button data-part="trigger">Save</button>
-        <uni-button><button data-part="root">Open</button></uni-button>
-        <uni-button><button data-part="root">Close</button></uni-button>
-        <div data-part="root">Opens a file</div>
+        <button data-element="Trigger">Save</button>
+        <uni-button><button class="uni-button">Open</button></uni-button>
+        <uni-button><button class="uni-button">Close</button></uni-button>
+        <div class="uni-tooltip">Opens a file</div>
       </uni-tooltip>
       <uni-tooltip id="outside">${TOOLTIP}</uni-tooltip>
       <dialog id="modal">Modal</dialog>`);
@@ -1582,28 +1713,28 @@ describe('<uni-tooltip>', () => {
 describe('<uni-listbox>', () => {
   const FRUIT = `
     <uni-listbox selection-mode="multiple" disabled-keys='["cherry"]'>
-      <span data-part="label">Fruit</span>
-      <div data-part="list" id="fruit">
-        <div data-part="option" data-key="apple">Apple</div>
-        <div data-part="option" data-key="cherry">Cherry</div>
-        <div data-part="group" data-key="citrus">
-          <span data-part="groupLabel" data-key="citrus">Citrus</span>
-          <div data-part="option" data-key="lemon" data-text-value="Lemon">
+      <span data-element="Label">Fruit</span>
+      <div data-element="List" id="fruit">
+        <div data-element="Option" data-key="apple">Apple</div>
+        <div data-element="Option" data-key="cherry">Cherry</div>
+        <div data-element="Group" data-key="citrus">
+          <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+          <div data-element="Option" data-key="lemon" data-text-value="Lemon">
             Lemon <small>sour</small>
           </div>
         </div>
       </div>
-      <p data-part="empty">No fruit</p>
+      <p data-element="Empty">No fruit</p>
     </uni-listbox>`;
 
   const listboxIn = (container: HTMLElement) => {
     const host =
       container.querySelector<UniElement<typeof listbox>>('uni-listbox')!;
     const part = (name: string) =>
-      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+      host.querySelector<HTMLElement>(byElement(name))!;
     const option = (key: string) =>
       host.querySelector<HTMLElement>(
-        `[data-part="option"][data-key="${key}"]`,
+        `[data-element="Option"][data-key="${key}"]`,
       )!;
     return { host, part, option };
   };
@@ -1649,30 +1780,30 @@ describe('<uni-listbox>', () => {
 describe('<uni-select>', () => {
   const FRUIT = `
     <uni-select placeholder="Pick a fruit" required>
-      <span data-part="label">Fruit</span>
-      <button data-part="trigger" id="pick">
-        <span data-part="value"></span>
+      <span data-element="Label">Fruit</span>
+      <button data-element="Trigger" id="pick">
+        <span data-element="Value"></span>
       </button>
-      <div data-part="popover">
-        <div data-part="list" id="fruit">
-          <div data-part="option" data-key="apple">Apple</div>
-          <div data-part="group" data-key="citrus">
-            <span data-part="groupLabel" data-key="citrus">Citrus</span>
-            <div data-part="option" data-key="lemon">Lemon</div>
+      <div data-element="Popover">
+        <div data-element="List" id="fruit">
+          <div data-element="Option" data-key="apple">Apple</div>
+          <div data-element="Group" data-key="citrus">
+            <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+            <div data-element="Option" data-key="lemon">Lemon</div>
           </div>
         </div>
       </div>
-      <select data-part="hiddenSelect" name="fruit"></select>
+      <select data-element="HiddenSelect" name="fruit"></select>
     </uni-select>`;
 
   const selectIn = (container: HTMLElement) => {
     const host =
       container.querySelector<UniElement<typeof select>>('uni-select')!;
     const part = (name: string) =>
-      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+      host.querySelector<HTMLElement>(byElement(name))!;
     const option = (key: string) =>
       host.querySelector<HTMLElement>(
-        `[data-part="option"][data-key="${key}"]`,
+        `[data-element="Option"][data-key="${key}"]`,
       )!;
     return { host, part, option };
   };
@@ -1715,29 +1846,29 @@ describe('<uni-select>', () => {
 describe('<uni-combobox>', () => {
   const FRUIT = `
     <uni-combobox required>
-      <label data-part="label">Fruit</label>
-      <input data-part="input" id="pick" />
-      <button data-part="button">▾</button>
-      <div data-part="popover">
-        <div data-part="list" id="fruit">
-          <div data-part="option" data-key="apple">Apple</div>
-          <div data-part="group" data-key="citrus">
-            <span data-part="groupLabel" data-key="citrus">Citrus</span>
-            <div data-part="option" data-key="lemon">Lemon</div>
+      <label data-element="Label">Fruit</label>
+      <input data-element="Input" id="pick" />
+      <button data-element="Button">▾</button>
+      <div data-element="Popover">
+        <div data-element="List" id="fruit">
+          <div data-element="Option" data-key="apple">Apple</div>
+          <div data-element="Group" data-key="citrus">
+            <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+            <div data-element="Option" data-key="lemon">Lemon</div>
           </div>
         </div>
       </div>
-      <input data-part="hiddenInput" name="fruit" />
+      <input data-element="HiddenInput" name="fruit" />
     </uni-combobox>`;
 
   const comboboxIn = (container: HTMLElement) => {
     const host =
       container.querySelector<UniElement<typeof combobox>>('uni-combobox')!;
     const part = (name: string) =>
-      host.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+      host.querySelector<HTMLElement>(byElement(name))!;
     const option = (key: string) =>
       host.querySelector<HTMLElement>(
-        `[data-part="option"][data-key="${key}"]`,
+        `[data-element="Option"][data-key="${key}"]`,
       )!;
     return { host, part, option };
   };

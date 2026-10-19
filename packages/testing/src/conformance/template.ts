@@ -7,6 +7,8 @@
  * before the implementation exists.
  */
 
+import { partElement, rootClass } from '@uniaria/core';
+
 export interface TemplateElement {
   /** Tag name, as the consumer would write it (`button`, `a`, `div`). */
   readonly tag: string;
@@ -45,7 +47,7 @@ export interface RenderedRows {
  * them in a child component that selects `renderedKeys` and
  * `renderedSections`, so the owner never renders again for them; custom
  * elements render them again on `renderedkeyschange`, synchronously,
- * keeping each element whose `data-part` and `data-key` stay.
+ * keeping each element whose part and `data-key` stay.
  */
 export interface TemplateRows {
   readonly rows: (rendered: RenderedRows) => readonly TemplateNode[];
@@ -137,21 +139,49 @@ export function templateParts(
 }
 
 /**
- * Renders a template to real DOM, writing `data-part` on part elements the way
- * a consumer of the custom elements would. `decorate` lets an adapter add
- * attributes to part elements as they are created; `host` creates the
- * element for a nested component, which its children go into; `rowsIn` is
- * told where a `rows()` node goes, and renders it there itself.
+ * The CSS selector for a part of `component` (root AGENTS.md → Part
+ * markers): the root by its `uni-<name>` class, any other part by
+ * `data-scope` and `data-element`.
+ */
+export function partSelector(component: string, part: string): string {
+  return part === 'root'
+    ? `.${rootClass(component)}`
+    : `[data-scope="${component}"][data-element="${partElement(part)}"]`;
+}
+
+/** Which part of `component` an element is, by its markers. */
+export function partName(
+  element: Element,
+  component: string,
+): string | undefined {
+  if (element.classList.contains(rootClass(component))) return 'root';
+  if (element.getAttribute('data-scope') !== component) return undefined;
+  const name = element.getAttribute('data-element');
+  return name ? name.charAt(0).toLowerCase() + name.slice(1) : undefined;
+}
+
+/**
+ * Renders a template of the component `component` to real DOM, marking part
+ * elements the way a consumer of the custom elements would: the root with
+ * its `uni-<name>` class, the others with `data-element`. `decorate` lets an
+ * adapter add attributes to part elements as they are created; `host`
+ * creates the element for a nested component, which its children go into;
+ * `rowsIn` is told where a `rows()` node goes, and renders it there itself.
  */
 export function renderTemplate(
   nodes: readonly TemplateNode[],
   doc: Document,
+  component: string,
   decorate?: (element: HTMLElement, node: TemplateElement) => void,
   host?: (node: TemplateComponent) => HTMLElement,
   rowsIn?: (node: TemplateRows, parent: ParentNode) => void,
 ): DocumentFragment {
   const fragment = doc.createDocumentFragment();
-  const append = (parent: ParentNode, list: readonly TemplateNode[]) => {
+  const append = (
+    parent: ParentNode,
+    list: readonly TemplateNode[],
+    owner = component,
+  ) => {
     for (const node of list) {
       if (typeof node === 'string') {
         parent.appendChild(doc.createTextNode(node));
@@ -171,7 +201,7 @@ export function renderTemplate(
           );
         }
         const element = host(node);
-        append(element, node.children);
+        append(element, node.children, node.component);
         parent.appendChild(element);
         continue;
       }
@@ -179,11 +209,13 @@ export function renderTemplate(
       for (const [name, value] of Object.entries(node.attrs)) {
         element.setAttribute(name, value);
       }
-      if (node.part !== undefined) {
-        element.setAttribute('data-part', node.part);
-        decorate?.(element, node);
+      if (node.part === 'root') {
+        element.classList.add(rootClass(owner));
+      } else if (node.part !== undefined) {
+        element.setAttribute('data-element', partElement(node.part));
       }
-      append(element, node.children);
+      if (node.part !== undefined) decorate?.(element, node);
+      append(element, node.children, owner);
       parent.appendChild(element);
     }
   };

@@ -262,7 +262,7 @@ function items(disabledKey?: string) {
   host.innerHTML = ['a', 'b']
     .map(
       (key) =>
-        `<div id="item-${key}" data-part="item" data-key="${key}">Item ${key}</div>`,
+        `<div id="item-${key}" data-element="Item" data-key="${key}">Item ${key}</div>`,
     )
     .join('');
   document.body.append(host);

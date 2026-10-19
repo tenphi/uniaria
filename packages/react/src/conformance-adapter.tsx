@@ -114,12 +114,18 @@ function renderNodes(
     };
     if (node.part !== undefined) {
       const key = node.attrs['data-key'];
+      const own = props.className;
       Object.assign(
         props,
         itemParts.includes(node.part) && key !== undefined
           ? ui.getItemProps(node.part, key)
           : (ui.parts as Readonly<Record<string, unknown>>)[node.part],
       );
+      // Keeps the root's `uni-<name>` class beside the consumer's own, as a
+      // consumer adding classes does.
+      if (own && props.className && own !== props.className) {
+        props.className = `${props.className as string} ${own as string}`;
+      }
     }
     return createElement(
       node.tag,

@@ -9,11 +9,11 @@
  *
  * ```html
  * <uni-popover position-area="bottom span-right">
- *   <button data-part="trigger">Size</button>
- *   <div data-part="root">
- *     <div data-part="arrow"></div>
+ *   <button data-element="Trigger">Size</button>
+ *   <div class="uni-popover">
+ *     <div data-element="Arrow"></div>
  *     <label>Width <input /></label>
- *     <button data-part="close">Apply</button>
+ *     <button data-element="Close">Apply</button>
  *   </div>
  * </uni-popover>
  * ```

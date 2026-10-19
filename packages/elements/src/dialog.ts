@@ -6,12 +6,12 @@
  *
  * ```html
  * <uni-dialog>
- *   <button data-part="trigger">Delete file</button>
- *   <dialog data-part="root" role="alertdialog">
- *     <h2 data-part="title">Delete file</h2>
- *     <p data-part="description">This can't be undone.</p>
+ *   <button data-element="Trigger">Delete file</button>
+ *   <dialog class="uni-dialog" role="alertdialog">
+ *     <h2 data-element="Title">Delete file</h2>
+ *     <p data-element="Description">This can't be undone.</p>
  *     <form method="dialog">
- *       <button data-part="close">Cancel</button>
+ *       <button data-element="Close">Cancel</button>
  *       <button value="delete" autofocus>Delete</button>
  *     </form>
  *   </dialog>

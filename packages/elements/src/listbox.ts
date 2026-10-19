@@ -7,16 +7,16 @@
  *
  * ```html
  * <uni-listbox selection-mode="multiple" disabled-keys='["cherry"]'>
- *   <span data-part="label">Fruit</span>
- *   <div data-part="list">
- *     <div data-part="option" data-key="apple">Apple</div>
- *     <div data-part="option" data-key="cherry">Cherry</div>
- *     <div data-part="group" data-key="citrus">
- *       <span data-part="groupLabel" data-key="citrus">Citrus</span>
- *       <div data-part="option" data-key="lemon">Lemon</div>
+ *   <span data-element="Label">Fruit</span>
+ *   <div data-element="List">
+ *     <div data-element="Option" data-key="apple">Apple</div>
+ *     <div data-element="Option" data-key="cherry">Cherry</div>
+ *     <div data-element="Group" data-key="citrus">
+ *       <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+ *       <div data-element="Option" data-key="lemon">Lemon</div>
  *     </div>
  *   </div>
- *   <p data-part="empty">No fruit</p>
+ *   <p data-element="Empty">No fruit</p>
  * </uni-listbox>
  * ```
  */

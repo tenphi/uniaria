@@ -40,6 +40,7 @@ import {
 } from './screen-reader';
 import { listenLive, spokenPhrases, stopListening } from './spoken';
 import type { TemplateNode } from './template';
+import { partSelector } from './template';
 
 export interface RunOptions {
   /**
@@ -71,9 +72,7 @@ const isInRun = (child: Child, isScreenReaderRun: boolean): boolean =>
 
 function partsOf(container: HTMLElement, component: string, name: string) {
   return Array.from(
-    container.querySelectorAll<HTMLElement>(
-      `[data-scope="${CSS.escape(component)}"][data-part="${CSS.escape(name)}"]`,
-    ),
+    container.querySelectorAll<HTMLElement>(partSelector(component, name)),
   );
 }
 
@@ -154,7 +153,7 @@ export function runConformance(
               if (found.length !== 1) {
                 throw new Error(
                   `Expected one "${name}" part of ${suite.component}, found ${found.length}. ` +
-                    'Check data-scope and data-part.',
+                    "Check the root's uni-<name> class, or data-scope and data-element.",
                 );
               }
               return found[0]!;

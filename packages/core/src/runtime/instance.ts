@@ -28,6 +28,7 @@ import type {
   StateOf,
   ViewContext,
 } from './define';
+import { partElement, rootClass } from './define';
 import type { EventsSchema, PropsSchema } from './schema';
 import { callbackName } from './schema';
 import { createStore } from './store';
@@ -69,7 +70,8 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   getState(): StateOf<D>;
   /**
    * Part props from `connect()`, cached until state or props change, with
-   * `data-scope` and `data-part` added and every handler run in a batch.
+   * the part markers added (the root's `className`, every other part's
+   * `data-scope` and `data-element`) and every handler run in a batch.
    */
   connect(): ConnectedParts<PartOf<D>>;
   /**
@@ -81,7 +83,7 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   element(part: PartOf<D>): unknown;
   /**
    * Props for one item part of one item from the definition's
-   * `connectItem()`, with `data-scope` and `data-part` added and every
+   * `connectItem()`, with `data-scope` and `data-element` added and every
    * handler run in a batch; cached per part and key until the key is
    * invalidated (`ctx.invalidateItems()`, a change of props, or one of the
    * key's item parts attached or detached). A key whose last element
@@ -462,6 +464,23 @@ export function createInstance<D extends AnyDefinition>(
     });
   });
 
+  // Part markers (root AGENTS.md): the root's class, every other part's
+  // `data-scope` and `data-element`.
+  const rootMarker = rootClass(definition.name);
+  const marked = (
+    part: string,
+    attrs: PartProps['attrs'],
+  ): Pick<PartProps, 'attrs' | 'className'> =>
+    part === 'root'
+      ? { attrs, className: rootMarker }
+      : {
+          attrs: {
+            ...attrs,
+            'data-scope': definition.name,
+            'data-element': partElement(part),
+          },
+        };
+
   const batched = (on: NonNullable<PartProps['on']>) => {
     const result: Record<string, PartHandler> = {};
     for (const [type, handler] of Object.entries(on)) {
@@ -564,7 +583,7 @@ export function createInstance<D extends AnyDefinition>(
       for (const part of definition.parts) {
         const { attrs, on, style, properties } = raw[part]!;
         parts[part] = {
-          attrs: { ...attrs, 'data-scope': definition.name, 'data-part': part },
+          ...marked(part, attrs),
           ...(on ? { on: batched(on) } : {}),
           ...(style ? { style } : {}),
           ...(properties ? { properties } : {}),
@@ -590,7 +609,7 @@ export function createInstance<D extends AnyDefinition>(
       const raw = definition.connectItem!(view, part, key);
       const { attrs, on, style, properties } = raw;
       const result: PartProps = {
-        attrs: { ...attrs, 'data-scope': definition.name, 'data-part': part },
+        ...marked(part, attrs),
         ...(on ? { on: batched(on) } : {}),
         ...(style ? { style } : {}),
         ...(properties ? { properties } : {}),

@@ -6,11 +6,11 @@
  *
  * ```html
  * <uni-number-field min-value="0" max-value="99" lang="de">
- *   <label data-part="label">Menge</label>
- *   <input data-part="input" value="5" />
- *   <button data-part="decrement">−</button>
- *   <button data-part="increment">+</button>
- *   <input type="hidden" data-part="hiddenInput" name="quantity" />
+ *   <label data-element="Label">Menge</label>
+ *   <input data-element="Input" value="5" />
+ *   <button data-element="Decrement">−</button>
+ *   <button data-element="Increment">+</button>
+ *   <input type="hidden" data-element="HiddenInput" name="quantity" />
  * </uni-number-field>
  * ```
  */

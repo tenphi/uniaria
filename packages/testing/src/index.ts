@@ -39,6 +39,8 @@ export {
   isNested,
   isRows,
   nested,
+  partName,
+  partSelector,
   renderTemplate,
   rows,
   templateParts,

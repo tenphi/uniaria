@@ -22,7 +22,7 @@ const focusable = defineComponent({
 
 // A div with tabindex, because Safari doesn't focus buttons on click; the
 // button before it has one because WebKit's Tab skips buttons without.
-const ROOT = '<div data-part="root" tabindex="0">Root <b>child</b></div>';
+const ROOT = '<div class="uni-focusable" tabindex="0">Root <b>child</b></div>';
 
 function mount(
   html = ROOT,
@@ -32,7 +32,7 @@ function mount(
   const host = document.createElement('div');
   host.innerHTML = `<button id="before" tabindex="0">Before</button>${html}`;
   document.body.append(host);
-  const root = host.querySelector<HTMLElement>('[data-part="root"]')!;
+  const root = host.querySelector<HTMLElement>('.uni-focusable')!;
   const instance = createInstance(focusable, { props });
   const binder = createBinder(instance, { host });
   if (isAttached) binder.attach('root', root);
@@ -66,14 +66,14 @@ describe('createFocus', () => {
 
   it('ignores focus on descendants', () => {
     const { root, state } = mount(
-      '<div data-part="root"><button>Inner</button></div>',
+      '<div class="uni-focusable"><button>Inner</button></div>',
     );
     root.querySelector('button')!.focus();
     expect(state().isFocused).toBe(false);
   });
 
   it('keeps focus hidden while typing into a text field, until Tab or Escape', async () => {
-    const { root, state } = mount('<input data-part="root" />');
+    const { root, state } = mount('<input class="uni-focusable" />');
     await userEvent.click(root);
     expect(state()).toEqual({ isFocused: true, isFocusVisible: false });
 

@@ -85,10 +85,10 @@ export interface Mounted<Props, State> {
   /** The element the adapter rendered into. */
   readonly container: HTMLElement;
   /**
-   * The element of a part of the mounted component (`root` by default):
-   * `[data-scope="<component>"][data-part="<name>"]` inside the container.
-   * Throws when there is none or more than one, so a missing `data-scope` or
-   * `data-part` fails loudly.
+   * The element of a part of the mounted component (`root` by default)
+   * inside the container: the root by its `uni-<component>` class, any other
+   * part by `[data-scope="<component>"][data-element="<Name>"]`. Throws when
+   * there is none or more than one, so a missing marker fails loudly.
    */
   part(name?: string): HTMLElement;
   parts(name: string): HTMLElement[];

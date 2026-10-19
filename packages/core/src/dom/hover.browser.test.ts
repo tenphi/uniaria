@@ -24,10 +24,10 @@ const hoverable = defineComponent({
 function mount(props: { isDisabled?: boolean } = {}) {
   const host = document.createElement('div');
   host.innerHTML =
-    '<div data-part="root" style="height: 40px">Hover <b>me</b></div>' +
+    '<div class="uni-hoverable" style="height: 40px">Hover <b>me</b></div>' +
     '<div id="outside" style="height: 40px">Outside</div>';
   document.body.append(host);
-  const root = host.querySelector<HTMLElement>('[data-part="root"]')!;
+  const root = host.querySelector<HTMLElement>('.uni-hoverable')!;
   const outside = host.querySelector<HTMLElement>('#outside')!;
   const instance = createInstance(hoverable, { props });
   const binder = createBinder(instance, { host });

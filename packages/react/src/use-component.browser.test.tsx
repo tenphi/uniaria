@@ -65,11 +65,63 @@ function Docs() {
 describe('useComponent', () => {
   it('renders part props for the first paint', () => {
     const element = render(<Save isDisabled />).querySelector('button')!;
-    expect(element.getAttribute('data-scope')).toBe('button');
-    expect(element.getAttribute('data-part')).toBe('root');
+    expect(element.className).toBe('uni-button');
+    expect(element.hasAttribute('data-scope')).toBe(false);
+    expect(element.hasAttribute('data-element')).toBe(false);
     expect(element.getAttribute('type')).toBe('button');
     expect(element.disabled).toBe(true);
     expect(element.hasAttribute('data-disabled')).toBe(true);
+  });
+
+  it('puts uni-<name> in the root className, which a consumer class merges with', () => {
+    const warn = vi.spyOn(console, 'warn');
+    const classNames: (string | undefined)[] = [];
+    function Primary() {
+      const ui = useComponent(button, {});
+      classNames.push(ui.parts.root.className);
+      return (
+        <button
+          {...ui.parts.root}
+          className={`${ui.parts.root.className} mine`}
+        >
+          Save
+        </button>
+      );
+    }
+    const element = render(<Primary />).querySelector('button')!;
+    expect(classNames.at(-1)).toBe('uni-button');
+    expect(element.className).toBe('uni-button mine');
+    // The binder never writes `class`, so state changes leave it as React
+    // rendered it.
+    element.focus();
+    expect(element.hasAttribute('data-focused')).toBe(true);
+    expect(element.className).toBe('uni-button mine');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('marks other parts with data-scope and data-element, and no class', () => {
+    let label: Record<string, unknown> = {};
+    function Name() {
+      const ui = useComponent(field, {});
+      label = ui.parts.label;
+      return (
+        <div {...ui.parts.root}>
+          <label {...ui.parts.label}>Name</label>
+          <input {...ui.parts.control} />
+        </div>
+      );
+    }
+    const element = render(<Name />);
+    expect(label.className).toBeUndefined();
+    const control = element.querySelector('input')!;
+    expect(control.getAttribute('data-scope')).toBe('field');
+    expect(control.getAttribute('data-element')).toBe('Control');
+    expect(control.hasAttribute('class')).toBe(false);
+    expect(element.querySelector('label')!.getAttribute('data-element')).toBe(
+      'Label',
+    );
+    expect(element.querySelector('.uni-field')).toBe(element.firstChild);
   });
 
   it('keeps handler identity across renders', () => {
@@ -202,6 +254,28 @@ describe('development warnings', () => {
     expect(messages.some((message) => message.includes('"data-pressed"'))).toBe(
       true,
     );
+  });
+
+  it('warns when the rendered root lacks its uni-<name> class', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    function Replaced() {
+      const ui = useComponent(button, {});
+      return (
+        <button {...ui.parts.root} className="mine">
+          Save
+        </button>
+      );
+    }
+    const element = render(<Replaced />).querySelector('button')!;
+    const messages = warn.mock.calls.map(([message]) => String(message));
+    warn.mockRestore();
+    expect(element.className).toBe('mine');
+    expect(
+      messages.filter((message) => message.includes('"uni-button" class')),
+    ).toHaveLength(1);
+    expect(
+      messages.some((message) => message.includes('parts.root.className')),
+    ).toBe(true);
   });
 
   it('warns when the root tag and elementType differ', () => {
@@ -466,13 +540,16 @@ function Rows({
 describe('item parts', () => {
   const row = (element: HTMLElement, key: string) =>
     element.querySelector<HTMLElement>(
-      `[data-part="row"]:nth-child(${['a', 'b', 'c'].indexOf(key) + 1})`,
+      `[data-element="Row"]:nth-child(${['a', 'b', 'c'].indexOf(key) + 1})`,
     )!;
 
   it('renders item props, and links item parts once they attach', () => {
     const warn = vi.spyOn(console, 'warn');
     const element = render(<Rows />);
     expect(row(element, 'a').getAttribute('data-scope')).toBe('rows');
+    expect(row(element, 'a').querySelector('span')!.dataset.element).toBe(
+      'RowLabel',
+    );
     expect(row(element, 'a').getAttribute('aria-selected')).toBe('false');
     expect(row(element, 'b').getAttribute('aria-labelledby')).toBe(
       'r-rowLabel-b',

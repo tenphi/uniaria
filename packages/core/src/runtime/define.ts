@@ -60,6 +60,28 @@ export interface PartProps {
   readonly properties?: Readonly<
     Record<string, string | number | boolean | undefined>
   >;
+  /**
+   * The class the root carries besides the consumer's own: `uni-<name>`.
+   * React renders it in `className`; a custom element finds its root by it,
+   * so the markup already has it. The binder never writes `class`.
+   */
+  readonly className?: string;
+}
+
+/**
+ * The class that marks a component's root, for styles and for a custom
+ * element to find it: `uni-checkbox` (root AGENTS.md → Part markers).
+ */
+export function rootClass(name: string): string {
+  return `uni-${name}`;
+}
+
+/**
+ * The `data-element` that marks every other part, as Tasty names a
+ * sub-element: `trigger` → `Trigger` (root AGENTS.md → Part markers).
+ */
+export function partElement(part: string): string {
+  return capitalize(part);
 }
 
 /** Host objects the component may need, supplied by the adapter. */
@@ -231,7 +253,7 @@ export interface Composed<D extends AnyDefinition> {
   readonly api: ApiOf<D>;
   /** Its `expose()` now. */
   state(): StateOf<D>;
-  /** Its `connect()` now, keyed by its own part names, without data-scope. */
+  /** Its `connect()` now, keyed by its own part names, without part markers. */
   connect(): ConnectedParts<PartOf<D>>;
   /** Its `connectItem()` now, for a definition with item parts. */
   connectItem(part: ItemPartOf<D>, key: string): PartProps;
@@ -255,7 +277,10 @@ export interface ComponentConfig<
   Api,
   State,
 > {
-  /** kebab-case; becomes `data-scope` and the element name. */
+  /**
+   * kebab-case; becomes `data-scope`, the root's `uni-<name>` class and the
+   * element name.
+   */
   readonly name: string;
   readonly parts: readonly Part[];
   readonly props: P;

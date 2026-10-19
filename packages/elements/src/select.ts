@@ -7,19 +7,19 @@
  *
  * ```html
  * <uni-select placeholder="Pick a fruit" required>
- *   <span data-part="label">Fruit</span>
- *   <button data-part="trigger">
- *     <span data-part="value"></span>
+ *   <span data-element="Label">Fruit</span>
+ *   <button data-element="Trigger">
+ *     <span data-element="Value"></span>
  *     <svg aria-hidden="true">…</svg>
  *   </button>
- *   <div data-part="popover">
- *     <div data-part="list">
- *       <div data-part="option" data-key="apple">Apple</div>
- *       <div data-part="option" data-key="banana">Banana</div>
+ *   <div data-element="Popover">
+ *     <div data-element="List">
+ *       <div data-element="Option" data-key="apple">Apple</div>
+ *       <div data-element="Option" data-key="banana">Banana</div>
  *     </div>
- *     <p data-part="empty">No fruit</p>
+ *     <p data-element="Empty">No fruit</p>
  *   </div>
- *   <select data-part="hiddenSelect" name="fruit"></select>
+ *   <select data-element="HiddenSelect" name="fruit"></select>
  * </uni-select>
  * ```
  */

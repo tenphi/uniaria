@@ -18,9 +18,9 @@ const pressable = defineComponent({
 
 function mount(style?: string) {
   const host = document.createElement('div');
-  host.innerHTML = '<div data-part="root">Press</div>';
+  host.innerHTML = '<div class="uni-pressable">Press</div>';
   document.body.append(host);
-  const root = host.querySelector<HTMLElement>('[data-part="root"]')!;
+  const root = host.querySelector<HTMLElement>('.uni-pressable')!;
   if (style !== undefined) root.setAttribute('style', style);
   const instance = createInstance(pressable);
   const binder = createBinder(instance, { host });

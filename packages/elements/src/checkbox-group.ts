@@ -6,12 +6,12 @@
  *
  * ```html
  * <uni-checkbox-group required>
- *   <div data-part="root">
- *     <span data-part="label">Notifications</span>
+ *   <div class="uni-checkbox-group">
+ *     <span data-element="Label">Notifications</span>
  *     <uni-checkbox value="email">
- *       <label data-part="root">
- *         <input data-part="input" type="checkbox" name="notify" checked />
- *         <span data-part="label">Email</span>
+ *       <label class="uni-checkbox">
+ *         <input data-element="Input" type="checkbox" name="notify" checked />
+ *         <span data-element="Label">Email</span>
  *       </label>
  *     </uni-checkbox>
  *   </div>

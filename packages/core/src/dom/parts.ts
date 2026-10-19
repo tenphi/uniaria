@@ -1,11 +1,14 @@
 /**
- * Finding part elements inside a custom-element host (design decision 8):
- * `data-part` elements with no other host between them and this one, so a
- * nested instance keeps its own parts. Another host is a nested UniAria element
- * of any kind, or one of the same tag. A nested UniAria element can itself be a
- * part of the outer host. Parts added later are picked up by observing the
- * host.
+ * Finding part elements inside a custom-element host (design decision 8) by
+ * their markers (root AGENTS.md → Part markers): the root by its
+ * `uni-<name>` class, every other part by its `data-element`. Only elements
+ * with no other host between them and this one count, so a nested instance
+ * keeps its own parts. Another host is a nested UniAria element of any kind,
+ * or one of the same tag. A nested UniAria element can itself be a part of
+ * the outer host. Parts added later are picked up by observing the host.
  */
+
+import { partElement, rootClass } from '../runtime';
 
 /**
  * Marks a custom-element class as a UniAria host, so hosts around its elements
@@ -38,15 +41,30 @@ function belongsTo(element: Element, host: Element): boolean {
   return true;
 }
 
-/** The first element for each of `parts` that belongs to `host`. */
+/** Each of `parts` by its `data-element`. */
+function byElement(parts: readonly string[]): Map<string, string> {
+  return new Map(parts.map((part) => [partElement(part), part]));
+}
+
+/**
+ * The first element for each of `parts` that belongs to `host`, the
+ * component `name`.
+ */
 export function queryParts(
   host: Element,
+  name: string,
   parts: readonly string[],
 ): Map<string, HTMLElement> {
   const found = new Map<string, HTMLElement>();
-  for (const element of host.querySelectorAll<HTMLElement>('[data-part]')) {
-    const part = element.getAttribute('data-part')!;
-    if (found.has(part) || !parts.includes(part)) continue;
+  const named = byElement(parts.filter((part) => part !== 'root'));
+  const root = parts.includes('root') ? rootClass(name) : undefined;
+  const selector = root ? `[data-element], .${root}` : '[data-element]';
+  for (const element of host.querySelectorAll<HTMLElement>(selector)) {
+    const part =
+      root && element.classList.contains(root)
+        ? 'root'
+        : named.get(element.getAttribute('data-element') ?? '');
+    if (part === undefined || found.has(part)) continue;
     if (!belongsTo(element, host)) continue;
     found.set(part, element);
   }
@@ -66,9 +84,10 @@ export function queryItemParts(
 ): Map<string, Map<string, HTMLElement>> {
   const found = new Map<string, Map<string, HTMLElement>>();
   if (parts.length === 0) return found;
-  for (const element of host.querySelectorAll<HTMLElement>('[data-part]')) {
-    const part = element.getAttribute('data-part')!;
-    if (!parts.includes(part) || !belongsTo(element, host)) continue;
+  const named = byElement(parts);
+  for (const element of host.querySelectorAll<HTMLElement>('[data-element]')) {
+    const part = named.get(element.getAttribute('data-element')!);
+    if (part === undefined || !belongsTo(element, host)) continue;
     const key = element.getAttribute('data-key');
     if (key === null) {
       onSkip?.(element, 'no-key');
@@ -85,16 +104,36 @@ export function queryItemParts(
   return found;
 }
 
-/** Calls `callback` whenever parts may have been added, removed or renamed. */
-export function observeParts(host: Element, callback: () => void): () => void {
+/**
+ * Calls `callback` whenever parts of the component `name` may have been
+ * added, removed or renamed. A change of `class` counts only when it adds or
+ * removes the root's class, so a consumer's class toggles cost no rescan.
+ */
+export function observeParts(
+  host: Element,
+  name: string,
+  callback: () => void,
+): () => void {
   const view = host.ownerDocument.defaultView;
   if (!view) return () => undefined;
-  const observer = new view.MutationObserver(callback);
+  const root = rootClass(name);
+  const hadRoot = (value: string | null) =>
+    value !== null && value.split(/\s+/).includes(root);
+  const observer = new view.MutationObserver((records) => {
+    const relevant = records.some(
+      (record) =>
+        record.attributeName !== 'class' ||
+        hadRoot(record.oldValue) !==
+          (record.target as Element).classList.contains(root),
+    );
+    if (relevant) callback();
+  });
   observer.observe(host, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['data-part', 'data-key'],
+    attributeOldValue: true,
+    attributeFilter: ['data-element', 'data-key', 'class'],
   });
   return () => observer.disconnect();
 }

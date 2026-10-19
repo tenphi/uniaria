@@ -5,10 +5,10 @@
  *
  * ```html
  * <uni-radio value="pro">
- *   <label data-part="root">
- *     <input data-part="input" type="radio" />
- *     <span data-part="indicator"></span>
- *     <span data-part="label">Pro</span>
+ *   <label class="uni-radio">
+ *     <input data-element="Input" type="radio" />
+ *     <span data-element="Indicator"></span>
+ *     <span data-element="Label">Pro</span>
  *   </label>
  * </uni-radio>
  * ```

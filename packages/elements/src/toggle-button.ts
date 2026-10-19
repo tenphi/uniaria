@@ -4,7 +4,7 @@
  *
  * ```html
  * <uni-toggle-button default-selected>
- *   <button data-part="root">Mute</button>
+ *   <button class="uni-toggle-button">Mute</button>
  * </uni-toggle-button>
  * ```
  */

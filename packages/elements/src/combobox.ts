@@ -7,19 +7,19 @@
  *
  * ```html
  * <uni-combobox required>
- *   <label data-part="label">Fruit</label>
- *   <div data-part="anchor">
- *     <input data-part="input" />
- *     <button data-part="button"><svg aria-hidden="true">…</svg></button>
+ *   <label data-element="Label">Fruit</label>
+ *   <div data-element="Anchor">
+ *     <input data-element="Input" />
+ *     <button data-element="Button"><svg aria-hidden="true">…</svg></button>
  *   </div>
- *   <div data-part="popover">
- *     <div data-part="list">
- *       <div data-part="option" data-key="apple">Apple</div>
- *       <div data-part="option" data-key="banana">Banana</div>
+ *   <div data-element="Popover">
+ *     <div data-element="List">
+ *       <div data-element="Option" data-key="apple">Apple</div>
+ *       <div data-element="Option" data-key="banana">Banana</div>
  *     </div>
- *     <p data-part="empty">No fruit</p>
+ *     <p data-element="Empty">No fruit</p>
  *   </div>
- *   <input data-part="hiddenInput" name="fruit" />
+ *   <input data-element="HiddenInput" name="fruit" />
  * </uni-combobox>
  * ```
  */

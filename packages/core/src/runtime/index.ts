@@ -30,7 +30,14 @@ export type {
   PropsSchema,
   ResolvedSchema,
 } from './schema';
-export { answers, defineComponent, isOwnerDefinition, itemId } from './define';
+export {
+  answers,
+  defineComponent,
+  isOwnerDefinition,
+  itemId,
+  partElement,
+  rootClass,
+} from './define';
 export type {
   ActionsOf,
   AnyDefinition,

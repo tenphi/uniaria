@@ -17,11 +17,13 @@ const fixtureAdapter: ConformanceAdapter = {
   async mount({ component, props, template, events, record, container }) {
     let current = { ...props };
     container.appendChild(
-      renderTemplate(template, document, (element) =>
-        element.setAttribute('data-scope', component),
-      ),
+      renderTemplate(template, document, component, (element) => {
+        if (element.hasAttribute('data-element')) {
+          element.setAttribute('data-scope', component);
+        }
+      }),
     );
-    const root = container.querySelector<HTMLElement>('[data-part="root"]')!;
+    const root = container.querySelector<HTMLElement>(`.uni-${component}`)!;
     const apply = () =>
       root.toggleAttribute('disabled', current.isDisabled === true);
     const onClick = (event: MouseEvent) => {
@@ -69,14 +71,28 @@ function track(element: Element, types: string[]) {
 const fixtureSuite = defineConformance<FixtureProps, FixtureState>(
   'fixture',
   ({ scenario, group }) => {
-    scenario('finds parts by data-scope and data-part', async ({ mount }) => {
-      const mounted = await mount({
-        template: h('button', { part: 'root' }, 'Save'),
-      });
-      expect(mounted.part().tagName).toBe('BUTTON');
-      expect(mounted.parts('root')).toHaveLength(1);
-      expect(() => mounted.part('missing')).toThrow(/found 0/);
-    });
+    scenario(
+      'finds the root by its class, and other parts by data-scope and data-element',
+      async ({ mount }) => {
+        const mounted = await mount({
+          template: h(
+            'button',
+            { part: 'root' },
+            h('span', { part: 'label' }, 'Save'),
+          ),
+        });
+        const root = mounted.part();
+        expect(root.tagName).toBe('BUTTON');
+        expect(root.className).toBe('uni-fixture');
+        expect(root.hasAttribute('data-element')).toBe(false);
+        expect(mounted.parts('root')).toHaveLength(1);
+        const label = mounted.part('label');
+        expect(label.tagName).toBe('SPAN');
+        expect(label.getAttribute('data-element')).toBe('Label');
+        expect(label.getAttribute('data-scope')).toBe('fixture');
+        expect(() => mounted.part('missing')).toThrow(/found 0/);
+      },
+    );
 
     scenario('applies and updates props', async ({ mount }) => {
       const mounted = await mount({

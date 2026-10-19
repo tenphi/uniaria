@@ -5,10 +5,10 @@
  *
  * ```html
  * <uni-field required>
- *   <label data-part="label">Email</label>
- *   <input data-part="control" id="email" name="email" type="email" />
- *   <p data-part="description">We never share it</p>
- *   <p data-part="error" hidden>Enter a valid email</p>
+ *   <label data-element="Label">Email</label>
+ *   <input data-element="Control" id="email" name="email" type="email" />
+ *   <p data-element="Description">We never share it</p>
+ *   <p data-element="Error" hidden>Enter a valid email</p>
  * </uni-field>
  * ```
  */

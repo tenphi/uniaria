@@ -5,7 +5,7 @@
  * props as properties. Test support only; not exported.
  */
 
-import { answers, domEventName } from '@uniaria/core';
+import { answers, domEventName, rootClass } from '@uniaria/core';
 import type { AnyDefinition } from '@uniaria/core';
 import { virtualizer } from '@uniaria/core/virtual';
 import type {
@@ -61,7 +61,7 @@ interface RenderedRowsState {
 /** A keyed row's identity: its part and `data-key`. */
 function rowId(node: Node): string | null {
   if (!(node instanceof Element) || !node.hasAttribute('data-key')) return null;
-  return `${node.getAttribute('data-part')}\n${node.getAttribute('data-key')}`;
+  return `${node.getAttribute('data-element')}\n${node.getAttribute('data-key')}`;
 }
 
 /**
@@ -132,6 +132,7 @@ export const elementsAdapter: ConformanceAdapter = {
         const fragment = renderTemplate(
           node.rows(rendered),
           document,
+          component,
           undefined,
           nestedHost,
         );
@@ -142,6 +143,7 @@ export const elementsAdapter: ConformanceAdapter = {
       renderTemplate(
         template,
         document,
+        component,
         undefined,
         nestedHost,
         (node, parent) => rowSites.push({ node, parent }),
@@ -153,9 +155,9 @@ export const elementsAdapter: ConformanceAdapter = {
       }
       return true;
     };
-    const parts = Array.from(container.querySelectorAll('[data-part]')).filter(
-      isOwn,
-    );
+    const parts = Array.from(
+      container.querySelectorAll(`[data-element], .${rootClass(component)}`),
+    ).filter(isOwn);
     if (parts.length === 0) throw new Error('The template has no parts.');
 
     const host = document.createElement(name) as UniElement<never>;

@@ -44,6 +44,8 @@ import { reactEventName, reactPropName, reactPropValue } from './props';
 /** Props to spread onto a part element: attributes, stable handlers, a ref. */
 export type ReactPartProps = Readonly<Record<string, unknown>> & {
   readonly ref: (element: Element | null) => void;
+  /** The root's `uni-<name>` class; keep it in a `className` you pass. */
+  readonly className?: string;
 };
 
 export interface ComponentHandle<D extends AnyDefinition> {
@@ -145,6 +147,14 @@ function checkOwnership<D extends AnyDefinition>(
         'Pass it as a prop, or drop it from the JSX.',
     );
   }
+  const marker = rendered?.className;
+  if (marker && !element.classList.contains(marker)) {
+    warn(
+      `${internal.instance.definition.name}: the ${part} part lost its ` +
+        `"${marker}" class, which styles target. Keep \`parts.${part}.className\` ` +
+        'in the className you pass.',
+    );
+  }
 }
 
 /**
@@ -165,6 +175,11 @@ function toReactAttrs(
     if (value === undefined) continue;
     const prop = reactPropName(name);
     result[prop] = reactPropValue(prop, value);
+  }
+  if (props.className) {
+    result.className = result.className
+      ? `${props.className} ${result.className as string}`
+      : props.className;
   }
   if (props.style) {
     const style: Record<string, string> = {};

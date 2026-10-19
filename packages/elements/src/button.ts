@@ -3,7 +3,7 @@
  *
  * ```html
  * <uni-button focusable-when-disabled>
- *   <button data-part="root">Save</button>
+ *   <button class="uni-button">Save</button>
  * </uni-button>
  * ```
  */

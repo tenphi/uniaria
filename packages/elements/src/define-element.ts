@@ -14,9 +14,10 @@
  *   (`pressStart` → `pressstart`).
  * - Actions: one method per action the definition lists (`element.open()`),
  *   calling `instance.actions`.
- * - Parts: `data-part` elements inside the host, minus those inside a nested
- *   UniAria element (of any kind) or a nested host of the same tag, re-scanned
- *   when the subtree changes. The DOM binder writes their attributes and
+ * - Parts: the element with the `uni-<name>` class is the root, and
+ *   `data-element` marks the others (`data-element="Trigger"`), inside the
+ *   host, minus those inside a nested UniAria element (of any kind) or a
+ *   nested host of the same tag, re-scanned when the subtree changes. The DOM binder writes their attributes and
  *   delegates their listeners from the host's root. Item parts are every such
  *   element, keyed by the consumer's `data-key`; a prop that adopts
  *   `items` reads its collection from them while the consumer sets none.
@@ -298,7 +299,9 @@ export function defineElement<D extends AnyDefinition>(
 
     connectedCallback(): void {
       this.#scan();
-      this.#unobserve ??= observeParts(this, () => this.#scan());
+      this.#unobserve ??= observeParts(this, definition.name, () =>
+        this.#scan(),
+      );
       this.#unprovide ??= provideOwner(this.instance as Instance, this);
       // Linked before the first write, so a checkbox in a group starts with
       // the group's state.
@@ -400,7 +403,7 @@ export function defineElement<D extends AnyDefinition>(
     /** Finds parts, adopts props from new part elements, attaches them. */
     #scan(): void {
       this.instance.batch(() => {
-        const found = queryParts(this, definition.parts);
+        const found = queryParts(this, definition.name, definition.parts);
         for (const part of definition.parts) {
           const element = found.get(part);
           if (element && element !== this.#parts.get(part)) {
@@ -422,7 +425,7 @@ export function defineElement<D extends AnyDefinition>(
         isDevelopment()
           ? (element, reason) =>
               warn(
-                `${definition.name}: the ${element.getAttribute('data-part')} part ` +
+                `${definition.name}: the ${element.getAttribute('data-element')} part ` +
                   (reason === 'no-key'
                     ? 'has no data-key, so it is left alone.'
                     : `with data-key "${element.getAttribute('data-key')}" repeats an earlier one, so it is left alone.`),
