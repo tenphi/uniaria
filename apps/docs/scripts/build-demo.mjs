@@ -29,15 +29,19 @@ const entries = (await readdir(new URL('../demo', import.meta.url)))
   .map((file) => file.slice(0, -'.ts'.length))
   .filter((page) => only.length === 0 || only.includes(page));
 
+// `runnerImport` runs in its own `inline` environment, which leaves every
+// package to Node: Node knows no `uniaria-source` condition and would need
+// the package built, so Vite takes the workspace packages itself.
 const { module: styles } = await runnerImport('@uniaria/styles/build', {
   root: app,
   configFile: false,
   logLevel: 'warn',
-  resolve: { conditions: ['uniaria-source', ...defaultServerConditions] },
-  ssr: {
-    resolve: {
-      conditions: ['uniaria-source', ...defaultServerConditions],
-      externalConditions: ['uniaria-source'],
+  environments: {
+    inline: {
+      resolve: {
+        conditions: ['uniaria-source', ...defaultServerConditions],
+        noExternal: [/^@uniaria\//],
+      },
     },
   },
 });

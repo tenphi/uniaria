@@ -334,7 +334,8 @@ it('keeps the press while the pointer comes back', async () => {
 
 `emulateMedia()` sets media features for the whole page through Playwright,
 so a test can check forced colors (Chromium only), `prefers-contrast: more`,
-reduced motion or a color scheme. It needs `uniCommands` registered. The
+reduced motion or a color scheme. It needs `uniCommands` registered, and
+resolves once the page has restyled, so computed styles already follow. The
 page outlives a test, so end what you set: `null` ends a feature's
 emulation.
 

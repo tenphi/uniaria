@@ -19,8 +19,13 @@ declare module 'vitest/browser' {
 /**
  * Emulates media features for the whole page until set again; `null` ends
  * a feature's emulation. Reset what you set after each test, since the
- * page outlives it.
+ * page outlives it. Resolves once the page has restyled: Firefox and WebKit
+ * re-evaluate their stylesheets' media queries on the next frame, after
+ * `matchMedia()` already answers.
  */
-export function emulateMedia(features: MediaFeatures): Promise<void> {
-  return commands.uniEmulateMedia(features);
+export async function emulateMedia(features: MediaFeatures): Promise<void> {
+  await commands.uniEmulateMedia(features);
+  for (let frame = 0; frame < 2; frame++) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
 }

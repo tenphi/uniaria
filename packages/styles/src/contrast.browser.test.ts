@@ -9,7 +9,13 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { colorToken, createPalette, ROLES, THEMES } from './palette';
 import type { Role, Scheme, Theme } from './palette';
-import { contrast, loadStyles, resolveToken, rgba } from './testing/browser';
+import {
+  addStyle,
+  contrast,
+  loadStyles,
+  resolveToken,
+  rgba,
+} from './testing/browser';
 import { tokenProperty } from './tokens';
 
 const palette = createPalette();
@@ -49,6 +55,20 @@ function floors(theme: Theme): [Role, readonly [Theme, Role], number][] {
   ];
 }
 
+/**
+ * Whether the page's stylesheets see a media query. Under emulation an
+ * engine's `matchMedia()` can agree while its stylesheets don't.
+ */
+function cssMatches(query: string): boolean {
+  const remove = addStyle(`@media ${query} { :root { --uni-test-media: 1; } }`);
+  const matches =
+    getComputedStyle(document.documentElement).getPropertyValue(
+      '--uni-test-media',
+    ) === '1';
+  remove();
+  return matches;
+}
+
 function scoped(scheme: 'light' | 'dark'): HTMLElement {
   const scope = document.createElement('div');
   scope.dataset.uniScheme = scheme;
@@ -71,7 +91,7 @@ describe.each([
     let isEmulated = true;
     beforeAll(async () => {
       await emulateMedia({ contrast: preference });
-      isEmulated = matchMedia(`(prefers-contrast: ${preference})`).matches;
+      isEmulated = cssMatches(`(prefers-contrast: ${preference})`);
       scope = scoped(forced);
     });
     afterAll(() => scope.remove());
