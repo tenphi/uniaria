@@ -85,15 +85,19 @@ const SCROLL_GRACE = 250;
  * scrolling one ahead of its event, or one left from an earlier step). A
  * wheel that neither reaches the page nor scrolls gives up after
  * `WHEEL_TIMEOUT`.
+ *
+ * It resolves in a task after the event, not in the capture listener:
+ * there, the caller would go on in the microtasks after that listener,
+ * before the event reached the page's own listeners.
  */
-function wheelArrival(): Promise<void> {
+export function wheelArrival(): Promise<void> {
   return new Promise((resolve) => {
     let timer = setTimeout(done, WHEEL_TIMEOUT);
     function done() {
       clearTimeout(timer);
       window.removeEventListener('wheel', done, true);
       window.removeEventListener('scroll', scrolled, true);
-      resolve();
+      setTimeout(resolve);
     }
     function scrolled() {
       window.removeEventListener('scroll', scrolled, true);
