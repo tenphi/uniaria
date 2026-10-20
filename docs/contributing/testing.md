@@ -214,7 +214,8 @@ pnpm -C packages/styles screenshots
 ```
 
 The script needs Docker. It copies the working tree into the image, with
-your uncommitted changes, and replaces every reference.
+your uncommitted changes, and rewrites only the references that no longer
+match. When you remove a gallery, delete its references by hand.
 
 ## Real screen readers
 

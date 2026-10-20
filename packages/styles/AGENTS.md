@@ -43,7 +43,7 @@ Read the root [AGENTS.md](../../AGENTS.md) first, then this package's
 - `src/screenshots.browser.test.ts` compares every component in every
   scheme with its reference in `src/__references__/`, made in Chromium on
   Linux; elsewhere it skips. A change to how something looks, or a
-  Playwright upgrade, remakes them in Playwright's Docker image with
+  Playwright upgrade, updates them in Playwright's Docker image with
   `pnpm -C packages/styles screenshots`, and the changed images are
   reviewed and committed with the change. A new gallery fits the test's
   720-pixel viewport, which the test checks.

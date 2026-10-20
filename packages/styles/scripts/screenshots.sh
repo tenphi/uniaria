@@ -1,12 +1,14 @@
 #!/bin/sh
-# Remakes the reference screenshots of `src/screenshots.browser.test.ts` in
+# Updates the reference screenshots of `src/screenshots.browser.test.ts` in
 # Playwright's Docker image for the Playwright the repository installs:
 # Ubuntu on x86-64, the Linux CI runs the comparison on (spec: Testing →
 # Screenshots). It copies the working tree as it is, uncommitted changes
-# included, installs it in the container, runs the test with `--update`
-# and replaces `src/__references__/` with what it wrote, so a reference
-# whose gallery is gone goes too. Review the changed images before
-# committing them.
+# included, installs it in the container and runs the test with
+# `--update`, which writes a reference only where none matches: a new
+# gallery's, or one whose look changed. A reference that still matches
+# keeps its bytes, though antialiasing differs by a level between runs.
+# A gallery's removal leaves its references to delete by hand. Review the
+# changed images before committing them.
 set -eu
 
 root=$(git rev-parse --show-toplevel)
@@ -30,12 +32,11 @@ git ls-files -co --exclude-standard -z |
     "$image" sh -euc '
       mkdir /tmp/work && cd /tmp/work && tar -xf -
       corepack pnpm install --frozen-lockfile --store-dir /store
-      rm -rf "$1"
       corepack pnpm vitest run --project browser --browser.name=chromium \
         packages/styles/src/screenshots.browser.test.ts --update
       cp -R "$1" /out/references
     ' sh "$references"
 
-rm -rf "$references"
-cp -R "$out/references" "$references"
+mkdir -p "$references"
+cp -R "$out/references/." "$references"
 git status --short -- "$references"

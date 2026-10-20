@@ -514,6 +514,16 @@ const GALLERIES: readonly Gallery[] = [
   },
 ];
 
+/**
+ * Pixelmatch's default threshold, .1, passes a dark surface ten tones
+ * lighter as the same color; .02 fails it, and still passes the level or
+ * two antialiasing moves between runs.
+ */
+const COMPARISON = {
+  comparatorName: 'pixelmatch',
+  comparatorOptions: { threshold: 0.02 },
+} as const;
+
 const MODES: readonly (readonly [string, MediaFeatures])[] = [
   ['light', { colorScheme: 'light', contrast: 'no-preference' }],
   ['dark', { colorScheme: 'dark', contrast: 'no-preference' }],
@@ -600,7 +610,7 @@ describe.skipIf(!isReference)('screenshots', () => {
       );
       await expect
         .element(browserPage.elementLocator(page.container))
-        .toMatchScreenshot(`${gallery.name}-${mode}`);
+        .toMatchScreenshot(`${gallery.name}-${mode}`, COMPARISON);
     });
   });
 });

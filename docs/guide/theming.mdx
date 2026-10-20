@@ -38,13 +38,16 @@ Tasty the same colors are tokens: `#uni-danger-border`, `#uni-border`.
 | `text-soft`                        | Secondary text: descriptions, placeholders.                                                        | As `text`.                                 |
 | `border`                           | Edges: a field's box, a checkbox.                                                                  | 3:1 against `surface`.                     |
 | `fill`                             | The theme's strong color: a selected indicator, a primary button; in the default theme, a tooltip. | None of its own: the same in every scheme. |
-| `fill-hover`, `fill-pressed`       | That fill, hovered and pressed.                                                                    | As `fill`.                                 |
+| `fill-hover`, `fill-pressed`       | That fill, hovered and pressed: a step darker each.                                                | As `fill`.                                 |
 | `fill-text`                        | Text and marks on the fill: a check mark, a primary button's label.                                | 4.5:1 on its fill.                         |
 | `outline`                          | The focus ring.                                                                                    | 3:1 against its surface and `surface`.     |
 
-The default theme also has `--uni-shadow-color`, for popups and dialogs, and
-`--uni-backdrop-color`, behind a dialog. The disabled theme keeps 3:1 for its
-text and nothing more, since WCAG exempts disabled controls.
+The default theme's fill, a tooltip's, also stands off the page, at 1.3:1 at
+least. The default theme also has `--uni-shadow-color`, for popups and
+dialogs, and `--uni-backdrop-color`, behind a dialog: both are shadow colors,
+dark and translucent, with an alpha fitted to the page in each scheme, so the
+backdrop dims a dark page as well as a light one. The disabled theme keeps 3:1
+for its text and nothing more, since WCAG exempts disabled controls.
 
 <Preview
   title="Every role of every theme"

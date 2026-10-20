@@ -106,6 +106,54 @@ describe.each([
         }
       },
     );
+
+    // The disabled theme has no hover or press: each is its rest color.
+    test.for(THEMES.filter((theme) => theme !== 'disabled'))(
+      'the %s theme steps away from its surface and fill for hover and press',
+      (theme, context) => {
+        if (!isEmulated) context.skip();
+        for (const rest of ['surface', 'fill']) {
+          const ramp = [rest, `${rest}-hover`, `${rest}-pressed`].map((role) =>
+            rgba(color(scope, theme, role)).join(),
+          );
+          expect(new Set(ramp).size, colorToken(theme, rest)).toBe(3);
+        }
+      },
+    );
+
+    test('a tooltip, the default fill, stands off the page', (context) => {
+      if (!isEmulated) context.skip();
+      expect(
+        contrast(
+          color(scope, 'default', 'fill'),
+          color(scope, 'default', 'surface'),
+        ),
+      ).toBeGreaterThanOrEqual(1.3);
+    });
+
+    test('the backdrop dims the page, unless the page is black', (context) => {
+      if (!isEmulated) context.skip();
+      const page = rgba(color(scope, 'default', 'surface'));
+      const [red, green, blue, alpha] = rgba(
+        color(scope, 'default', 'backdrop'),
+      );
+      const over = [red, green, blue].map(
+        (channel, index) => alpha * channel + (1 - alpha) * (page[index] ?? 0),
+      );
+      const ratio = contrast(
+        `rgb(${over.join(' ')})`,
+        `rgb(${page.join(' ')})`,
+      );
+      if (page.slice(0, 3).every((channel) => channel === 0)) {
+        expect(ratio).toBeCloseTo(1, 1);
+      } else {
+        // Darker in every channel, never lighter, as a fixed color was.
+        over.forEach((channel, index) =>
+          expect(channel).toBeLessThanOrEqual(page[index] ?? 0),
+        );
+        expect(ratio).toBeGreaterThanOrEqual(1.1);
+      }
+    });
   },
 );
 

@@ -83,8 +83,11 @@ export function colorToken(theme: Theme, role: string): string {
 /**
  * The roles in a colored theme, after UI Kit's: a lightly tinted surface,
  * the theme's color as text and border, and a fill set from its white text,
- * as UI Kit's primary button is, darker for hover and press. Fills and
- * their text are the same in every scheme (`fixed`), and need no contrast
+ * as UI Kit's primary button is. Hover and press are tone steps darker than
+ * the fill, as UI Kit's accent ramp: a floor of their own against the
+ * text would pull all three to the one tone that meets it, as in high
+ * contrast, and darker only adds to the text's contrast. Fills and their
+ * text are the same in every scheme (`fixed`), and need no contrast
  * against the page: the text or mark on a fill identifies it (owner,
  * 2026-10-20). Tones are UI Kit's; a contrast floor moves a color only
  * where it would fall short (spec: Tokens).
@@ -98,18 +101,8 @@ const COLORED: ColorMap = {
   border: { base: 'surface', tone: '-47', contrast: [3, 4.5] },
   'fill-text': { tone: 100, mode: 'fixed' },
   fill: { base: 'fill-text', tone: '-49', contrast: [4.5, 7], mode: 'fixed' },
-  'fill-hover': {
-    base: 'fill-text',
-    tone: '-52',
-    contrast: [4.5, 7],
-    mode: 'fixed',
-  },
-  'fill-pressed': {
-    base: 'fill-text',
-    tone: '-55',
-    contrast: [4.5, 7],
-    mode: 'fixed',
-  },
+  'fill-hover': { base: 'fill', tone: '-3', mode: 'fixed' },
+  'fill-pressed': { base: 'fill', tone: '-6', mode: 'fixed' },
   outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
 };
 
@@ -117,7 +110,9 @@ const COLORED: ColorMap = {
  * The default theme: a white surface with a faint tint, near-black text,
  * and a dark fill. UI Kit's borders are lighter (tone -10), as decoration;
  * here a border is a field's or a checkbox's edge, which needs 3:1
- * (WCAG 1.4.11), so the floor darkens it.
+ * (WCAG 1.4.11), so the floor darkens it. The shadow and the backdrop are
+ * Glaze's shadow colors, each a dark pigment with an alpha fitted to the
+ * page's surface in every scheme.
  */
 export const DEFAULT_COLORS: ColorMap = {
   ...COLORED,
@@ -132,20 +127,11 @@ export const DEFAULT_COLORS: ColorMap = {
     saturation: 0.875,
     contrast: [3, 4.5],
   },
-  // UI Kit's inverse surface: dark in every scheme.
-  fill: { base: 'fill-text', tone: '-88', contrast: [4.5, 7], mode: 'fixed' },
-  'fill-hover': {
-    base: 'fill-text',
-    tone: '-91',
-    contrast: [4.5, 7],
-    mode: 'fixed',
-  },
-  'fill-pressed': {
-    base: 'fill-text',
-    tone: '-94',
-    contrast: [4.5, 7],
-    mode: 'fixed',
-  },
+  // UI Kit's inverse surface (`surface-inverse`): dark in every scheme, at
+  // its own tone. A step down from its white text, it fell to the floor of
+  // the dark scheme's tone window, the dark page's own tone, and a tooltip
+  // lost its edge there; its text's floor stays as a safety net.
+  fill: { base: 'fill-text', tone: 12, contrast: [4.5, 7], mode: 'fixed' },
   outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
   shadow: {
     type: 'shadow',
@@ -154,7 +140,17 @@ export const DEFAULT_COLORS: ColorMap = {
     intensity: 10,
     inherit: false,
   },
-  backdrop: { tone: 10, opacity: 0.5, mode: 'static', inherit: false },
+  // UI Kit's overlay is a fixed color at half alpha, which lightens the
+  // dark page; a shadow color darkens every scheme's. The cap keeps the
+  // page behind it in sight: half in light, .6 in dark.
+  backdrop: {
+    type: 'shadow',
+    bg: 'surface',
+    fg: 'text',
+    intensity: 60,
+    tuning: { alphaMax: 0.6 },
+    inherit: false,
+  },
 };
 
 /** Per-theme changes to the colored roles. */

@@ -389,8 +389,12 @@ can only be the default theme's.
 | `fill-text`                        | Text and marks on the fill: a check mark, a primary button's label.                                                                   | 4.5:1 on its fill                              |
 | `outline`                          | The focus ring.                                                                                                                       | 3:1 against its surface and `#uni-surface`     |
 
-- The default theme also has `#uni-shadow` (popovers and dialogs, from
-  Glaze's shadow colors) and `#uni-backdrop` (the dialog's underlay).
+- The default theme also has `#uni-shadow` (popovers and dialogs) and
+  `#uni-backdrop` (the dialog's underlay), both Glaze shadow colors: a dark
+  pigment with an alpha Glaze fits to the page's surface in each scheme.
+  The backdrop's is capped at .6, so it dims the dark page as well as the
+  light one, which UI Kit's overlay, a fixed color at half alpha,
+  lightens.
 - `disabled` keeps 3:1 for its text and its fill's text, and nothing
   more: WCAG exempts disabled controls.
 - **The focus ring isn't checked against the fill** (owner, 2026-10-20;
@@ -399,10 +403,15 @@ can only be the default theme's.
   ring at 3:1 against the white surface and a mid-tone fill at once would
   have to be nearly black in the light scheme.
 - **Fills are the same in every scheme** (owner, 2026-10-20): Cube UI
-  Kit's, set from their white text, darker for hover and press. A fill
-  needs no contrast against the page, since the text or mark on it
-  identifies it; its text keeps 4.5:1 on it (7:1 in high contrast). On the
-  dark surface UI Kit's fills measure about 2.4 to 3.2:1.
+  Kit's, set from their white text. A fill needs no contrast against the
+  page, since the text or mark on it identifies it; its text keeps 4.5:1
+  on it (7:1 in high contrast). On the dark surface UI Kit's fills measure
+  about 2.4 to 3.2:1. Hover and press are tone steps darker than the fill,
+  as UI Kit's accent ramp, with no floor of their own: one against the
+  text pulls all three to the one tone that meets it, as it did in high
+  contrast. The default fill is UI Kit's inverse surface at its own tone,
+  not a step from its text, which in the dark scheme fell to the page's
+  own tone; a tooltip stands off the page at 1.3:1 at least.
 - **Borders are darker than UI Kit's**, which are decoration at about
   1.3:1: here a border is a field's or a checkbox's edge, which needs 3:1.
 - A checkbox, for example: `#uni-surface` and `#uni-border` at rest,
@@ -832,6 +841,9 @@ command, which runs in Node, so they need no build first.
 - **Contrast** (browser, all three engines): renders every role's pairs
   in every theme and scheme, reads the resolved colors, and checks the
   contrast column in Tokens. WCAG 2 contrast is a small in-house function.
+  It checks the relations too: hover and press step away from each
+  surface and fill, the default fill stands off the page, and the
+  backdrop dims it.
 - **Components** (browser): mounts the docs examples with the prebuilt
   CSS, through both adapters, and checks:
   - a focus ring appears on `focus-visible` only, at least 2 pixels and
@@ -856,9 +868,11 @@ command, which runs in Node, so they need no build first.
   and compared with its reference in `src/__references__/`. The text is
   Liberation Sans, which Playwright installs with its Linux dependencies,
   so CI's runner and Playwright's Docker image draw it alike; elsewhere
-  the test skips. `pnpm -C packages/styles screenshots` remakes every
-  reference in that image (`scripts/screenshots.sh`, Docker needed), and a
-  change to a look commits them with it.
+  the test skips. Pixelmatch compares at a threshold of .02, not its .1,
+  which passes a dark surface ten tones lighter.
+  `pnpm -C packages/styles screenshots` updates the references in that
+  image (`scripts/screenshots.sh`, Docker needed), writing only those that
+  no longer match, and a change to a look commits them with it.
 
 ## Documentation
 
