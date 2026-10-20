@@ -28,6 +28,20 @@ export function addStyle(css: string): () => void {
   return () => style.remove();
 }
 
+/**
+ * Whether the page's stylesheets see a media query. Under emulation an
+ * engine's `matchMedia()` can agree while its stylesheets don't.
+ */
+export function cssMatches(query: string): boolean {
+  const remove = addStyle(`@media ${query} { :root { --uni-test-media: 1; } }`);
+  const matches =
+    getComputedStyle(document.documentElement).getPropertyValue(
+      '--uni-test-media',
+    ) === '1';
+  remove();
+  return matches;
+}
+
 /** A color as the browser draws it: sRGB channels 0–255 and alpha 0–1. */
 export function rgba(color: string): [number, number, number, number] {
   const canvas = document.createElement('canvas');

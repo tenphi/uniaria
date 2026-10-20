@@ -10,8 +10,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { colorToken, createPalette, ROLES, THEMES } from './palette';
 import type { Role, Scheme, Theme } from './palette';
 import {
-  addStyle,
   contrast,
+  cssMatches,
   loadStyles,
   resolveToken,
   rgba,
@@ -51,20 +51,6 @@ function floors(theme: Theme): [Role, readonly [Theme, Role], number][] {
     ['outline', [theme, 'surface'], 3],
     ['outline', page, 3],
   ];
-}
-
-/**
- * Whether the page's stylesheets see a media query. Under emulation an
- * engine's `matchMedia()` can agree while its stylesheets don't.
- */
-function cssMatches(query: string): boolean {
-  const remove = addStyle(`@media ${query} { :root { --uni-test-media: 1; } }`);
-  const matches =
-    getComputedStyle(document.documentElement).getPropertyValue(
-      '--uni-test-media',
-    ) === '1';
-  remove();
-  return matches;
 }
 
 function scoped(scheme: 'light' | 'dark'): HTMLElement {

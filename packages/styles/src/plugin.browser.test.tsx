@@ -15,7 +15,7 @@ import { checkboxStyles } from './components/checkbox';
 import { DEFAULT_PALETTE } from './palette/default';
 import type { Scheme } from './palette/themes';
 import { uniaria } from './plugin';
-import { rgba } from './testing/browser';
+import { cssMatches, rgba } from './testing/browser';
 
 // Before the first style, as the plugin's docs say.
 configure({ plugins: [uniaria()] });
@@ -76,9 +76,8 @@ describe.each([
       '%s takes the %s scheme',
       async ([, selector, scheme], context) => {
         await emulateMedia({ colorScheme, contrast });
-        // Firefox emulates no `prefers-contrast`.
         const query = `(prefers-color-scheme: ${colorScheme}) and (prefers-contrast: ${contrast})`;
-        if (!matchMedia(query).matches) context.skip();
+        if (!cssMatches(query)) context.skip();
         const element = container.querySelector(selector);
         if (!element) throw new Error(`No ${selector}.`);
         for (const token of TOKENS) {
