@@ -612,8 +612,9 @@ static property of each element class:
 | `@uniaria/host`                                        | Marks UniAria element classes, so hosts around them leave their parts alone | `dom/parts.ts`                   |
 
 Two of them patch the platform. The modality tracker wraps
-`HTMLElement.prototype.focus` once per window, as React Aria does, so a
-script's `focus()` call isn't taken for a screen reader moving focus. Scroll
+`HTMLElement.prototype.focus` once per window, as React Aria does, and the
+dialog and popover methods that move focus, so focus a script moves isn't
+taken for a screen reader moving it. Scroll
 lock on iOS wraps it once per window too, the first time it locks, and passes
 calls through while unlocked. A wrapper is never removed: removing it would
 drop any wrapper installed after it.

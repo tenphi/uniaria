@@ -257,6 +257,17 @@ describe.each([
       expect(root.open).toBe(false);
     });
 
+    test('closed with the pointer, it returns focus to its trigger without a ring', async () => {
+      const root = await adapter.dialog();
+      const trigger = outside('dialog-trigger');
+      await open(trigger);
+      await pointer.click(part(root, 'Close'));
+      await settle();
+      await settle();
+      expect(document.activeElement).toBe(trigger);
+      expect(style(trigger).outlineWidth).toBe('0px');
+    });
+
     test('with reduced motion, nothing transitions', async () => {
       await emulateMedia({ reducedMotion: 'reduce' });
       const root = await adapter.dialog();

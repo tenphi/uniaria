@@ -27,7 +27,10 @@
  *
  * Like React Aria, the tracker wraps `HTMLElement.prototype.focus` (once per
  * window, calling the original): a script's `focus()` call is not input, and
- * without the wrapper it would look like a screen reader moving focus.
+ * without the wrapper it would look like a screen reader moving focus. It
+ * wraps the dialog and popover methods that move focus too, which React Aria
+ * doesn't use: closing a dialog with the mouse would otherwise return focus
+ * to its trigger with a visible ring.
  */
 
 import { isMac } from './platform';
@@ -218,16 +221,31 @@ function createTracker(view: Window): ModalityTracker {
   view.addEventListener('focus', onFocus, true);
   view.addEventListener('blur', onWindowBlur);
 
-  const prototype = (view as Window & typeof globalThis).HTMLElement.prototype;
-  const focus = prototype.focus;
-  Object.defineProperty(prototype, 'focus', {
-    configurable: true,
-    writable: true,
-    value: function (this: HTMLElement, options?: FocusOptions) {
-      hasInputBeforeFocus = true;
-      focus.call(this, options);
-    },
-  });
+  // Focus that a script moves is not input: `focus()`, and the dialog and
+  // popover methods that move focus themselves, `showModal()` into the
+  // dialog and `close()` back to where focus was.
+  const asScript = (prototype: object, name: string) => {
+    const method: unknown = Reflect.get(prototype, name);
+    if (typeof method !== 'function') return;
+    Object.defineProperty(prototype, name, {
+      configurable: true,
+      writable: true,
+      value: function (this: unknown, ...args: unknown[]): unknown {
+        hasInputBeforeFocus = true;
+        return Reflect.apply(method, this, args);
+      },
+    });
+  };
+  const globals = view as Window & typeof globalThis;
+  for (const name of ['focus', 'showPopover', 'hidePopover', 'togglePopover']) {
+    asScript(globals.HTMLElement.prototype, name);
+  }
+  // Some DOM implementations for tests have no dialog element.
+  const dialog = globals.HTMLDialogElement as
+    typeof HTMLDialogElement | undefined;
+  for (const name of ['show', 'showModal', 'close', 'requestClose']) {
+    if (dialog) asScript(dialog.prototype, name);
+  }
 
   return {
     get: () => modality,

@@ -273,7 +273,10 @@ the user last used a keyboard, a pointer or assistive technology (`virtual`).
 The tracker starts with the first interaction that asks for it and never
 stops. Like React Aria, it wraps `HTMLElement.prototype.focus` once per
 window, so a script's `focus()` call isn't taken for a screen reader moving
-focus. The wrapper is never removed.
+focus. It wraps the dialog and popover methods that move focus too
+(`showModal()`, `close()`, `showPopover()`, `hidePopover()` and the rest), so
+a dialog closed with the mouse doesn't return focus with a visible ring. The
+wrappers are never removed.
 
 ## Focus
 

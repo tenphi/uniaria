@@ -111,6 +111,28 @@ describe('modalityTracker', () => {
     unsubscribe();
   });
 
+  it('treats focus that a dialog or a popover moves as a focus() call', () => {
+    const tracker = modalityTracker(window);
+    const trigger = append('button');
+    const dialog = append('dialog');
+    dialog.replaceChildren(document.createElement('button'));
+    const popover = append('div', { popover: 'manual' });
+    popover.replaceChildren(document.createElement('button'));
+    popover.firstElementChild?.setAttribute('autofocus', '');
+    trigger.focus();
+    tracker.set('pointer');
+
+    // `showModal()` focuses the dialog's first button, `close()` focuses
+    // where focus was, and `showPopover()` the popover's `autofocus` button.
+    dialog.showModal();
+    expect(document.activeElement).toBe(dialog.firstElementChild);
+    dialog.close();
+    expect(document.activeElement).toBe(trigger);
+    popover.showPopover();
+    expect(document.activeElement).toBe(popover.firstElementChild);
+    expect(tracker.get()).toBe('pointer');
+  });
+
   it('treats a click with no pointer behind it as virtual', () => {
     const tracker = modalityTracker(window);
     tracker.set('pointer');
