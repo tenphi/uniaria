@@ -692,9 +692,11 @@ component tests through both adapters.
 
 ## Tasty gaps
 
-Found while researching this spec (Tasty 3.9.10). Gaps 1 to 4 and 6 were
-filed upstream (owner, 2026-10-19) and fixed in Tasty 3.10.0, which the
-package requires; the rest stay workarounds.
+Found while researching this spec (Tasty 3.9.10) and building it. Gaps 1
+to 4 and 6 were filed upstream (owner, 2026-10-19) and fixed in Tasty
+3.10.0; Tasty 3.11 fixed 11 and its ESLint plugin 1.7.1 fixed 14. The
+package requires Tasty 3.11.2. The rest stay workarounds, and those that
+need a change in Tasty are filed (owner, 2026-10-20).
 
 1. **`@starting` was dropped** outside generated classes
    ([tenphi/tasty#380](https://github.com/tenphi/tasty/issues/380)). Fixed:
@@ -711,13 +713,16 @@ package requires; the rest stay workarounds.
    ([tenphi/tasty#383](https://github.com/tenphi/tasty/issues/383)). Fixed;
    the styles still use transitions only.
 5. **No `@layer`** option for extracted CSS. Workaround: the build wraps
-   the layered export itself.
+   the layered export itself. Not filed: the wrapping is trivial.
 6. **Selector lists** took states and sub-elements on the last item only
    ([tenphi/tasty#384](https://github.com/tenphi/tasty/issues/384)). Fixed.
-7. **Units default to pixels** (`x` is `8px`) where the docs say they use
-   `--gap`. Workaround: the build configures the units.
+7. **Units default to pixels** (`x` is `8px`) where the docs said they used
+   `--gap`. Tasty 3.11 corrected the docs: units are literal. The build
+   still points them at the `$uni-*` tokens.
 8. **`#token.N` alpha emits relative color syntax**, which isn't widely
-   available. Workaround: explicit tokens and `color-mix()`.
+   available. Workaround: explicit tokens and `color-mix()`. Requested: an
+   option to compile it with `color-mix()`
+   ([tenphi/tasty#415](https://github.com/tenphi/tasty/issues/415)).
 9. **Global configuration**: one config per process. Workaround:
    `buildCss()` resets it and runs synchronously.
 10. **`$` affixes take no functional pseudo-classes** (`:is()`, `:where()`,
@@ -725,28 +730,35 @@ package requires; the rest stay workarounds.
     Tasty's model, so it needs an explicit exclusion (owner, 2026-10-19).
     The build adds the nested-root exclusion to the CSS it writes
     (Selectors).
-11. **`#clear` is a token**, `var(--clear-color)`, which nothing defines
-    outside a Tasty project. Workaround: the build replaces it with
-    `transparent` (`replaceTokens`).
+11. **`#clear` was a token**, `var(--clear-color)`, which nothing defined
+    outside a Tasty project. Fixed in Tasty 3.11.0: it compiles to
+    `transparent`.
 12. **A transition's state value is read as a property name**:
     `transition: { '@uni-reduced-motion': 'none' }` emits
-    `none var(--none-transition, …)`. Workaround: the reduced-motion state
-    sets `false`, so no transition is written under it.
-13. **System colors** aren't accepted in a border or an outline (they emit
-    `var(--highlight-color)`), and the ESLint plugin reports them as
-    unknown tokens. Workaround: `#uni-system-*` tokens, defined as custom
-    properties holding the system colors (Tokens → Schemes).
-14. **The ESLint plugin's `no-unknown-state-alias`** reads a whole key
-    that starts with an alias as one alias name
-    (`'@uni-selected | indeterminate'` is reported as unknown).
-    Workaround: start the key with a state, or wrap it in parentheses.
-15. **An own state on a pseudo-element** is written after it
+    `none var(--none-transition, …)`
+    ([tenphi/tasty#412](https://github.com/tenphi/tasty/issues/412)).
+    Workaround: the reduced-motion state sets `false`, so no transition is
+    written under it.
+13. **System colors** aren't accepted in a border or an outline (Tasty 3.11
+    replaces them with its default color token)
+    ([tenphi/tasty#411](https://github.com/tenphi/tasty/issues/411)), and
+    the ESLint plugin reports them in any color position
+    ([tenphi/eslint-plugin-tasty#86](https://github.com/tenphi/eslint-plugin-tasty/issues/86)).
+    Workaround: `#uni-system-*` tokens, defined as custom properties holding
+    the system colors (Tokens → Schemes).
+14. **The ESLint plugin's `no-unknown-state-alias`** read a whole key that
+    starts with an alias as one alias name. Fixed in its 1.7.1; the keys
+    written around it stay.
+15. **An own state on a pseudo-element** was written after it
     (`[data-element="Option"]::after:where([data-selected])`), which never
-    matches. Workaround: the part sets a custom property from its own
-    state (`--uni-option-mark`), which the pseudo-element reads.
-16. **`padding: false`** in a state map writes Tasty's default gap,
-    `var(--gap)`, where `false` elsewhere writes nothing. Workaround: a map
-    that applies under one state leaves its default out.
+    matched. Tasty 3.11.2 ignores such a state with a warning, and the
+    ESLint plugin reports it: a pseudo-element has no state of its own. So
+    the part sets a custom property from its own state
+    (`--uni-option-mark`), which the pseudo-element reads.
+16. **`padding: false`** in a state map writes Tasty's default gap, where
+    `false` elsewhere writes nothing
+    ([tenphi/tasty#413](https://github.com/tenphi/tasty/issues/413)).
+    Workaround: a map that applies under one state leaves its default out.
 
 ## Testing
 

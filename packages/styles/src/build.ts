@@ -53,8 +53,6 @@ export function componentsCss(names: readonly ComponentName[]): string {
   configure({
     units: { ...UNITS },
     states: { ...STATES },
-    // Tasty's `#clear` is a token Tasty projects define; plain CSS has none.
-    replaceTokens: { '#clear': 'transparent' },
   });
   try {
     return names.map(componentCss).join('\n');

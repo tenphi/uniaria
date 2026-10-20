@@ -137,7 +137,7 @@
   },
   "peerDependencies": {
     "@tenphi/glaze": "^2.0.1",
-    "@tenphi/tasty": "^3.10.0"
+    "@tenphi/tasty": "^3.11.2"
   },
   "peerDependenciesMeta": {
     "@tenphi/glaze": {
@@ -149,7 +149,7 @@
   },
   "devDependencies": {
     "@tenphi/glaze": "^2.0.1",
-    "@tenphi/tasty": "^3.10.0",
+    "@tenphi/tasty": "^3.11.2",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
