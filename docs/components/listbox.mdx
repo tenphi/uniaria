@@ -361,7 +361,7 @@ function UserRows(props: {
       let row = rows.get(key);
       if (!row) {
         row = document.createElement('div');
-        row.dataset.part = 'option';
+        row.dataset.element = 'Option';
         row.dataset.key = key;
         row.textContent = byId.get(key).name;
         rows.set(key, row);

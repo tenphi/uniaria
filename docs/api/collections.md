@@ -282,7 +282,7 @@ stays: removing the focused option's element would drop focus.
         continue;
       }
       const row = document.createElement('div');
-      row.dataset.part = 'option';
+      row.dataset.element = 'Option';
       row.dataset.key = key;
       row.textContent = key;
       list.insertBefore(row, next);
