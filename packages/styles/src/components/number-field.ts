@@ -6,8 +6,10 @@ import { wrappedInputStyles } from '../shared/input';
 /**
  * A stepper: a quiet 24-pixel button inside the box, in markup order
  * beside the input. UI Kit stacks two half-height ones; here each keeps
- * the 24-pixel target (WCAG 2.5.8). It reads its own state, which
- * UniAria writes as Button's: disabled while it can't step.
+ * the 24-pixel target (WCAG 2.5.8). At the box's edge it sits as far from
+ * the edge as from the top and bottom (the inset), its corners concentric
+ * with the box's. It reads its own state, which UniAria writes as
+ * Button's: disabled while it can't step.
  */
 /* eslint-disable tasty/no-own-at-root -- spread into the stepper parts, where @own() reads the button's own state */
 const stepperStyles = {
@@ -19,10 +21,21 @@ const stepperStyles = {
   inlineSize: 'fixed max(24px, 3x)',
   // eslint-disable-next-line tasty/consistent-token-usage -- as above
   blockSize: 'fixed max(24px, 3x)',
-  margin: 0,
+  blockMargin: 0,
+  // The wrapper's padding, less the inset, at the box's edge.
+  inlineMargin: {
+    '': 0,
+    '@own(@uni-first)':
+      // eslint-disable-next-line tasty/consistent-token-usage -- the stepper's size, as above
+      '((($uni-control-height - 2bw - max(24px, 3x)) / 2) - (1x - 1bw)) start',
+    '@own(@uni-last)':
+      // eslint-disable-next-line tasty/consistent-token-usage -- as above
+      '((($uni-control-height - 2bw - max(24px, 3x)) / 2) - (1x - 1bw)) end',
+  },
   padding: 0,
   border: '0 #clear',
-  radius: '.5r',
+  // eslint-disable-next-line tasty/consistent-token-usage -- as above
+  radius: '(1r - 1bw - (($uni-control-height - 2bw - max(24px, 3x)) / 2))',
   fill: {
     '': '#clear',
     '@own(hovered)': '#uni-surface-hover',

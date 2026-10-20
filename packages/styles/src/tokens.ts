@@ -69,6 +69,9 @@ export const STATES = {
   '@uni-selected': 'selected | :has(Input:checked)',
   '@uni-input-disabled': 'disabled | :has(Input:disabled)',
   '@uni-focused': 'focused | :focus-within',
+  // Structural, inside `@own()`: a part at the start or the end of its box.
+  '@uni-first': ':first-child',
+  '@uni-last': ':last-child',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;

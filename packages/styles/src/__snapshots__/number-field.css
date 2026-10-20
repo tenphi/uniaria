@@ -35,7 +35,9 @@
 
 [data-uni="number-field"] [data-element="Input"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; flex-grow: 1; inline-size: auto; min-inline-size: 0px; max-inline-size: initial; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2 - var(--uni-border-width)) 0; border: 0 solid transparent; border-radius: 0px; background-color: transparent; color: inherit; --current-color: inherit; outline: 0 solid transparent; resize: vertical; text-align: end; font-variant-numeric: tabular-nums; }
 
-[data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { display: grid; align-items: center; justify-items: center; flex-shrink: 0; box-sizing: border-box; inline-size: max(24px, calc(3 * var(--uni-gap))); min-inline-size: max(24px, calc(3 * var(--uni-gap))); max-inline-size: max(24px, calc(3 * var(--uni-gap))); block-size: max(24px, calc(3 * var(--uni-gap))); min-block-size: max(24px, calc(3 * var(--uni-gap))); max-block-size: max(24px, calc(3 * var(--uni-gap))); margin: 0px; padding: 0px; border: 0 solid transparent; border-radius: calc(0.5 * var(--uni-radius)); font-size: var(--uni-font-size); line-height: 1px; font-family: inherit; }
+[data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { display: grid; align-items: center; justify-items: center; flex-shrink: 0; box-sizing: border-box; inline-size: max(24px, calc(3 * var(--uni-gap))); min-inline-size: max(24px, calc(3 * var(--uni-gap))); max-inline-size: max(24px, calc(3 * var(--uni-gap))); block-size: max(24px, calc(3 * var(--uni-gap))); min-block-size: max(24px, calc(3 * var(--uni-gap))); max-block-size: max(24px, calc(3 * var(--uni-gap))); margin-block: 0px; padding: 0px; border: 0 solid transparent; border-radius: calc(var(--uni-radius) - var(--uni-border-width) - calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2)); font-size: var(--uni-font-size); line-height: 1px; font-family: inherit; }
+
+[data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not(:first-child):not(:last-child)) { margin-inline: 0px; }
 
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]), [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled]):not([data-hovered]):not([data-pressed])) { background-color: transparent; }
@@ -51,7 +53,9 @@
   [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition); }
 }
 
-[data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { display: grid; align-items: center; justify-items: center; flex-shrink: 0; box-sizing: border-box; inline-size: max(24px, calc(3 * var(--uni-gap))); min-inline-size: max(24px, calc(3 * var(--uni-gap))); max-inline-size: max(24px, calc(3 * var(--uni-gap))); block-size: max(24px, calc(3 * var(--uni-gap))); min-block-size: max(24px, calc(3 * var(--uni-gap))); max-block-size: max(24px, calc(3 * var(--uni-gap))); margin: 0px; padding: 0px; border: 0 solid transparent; border-radius: calc(0.5 * var(--uni-radius)); font-size: var(--uni-font-size); line-height: 1px; font-family: inherit; }
+[data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { display: grid; align-items: center; justify-items: center; flex-shrink: 0; box-sizing: border-box; inline-size: max(24px, calc(3 * var(--uni-gap))); min-inline-size: max(24px, calc(3 * var(--uni-gap))); max-inline-size: max(24px, calc(3 * var(--uni-gap))); block-size: max(24px, calc(3 * var(--uni-gap))); min-block-size: max(24px, calc(3 * var(--uni-gap))); max-block-size: max(24px, calc(3 * var(--uni-gap))); margin-block: 0px; padding: 0px; border: 0 solid transparent; border-radius: calc(var(--uni-radius) - var(--uni-border-width) - calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2)); font-size: var(--uni-font-size); line-height: 1px; font-family: inherit; }
+
+[data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not(:first-child):not(:last-child)) { margin-inline: 0px; }
 
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]), [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled]):not([data-hovered]):not([data-pressed])) { background-color: transparent; }
@@ -91,6 +95,8 @@
 
 [data-uni="number-field"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled])) [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { cursor: default; }
 
+[data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not(:last-child):first-child) { margin-inline: calc(calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2) - calc(var(--uni-gap) - var(--uni-border-width))) 0; }
+
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered]) { background-color: var(--uni-surface-hover-color); }
 }
@@ -100,6 +106,8 @@
 }
 
 [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { cursor: default; }
+
+[data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not(:last-child):first-child) { margin-inline: calc(calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2) - calc(var(--uni-gap) - var(--uni-border-width))) 0; }
 
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered]) { background-color: var(--uni-surface-hover-color); }
@@ -123,6 +131,8 @@
   [data-uni="number-field"]:where([data-invalid]) [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
 }
 
+[data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:last-child) { margin-inline: 0 calc(calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2) - calc(var(--uni-gap) - var(--uni-border-width))); }
+
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])[data-pressed]) { background-color: var(--uni-surface-pressed-color); }
 }
@@ -130,6 +140,8 @@
 @media (forced-colors: active) {
   [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); }
 }
+
+[data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:last-child) { margin-inline: 0 calc(calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2) - calc(var(--uni-gap) - var(--uni-border-width))); }
 
 @media (not (forced-colors: active)) {
   [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])[data-pressed]) { background-color: var(--uni-surface-pressed-color); }

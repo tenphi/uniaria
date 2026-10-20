@@ -242,6 +242,13 @@ describe.each([
       expect(box(part(root, 'Input')).left).toBeGreaterThan(
         box(part(root, 'Decrement')).right,
       );
+      // At the box's edges, as far in as from the top and bottom.
+      const decrement = box(part(root, 'Decrement'));
+      const increment = box(part(root, 'Increment'));
+      const inset = decrement.top - wrapper.top;
+      expect(decrement.left - wrapper.left).toBeCloseTo(inset, 1);
+      expect(wrapper.right - increment.right).toBeCloseTo(inset, 1);
+      expect(wrapper.bottom - decrement.bottom).toBeCloseTo(inset, 1);
     });
 
     test('a stepper that can step lights up under the pointer', async () => {

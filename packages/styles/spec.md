@@ -255,12 +255,14 @@ export const checkboxStyles = {
   (`disabled | :has(Input:disabled)`, for components whose root isn't the
   native element), `@uni-focused` (`focused | :focus-within`, for an input
   box, which shows focus on any focus within it, as a text control does),
-  `@uni-reduced-motion` and `@uni-forced-colors`.
+  `@uni-first` and `@uni-last` (`:first-child`, `:last-child`, for a part at
+  the start or end of its box, such as a stepper), `@uni-reduced-motion`
+  and `@uni-forced-colors`.
 - **Shared fragments** (`src/shared/`): the field label, description and
-  error; the field column; the input box; the button box; the toggle row Checkbox, Switch and
-  Radio share; the group layout; the option; the popup surface; the
-  overlay motion; the focus ring; the check and dash marks. Components spread them; consumers see only the
-  flattened objects.
+  error; the field column; the input box; the button box; the toggle row
+  Checkbox, Switch and Radio share; the group layout; the option; the
+  popup surface; the overlay motion; the focus ring; the check and dash
+  marks. Components spread them; consumers see only the flattened objects.
 - **What the source may use** is fixed by the Web platform baseline and
   Tasty gaps sections below, and checked by tests: no `@starting` (it emits
   `@starting-style`), no `#token.N` alpha (Tasty emits relative color
@@ -514,7 +516,7 @@ All 16, each in its own file and stylesheet:
 | RadioGroup    | root, label, description, error                                                                                   | As CheckboxGroup; UniAria writes `data-orientation` from `orientation`.                                                                                                                                                                                                                              |
 | Field         | root, label, control, description, error                                                                          | The label, description and error fragment every field shares. Only a native text control (an `input` you type in, a `textarea`, a `select`) takes the input box.                                                                                                                                     |
 | TextField     | root, wrapper, label, input, description, error                                                                   | The wrapper is the box: border, a ring on any focus within it, the `invalid` border, 7 pixels inside its border and 4 between what it holds, so your prefix or suffix sits beside the input. The input is bare inside it; without a wrapper there is no box (Field draws one around a native input). |
-| NumberField   | root, wrapper, label, input, increment, decrement, description, error                                             | TextField's box, with the number at the input's end. The steppers are quiet 24-pixel buttons beside the input in markup order, where UI Kit's stacked half-height ones would fall below the 24-pixel target.                                                                                         |
+| NumberField   | root, wrapper, label, input, increment, decrement, description, error                                             | TextField's box, with the number at the input's end. The steppers are quiet 24-pixel buttons beside the input in markup order, where UI Kit's stacked half-height ones would fall below the 24-pixel target; at the box's edge, as far from it as from the top and bottom.                           |
 | Listbox       | root, label, scroller, list, option, optionLabel, optionDescription, group, groupLabel, empty, description, error | The option fragment shared with Select and Combobox: hover, `focus-visible`, a selected mark, disabled.                                                                                                                                                                                              |
 | Select        | root, label, trigger, value, popover, arrow, scroller, list, the option parts, empty, close, description, error   | The trigger is a field box with a chevron; `placeholder` dims the value. The popup: `min-inline-size: var(--anchor-width)`, `max-block-size: var(--available-height)`. `close` stays visually hidden until it has focus. The popup opens with the overlay motion (Overlay motion).                   |
 | Combobox      | root, label, anchor, input, button, popover, arrow, scroller, list, the option parts, empty, description, error   | The anchor is the field box around the input and the button; the popup as Select's.                                                                                                                                                                                                                  |
