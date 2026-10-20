@@ -9,6 +9,8 @@
   --uni-font-size-small: 0.75rem;
   --uni-line-height-small: 1.125rem;
   --uni-transition: 80ms;
+  --uni-overlay-transition: 120ms;
+  --uni-dialog-transition: 250ms;
   --uni-z-overlay: 1000;
   --uni-system-canvas-color: Canvas;
   --uni-system-canvas-text-color: CanvasText;

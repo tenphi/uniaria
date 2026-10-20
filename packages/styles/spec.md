@@ -258,8 +258,8 @@ export const checkboxStyles = {
   `@uni-reduced-motion` and `@uni-forced-colors`.
 - **Shared fragments** (`src/shared/`): the field label, description and
   error; the input box; the button box; the toggle row Checkbox, Switch and
-  Radio share; the group layout; the option; the popup surface; the focus
-  ring; the check and dash marks. Components spread them; consumers see only the
+  Radio share; the group layout; the option; the popup surface; the
+  overlay motion; the focus ring; the check and dash marks. Components spread them; consumers see only the
   flattened objects.
 - **What the source may use** is fixed by the Web platform baseline and
   Tasty gaps sections below, and checked by tests: no `@starting` (it emits
@@ -396,15 +396,17 @@ can only be the default theme's.
 
 ### Sizes and motion
 
-| Token                                            | Use                                                       |
-| ------------------------------------------------ | --------------------------------------------------------- |
-| `$uni-gap`, `$uni-radius`                        | The `x` and `r` units in the prebuilt CSS.                |
-| `$uni-border-width`, `$uni-outline-width`        | The `bw` and `ow` units.                                  |
-| `$uni-control-height`                            | Buttons, inputs and triggers.                             |
-| `$uni-font-size`, `$uni-line-height`             | Text: 14 and 20 pixels at the default root size.          |
-| `$uni-font-size-small`, `$uni-line-height-small` | Descriptions, errors and tooltips: 12 and 18.             |
-| `$uni-transition`                                | Hover, press and overlay transitions: 80ms.               |
-| `$uni-z-overlay`                                 | Popovers without the Popover API (Browser support guide). |
+| Token                                            | Use                                                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `$uni-gap`, `$uni-radius`                        | The `x` and `r` units in the prebuilt CSS.                                                        |
+| `$uni-border-width`, `$uni-outline-width`        | The `bw` and `ow` units.                                                                          |
+| `$uni-control-height`                            | Buttons, inputs and triggers.                                                                     |
+| `$uni-font-size`, `$uni-line-height`             | Text: 14 and 20 pixels at the default root size.                                                  |
+| `$uni-font-size-small`, `$uni-line-height-small` | Descriptions, errors and tooltips: 12 and 18.                                                     |
+| `$uni-transition`                                | Hover and press, and the popups of Select, Combobox and Tooltip, as UI Kit's `$transition`: 80ms. |
+| `$uni-overlay-transition`                        | Popover opening and closing, as UI Kit's `$disclosure-transition`: 120ms.                         |
+| `$uni-dialog-transition`                         | Dialog and its backdrop opening and closing, as UI Kit's modal: 250ms.                            |
+| `$uni-z-overlay`                                 | Popovers without the Popover API (Browser support guide).                                         |
 
 ### Schemes
 
@@ -501,24 +503,24 @@ logical properties, `color-mix()`, `oklch()`, `prefers-color-scheme`,
 
 All 16, each in its own file and stylesheet:
 
-| Component     | Parts styled                                                                                                      | Notes                                                                                                                                                                                                                    |
-| ------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Button        | root                                                                                                              | `data-variant`: `secondary` (default), `primary`, `quiet`, `danger` (Resolved questions 10).                                                                                                                             |
-| ToggleButton  | root                                                                                                              | Button's look; `selected` takes the accent fill whatever the variant, where UI Kit's light tint would show it mostly by hue (WCAG 1.4.1).                                                                                |
-| Checkbox      | root, wrapper, input, indicator, label, description, error                                                        | The input is laid over the wrapper (or a `label` root), invisible and clickable, as in the Styling guide. Check and dash drawn on `::before`.                                                                            |
-| Switch        | as Checkbox                                                                                                       | The indicator is UI Kit's 32 by 20 track; your `Thumb` element, a 12-pixel dot, slides inside it by logical inset, so it mirrors in right-to-left text.                                                                  |
-| Radio         | root, wrapper, input, indicator, label, description                                                               | UI Kit's 16-pixel circle, with an 8-pixel dot in the accent text color while selected.                                                                                                                                   |
-| CheckboxGroup | root, label, description, error                                                                                   | Stacks the items; `data-orientation="horizontal"`, which the consumer writes on this group, wraps them in a row.                                                                                                         |
-| RadioGroup    | root, label, description, error                                                                                   | As CheckboxGroup; UniAria writes `data-orientation` from `orientation`.                                                                                                                                                  |
-| Field         | root, label, control, description, error                                                                          | The label, description and error fragment every field shares. Only a native text control (an `input` you type in, a `textarea`, a `select`) takes the input box.                                                         |
-| TextField     | root, wrapper, label, input, description, error                                                                   | The wrapper is the box: border, `focus-within` ring, `invalid` border. The input is bare inside it.                                                                                                                      |
-| NumberField   | root, wrapper, label, input, increment, decrement, description, error                                             | The wrapper holds the input and the steppers.                                                                                                                                                                            |
-| Listbox       | root, label, scroller, list, option, optionLabel, optionDescription, group, groupLabel, empty, description, error | The option fragment shared with Select and Combobox: hover, `focus-visible`, a selected mark, disabled.                                                                                                                  |
-| Select        | root, label, trigger, value, popover, arrow, scroller, list, the option parts, empty, close, description, error   | The trigger is a field box with a chevron; `placeholder` dims the value. The popup: `min-inline-size: var(--anchor-width)`, `max-block-size: var(--available-height)`. `close` stays visually hidden until it has focus. |
-| Combobox      | root, label, anchor, input, button, popover, arrow, scroller, list, the option parts, empty, description, error   | The anchor is the field box around the input and the button; the popup as Select's.                                                                                                                                      |
-| Dialog        | trigger, root, `::backdrop`, title, description, close                                                            | Panel centered by the native dialog, capped width; fades and scales from `entering`, back on `exiting`.                                                                                                                  |
-| Popover       | trigger, root, arrow, title, description, close                                                                   | The popup surface; the arrow rotates by `placement`.                                                                                                                                                                     |
-| Tooltip       | root, arrow                                                                                                       | The default fill, small text; fades on `entering` and `exiting`.                                                                                                                                                         |
+| Component     | Parts styled                                                                                                      | Notes                                                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Button        | root                                                                                                              | `data-variant`: `secondary` (default), `primary`, `quiet`, `danger` (Resolved questions 10).                                                                                                                                                                                       |
+| ToggleButton  | root                                                                                                              | Button's look; `selected` takes the accent fill whatever the variant, where UI Kit's light tint would show it mostly by hue (WCAG 1.4.1).                                                                                                                                          |
+| Checkbox      | root, wrapper, input, indicator, label, description, error                                                        | The input is laid over the wrapper (or a `label` root), invisible and clickable, as in the Styling guide. Check and dash drawn on `::before`.                                                                                                                                      |
+| Switch        | as Checkbox                                                                                                       | The indicator is UI Kit's 32 by 20 track; your `Thumb` element, a 12-pixel dot, slides inside it by logical inset, so it mirrors in right-to-left text.                                                                                                                            |
+| Radio         | root, wrapper, input, indicator, label, description                                                               | UI Kit's 16-pixel circle, with an 8-pixel dot in the accent text color while selected.                                                                                                                                                                                             |
+| CheckboxGroup | root, label, description, error                                                                                   | Stacks the items; `data-orientation="horizontal"`, which the consumer writes on this group, wraps them in a row.                                                                                                                                                                   |
+| RadioGroup    | root, label, description, error                                                                                   | As CheckboxGroup; UniAria writes `data-orientation` from `orientation`.                                                                                                                                                                                                            |
+| Field         | root, label, control, description, error                                                                          | The label, description and error fragment every field shares. Only a native text control (an `input` you type in, a `textarea`, a `select`) takes the input box.                                                                                                                   |
+| TextField     | root, wrapper, label, input, description, error                                                                   | The wrapper is the box: border, `focus-within` ring, `invalid` border. The input is bare inside it.                                                                                                                                                                                |
+| NumberField   | root, wrapper, label, input, increment, decrement, description, error                                             | The wrapper holds the input and the steppers.                                                                                                                                                                                                                                      |
+| Listbox       | root, label, scroller, list, option, optionLabel, optionDescription, group, groupLabel, empty, description, error | The option fragment shared with Select and Combobox: hover, `focus-visible`, a selected mark, disabled.                                                                                                                                                                            |
+| Select        | root, label, trigger, value, popover, arrow, scroller, list, the option parts, empty, close, description, error   | The trigger is a field box with a chevron; `placeholder` dims the value. The popup: `min-inline-size: var(--anchor-width)`, `max-block-size: var(--available-height)`. `close` stays visually hidden until it has focus. The popup opens with the overlay motion (Overlay motion). |
+| Combobox      | root, label, anchor, input, button, popover, arrow, scroller, list, the option parts, empty, description, error   | The anchor is the field box around the input and the button; the popup as Select's.                                                                                                                                                                                                |
+| Dialog        | trigger, root, `::backdrop`, title, description, close                                                            | Panel centered by the native dialog, capped width. It fades in and drops 24 pixels into place from `entering`, back on `exiting`, with the backdrop fading, in `$uni-dialog-transition`.                                                                                           |
+| Popover       | trigger, root, arrow, title, description, close                                                                   | The popup surface; the arrow rotates by `placement`. It fades in and grows from .9 along the placement axis, from its trigger's side, in `$uni-overlay-transition`.                                                                                                                |
+| Tooltip       | root, arrow                                                                                                       | The default fill, small text; the overlay motion, at .8 instead of .9. `data-instant` (warm-up) skips it.                                                                                                                                                                          |
 
 - Every interactive part keeps a target of at least 24 by 24 CSS pixels
   (WCAG 2.5.8): a checkbox's target is its overlaid input, which covers
@@ -527,6 +529,27 @@ All 16, each in its own file and stylesheet:
   offset, on `focus-visible` only, drawn on the part that shows focus: the
   input box for text fields, the indicator for checkbox, switch and radio,
   the option for list items.
+
+### Overlay motion
+
+Overlays animate with transitions alone, between the hidden look and
+their own, as Cube UI Kit's do (Resolved questions 16). UniAria's
+presence marks an opening overlay `data-entering` for its first two
+frames and a closing one `data-exiting` until its transitions end, then
+hides it; the styles key the hidden look on `entering | exiting`
+(`src/shared/motion.ts`):
+
+- **Popups** (Select's and Combobox's popover, and Tooltip): faded, 8
+  pixels toward the trigger and scaled to .9 (Tooltip .8) along the
+  `data-placement` axis, from the side toward the trigger, in
+  `$uni-transition`. Without `data-placement` yet, as below its trigger.
+- **Popover:** faded and scaled to .9 along the `data-placement` axis, from
+  the side toward its trigger, in `$uni-overlay-transition`.
+- **Dialog:** faded and 24 pixels up, its `::backdrop` faded, in
+  `$uni-dialog-transition`.
+
+Opacity transitions linearly, movement and scale ease. Under reduced
+motion no transition runs, so overlays appear and disappear at once.
 
 ## Cases
 
@@ -828,3 +851,13 @@ With the spec's approval, its recommendations for the open questions:
     element shows itself fall back to it (`:has(input:checked)` for a
     selected checkbox, switch or radio, `:disabled`); `:has()` is widely
     available since 2026-06. The rest wait for the upgrade.
+
+Decided by the owner after approval:
+
+16. **Overlay motion** (2026-10-20): a shared transition fragment in this
+    package (Components → Overlay motion), keyed on the presence states
+    UniAria already writes; no wrapper component, since overlays stay
+    mounted. Durations as UI Kit's, with their own tokens:
+    `$uni-overlay-transition` (120ms) for Popover and
+    `$uni-dialog-transition` (250ms) for Dialog; the pickers' popups and
+    Tooltip keep `$uni-transition` (80ms), as UI Kit's do.

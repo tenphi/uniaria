@@ -7,7 +7,8 @@
 /**
  * Sizes and motion, written once on `:root` by `tokens.css`. Cube UI Kit's,
  * in `rem` where they size text or controls: its 8-pixel gap, 6-pixel
- * radius, 32-pixel controls, 14/20 and 12/18 text and 80ms transitions.
+ * radius, 32-pixel controls, 14/20 and 12/18 text, and its transitions:
+ * 80ms, 120ms for a popover, 250ms for a dialog (spec: Overlay motion).
  * Its focus ring is 1 pixel; here it is 2 (spec: Components).
  */
 export const SIZES = {
@@ -21,6 +22,8 @@ export const SIZES = {
   '$uni-font-size-small': '0.75rem',
   '$uni-line-height-small': '1.125rem',
   '$uni-transition': '80ms',
+  '$uni-overlay-transition': '120ms',
+  '$uni-dialog-transition': '250ms',
   '$uni-z-overlay': '1000',
 } as const;
 
