@@ -8,8 +8,9 @@
  * rebuild only those (`node scripts/build-demo.mjs select combobox`).
  *
  * A demo imports `uniaria-styles:<name>,…` for the default styles of those
- * components with their tokens, as a string: `@uniaria/styles` builds them
- * here in Node, as its own build would.
+ * components with their tokens, as a string (`uniaria-styles:` alone for
+ * the tokens): `@uniaria/styles` builds them here in Node, as its own build
+ * would.
  */
 
 import { readdir } from 'node:fs/promises';
@@ -52,7 +53,11 @@ const defaultStyles = {
   resolveId: (id) => (id.startsWith(STYLES) ? `\0${id}` : null),
   load(id) {
     if (!id.startsWith(`\0${STYLES}`)) return null;
-    const components = id.slice(STYLES.length + 1).split(',');
+    // `uniaria-styles:` alone is the tokens only.
+    const components = id
+      .slice(STYLES.length + 1)
+      .split(',')
+      .filter(Boolean);
     return `export default ${JSON.stringify(styles.buildCss({ components }))};`;
   },
 };

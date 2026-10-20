@@ -27,6 +27,8 @@ export default defineDocsConfig({
             label: 'Use',
             items: [
               '/guide/styling',
+              '/guide/default-styles',
+              '/guide/theming',
               '/guide/state',
               '/guide/composition',
               '/guide/forms',

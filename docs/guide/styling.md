@@ -8,6 +8,10 @@ elements so the CSS can follow the component's state. Any styling approach
 works: plain CSS, CSS modules, Tailwind, a CSS-in-JS library, or
 [Tasty](https://tasty.style).
 
+To start from a look rather than a blank page, the optional
+[default styles](./default-styles.md) style every component the way this page
+describes, and [Theming](./theming.mdx) changes their colors and sizes.
+
 ## Parts
 
 Every element a component manages is a _part_, and UniAria marks each one

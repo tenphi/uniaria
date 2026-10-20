@@ -1,0 +1,211 @@
+---
+title: Theming
+description: The colors, sizes and schemes of the default styles, and how to change them, at build time or while the page runs.
+---
+
+import { Preview } from '@tenphi/cookbook/components';
+
+import css from './demos/theming.css?raw';
+import html from './demos/theming.html?raw';
+
+The [default styles](./default-styles.md) read every color, size and duration
+from a CSS custom property whose name starts with `uni-`, so they never meet
+your own. A theme of yours is a set of values for those properties: from a
+palette the package generates, or from your own design tokens.
+
+## Themes and roles
+
+Every color names a theme and a role in it: `--uni-danger-border-color` is
+the danger theme's border. The default theme leaves its name out:
+`--uni-border-color`. Every theme has every role, so a field that turns
+invalid swaps `border` for `danger-border`, and no name needs looking up. In
+Tasty the same colors are tokens: `#uni-danger-border`, `#uni-border`.
+
+| Theme      | Colors                                                         | Used by                                                         |
+| ---------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
+| `default`  | Neutral, the base of every component: surfaces, text, borders. | All 16.                                                         |
+| `accent`   | Selection, primary actions and the focus ring.                 | Checkbox, Switch, Radio, ToggleButton, options, Button.         |
+| `danger`   | Invalid fields, error messages, destructive actions.           | Every field's invalid state and error, `data-variant="danger"`. |
+| `warning`  | Cautions.                                                      | No component yet: they are there for yours.                     |
+| `note`     | Information to point out.                                      | As `warning`.                                                   |
+| `disabled` | A disabled component, which takes it whole.                    | Every component that can be disabled.                           |
+
+| Role                               | Colors                                                                                             | Contrast, in every scheme                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `surface`                          | The theme's background: controls and panels in the default theme, a tinted one in the others.      | None of its own.                           |
+| `surface-hover`, `surface-pressed` | That background, hovered and pressed.                                                              | None of their own.                         |
+| `text`                             | Text: body text, an error message.                                                                 | 4.5:1 on its own surface and on `surface`. |
+| `text-soft`                        | Secondary text: descriptions, placeholders.                                                        | As `text`.                                 |
+| `border`                           | Edges: a field's box, a checkbox.                                                                  | 3:1 against `surface`.                     |
+| `fill`                             | The theme's strong color: a selected indicator, a primary button; in the default theme, a tooltip. | None of its own: the same in every scheme. |
+| `fill-hover`, `fill-pressed`       | That fill, hovered and pressed.                                                                    | As `fill`.                                 |
+| `fill-text`                        | Text and marks on the fill: a check mark, a primary button's label.                                | 4.5:1 on its fill.                         |
+| `outline`                          | The focus ring.                                                                                    | 3:1 against its surface and `surface`.     |
+
+The default theme also has `--uni-shadow-color`, for popups and dialogs, and
+`--uni-backdrop-color`, behind a dialog. The disabled theme keeps 3:1 for its
+text and nothing more, since WCAG exempts disabled controls.
+
+<Preview
+  title="Every role of every theme"
+  scripts={['/demo/theming.js']}
+  html={html}
+  css={css}
+/>
+
+## Schemes
+
+The palette has a light, a dark and a high-contrast scheme. The page follows
+the OS: dark under `prefers-color-scheme: dark`, and high contrast under
+`prefers-contrast: more`. To force one, set `data-uni-scheme` to `light` or
+`dark` on `<html>` for the page, or on any element for what is inside it:
+
+```html
+<aside data-uni-scheme="dark">…</aside>
+```
+
+High contrast follows the OS in a forced scheme too. Each scheme sets
+`color-scheme`, so scrollbars and native controls match it. In forced colors
+mode, the components draw their fills, borders and marks in the system's
+colors, which the `--uni-system-*-color` properties hold.
+
+## Your palette
+
+The palette comes from [Glaze](https://github.com/tenphi/glaze): a hue and a
+saturation for each theme, from which it derives every role in every scheme,
+at the contrast above. `createPalette()` takes the seeds you change, and keeps
+the package's for the rest:
+
+```ts
+import { createPalette } from '@uniaria/styles/palette';
+
+const palette = createPalette({
+  default: { hue: 200, saturation: 10 },
+  accent: { hue: 150 },
+});
+```
+
+| Theme      | Hue | Saturation |
+| ---------- | --- | ---------- |
+| `default`  | 262 | 20         |
+| `accent`   | 262 | 100        |
+| `danger`   | 25  | 100        |
+| `warning`  | 75  | 100        |
+| `note`     | 200 | 100        |
+| `disabled` | 262 | 20         |
+
+`createPalette()` needs `@tenphi/glaze`, and runs in Node and in the browser.
+Pass its result to [`buildCss()`](./default-styles.md#customized-css), to the
+[Tasty plugin](#in-tastys-runtime), or to `paletteCss()`, which writes it as
+CSS while the page runs ([below](#while-the-page-runs)).
+
+### Colors of your own
+
+A design system with its own color tokens leaves the palette out and points
+the roles at its tokens. The contrast in the tables above is then yours to
+keep.
+
+- With the prebuilt CSS, import `components.css` without `tokens.css`, and set
+  the properties:
+
+  ```css
+  @import '@uniaria/styles/css/components.css';
+
+  :root {
+    --uni-accent-fill-color: var(--brand-600);
+    /* …and the other roles. */
+  }
+  ```
+
+- With `buildCss()`, compile the roles straight to your tokens, so the CSS has
+  no `--uni-*` colors at all:
+
+  ```ts
+  buildCss({
+    palette: false,
+    replaceTokens: { '#uni-accent-fill': '#brand-600' },
+  });
+  ```
+
+- In Tasty, `uniaria({ palette: false })` and Tasty's own `replaceTokens`.
+
+## Tokens
+
+A single token changes with `buildCss({ tokens })` or the plugin's `tokens`
+option. A color takes one value for every scheme, or one per scheme (`light`,
+`dark`, `lightContrast`, `darkContrast`), and the others keep the palette's:
+
+```ts
+buildCss({
+  tokens: {
+    '$uni-radius': '4px',
+    '#uni-accent-outline': { light: '#0a7', dark: '#3c9' },
+  },
+});
+```
+
+The sizes and durations:
+
+| Token                                              | Default               | Use                                                              |
+| -------------------------------------------------- | --------------------- | ---------------------------------------------------------------- |
+| `--uni-gap`                                        | `0.5rem`              | The gap unit: padding and spacing.                               |
+| `--uni-radius`                                     | `0.375rem`            | Corners.                                                         |
+| `--uni-border-width`, `--uni-outline-width`        | `1px`, `2px`          | Borders, and the focus ring.                                     |
+| `--uni-control-height`                             | `2rem`                | The least height of buttons, inputs and triggers.                |
+| `--uni-font-size`, `--uni-line-height`             | `0.875rem`, `1.25rem` | Text.                                                            |
+| `--uni-font-size-small`, `--uni-line-height-small` | `0.75rem`, `1.125rem` | Descriptions, errors and tooltips.                               |
+| `--uni-transition`                                 | `80ms`                | Hover and press, and the popups of Select, Combobox and Tooltip. |
+| `--uni-overlay-transition`                         | `120ms`               | A popover opening and closing.                                   |
+| `--uni-dialog-transition`                          | `250ms`               | A dialog and its backdrop opening and closing.                   |
+| `--uni-z-overlay`                                  | `1000`                | Popovers in browsers without the Popover API.                    |
+
+Controls grow with the text: the sizes are in `rem`, and the control height is
+a minimum. Under `prefers-reduced-motion: reduce`, nothing transitions.
+
+## While the page runs
+
+Whichever output you use:
+
+- **A scheme:** set or remove `data-uni-scheme`.
+- **A token:** set its property on any element, for what is inside it:
+  `element.style.setProperty('--uni-accent-fill-color', color)`. A forced
+  scheme inside it keeps its own.
+- **The palette,** chosen on the page, as from a color picker: `paletteCss()`
+  writes the same rules as `tokens.css`, to add after the default ones.
+
+  ```ts
+  import { createPalette, paletteCss } from '@uniaria/styles/palette';
+
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(paletteCss(createPalette({ accent: { hue } })));
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  ```
+
+## In Tasty's runtime
+
+The plugin takes the palette and the tokens. Configure it once, before
+anything renders:
+
+```ts
+import { configure } from '@tenphi/tasty';
+import { createPalette } from '@uniaria/styles/palette';
+import { uniaria } from '@uniaria/styles/tasty';
+
+configure({
+  plugins: [
+    uniaria({
+      palette: createPalette({ accent: { hue: 300 } }),
+      tokens: { '#uni-accent-outline': { light: '#0a7', dark: '#3c9' } },
+    }),
+  ],
+  // Yours: the plugin sets no units.
+  units: { x: '8px', r: '6px' },
+});
+```
+
+The plugin writes the tokens as global styles, one block per scheme, so
+`data-uni-scheme` works as with the prebuilt CSS. Set the package's tokens
+through its options rather than through `configure({ tokens })`: Tasty
+renders those on `:root` only, where the scheme blocks override them. Without
+a `palette`, the plugin takes the package's, which ships as data, so it needs
+no Glaze.

@@ -1,6 +1,7 @@
 # Styles spec (`@uniaria/styles`)
 
-Status: approved by @tenphi on 2026-10-19. Delivery phase 3 in progress.
+Status: approved by @tenphi on 2026-10-19. Delivery phases 1 to 3 done;
+phase 4 (screenshots) waits for the look's approval.
 
 ## Summary
 
