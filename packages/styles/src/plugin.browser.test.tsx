@@ -68,27 +68,33 @@ describe.each([
 ] as const)(
   'with the OS %s and contrast %s',
   (colorScheme, contrast, page, forcedLight, forcedDark) => {
-    test.each([
+    test.for([
       ['the page', '#page', page],
       ['forced light', '#forced-light', forcedLight],
       ['forced dark', '#forced-dark', forcedDark],
-    ] as const)('%s takes the %s scheme', async (_name, selector, scheme) => {
-      await emulateMedia({ colorScheme, contrast });
-      const element = container.querySelector(selector);
-      if (!element) throw new Error(`No ${selector}.`);
-      for (const token of TOKENS) {
-        expect(
-          rgba(resolve(element, `var(--${token.slice(1)}-color)`)),
-        ).toEqual(
-          rgba(
-            resolve(element, DEFAULT_PALETTE[scheme as Scheme][token] ?? ''),
-          ),
+    ] as const)(
+      '%s takes the %s scheme',
+      async ([, selector, scheme], context) => {
+        await emulateMedia({ colorScheme, contrast });
+        // Firefox emulates no `prefers-contrast`.
+        const query = `(prefers-color-scheme: ${colorScheme}) and (prefers-contrast: ${contrast})`;
+        if (!matchMedia(query).matches) context.skip();
+        const element = container.querySelector(selector);
+        if (!element) throw new Error(`No ${selector}.`);
+        for (const token of TOKENS) {
+          expect(
+            rgba(resolve(element, `var(--${token.slice(1)}-color)`)),
+          ).toEqual(
+            rgba(
+              resolve(element, DEFAULT_PALETTE[scheme as Scheme][token] ?? ''),
+            ),
+          );
+        }
+        expect(getComputedStyle(element).colorScheme).toBe(
+          scheme.startsWith('dark') ? 'dark' : 'light',
         );
-      }
-      expect(getComputedStyle(element).colorScheme).toBe(
-        scheme.startsWith('dark') ? 'dark' : 'light',
-      );
-    });
+      },
+    );
   },
 );
 
