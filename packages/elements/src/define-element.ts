@@ -106,6 +106,12 @@ export type UniElement<D extends AnyDefinition> = HTMLElement &
     readonly instance: Instance<D>;
   };
 
+/**
+ * An element's class, as `defineElement()` returns it. Every element's
+ * export is annotated with it: inferred, its declaration has to name the
+ * definition's internal types (a tooltip link's, Popover's), which the
+ * declaration build can't always reach (TS2883 in CI).
+ */
 export interface UniElementConstructor<D extends AnyDefinition> {
   new (): UniElement<D>;
   readonly prototype: UniElement<D>;

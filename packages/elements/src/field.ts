@@ -15,12 +15,14 @@
 
 import { field } from '@uniaria/core/field';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniFieldElement = UniElement<typeof field>;
 
-export const UniField = defineElement(field);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniField: UniElementConstructor<typeof field> | undefined =
+  defineElement(field);
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -22,12 +22,15 @@
 
 import { numberField } from '@uniaria/core/number-field';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniNumberFieldElement = UniElement<typeof numberField>;
 
-export const UniNumberField = defineElement(numberField);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniNumberField:
+  UniElementConstructor<typeof numberField> | undefined =
+  defineElement(numberField);
 
 declare global {
   interface HTMLElementTagNameMap {

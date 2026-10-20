@@ -10,12 +10,14 @@
 
 import { button } from '@uniaria/core/button';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniButtonElement = UniElement<typeof button>;
 
-export const UniButton = defineElement(button);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniButton: UniElementConstructor<typeof button> | undefined =
+  defineElement(button);
 
 declare global {
   interface HTMLElementTagNameMap {

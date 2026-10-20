@@ -31,8 +31,7 @@ import { defineElement } from './define-element';
 
 export type UniComboboxElement = UniElement<typeof combobox>;
 
-// Annotated: inferred, its declaration has to name Popover's internal types,
-// which the declaration build can't always reach (TS2883 in CI).
+// Annotated, as every element is: see `UniElementConstructor`.
 export const UniCombobox: UniElementConstructor<typeof combobox> | undefined =
   defineElement(combobox);
 

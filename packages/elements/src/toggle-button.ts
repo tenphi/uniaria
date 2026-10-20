@@ -11,12 +11,15 @@
 
 import { toggleButton } from '@uniaria/core/toggle-button';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniToggleButtonElement = UniElement<typeof toggleButton>;
 
-export const UniToggleButton = defineElement(toggleButton);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniToggleButton:
+  UniElementConstructor<typeof toggleButton> | undefined =
+  defineElement(toggleButton);
 
 declare global {
   interface HTMLElementTagNameMap {

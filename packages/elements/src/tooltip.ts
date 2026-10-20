@@ -19,12 +19,14 @@
 
 import { tooltip } from '@uniaria/core/tooltip';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniTooltipElement = UniElement<typeof tooltip>;
 
-export const UniTooltip = defineElement(tooltip);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniTooltip: UniElementConstructor<typeof tooltip> | undefined =
+  defineElement(tooltip);
 
 declare global {
   interface HTMLElementTagNameMap {

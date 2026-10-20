@@ -19,12 +19,14 @@
 
 import { textField } from '@uniaria/core/text-field';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniTextFieldElement = UniElement<typeof textField>;
 
-export const UniTextField = defineElement(textField);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniTextField: UniElementConstructor<typeof textField> | undefined =
+  defineElement(textField);
 
 declare global {
   interface HTMLElementTagNameMap {

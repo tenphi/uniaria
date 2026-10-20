@@ -18,12 +18,14 @@
 
 import { radio } from '@uniaria/core/radio';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniRadioElement = UniElement<typeof radio>;
 
-export const UniRadio = defineElement(radio);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniRadio: UniElementConstructor<typeof radio> | undefined =
+  defineElement(radio);
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -22,12 +22,15 @@
 
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniCheckboxGroupElement = UniElement<typeof checkboxGroup>;
 
-export const UniCheckboxGroup = defineElement(checkboxGroup);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniCheckboxGroup:
+  UniElementConstructor<typeof checkboxGroup> | undefined =
+  defineElement(checkboxGroup);
 
 declare global {
   interface HTMLElementTagNameMap {

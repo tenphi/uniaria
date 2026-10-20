@@ -17,12 +17,14 @@
 
 import { toggleSwitch } from '@uniaria/core/switch';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniSwitchElement = UniElement<typeof toggleSwitch>;
 
-export const UniSwitch = defineElement(toggleSwitch);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniSwitch: UniElementConstructor<typeof toggleSwitch> | undefined =
+  defineElement(toggleSwitch);
 
 declare global {
   interface HTMLElementTagNameMap {

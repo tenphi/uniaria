@@ -23,12 +23,14 @@
 
 import { listbox } from '@uniaria/core/listbox';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniListboxElement = UniElement<typeof listbox>;
 
-export const UniListbox = defineElement(listbox);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniListbox: UniElementConstructor<typeof listbox> | undefined =
+  defineElement(listbox);
 
 declare global {
   interface HTMLElementTagNameMap {

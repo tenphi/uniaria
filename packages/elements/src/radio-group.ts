@@ -22,12 +22,15 @@
 
 import { radioGroup } from '@uniaria/core/radio-group';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniRadioGroupElement = UniElement<typeof radioGroup>;
 
-export const UniRadioGroup = defineElement(radioGroup);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniRadioGroup:
+  UniElementConstructor<typeof radioGroup> | undefined =
+  defineElement(radioGroup);
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -21,12 +21,14 @@
 
 import { popover } from '@uniaria/core/popover';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniPopoverElement = UniElement<typeof popover>;
 
-export const UniPopover = defineElement(popover);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniPopover: UniElementConstructor<typeof popover> | undefined =
+  defineElement(popover);
 
 declare global {
   interface HTMLElementTagNameMap {

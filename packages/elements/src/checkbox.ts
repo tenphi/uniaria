@@ -20,12 +20,14 @@
 
 import { checkbox } from '@uniaria/core/checkbox';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniCheckboxElement = UniElement<typeof checkbox>;
 
-export const UniCheckbox = defineElement(checkbox);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniCheckbox: UniElementConstructor<typeof checkbox> | undefined =
+  defineElement(checkbox);
 
 declare global {
   interface HTMLElementTagNameMap {

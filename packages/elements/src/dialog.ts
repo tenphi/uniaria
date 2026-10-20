@@ -21,12 +21,14 @@
 
 import { dialog } from '@uniaria/core/dialog';
 
-import type { UniElement } from './define-element';
+import type { UniElement, UniElementConstructor } from './define-element';
 import { defineElement } from './define-element';
 
 export type UniDialogElement = UniElement<typeof dialog>;
 
-export const UniDialog = defineElement(dialog);
+// Annotated, as every element is: see `UniElementConstructor`.
+export const UniDialog: UniElementConstructor<typeof dialog> | undefined =
+  defineElement(dialog);
 
 declare global {
   interface HTMLElementTagNameMap {
