@@ -253,10 +253,13 @@ export const checkboxStyles = {
   `@uni-disabled` (`disabled | :disabled`), `@uni-selected`
   (`selected | :has(Input:checked)`), `@uni-input-disabled`
   (`disabled | :has(Input:disabled)`, for components whose root isn't the
-  native element), `@uni-reduced-motion` and `@uni-forced-colors`.
+  native element), `@uni-focus-visible` (`focus-visible | :focus-visible`,
+  for a part whose own focus shows the ring, such as Field's control),
+  `@uni-reduced-motion` and `@uni-forced-colors`.
 - **Shared fragments** (`src/shared/`): the field label, description and
-  error; the input box; the option; the popup surface; the focus ring; the
-  check and dash marks. Components spread them; consumers see only the
+  error; the input box; the button box; the toggle row Checkbox, Switch and
+  Radio share; the group layout; the option; the popup surface; the focus
+  ring; the check and dash marks. Components spread them; consumers see only the
   flattened objects.
 - **What the source may use** is fixed by the Web platform baseline and
   Tasty gaps sections below, and checked by tests: no `@starting` (it emits
@@ -501,13 +504,13 @@ All 16, each in its own file and stylesheet:
 | Component     | Parts styled                                                                                                      | Notes                                                                                                                                                                                                                    |
 | ------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Button        | root                                                                                                              | `data-variant`: `secondary` (default), `primary`, `quiet`, `danger` (Resolved questions 10).                                                                                                                             |
-| ToggleButton  | root                                                                                                              | Button's look; `selected` takes the accent fill.                                                                                                                                                                         |
+| ToggleButton  | root                                                                                                              | Button's look; `selected` takes the accent fill whatever the variant, where UI Kit's light tint would show it mostly by hue (WCAG 1.4.1).                                                                                |
 | Checkbox      | root, wrapper, input, indicator, label, description, error                                                        | The input is laid over the wrapper (or a `label` root), invisible and clickable, as in the Styling guide. Check and dash drawn on `::before`.                                                                            |
-| Switch        | as Checkbox                                                                                                       | The indicator is the track; your `Thumb` element slides inside it.                                                                                                                                                       |
-| Radio         | root, wrapper, input, indicator, label, description                                                               | Round indicator with a dot.                                                                                                                                                                                              |
-| CheckboxGroup | root, label, description, error                                                                                   | Lays the items out by `orientation`.                                                                                                                                                                                     |
-| RadioGroup    | root, label, description, error                                                                                   | As CheckboxGroup.                                                                                                                                                                                                        |
-| Field         | root, label, control, description, error                                                                          | The label, description and error fragment every field shares.                                                                                                                                                            |
+| Switch        | as Checkbox                                                                                                       | The indicator is UI Kit's 32 by 20 track; your `Thumb` element, a 12-pixel dot, slides inside it by logical inset, so it mirrors in right-to-left text.                                                                  |
+| Radio         | root, wrapper, input, indicator, label, description                                                               | UI Kit's 16-pixel circle, with an 8-pixel dot in the accent text color while selected.                                                                                                                                   |
+| CheckboxGroup | root, label, description, error                                                                                   | Stacks the items; `data-orientation="horizontal"`, which the consumer writes on this group, wraps them in a row.                                                                                                         |
+| RadioGroup    | root, label, description, error                                                                                   | As CheckboxGroup; UniAria writes `data-orientation` from `orientation`.                                                                                                                                                  |
+| Field         | root, label, control, description, error                                                                          | The label, description and error fragment every field shares. Only a native text control (an `input` you type in, a `textarea`, a `select`) takes the input box.                                                         |
 | TextField     | root, wrapper, label, input, description, error                                                                   | The wrapper is the box: border, `focus-within` ring, `invalid` border. The input is bare inside it.                                                                                                                      |
 | NumberField   | root, wrapper, label, input, increment, decrement, description, error                                             | The wrapper holds the input and the steppers.                                                                                                                                                                            |
 | Listbox       | root, label, scroller, list, option, optionLabel, optionDescription, group, groupLabel, empty, description, error | The option fragment shared with Select and Combobox: hover, `focus-visible`, a selected mark, disabled.                                                                                                                  |
@@ -519,7 +522,7 @@ All 16, each in its own file and stylesheet:
 
 - Every interactive part keeps a target of at least 24 by 24 CSS pixels
   (WCAG 2.5.8): a checkbox's target is its overlaid input, which covers
-  the wrapper or label, not the 16-pixel indicator.
+  the wrapper or label, not the 14-pixel box.
 - The focus ring is a 2-pixel outline in `#uni-accent-outline` with an
   offset, on `focus-visible` only, drawn on the part that shows focus: the
   input box for text fields, the indicator for checkbox, switch and radio,

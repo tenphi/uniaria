@@ -8,6 +8,12 @@ import type { Styles } from '@tenphi/tasty';
 import { partElement } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
+import { checkboxGroup } from '@uniaria/core/checkbox-group';
+import { field } from '@uniaria/core/field';
+import { radio } from '@uniaria/core/radio';
+import { radioGroup } from '@uniaria/core/radio-group';
+import { toggleSwitch } from '@uniaria/core/switch';
+import { toggleButton } from '@uniaria/core/toggle-button';
 import { describe, expect, test } from 'vitest';
 
 import { buildCss, componentsCss } from './build';
@@ -19,10 +25,22 @@ import { STATES } from './tokens';
 const DEFINITIONS: Record<
   ComponentName,
   { readonly parts: readonly string[] }
-> = { button, checkbox };
+> = {
+  button,
+  'toggle-button': toggleButton,
+  checkbox,
+  switch: toggleSwitch,
+  radio,
+  'checkbox-group': checkboxGroup,
+  'radio-group': radioGroup,
+  field,
+};
 
 /** Elements of the consumer's own that the styles expect, by component. */
-const OWN_ELEMENTS: Partial<Record<ComponentName, readonly string[]>> = {};
+const OWN_ELEMENTS: Partial<Record<ComponentName, readonly string[]>> = {
+  // The thumb inside the track (spec: Components).
+  switch: ['Thumb'],
+};
 
 /** The state attributes UniAria writes, in Tasty's names. */
 const UNIARIA_STATES = new Set([

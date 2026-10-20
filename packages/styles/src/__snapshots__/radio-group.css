@@ -1,0 +1,64 @@
+/* radio-group */
+[data-uni="radio-group"] [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="radio-group"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+[data-uni="radio-group"]:where(:not([data-orientation="horizontal"])) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: auto; }
+
+[data-uni="radio-group"] [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; margin-block: calc(-0.5 * var(--uni-gap)) 0; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="radio-group"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="radio-group"]:where(:not([data-orientation="horizontal"])) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: auto; }
+
+[data-uni="radio-group"] [data-element="Error"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; margin-block: calc(-0.5 * var(--uni-gap)) 0; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="radio-group"] [data-element="Error"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
+}
+
+[data-uni="radio-group"]:where(:not([data-orientation="horizontal"])) [data-element="Error"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: auto; }
+
+[data-uni="radio-group"] { display: flex; align-items: start; margin: 0px; padding: 0px; border: 0 solid transparent; }
+
+[data-uni="radio-group"]:where(:not([data-orientation="horizontal"])) { gap: var(--uni-gap); flex-flow: column; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="radio-group"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+[data-uni="radio-group"]:where([data-orientation="horizontal"]) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: 100%; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="radio-group"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+[data-uni="radio-group"]:where([data-orientation="horizontal"]) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: 100%; }
+
+@media (forced-colors: active) {
+  [data-uni="radio-group"] [data-element="Error"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+[data-uni="radio-group"]:where([data-orientation="horizontal"]) [data-element="Error"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { flex-basis: 100%; }
+
+[data-uni="radio-group"]:where([data-orientation="horizontal"]) { gap: var(--uni-gap) calc(2 * var(--uni-gap)); flex-flow: row wrap; }
+
+@media (forced-colors: active) {
+  [data-uni="radio-group"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="radio-group"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="radio-group"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="radio-group"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="radio-group"] [data-uni]:not([data-uni="radio-group"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}

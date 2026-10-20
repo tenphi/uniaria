@@ -51,17 +51,19 @@ export const UNITS = {
 } as const;
 
 /**
- * The state aliases the style objects use. The first three fall back to
+ * The state aliases the style objects use. The first four fall back to
  * the native element's own state, so a custom element's markup shows it
  * before the element upgrades (spec: Resolved questions 15):
  * `@uni-disabled` where the root is the native control (Button),
  * `@uni-selected` and `@uni-input-disabled` where an `Input` part inside
- * the root is (Checkbox).
+ * the root is (Checkbox), and `@uni-focus-visible` on a part UniAria
+ * writes no focus state on (Field's control, inside `@own()`).
  */
 export const STATES = {
   '@uni-disabled': 'disabled | :disabled',
   '@uni-selected': 'selected | :has(Input:checked)',
   '@uni-input-disabled': 'disabled | :has(Input:disabled)',
+  '@uni-focus-visible': 'focus-visible | :focus-visible',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;

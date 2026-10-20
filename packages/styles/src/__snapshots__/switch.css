@@ -1,0 +1,178 @@
+/* switch */
+[data-uni="switch"] [data-element="Wrapper"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { position: relative; display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; block-size: auto; min-block-size: max(24px, 1.5rem); max-block-size: initial; }
+
+[data-uni="switch"] [data-element="Input"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { position: absolute; inset: 0px; width: 100%; min-width: initial; max-width: initial; height: 100%; min-height: initial; max-height: initial; margin: 0px; padding: 0px; opacity: 0; appearance: none; }
+
+[data-uni="switch"]:where(:not([data-disabled]):not([data-readonly]):not(:has([data-element="Input"]:disabled))) [data-element="Input"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { cursor: pointer; }
+
+[data-uni="switch"] [data-element="Label"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { grid-row: 1; grid-column: 2; }
+
+[data-uni="switch"] [data-element="Description"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; grid-column: 2; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="switch"]:where(:not([data-focus-visible])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+[data-uni="switch"] [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { grid-row: 1; grid-column: 1; position: relative; display: block; box-sizing: border-box; inline-size: calc(4 * var(--uni-gap)); min-inline-size: calc(4 * var(--uni-gap)); max-inline-size: calc(4 * var(--uni-gap)); block-size: calc(2.5 * var(--uni-gap)); min-block-size: calc(2.5 * var(--uni-gap)); max-block-size: calc(2.5 * var(--uni-gap)); border-radius: 9999rem; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled)):is(:not([data-hovered]), [data-readonly])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-surface-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-invalid]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { border: var(--uni-border-width) solid var(--uni-border-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"] [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { forced-color-adjust: auto; }
+}
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="switch"] [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition), border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="switch"] [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { position: absolute; inset-block: calc(0.375 * var(--uni-gap)) auto; inline-size: calc(1.5 * var(--uni-gap)); min-inline-size: calc(1.5 * var(--uni-gap)); max-inline-size: calc(1.5 * var(--uni-gap)); block-size: calc(1.5 * var(--uni-gap)); min-block-size: calc(1.5 * var(--uni-gap)); max-block-size: calc(1.5 * var(--uni-gap)); border-radius: 9999rem; background-color: currentcolor; }
+
+[data-uni="switch"]:where(:not([data-selected]):not(:has([data-element="Input"]:checked))) [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { inset-inline: calc(0.375 * var(--uni-gap)) auto; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"] [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { forced-color-adjust: auto; }
+}
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="switch"] [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { transition: inset-inline-start var(--uni-transition), background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition); }
+}
+
+[data-uni="switch"] [data-element="Error"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; grid-column: 2; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"] [data-element="Error"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
+}
+
+[data-uni="switch"] { position: relative; display: inline-grid; gap: calc(0.5 * var(--uni-gap)) var(--uni-gap); grid-template-columns: auto 1fr; align-items: center; block-size: auto; min-block-size: max(24px, 1.5rem); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, 1.5rem); max-inline-size: initial; font-size: var(--uni-font-size); line-height: var(--uni-line-height); overflow-wrap: anywhere; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+[data-uni="switch"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled], [data-readonly])) [data-element="Input"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { cursor: default; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-focus-visible]:not([data-invalid])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-hovered]:not([data-disabled]):not([data-readonly]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-surface-hover-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-invalid]:not([data-disabled]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-invalid]):not(:has([data-element="Input"]:disabled)):is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-accent-fill-text-color); --current-color: var(--uni-accent-fill-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"] [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { forced-color-adjust: none; }
+}
+
+[data-uni="switch"]:where(:is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { inset-inline: calc(100% - calc(1.5 * var(--uni-gap)) - calc(0.375 * var(--uni-gap))) auto; }
+
+@media (forced-colors: active) {
+  [data-uni="switch"] [data-element="Thumb"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { forced-color-adjust: none; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"] [data-element="Error"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled])) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-focus-visible][data-invalid]) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-invalid]):not(:has([data-element="Input"]:disabled)):is(:not([data-hovered]):has([data-element="Input"]:checked), [data-readonly]:has([data-element="Input"]:checked), [data-readonly][data-selected], [data-selected]:not([data-hovered]))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-accent-fill-color); border: var(--uni-border-width) solid var(--uni-accent-fill-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-invalid]:not([data-disabled]):not(:has([data-element="Input"]:disabled)):is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-danger-fill-text-color); --current-color: var(--uni-danger-fill-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where([data-focus-visible]) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-hovered]:not([data-disabled]):not([data-invalid]):not([data-readonly]):not(:has([data-element="Input"]:disabled)):is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-accent-fill-hover-color); border: var(--uni-border-width) solid var(--uni-accent-fill-hover-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:not([data-selected]):not(:has([data-element="Input"]:checked)):is(:has([data-element="Input"]:disabled), [data-disabled])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); background-color: var(--uni-disabled-surface-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled])) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-invalid]:not([data-disabled]):not(:has([data-element="Input"]:disabled)):is(:not([data-hovered]):has([data-element="Input"]:checked), [data-readonly]:has([data-element="Input"]:checked), [data-readonly][data-selected], [data-selected]:not([data-hovered]))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-danger-fill-color); border: var(--uni-border-width) solid var(--uni-danger-fill-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where(:is(:has([data-element="Input"]:checked):has([data-element="Input"]:disabled), [data-disabled]:has([data-element="Input"]:checked), [data-disabled][data-selected], [data-selected]:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-disabled-fill-text-color); --current-color: var(--uni-disabled-fill-text-color); background-color: var(--uni-disabled-fill-color); border: var(--uni-border-width) solid var(--uni-disabled-fill-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="switch"]:where([data-hovered][data-invalid]:not([data-disabled]):not([data-readonly]):not(:has([data-element="Input"]:disabled)):is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-danger-fill-hover-color); border: var(--uni-border-width) solid var(--uni-danger-fill-hover-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-disabled]):not([data-selected]):not(:has([data-element="Input"]:checked)):not(:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); border: var(--uni-border-width) solid var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled)):is(:has([data-element="Input"]:checked), [data-selected])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-highlight-text-color); --current-color: var(--uni-system-highlight-text-color); background-color: var(--uni-system-highlight-color); border: var(--uni-border-width) solid var(--uni-system-highlight-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-selected]):not(:has([data-element="Input"]:checked)):is(:has([data-element="Input"]:disabled), [data-disabled])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:not([data-selected]):not(:has([data-element="Input"]:checked))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { background-color: var(--uni-system-canvas-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:is(:has([data-element="Input"]:checked):has([data-element="Input"]:disabled), [data-disabled]:has([data-element="Input"]:checked), [data-disabled][data-selected], [data-selected]:has([data-element="Input"]:disabled))) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { color: var(--uni-system-canvas-color); --current-color: var(--uni-system-canvas-color); background-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="switch"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled])) [data-element="Indicator"]:where(:not([data-uni="switch"] [data-uni]:not([data-uni="switch"]) *)) { border: var(--uni-border-width) solid var(--uni-system-gray-text-color); }
+}

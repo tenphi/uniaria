@@ -1,5 +1,5 @@
+/* The page's layout. The checkboxes' look is @uniaria/styles' default. */
 :root {
-  color-scheme: light dark;
   font:
     15px/1.5 system-ui,
     sans-serif;
@@ -8,82 +8,6 @@ body {
   display: grid;
   gap: 1rem;
   margin: 1.5rem;
-}
-
-[data-uni='checkbox-group'] {
-  display: grid;
-  gap: 0.5rem;
-  justify-items: start;
-  max-width: 20rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
-  border-radius: 0.5rem;
-}
-[data-uni='checkbox-group'][data-focus-visible] {
-  border-color: Highlight;
-}
-[data-uni='checkbox-group'][data-invalid] {
-  border-color: color-mix(in srgb, red 70%, CanvasText);
-}
-/* The group's parts by scope, which leaves the checkboxes' labels alone. */
-[data-uni='checkbox-group'] [data-element='Label'] {
-  font-weight: 600;
-}
-[data-uni='checkbox-group'] [data-element='Description'] {
-  margin-top: -0.5rem;
-  color: GrayText;
-  font-size: 0.875rem;
-}
-[data-uni='checkbox-group'] [data-element='Error'] {
-  color: color-mix(in srgb, red 70%, CanvasText);
-  font-size: 0.875rem;
-}
-
-/* Each checkbox: the input lies over its label root, transparent. */
-[data-uni='checkbox'] {
-  position: relative;
-  display: inline-flex;
-  gap: 0.625rem;
-  align-items: center;
-  cursor: pointer;
-}
-[data-uni='checkbox'] [data-element='Input'] {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: inherit;
-}
-[data-uni='checkbox'] [data-element='Indicator'] {
-  display: grid;
-  place-items: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  box-sizing: border-box;
-  border: 1.5px solid color-mix(in srgb, CanvasText 45%, transparent);
-  border-radius: 0.3rem;
-  background: Canvas;
-}
-[data-uni='checkbox'] [data-element='Indicator'][data-hovered] {
-  border-color: CanvasText;
-}
-[data-uni='checkbox'] [data-element='Indicator'][data-invalid] {
-  border-color: color-mix(in srgb, red 70%, CanvasText);
-}
-[data-uni='checkbox'] [data-element='Indicator'][data-selected] {
-  border-color: CanvasText;
-  background: CanvasText;
-}
-[data-uni='checkbox'] [data-element='Indicator'][data-selected]::after {
-  content: '';
-  width: 0.3rem;
-  height: 0.6rem;
-  margin-top: -0.15rem;
-  border: solid Canvas;
-  border-width: 0 2px 2px 0;
-  rotate: 45deg;
-}
-[data-uni='checkbox'] [data-element='Indicator'][data-focus-visible] {
-  outline: 2px solid Highlight;
-  outline-offset: 2px;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
 }

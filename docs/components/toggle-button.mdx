@@ -196,6 +196,14 @@ a press is in progress. State attributes are present or absent, never
 `"false"`. As in Button, UniAria sets `touch-action: pan-x pan-y pinch-zoom`
 on the root, and `user-select: none` while a touch press lasts.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles the root, as in the demo above,
+whose CSS tab holds only the page's layout. It looks like a
+[Button](./button.mdx) and takes `data-variant` the same way. Selected, it
+takes the accent fill whatever the variant, so the on state shows by more
+than a change of hue.
+
 ## Keyboard
 
 | Key   | Behavior                                                                                                      |

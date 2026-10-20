@@ -221,6 +221,15 @@ messages can be styled without reading state.
 State attributes are present or absent, never `"false"`. There is no pressed
 state; use `:active`. UniAria writes no styles.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles every part, as in the demo
+above, whose CSS tab holds only the page's layout. It lays the input over the
+wrapper, or over a `label` root, invisible and clickable, and draws the
+indicator as a 32 by 20 pixel track. Put your own
+`<span data-element="Thumb">` in the indicator: the styles slide it to the
+end while the switch is on, mirrored in right-to-left text.
+
 ## Keyboard
 
 | Key   | Behavior                                                                                      |

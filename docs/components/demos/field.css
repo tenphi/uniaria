@@ -1,5 +1,5 @@
+/* The page's layout. The fields' look is @uniaria/styles' default. */
 :root {
-  color-scheme: light dark;
   font:
     15px/1.5 system-ui,
     sans-serif;
@@ -8,72 +8,15 @@ body {
   display: grid;
   gap: 1rem;
   margin: 1.5rem;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
 }
 form {
   display: grid;
   gap: 1rem;
+  justify-items: start;
   max-inline-size: 20rem;
 }
-
-[data-uni='field'] {
-  display: grid;
-  gap: 0.25rem;
-}
-[data-uni='field'] [data-element='Label'] {
-  font-weight: 600;
-}
-[data-uni='field'] [data-element='Control'] {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
-  border-radius: 0.5rem;
-  background: Canvas;
-  color: CanvasText;
-  font: inherit;
-}
-[data-uni='field'] [data-element='Control']:focus-visible {
-  outline: 2px solid Highlight;
-  outline-offset: 1px;
-}
-[data-uni='field'] [data-element='Description'] {
-  margin: 0;
-  color: GrayText;
-  font-size: 0.875rem;
-}
-
-/* The label around the checkbox; the error stays outside it. */
-[data-uni='checkbox'] [data-element='Wrapper'] {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  cursor: pointer;
-}
-[data-uni='checkbox'] [data-element='Input'] {
-  margin: 0;
-  inline-size: 1rem;
-  block-size: 1rem;
-  accent-color: Highlight;
-}
-
-/* Both components call the part Error, so one selector styles both. */
-[data-element='Error'] {
-  margin: 0;
-  color: color-mix(in srgb, red 70%, CanvasText);
-  font-size: 0.875rem;
-}
-[data-uni='field'] [data-element='Control'][data-invalid] {
-  border-color: color-mix(in srgb, red 70%, CanvasText);
-}
-[data-uni='checkbox'] [data-element='Label'][data-invalid] {
-  color: color-mix(in srgb, red 70%, CanvasText);
-}
-
-button {
-  justify-self: start;
-  padding: 0.5rem 1rem;
-  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, CanvasText 6%, Canvas);
-  color: CanvasText;
-  font: inherit;
-  cursor: pointer;
+form > uni-field {
+  justify-self: stretch;
 }

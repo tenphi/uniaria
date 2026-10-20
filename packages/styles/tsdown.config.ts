@@ -8,7 +8,13 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     button: 'src/components/button.ts',
+    'toggle-button': 'src/components/toggle-button.ts',
     checkbox: 'src/components/checkbox.ts',
+    switch: 'src/components/switch.ts',
+    radio: 'src/components/radio.ts',
+    'checkbox-group': 'src/components/checkbox-group.ts',
+    'radio-group': 'src/components/radio-group.ts',
+    field: 'src/components/field.ts',
     build: 'src/build.ts',
     // Internal: the hook below runs it.
     generate: 'src/generate.ts',

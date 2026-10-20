@@ -20,12 +20,15 @@
     <div data-uni="checkbox">
       <label data-element="Wrapper">
         <input data-element="Input" type="checkbox" name="terms" />
+        <span data-element="Indicator"></span>
         <span data-element="Label">I accept the terms</span>
       </label>
       <p data-element="Error" hidden>Accept the terms to continue.</p>
     </div>
   </uni-checkbox>
 
-  <button type="submit">Sign up</button>
+  <uni-button type="submit">
+    <button data-uni="button" data-variant="primary">Sign up</button>
+  </uni-button>
 </form>
 <output id="log">Submit the form empty to see the errors.</output>

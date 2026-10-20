@@ -1,0 +1,128 @@
+/* toggle-button */
+[data-uni="toggle-button"]:where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+[data-uni="toggle-button"] { display: inline-flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; justify-content: center; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, var(--uni-control-height)); max-inline-size: initial; margin: 0px; padding: calc(0.5 * var(--uni-gap)) calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2 - var(--uni-border-width) + calc(0.5 * var(--uni-gap))); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; font-family: inherit; text-align: center; text-decoration: none; overflow-wrap: anywhere; }
+
+[data-uni="toggle-button"]:where(:not([data-disabled]):not(:disabled)) { cursor: pointer; }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="toggle-button"] { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition), border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition), color var(--uni-transition); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-hovered]):not([data-pressed]):not([data-selected]):not([data-variant="danger"]):not([data-variant="primary"]):not([data-variant="quiet"]):not(:disabled)) { background-color: var(--uni-surface-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-selected]):not([data-variant="danger"]):not([data-variant="primary"]):not([data-variant="quiet"]):not(:disabled)) { border: var(--uni-border-width) solid var(--uni-border-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-selected]):not([data-variant="danger"]):not([data-variant="primary"]):not(:disabled)) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"] { forced-color-adjust: auto; }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-focus-visible]:not([data-invalid])) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="toggle-button"]:where(:is(:disabled, [data-disabled])) { cursor: default; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-variant="quiet"]:not([data-selected]):is(:disabled, :not([data-disabled]):not(:disabled):not([data-hovered][data-variant="primary"]):not([data-pressed][data-variant="primary"]), [data-disabled])) { border: var(--uni-border-width) solid transparent; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"] { forced-color-adjust: none; }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-focus-visible][data-invalid]) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-variant="danger"]:not([data-disabled]):not([data-selected]):not(:disabled)) { color: var(--uni-danger-fill-text-color); --current-color: var(--uni-danger-fill-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-variant="quiet"]:not([data-selected]):is(:disabled, :not([data-disabled]):not([data-hovered]):not([data-pressed]):not(:disabled), [data-disabled])) { background-color: transparent; }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not(:disabled):is([data-selected], [data-variant="primary"])) { color: var(--uni-accent-fill-text-color); --current-color: var(--uni-accent-fill-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-hovered]:not([data-disabled]):not([data-pressed]):not([data-selected]):not([data-variant="danger"]):not([data-variant="primary"]):not(:disabled)) { background-color: var(--uni-surface-hover-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-selected]):is(:disabled, [data-disabled])) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-pressed]:not([data-disabled]):not([data-selected]):not([data-variant="danger"]):not([data-variant="primary"]):not(:disabled)) { background-color: var(--uni-surface-pressed-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-variant="danger"]:not([data-disabled]):not([data-hovered]):not([data-pressed]):not([data-selected]):not(:disabled)) { border: var(--uni-border-width) solid var(--uni-danger-fill-color); background-color: var(--uni-danger-fill-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-selected]:is(:disabled, [data-disabled])) { color: var(--uni-disabled-fill-text-color); --current-color: var(--uni-disabled-fill-text-color); border: var(--uni-border-width) solid var(--uni-disabled-fill-color); background-color: var(--uni-disabled-fill-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-hovered][data-variant="danger"]:not([data-disabled]):not([data-pressed]):not([data-selected]):not(:disabled)) { border: var(--uni-border-width) solid var(--uni-danger-fill-hover-color); background-color: var(--uni-danger-fill-hover-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-selected]):not(:disabled)) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); border: var(--uni-border-width) solid var(--uni-system-button-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-pressed][data-variant="danger"]:not([data-disabled]):not([data-selected]):not(:disabled):not([data-hovered][data-variant="primary"])) { border: var(--uni-border-width) solid var(--uni-danger-fill-pressed-color); background-color: var(--uni-danger-fill-pressed-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where([data-selected]:not([data-disabled]):not(:disabled)) { color: var(--uni-system-highlight-text-color); --current-color: var(--uni-system-highlight-text-color); border: var(--uni-border-width) solid var(--uni-system-highlight-color); background-color: var(--uni-system-highlight-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not(:disabled):not([data-hovered][data-selected]):not([data-hovered][data-variant="primary"]):not([data-pressed][data-selected]):not([data-pressed][data-variant="primary"]):is([data-selected], [data-variant="primary"])) { border: var(--uni-border-width) solid var(--uni-accent-fill-color); background-color: var(--uni-accent-fill-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where(:not([data-selected]):is(:disabled, [data-disabled])) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-hovered]:not([data-disabled]):not(:disabled):not([data-pressed][data-selected]):not([data-pressed][data-variant="primary"]):is([data-selected], [data-variant="primary"])) { border: var(--uni-border-width) solid var(--uni-accent-fill-hover-color); background-color: var(--uni-accent-fill-hover-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where([data-selected]:is(:disabled, [data-disabled])) { color: var(--uni-system-button-face-color); --current-color: var(--uni-system-button-face-color); background-color: var(--uni-system-gray-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where([data-pressed]:not([data-disabled]):not(:disabled):is([data-selected], [data-variant="primary"])) { border: var(--uni-border-width) solid var(--uni-accent-fill-pressed-color); background-color: var(--uni-accent-fill-pressed-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="toggle-button"]:where(:not([data-selected]):not([data-variant="quiet"]):is(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-disabled-border-color); background-color: var(--uni-disabled-surface-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where(:is(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="toggle-button"]:where(:not([data-selected])) { background-color: var(--uni-system-button-face-color); }
+}

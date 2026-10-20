@@ -9,20 +9,25 @@ import '@uniaria/elements/checkbox';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { useComponent } from '@uniaria/react';
-import {
-  emulateMedia,
-  keyboard,
-  pointer,
-  releaseInput,
-} from '@uniaria/testing/browser';
-import { StrictMode } from 'react';
-import type { ReactNode } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
-import type { Root } from 'react-dom/client';
-import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { emulateMedia, pointer, releaseInput } from '@uniaria/testing/browser';
+import { afterEach, describe, expect, test } from 'vitest';
 
-import { addStyle, contrast, loadStyles, rgba } from './testing/browser';
+import { addStyle, contrast, rgba } from './testing/browser';
+import {
+  flags,
+  isChromium,
+  mountHtml,
+  mountReact,
+  page,
+  part,
+  rootOf,
+  settle,
+  setUpPage,
+  style,
+  tabInto,
+  token,
+  unmount,
+} from './testing/harness';
 
 interface ButtonProps {
   readonly variant?: 'primary' | 'secondary' | 'quiet' | 'danger';
@@ -47,25 +52,6 @@ interface Adapter {
   unmount(): void;
 }
 
-let container: HTMLElement;
-
-/**
- * Two frames, as the binder writes attributes after mount, then every
- * transition at its end, so colors read as the state's own.
- */
-async function settle(): Promise<void> {
-  await new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(resolve)),
-  );
-  for (const animation of document.getAnimations()) animation.finish();
-}
-
-const rootOf = (kind: string): HTMLElement => {
-  const root = container.querySelector<HTMLElement>(`[data-uni="${kind}"]`);
-  if (!root) throw new Error(`No ${kind} root.`);
-  return root;
-};
-
 // `tabindex`, so WebKit's Tab reaches the input, as Safari's does with
 // "Press Tab to highlight each item" on.
 const CHECKBOX = `
@@ -79,36 +65,30 @@ const CHECKBOX = `
     <p data-element="Error">You must accept the terms.</p>
   </div>`;
 
-const flags = (pairs: Record<string, boolean | undefined>) =>
-  Object.entries(pairs)
-    .filter(([, isOn]) => isOn)
-    .map(([name]) => ` ${name}`)
-    .join('');
-
 const elements: Adapter = {
   async button(props = {}) {
     const variant = props.variant ? ` data-variant="${props.variant}"` : '';
-    container.innerHTML = `<uni-button${flags({
-      disabled: props.isDisabled,
-      'focusable-when-disabled': props.isFocusableWhenDisabled,
-    })}><button data-uni="button"${variant}>${props.label ?? 'Save'}</button></uni-button>`;
-    await settle();
+    await mountHtml(
+      `<uni-button${flags({
+        disabled: props.isDisabled,
+        'focusable-when-disabled': props.isFocusableWhenDisabled,
+      })}><button data-uni="button"${variant}>${props.label ?? 'Save'}</button></uni-button>`,
+    );
     return rootOf('button');
   },
   async checkbox(props = {}) {
-    container.innerHTML = `<uni-checkbox${flags({
-      'default-selected': props.defaultSelected,
-      indeterminate: props.isIndeterminate,
-      disabled: props.isDisabled,
-      invalid: props.isInvalid,
-      readonly: props.isReadOnly,
-    })}>${CHECKBOX}</uni-checkbox>`;
-    await settle();
+    await mountHtml(
+      `<uni-checkbox${flags({
+        'default-selected': props.defaultSelected,
+        indeterminate: props.isIndeterminate,
+        disabled: props.isDisabled,
+        invalid: props.isInvalid,
+        readonly: props.isReadOnly,
+      })}>${CHECKBOX}</uni-checkbox>`,
+    );
     return rootOf('checkbox');
   },
-  unmount() {
-    container.innerHTML = '';
-  },
+  unmount,
 };
 
 function ReactButton({ variant, label, ...props }: ButtonProps) {
@@ -138,70 +118,19 @@ function ReactCheckbox(props: CheckboxProps) {
   );
 }
 
-let reactRoot: Root | undefined;
-
-async function render(node: ReactNode): Promise<void> {
-  reactRoot?.unmount();
-  const host = document.createElement('div');
-  container.replaceChildren(host);
-  reactRoot = createRoot(host);
-  flushSync(() => reactRoot!.render(<StrictMode>{node}</StrictMode>));
-  await settle();
-}
-
 const react: Adapter = {
   async button(props = {}) {
-    await render(<ReactButton {...props} />);
+    await mountReact(<ReactButton {...props} />);
     return rootOf('button');
   },
   async checkbox(props = {}) {
-    await render(<ReactCheckbox {...props} />);
+    await mountReact(<ReactCheckbox {...props} />);
     return rootOf('checkbox');
   },
-  unmount() {
-    reactRoot?.unmount();
-    reactRoot = undefined;
-    container.innerHTML = '';
-  },
+  unmount,
 };
 
-const part = (root: Element, name: string): HTMLElement => {
-  const element = root.querySelector<HTMLElement>(`[data-element="${name}"]`);
-  if (!element) throw new Error(`No ${name} part.`);
-  return element;
-};
-
-const style = (element: Element, pseudo?: string) =>
-  getComputedStyle(element, pseudo);
-
-const isChromium = navigator.userAgent.includes('Chrome/');
-
-let unload: () => void;
-let sentinel: HTMLInputElement;
-
-beforeAll(async () => {
-  unload = await loadStyles();
-  // The page behind the components is the default surface.
-  document.body.style.background = 'var(--uni-surface-color)';
-  sentinel = document.createElement('input');
-  sentinel.setAttribute('aria-label', 'Before');
-  container = document.createElement('div');
-  document.body.append(sentinel, container);
-});
-
-afterAll(() => {
-  unload();
-  sentinel.remove();
-  container.remove();
-  document.body.style.background = '';
-});
-
-/** Keyboard focus from the input before the component. */
-async function tabInto(): Promise<void> {
-  sentinel.focus();
-  await keyboard.tab();
-  await settle();
-}
+setUpPage();
 
 describe.each([
   ['elements', elements],
@@ -210,10 +139,10 @@ describe.each([
   afterEach(async () => {
     await releaseInput();
     // Off the components, so the next one mounts unhovered.
-    await pointer.move(sentinel);
+    await pointer.move(page.sentinel);
     adapter.unmount();
-    container.removeAttribute('dir');
-    container.removeAttribute('style');
+    page.container.removeAttribute('dir');
+    page.container.removeAttribute('style');
   });
 
   describe('focus ring', () => {
@@ -281,11 +210,7 @@ describe.each([
       const root = await adapter.checkbox({ defaultSelected: true });
       const indicator = part(root, 'Indicator');
       expect(rgba(style(indicator).backgroundColor)).toEqual(
-        rgba(
-          style(document.documentElement).getPropertyValue(
-            '--uni-accent-fill-color',
-          ),
-        ),
+        rgba(token('accent-fill')),
       );
       expect(style(indicator, '::before').content).not.toBe('none');
     });
@@ -307,13 +232,7 @@ describe.each([
       const root = await adapter.button({ variant: 'primary' });
       const fill = style(root).backgroundColor;
       expect(contrast(style(root).color, fill)).toBeGreaterThanOrEqual(4.5);
-      expect(rgba(fill)).toEqual(
-        rgba(
-          style(document.documentElement).getPropertyValue(
-            '--uni-accent-fill-color',
-          ),
-        ),
-      );
+      expect(rgba(fill)).toEqual(rgba(token('accent-fill')));
     });
   });
 
@@ -406,7 +325,7 @@ describe.each([
 
   describe('text', () => {
     test('in right-to-left text the box sits at the start, on the right', async () => {
-      container.dir = 'rtl';
+      page.container.dir = 'rtl';
       const root = await adapter.checkbox();
       expect(
         part(root, 'Indicator').getBoundingClientRect().left,
@@ -414,7 +333,7 @@ describe.each([
     });
 
     test('at 200% text with WCAG 1.4.12 spacing, nothing clips', async () => {
-      container.style.cssText =
+      page.container.style.cssText =
         'font-size: 200%; line-height: 1.5; letter-spacing: 0.12em; word-spacing: 0.16em;';
       const remove = addStyle(
         '[data-uni] * { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } [data-uni] p { margin-block-end: 2em !important; }',
@@ -430,7 +349,7 @@ describe.each([
     });
 
     test('at 320 pixels wide, a long label wraps inside the button', async () => {
-      container.style.cssText = 'inline-size: 320px;';
+      page.container.style.cssText = 'inline-size: 320px;';
       const root = await adapter.button({
         label: 'Save every draft in this folder before the deadline tonight',
       });
@@ -441,36 +360,23 @@ describe.each([
 });
 
 describe('before a custom element upgrades', () => {
-  afterEach(() => {
-    container.innerHTML = '';
-  });
+  afterEach(unmount);
 
   test("a checkbox shows the native input's checked and disabled states", async () => {
-    container.innerHTML = CHECKBOX.replace(
-      'type="checkbox"',
-      'type="checkbox" checked disabled',
+    await mountHtml(
+      CHECKBOX.replace('type="checkbox"', 'type="checkbox" checked disabled'),
     );
-    await settle();
     const indicator = part(rootOf('checkbox'), 'Indicator');
     expect(rgba(style(indicator).backgroundColor)).toEqual(
-      rgba(
-        style(document.documentElement).getPropertyValue(
-          '--uni-disabled-fill-color',
-        ),
-      ),
+      rgba(token('disabled-fill')),
     );
     expect(style(indicator, '::before').content).not.toBe('none');
   });
 
   test("a button shows the native button's disabled state", async () => {
-    container.innerHTML = '<button data-uni="button" disabled>Save</button>';
-    await settle();
+    await mountHtml('<button data-uni="button" disabled>Save</button>');
     expect(rgba(style(rootOf('button')).color)).toEqual(
-      rgba(
-        style(document.documentElement).getPropertyValue(
-          '--uni-disabled-text-color',
-        ),
-      ),
+      rgba(token('disabled-text')),
     );
   });
 });

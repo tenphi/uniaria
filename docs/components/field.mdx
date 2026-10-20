@@ -267,6 +267,14 @@ The state attributes go on every part, so you can style the label and the
 messages from the field's state without reading it in JavaScript. A required
 mark, an "(optional)" note and a success state are yours to draw.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles the label, the description and
+the error, as in the demo above, whose CSS tab holds only the page's layout.
+A native text control (an `input` you type in, a `textarea` or a
+`select`) becomes the input box, with the focus ring and the invalid
+border; any other control, such as a group, keeps its own look.
+
 ## Accessibility
 
 - **Spoken output.** For a label "Email", a description "We never share it"

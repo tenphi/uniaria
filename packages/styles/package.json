@@ -18,10 +18,40 @@
       "types": "./dist/button.d.ts",
       "default": "./dist/button.js"
     },
+    "./toggle-button": {
+      "uniaria-source": "./src/components/toggle-button.ts",
+      "types": "./dist/toggle-button.d.ts",
+      "default": "./dist/toggle-button.js"
+    },
     "./checkbox": {
       "uniaria-source": "./src/components/checkbox.ts",
       "types": "./dist/checkbox.d.ts",
       "default": "./dist/checkbox.js"
+    },
+    "./switch": {
+      "uniaria-source": "./src/components/switch.ts",
+      "types": "./dist/switch.d.ts",
+      "default": "./dist/switch.js"
+    },
+    "./radio": {
+      "uniaria-source": "./src/components/radio.ts",
+      "types": "./dist/radio.d.ts",
+      "default": "./dist/radio.js"
+    },
+    "./checkbox-group": {
+      "uniaria-source": "./src/components/checkbox-group.ts",
+      "types": "./dist/checkbox-group.d.ts",
+      "default": "./dist/checkbox-group.js"
+    },
+    "./radio-group": {
+      "uniaria-source": "./src/components/radio-group.ts",
+      "types": "./dist/radio-group.d.ts",
+      "default": "./dist/radio-group.js"
+    },
+    "./field": {
+      "uniaria-source": "./src/components/field.ts",
+      "types": "./dist/field.d.ts",
+      "default": "./dist/field.js"
     },
     "./build": {
       "uniaria-source": "./src/build.ts",

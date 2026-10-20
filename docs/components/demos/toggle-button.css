@@ -1,5 +1,5 @@
+/* The page's layout. The toggle buttons' look is @uniaria/styles' default. */
 :root {
-  color-scheme: light dark;
   font:
     15px/1.5 system-ui,
     sans-serif;
@@ -8,6 +8,8 @@ body {
   display: grid;
   gap: 1rem;
   margin: 1.5rem;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
 }
 .row {
   display: flex;
@@ -27,40 +29,4 @@ body {
 }
 .underline {
   text-decoration: underline;
-}
-
-[data-uni='toggle-button'] {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
-  border-radius: 0.5rem;
-  background: Canvas;
-  color: CanvasText;
-  font: inherit;
-  cursor: pointer;
-  outline: none;
-  transition:
-    transform 80ms,
-    background-color 80ms;
-}
-[data-uni='toggle-button'][data-hovered] {
-  background: color-mix(in srgb, CanvasText 6%, Canvas);
-}
-[data-uni='toggle-button'][data-selected] {
-  border-color: CanvasText;
-  background: CanvasText;
-  color: Canvas;
-}
-[data-uni='toggle-button'][data-selected][data-hovered] {
-  background: color-mix(in srgb, CanvasText 85%, Canvas);
-}
-[data-uni='toggle-button'][data-pressed] {
-  transform: scale(0.97);
-}
-[data-uni='toggle-button'][data-focus-visible] {
-  outline: 2px solid Highlight;
-  outline-offset: 2px;
-}
-[data-uni='toggle-button'][data-disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
