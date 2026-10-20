@@ -64,8 +64,11 @@ function onlyWhen(state: string, styles: Styles): Styles {
  * scroller is the box, and the list inside it only holds the options
  * UniAria positions, so they keep the box's padding. The height is yours:
  * give the list, or the scroller, a block size or a maximum.
+ *
+ * Typed `Styles`, not inferred: the declarations can't name the narrowed
+ * box's type.
  */
-export const listboxStyles = {
+export const listboxStyles: Styles = {
   // eslint-disable-next-line tasty/no-style-spread -- the shared field column, the same as Field's
   ...fieldStackStyles,
 
@@ -83,4 +86,4 @@ export const listboxStyles = {
   },
 
   ...optionPartStyles,
-} satisfies Styles;
+};
