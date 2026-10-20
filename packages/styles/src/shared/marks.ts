@@ -17,3 +17,19 @@ export const checkMarkStyles = {
   },
   rotate: { '': '45deg', indeterminate: '0deg' },
 } satisfies Styles;
+
+/**
+ * A chevron pointing down, the sign that a picker opens: two borders of a
+ * 6-pixel square turned 45 degrees, raised by the half of the square the
+ * borders leave empty. It doesn't mirror in right-to-left text either.
+ */
+export const chevronStyles = {
+  content: '""',
+  flexShrink: 0,
+  boxSizing: 'border-box',
+  inlineSize: 'fixed .375rem',
+  blockSize: 'fixed .375rem',
+  border: '1.5bw #current right bottom',
+  rotate: '45deg',
+  translate: '0 -.125rem',
+} satisfies Styles;

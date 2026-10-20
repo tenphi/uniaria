@@ -9,10 +9,13 @@ import type { Styles } from '@tenphi/tasty';
 import { buttonStyles } from './button';
 import { checkboxStyles } from './checkbox';
 import { checkboxGroupStyles } from './checkbox-group';
+import { comboboxStyles } from './combobox';
 import { fieldStyles } from './field';
+import { listboxStyles } from './listbox';
 import { numberFieldStyles } from './number-field';
 import { radioStyles } from './radio';
 import { radioGroupStyles } from './radio-group';
+import { selectStyles } from './select';
 import { switchStyles } from './switch';
 import { textFieldStyles } from './text-field';
 import { toggleButtonStyles } from './toggle-button';
@@ -33,6 +36,9 @@ export const COMPONENTS = {
   field: { styles: fieldStyles },
   'text-field': { styles: textFieldStyles },
   'number-field': { styles: numberFieldStyles },
+  listbox: { styles: listboxStyles },
+  select: { styles: selectStyles },
+  combobox: { styles: comboboxStyles },
 } as const satisfies Record<string, ComponentStyles>;
 
 export type ComponentName = keyof typeof COMPONENTS;

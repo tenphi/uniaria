@@ -9,10 +9,13 @@ import { partElement } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
+import { combobox } from '@uniaria/core/combobox';
 import { field } from '@uniaria/core/field';
+import { listbox } from '@uniaria/core/listbox';
 import { numberField } from '@uniaria/core/number-field';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
+import { select } from '@uniaria/core/select';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
@@ -26,7 +29,10 @@ import { STATES } from './tokens';
 
 const DEFINITIONS: Record<
   ComponentName,
-  { readonly parts: readonly string[] }
+  {
+    readonly parts: readonly string[];
+    readonly itemParts?: readonly string[];
+  }
 > = {
   button,
   'toggle-button': toggleButton,
@@ -38,6 +44,9 @@ const DEFINITIONS: Record<
   field,
   'text-field': textField,
   'number-field': numberField,
+  listbox,
+  select,
+  combobox,
 };
 
 /** Elements of the consumer's own that the styles expect, by component. */
@@ -66,6 +75,7 @@ const UNIARIA_STATES = new Set([
   'orientation',
   'placeholder',
   'empty',
+  'virtualized',
 ]);
 
 /** Attributes the consumer writes, which the styles read. */
@@ -141,7 +151,7 @@ describe.each(COMPONENT_NAMES)('%s', (name) => {
 
   test('styles only the parts of its definition', () => {
     const elements = [
-      ...DEFINITIONS[name].parts
+      ...[...DEFINITIONS[name].parts, ...(DEFINITIONS[name].itemParts ?? [])]
         .filter((part) => part !== 'root')
         .map(partElement),
       ...(OWN_ELEMENTS[name] ?? []),
@@ -197,14 +207,18 @@ describe('the built CSS', () => {
     expect(css).not.toMatch(/@scope/);
   });
 
-  test('reads only the custom properties tokens.css defines', () => {
-    const defined = new Set(
-      [
-        ...`${baseCss()}${paletteCss(createPalette())}`.matchAll(
+  test('reads only the custom properties tokens.css, UniAria or a component defines', () => {
+    const defined = new Set([
+      ...[
+        ...`${baseCss()}${paletteCss(createPalette())}${componentsCss(COMPONENT_NAMES)}`.matchAll(
           /(--[\w-]+):/g,
         ),
       ].map((match) => match[1]),
-    );
+      // A popover's room, which UniAria measures (Popover spec).
+      '--anchor-width',
+      '--available-width',
+      '--available-height',
+    ]);
     const used = new Set(
       [...componentsCss(COMPONENT_NAMES).matchAll(/var\((--[\w-]+)/g)].map(
         (match) => match[1],

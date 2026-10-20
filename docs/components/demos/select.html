@@ -4,14 +4,6 @@
       <span data-element="Label">Fruit</span>
       <button data-element="Trigger">
         <span data-element="Value"></span>
-        <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
-          <path
-            d="M4 6l4 4 4-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-        </svg>
       </button>
       <div data-element="Popover">
         <div data-element="List">
@@ -32,6 +24,8 @@
       <select data-element="HiddenSelect" name="fruit"></select>
     </div>
   </uni-select>
-  <button type="submit">Order</button>
+  <uni-button type="submit">
+    <button data-uni="button" data-variant="primary">Order</button>
+  </uni-button>
   <output id="log">Pick a fruit, then order.</output>
 </form>

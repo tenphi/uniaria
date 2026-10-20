@@ -72,6 +72,9 @@ export const STATES = {
   // Structural, inside `@own()`: a part at the start or the end of its box.
   '@uni-first': ':first-child',
   '@uni-last': ':last-child',
+  // A list that is its own tab stop, empty or with no option to focus
+  // (Listbox spec, Focus): with `focus-visible`, focus is on the list.
+  '@uni-list-tab-stop': ':has(List[tabindex="0"])',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;

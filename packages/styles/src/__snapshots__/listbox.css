@@ -1,0 +1,206 @@
+/* listbox */
+[data-uni="listbox"] [data-element="Label"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; margin-block: 0 calc(0.5 * var(--uni-gap)); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+[data-uni="listbox"] [data-element="Description"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="listbox"] [data-element="Error"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"] [data-element="Error"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
+}
+
+[data-uni="listbox"]:where([data-virtualized]) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { box-sizing: border-box; padding: calc(0.5 * var(--uni-gap)); border-radius: calc(var(--uni-radius) + calc(0.5 * var(--uni-gap))); overflow: auto; }
+
+[data-uni="listbox"]:where([data-virtualized]:not([data-disabled])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { background-color: var(--uni-surface-color); }
+
+[data-uni="listbox"]:where([data-virtualized]:not([data-disabled]):not([data-invalid])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+[data-uni="listbox"]:where([data-virtualized]:not(:has([data-element="List"][tabindex="0"])[data-focus-visible])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="listbox"]:where([data-virtualized]) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="listbox"]:where(:not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { box-sizing: border-box; padding: calc(0.5 * var(--uni-gap)); border-radius: calc(var(--uni-radius) + calc(0.5 * var(--uni-gap))); overflow: auto; display: block; }
+
+[data-uni="listbox"]:where(:not([data-disabled]):not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { background-color: var(--uni-surface-color); }
+
+[data-uni="listbox"]:where(:not([data-disabled]):not([data-invalid]):not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+[data-uni="listbox"]:where(:not([data-virtualized]):not(:has([data-element="List"][tabindex="0"])[data-focus-visible])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="listbox"]:where(:not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="listbox"] [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; list-style: none; }
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *))::after { content: var(--uni-option-mark); position: absolute; inset-inline: auto calc(var(--uni-gap) + .125rem); inset-block: calc(50% - .3125rem) auto; box-sizing: border-box; inline-size: .25rem; min-inline-size: .25rem; max-inline-size: .25rem; block-size: .5rem; min-block-size: .5rem; max-block-size: .5rem; border-top: 0 solid currentcolor; border-right: calc(2 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(2 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; }
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { position: relative; inset-inline: auto 0; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; margin: 0px; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); padding-inline: var(--uni-gap) calc(2.5 * var(--uni-gap)); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; overflow-wrap: anywhere; }
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-disabled]), [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered]):not([data-pressed])), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered])[data-pressed]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered]:not([data-pressed])), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered][data-pressed]) { background-color: transparent; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-selected])) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+
+[data-uni="listbox"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])) { cursor: pointer; }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition), color var(--uni-transition); }
+}
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-selected])) { --uni-option-mark: none; }
+
+[data-uni="listbox"] [data-element="OptionLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { display: block; }
+
+[data-uni="listbox"] [data-element="OptionDescription"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; color: inherit; --current-color: inherit; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; display: block; }
+
+[data-uni="listbox"] [data-element="GroupLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); letter-spacing: .01em; font-weight: 600; text-transform: uppercase; display: block; padding: var(--uni-gap) var(--uni-gap) calc(0.5 * var(--uni-gap)) var(--uni-gap); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="GroupLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="listbox"] [data-element="Empty"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { margin: 0px; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); font-size: var(--uni-font-size); line-height: var(--uni-line-height); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Empty"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="listbox"] { display: grid; gap: calc(0.5 * var(--uni-gap)); grid-template-columns: minmax(0, 1fr); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"] [data-element="Error"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+[data-uni="listbox"]:where([data-disabled][data-virtualized]) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { background-color: var(--uni-disabled-surface-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="listbox"]:where([data-invalid][data-virtualized]:not([data-disabled])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-focus-visible][data-virtualized]:not([data-invalid]):has([data-element="List"][tabindex="0"])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="listbox"]:where([data-virtualized]) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { padding: 0px; }
+
+[data-uni="listbox"]:where([data-disabled]:not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { background-color: var(--uni-disabled-surface-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="listbox"]:where([data-invalid]:not([data-disabled]):not([data-virtualized])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-focus-visible]:not([data-invalid]):not([data-virtualized]):has([data-element="List"][tabindex="0"])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-selected]):not([data-pressed])[data-focused]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-selected])[data-pressed][data-focused]), [data-uni="listbox"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-pressed]):not([data-selected])[data-hovered]) { background-color: var(--uni-surface-hover-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])[data-selected]) { color: var(--uni-accent-text-color); --current-color: var(--uni-accent-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+}
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-disabled]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])) { cursor: default; }
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-selected]) { --uni-option-mark: ""; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="GroupLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Empty"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-focus-visible][data-invalid][data-virtualized]:has([data-element="List"][tabindex="0"])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"]:where([data-focus-visible][data-invalid]:not([data-virtualized]):has([data-element="List"][tabindex="0"])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="listbox"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-selected])[data-pressed]) { background-color: var(--uni-surface-pressed-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-disabled]) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="GroupLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where(:not([data-disabled])) [data-element="Empty"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-focus-visible][data-virtualized]:has([data-element="List"][tabindex="0"])) [data-element="Scroller"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-focus-visible]:not([data-virtualized]):has([data-element="List"][tabindex="0"])) [data-element="List"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered]):not([data-pressed])[data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered])[data-pressed][data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered]:not([data-pressed])[data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered][data-pressed][data-selected]) { background-color: var(--uni-accent-surface-color); }
+
+@media (forced-colors: active) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="GroupLabel"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="listbox"]:where([data-disabled]) [data-element="Empty"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+[data-uni="listbox"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered][data-selected]), [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-pressed]):not([data-hovered])[data-focused][data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered][data-focused][data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])[data-pressed]:not([data-hovered])[data-focused][data-selected]), [data-uni="listbox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])[data-pressed][data-hovered][data-focused][data-selected]) { background-color: var(--uni-accent-surface-hover-color); }
+
+@media (forced-colors: active) {
+  [data-uni="listbox"] [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where([data-disabled]) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+[data-uni="listbox"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="listbox"] [data-uni]:not([data-uni="listbox"]) *)):where(:not([data-disabled])[data-pressed][data-selected]) { background-color: var(--uni-accent-surface-pressed-color); }

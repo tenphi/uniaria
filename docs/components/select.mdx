@@ -373,6 +373,19 @@ By default UniAria places the open popover with inline `position: fixed`,
 [Popover](./popover.mdx) for CSS anchor positioning instead). It also hides
 the hidden `<select>` with inline styles. Everything else is your CSS.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles every part, as in the demo
+above, whose CSS tab holds only the page's layout. The trigger is a field's
+box holding the value, on one line that ends in an ellipsis, with a soft
+placeholder and a chevron the styles draw, so leave your icon out. The
+popover is a surface a gap away from the trigger, at least as wide as it and
+no larger than the room UniAria measures, and the list scrolls inside it;
+options are [Listbox](./listbox.mdx#default-styles)'s. Opening, the popover
+fades in and grows from 90% as it moves 8 pixels away from the trigger, in
+80 milliseconds, and closing reverses it; under reduced motion it shows and
+hides at once. The close button stays visually hidden until it has focus.
+
 ## Keyboard
 
 On the closed trigger:

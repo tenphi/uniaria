@@ -1,5 +1,5 @@
+/* The page's layout. The listboxes' look is @uniaria/styles' default. */
 :root {
-  color-scheme: light dark;
   font:
     15px/1.5 system-ui,
     sans-serif;
@@ -8,6 +8,8 @@ body {
   display: grid;
   gap: 1rem;
   margin: 1.5rem;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
 }
 .row {
   display: flex;
@@ -16,79 +18,8 @@ body {
   align-items: start;
 }
 uni-listbox {
-  display: grid;
-  gap: 0.375rem;
-  width: 13rem;
-}
-
-[data-uni='listbox'] [data-element='Label'] {
-  font-weight: 600;
+  inline-size: 13rem;
 }
 [data-uni='listbox'] [data-element='List'] {
-  max-height: 15rem;
-  overflow: auto;
-  padding: 0.25rem;
-  border: 1px solid color-mix(in srgb, CanvasText 25%, transparent);
-  border-radius: 0.5rem;
-  outline: none;
-}
-[data-uni='listbox'] [data-element='List'][data-focus-visible] {
-  border-color: Highlight;
-}
-[data-uni='listbox'] [data-element='GroupLabel'] {
-  display: block;
-  padding: 0.5rem 0.5rem 0.125rem;
-  color: GrayText;
-  font-size: 0.8em;
-  text-transform: uppercase;
-}
-[data-uni='listbox'] [data-element='Option'] {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  cursor: default;
-  outline: none;
-}
-/* A checkmark in single mode, a checkbox in multiple mode. */
-[data-uni='listbox'] [data-element='Option']::before {
-  content: '';
-  width: 1em;
-  text-align: center;
-}
-[data-uni='listbox'] [data-element='Option'][data-selected]::before {
-  content: '✓';
-}
-[data-multiple] > [data-element='Option']::before {
-  height: 1em;
-  border: 1px solid color-mix(in srgb, CanvasText 40%, transparent);
-  border-radius: 0.25rem;
-  font-size: 0.8em;
-  line-height: 1;
-}
-[data-multiple] > [data-element='Option'][data-selected]::before {
-  border-color: Highlight;
-  background: Highlight;
-  color: HighlightText;
-}
-[data-uni='listbox'] [data-element='Option'][data-hovered] {
-  background: color-mix(in srgb, CanvasText 6%, Canvas);
-}
-[data-uni='listbox'] [data-element='Option'][data-selected] {
-  background: color-mix(in srgb, Highlight 30%, Canvas);
-}
-[data-uni='listbox'] [data-element='Option'][data-pressed] {
-  background: color-mix(in srgb, Highlight 50%, Canvas);
-}
-[data-uni='listbox'] [data-element='Option'][data-focus-visible] {
-  outline: 2px solid Highlight;
-  outline-offset: -2px;
-}
-[data-uni='listbox'] [data-element='Option'][data-disabled] {
-  color: GrayText;
-}
-[data-uni='listbox'] [data-element='Empty'] {
-  margin: 0;
-  color: GrayText;
+  max-block-size: 15rem;
 }

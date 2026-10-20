@@ -63,6 +63,21 @@
       "types": "./dist/number-field.d.ts",
       "default": "./dist/number-field.js"
     },
+    "./listbox": {
+      "uniaria-source": "./src/components/listbox.ts",
+      "types": "./dist/listbox.d.ts",
+      "default": "./dist/listbox.js"
+    },
+    "./select": {
+      "uniaria-source": "./src/components/select.ts",
+      "types": "./dist/select.d.ts",
+      "default": "./dist/select.js"
+    },
+    "./combobox": {
+      "uniaria-source": "./src/components/combobox.ts",
+      "types": "./dist/combobox.d.ts",
+      "default": "./dist/combobox.js"
+    },
     "./build": {
       "uniaria-source": "./src/build.ts",
       "types": "./dist/build.d.ts",

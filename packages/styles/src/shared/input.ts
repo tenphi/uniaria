@@ -88,3 +88,63 @@ export const wrappedInputStyles = {
     resize: 'vertical',
   },
 } satisfies Styles;
+
+/**
+ * A quiet 24-pixel button inside the box, in markup order beside the
+ * input: NumberField's steppers, Combobox's button. At the box's edge it
+ * sits as far from the edge as from the top and bottom (the inset), its
+ * corners concentric with the box's. It reads its own state, which
+ * UniAria writes as Button's: a stepper is disabled while it can't step.
+ */
+/* eslint-disable tasty/no-own-at-root -- spread into button parts, where @own() reads the button's own state */
+export const boxButtonStyles = {
+  display: 'grid',
+  placeItems: 'center',
+  flexShrink: 0,
+  boxSizing: 'border-box',
+  // eslint-disable-next-line tasty/consistent-token-usage -- WCAG 2.5.8 counts CSS pixels, whatever the root font size
+  inlineSize: 'fixed max(24px, 3x)',
+  // eslint-disable-next-line tasty/consistent-token-usage -- as above
+  blockSize: 'fixed max(24px, 3x)',
+  blockMargin: 0,
+  // The wrapper's padding, less the inset, at the box's edge.
+  inlineMargin: {
+    '': 0,
+    '@own(@uni-first)':
+      // eslint-disable-next-line tasty/consistent-token-usage -- the button's size, as above
+      '((($uni-control-height - 2bw - max(24px, 3x)) / 2) - (1x - 1bw)) start',
+    '@own(@uni-last)':
+      // eslint-disable-next-line tasty/consistent-token-usage -- as above
+      '((($uni-control-height - 2bw - max(24px, 3x)) / 2) - (1x - 1bw)) end',
+  },
+  padding: 0,
+  border: '0 #clear',
+  // eslint-disable-next-line tasty/consistent-token-usage -- as above
+  radius: '(1r - 1bw - (($uni-control-height - 2bw - max(24px, 3x)) / 2))',
+  fill: {
+    '': '#clear',
+    '@own(hovered)': '#uni-surface-hover',
+    '@own(pressed)': '#uni-surface-pressed',
+    '@own(disabled)': '#clear',
+    '@uni-forced-colors': '#uni-system-button-face',
+  },
+  color: {
+    '': '#uni-text',
+    '@own(disabled)': '#uni-disabled-text',
+    '@uni-forced-colors': '#uni-system-button-text',
+    '(@uni-forced-colors & @own(disabled))': '#uni-system-gray-text',
+  },
+  cursor: { '': 'pointer', '@own(disabled)': 'default' },
+  // No presets: the type follows the page, sizes come from the uni tokens.
+  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
+  fontFamily: 'inherit',
+  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
+  fontSize: '$uni-font-size',
+  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
+  lineHeight: 1,
+  transition: {
+    '': 'fill $uni-transition',
+    '@uni-reduced-motion': false,
+  },
+} satisfies Styles;
+/* eslint-enable tasty/no-own-at-root */

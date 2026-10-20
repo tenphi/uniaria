@@ -17,6 +17,9 @@ export default defineConfig({
     field: 'src/components/field.ts',
     'text-field': 'src/components/text-field.ts',
     'number-field': 'src/components/number-field.ts',
+    listbox: 'src/components/listbox.ts',
+    select: 'src/components/select.ts',
+    combobox: 'src/components/combobox.ts',
     build: 'src/build.ts',
     // Internal: the hook below runs it.
     generate: 'src/generate.ts',

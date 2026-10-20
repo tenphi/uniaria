@@ -19,6 +19,10 @@ export default {
     // Tasty's own: `currentColor`, and `transparent` in the built CSS.
     '#current',
     '#clear',
+    // A popover's room, which UniAria measures and writes on it.
+    '$anchor-width',
+    '$available-width',
+    '$available-height',
   ],
   units: Object.keys(UNITS),
   states: Object.keys(STATES),
