@@ -8,6 +8,6 @@ document.addEventListener('openchange', (event) => {
 document.addEventListener('dismiss', (event) => {
   log.textContent = `${nameOf(event)}: dismiss, ${event.detail.reason}`;
 });
-document.querySelector('.copy').addEventListener('click', () => {
+document.getElementById('copy').addEventListener('press', () => {
   log.textContent = 'Share: link copied';
 });

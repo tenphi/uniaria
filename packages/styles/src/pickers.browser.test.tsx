@@ -32,6 +32,7 @@ import {
   rootOf,
   settle,
   setUpPage,
+  startOpening,
   style,
   tabInto,
   token,
@@ -430,6 +431,20 @@ describe.each([
       expect(style(popover).boxShadow).not.toBe('none');
       expect(style(popover).opacity).toBe('1');
       expect(box(option(root, 'apple')).height).toBeCloseTo(32, 0);
+    });
+
+    test('opening, the popup fades in from its hidden look', async () => {
+      await emulateMedia({ reducedMotion: 'no-preference' });
+      const root = await adapter.select();
+      const popover = part(root, 'Popover');
+      expect(await startOpening(part(root, 'Trigger'), root, popover)).toBe(0);
+      expect(
+        popover
+          .getAnimations()
+          .map((animation) => (animation as CSSTransition).transitionProperty),
+      ).toEqual(expect.arrayContaining(['opacity', 'translate', 'scale']));
+      expect(Number(style(popover).opacity)).toBeLessThan(0.5);
+      await emulateMedia({ reducedMotion: null });
     });
 
     test('closing, the popup fades out before it hides', async () => {

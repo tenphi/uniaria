@@ -20,6 +20,9 @@ export default defineConfig({
     listbox: 'src/components/listbox.ts',
     select: 'src/components/select.ts',
     combobox: 'src/components/combobox.ts',
+    dialog: 'src/components/dialog.ts',
+    popover: 'src/components/popover.ts',
+    tooltip: 'src/components/tooltip.ts',
     build: 'src/build.ts',
     // Internal: the hook below runs it.
     generate: 'src/generate.ts',

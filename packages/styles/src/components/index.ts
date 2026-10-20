@@ -10,15 +10,18 @@ import { buttonStyles } from './button';
 import { checkboxStyles } from './checkbox';
 import { checkboxGroupStyles } from './checkbox-group';
 import { comboboxStyles } from './combobox';
+import { dialogStyles, dialogTriggerStyles } from './dialog';
 import { fieldStyles } from './field';
 import { listboxStyles } from './listbox';
 import { numberFieldStyles } from './number-field';
+import { popoverStyles, popoverTriggerStyles } from './popover';
 import { radioStyles } from './radio';
 import { radioGroupStyles } from './radio-group';
 import { selectStyles } from './select';
 import { switchStyles } from './switch';
 import { textFieldStyles } from './text-field';
 import { toggleButtonStyles } from './toggle-button';
+import { tooltipStyles } from './tooltip';
 
 export interface ComponentStyles {
   readonly styles: Styles;
@@ -39,6 +42,12 @@ export const COMPONENTS = {
   listbox: { styles: listboxStyles },
   select: { styles: selectStyles },
   combobox: { styles: comboboxStyles },
+  dialog: { styles: dialogStyles, outside: { trigger: dialogTriggerStyles } },
+  popover: {
+    styles: popoverStyles,
+    outside: { trigger: popoverTriggerStyles },
+  },
+  tooltip: { styles: tooltipStyles },
 } as const satisfies Record<string, ComponentStyles>;
 
 export type ComponentName = keyof typeof COMPONENTS;

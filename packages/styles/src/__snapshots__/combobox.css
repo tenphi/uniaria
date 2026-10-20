@@ -60,16 +60,18 @@
 [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-placement="left"]):not([data-placement="right"]):not([data-placement="top"])) { transform-origin: top; }
 
 @media (not (prefers-reduced-motion: reduce)) {
-  [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { transition: opacity var(--uni-transition) linear, transform var(--uni-transition) ease-out, translate var(--uni-transition) ease-out, scale var(--uni-transition) ease-out; }
+  [data-uni="combobox"]:where(:not([data-entering])) [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { transition: opacity var(--uni-transition) linear, transform var(--uni-transition) ease-out, translate var(--uni-transition) ease-out, scale var(--uni-transition) ease-out; }
 }
 
 [data-uni="combobox"]:where(:not([data-exiting]):not([data-open])) [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { overflow: visible; }
 
 [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { box-sizing: border-box; inline-size: max-content; min-inline-size: var(--anchor-width); max-inline-size: var(--available-width, 100dvw); block-size: auto; min-block-size: initial; max-block-size: min(var(--available-height, 100dvh), calc(50vh - calc(5 * var(--uni-gap)))); margin: var(--uni-gap) 0; padding: calc(0.5 * var(--uni-gap)); border: var(--uni-border-width) solid var(--uni-border-color); border-radius: calc(var(--uni-radius) + calc(0.5 * var(--uni-gap))); background-color: var(--uni-surface-color); color: var(--uni-text-color); --current-color: var(--uni-text-color); box-shadow:  0 calc(0.5 * var(--uni-gap)) calc(2 * var(--uni-gap)) var(--uni-shadow-color); z-index: var(--uni-z-overlay); }
 
-[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { position: absolute; box-sizing: border-box; inline-size: var(--uni-gap); min-inline-size: var(--uni-gap); max-inline-size: var(--uni-gap); block-size: var(--uni-gap); min-block-size: var(--uni-gap); max-block-size: var(--uni-gap); background-color: var(--uni-surface-color); rotate: 45deg; pointer-events: none; }
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *))::before { content: ""; position: absolute; inset: 0px; box-sizing: border-box; background-color: var(--uni-surface-color); border-top: var(--uni-border-width) solid var(--uni-border-color); border-right: 0 solid var(--uni-border-color); border-bottom: 0 solid var(--uni-border-color); border-left: var(--uni-border-width) solid var(--uni-border-color); rotate: 45deg; }
 
-[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-placement="left"]):not([data-placement="right"]):not([data-placement="top"])) { border-top: var(--uni-border-width) solid var(--uni-border-color); border-right: 0 solid var(--uni-border-color); border-bottom: 0 solid var(--uni-border-color); border-left: var(--uni-border-width) solid var(--uni-border-color); inset: calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto auto auto; }
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { position: absolute; box-sizing: border-box; inline-size: var(--uni-gap); min-inline-size: var(--uni-gap); max-inline-size: var(--uni-gap); block-size: var(--uni-gap); min-block-size: var(--uni-gap); max-block-size: var(--uni-gap); pointer-events: none; }
+
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-placement="left"]):not([data-placement="right"]):not([data-placement="top"])) { rotate: 0deg; inset: calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto auto auto; }
 
 [data-uni="combobox"] [data-element="Scroller"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { overflow: auto; }
 
@@ -159,7 +161,7 @@
 
 [data-uni="combobox"]:where(:is([data-exiting], [data-open])) [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { overflow: visible; display: flex; flex-flow: column; }
 
-[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="top"]) { border-top: 0 solid var(--uni-border-color); border-right: var(--uni-border-width) solid var(--uni-border-color); border-bottom: var(--uni-border-width) solid var(--uni-border-color); border-left: 0 solid var(--uni-border-color); inset: auto auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto; }
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="top"]) { rotate: 180deg; inset: auto auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto; }
 
 @media (not (forced-colors: active)) {
   [data-uni="combobox"]:where([data-focus-visible]:has([data-element="List"][tabindex="0"])) [data-element="List"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
@@ -215,7 +217,7 @@
 
 [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="left"]) { transform-origin: right; }
 
-[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="left"]) { border-top: var(--uni-border-width) solid var(--uni-border-color); border-right: var(--uni-border-width) solid var(--uni-border-color); border-bottom: 0 solid var(--uni-border-color); border-left: 0 solid var(--uni-border-color); inset: auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto auto; }
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="left"]) { rotate: 90deg; inset: auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)) auto auto; }
 
 @media (forced-colors: active) {
   [data-uni="combobox"]:where([data-focus-visible]:has([data-element="List"][tabindex="0"])) [data-element="List"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
@@ -259,7 +261,7 @@
 
 [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="right"]) { transform-origin: left; }
 
-[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="right"]) { border-top: 0 solid var(--uni-border-color); border-right: 0 solid var(--uni-border-color); border-bottom: var(--uni-border-width) solid var(--uni-border-color); border-left: var(--uni-border-width) solid var(--uni-border-color); inset: auto auto auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)); }
+[data-uni="combobox"] [data-element="Arrow"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where([data-placement="right"]) { rotate: -90deg; inset: auto auto auto calc(calc(-0.5 * var(--uni-gap)) - var(--uni-border-width)); }
 
 [data-uni="combobox"] [data-element="Option"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered]):not([data-pressed])[data-selected]), [data-uni="combobox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered])[data-pressed][data-selected]), [data-uni="combobox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered]:not([data-pressed])[data-selected]), [data-uni="combobox"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered][data-pressed][data-selected]) { background-color: var(--uni-accent-surface-color); }
 

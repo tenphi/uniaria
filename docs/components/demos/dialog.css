@@ -1,5 +1,5 @@
+/* The page's layout. The dialog's look is @uniaria/styles' default. */
 :root {
-  color-scheme: light dark;
   font:
     15px/1.5 system-ui,
     sans-serif;
@@ -9,84 +9,8 @@ body {
   gap: 1rem;
   justify-items: start;
   margin: 1.5rem;
-}
-
-/* The trigger and close parts are buttons, like the Delete Button. */
-[data-uni-part='dialog-trigger'],
-[data-uni='dialog'] [data-element='Close'],
-[data-uni='button'] {
-  padding: 0.5rem 1rem;
-  border: 1px solid color-mix(in srgb, CanvasText 30%, transparent);
-  border-radius: 0.5rem;
-  background: Canvas;
-  color: CanvasText;
-  font: inherit;
-  cursor: pointer;
-  outline: none;
-}
-:is(
-  [data-uni-part='dialog-trigger'],
-  [data-uni='dialog'] [data-element='Close'],
-  [data-uni='button']
-)[data-hovered] {
-  background: color-mix(in srgb, CanvasText 6%, Canvas);
-}
-:is(
-  [data-uni-part='dialog-trigger'],
-  [data-uni='dialog'] [data-element='Close'],
-  [data-uni='button']
-)[data-pressed] {
-  background: color-mix(in srgb, CanvasText 12%, Canvas);
-}
-:is(
-  [data-uni-part='dialog-trigger'],
-  [data-uni='dialog'] [data-element='Close'],
-  [data-uni='button']
-)[data-focus-visible] {
-  outline: 2px solid Highlight;
-  outline-offset: 2px;
-}
-[data-uni='button'].primary {
-  border-color: CanvasText;
-  background: CanvasText;
-  color: Canvas;
-}
-[data-uni='button'].primary:is([data-hovered], [data-pressed]) {
-  background: color-mix(in srgb, CanvasText 80%, Canvas);
-}
-
-[data-uni='dialog'] {
-  width: min(22rem, 100% - 2rem);
-  padding: 1.25rem 1.5rem;
-  border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
-  border-radius: 0.75rem;
-  background: Canvas;
-  color: CanvasText;
-  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.3);
-  outline: none;
-  transition:
-    opacity 150ms,
-    scale 150ms;
-}
-[data-uni='dialog']::backdrop {
-  background: rgb(0 0 0 / 0.4);
-  transition: opacity 150ms;
-}
-/* The first two frames after opening, and the closing phase. */
-[data-uni='dialog']:is([data-entering], [data-exiting]) {
-  opacity: 0;
-  scale: 0.96;
-}
-[data-uni='dialog']:is([data-entering], [data-exiting])::backdrop {
-  opacity: 0;
-}
-[data-uni='dialog'] [data-element='Title'] {
-  margin: 0 0 0.25rem;
-  font-size: 1.125rem;
-}
-[data-uni='dialog'] [data-element='Description'] {
-  margin: 0 0 1.25rem;
-  color: GrayText;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
 }
 .actions {
   display: flex;

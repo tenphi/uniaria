@@ -51,6 +51,34 @@ export async function settle(): Promise<void> {
   for (const animation of document.getAnimations()) animation.finish();
 }
 
+/**
+ * Opens an overlay from its trigger within the page, without a pointer's
+ * round trip, and waits out the frames its component's root is marked
+ * `entering`, so its opening transition has just begun. Resolves to the
+ * overlay's opacity while `entering`: its hidden look's.
+ */
+export async function startOpening(
+  trigger: HTMLElement,
+  root: Element,
+  overlay: Element = root,
+): Promise<number> {
+  const marked = new Promise<void>((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (!root.hasAttribute('data-entering')) return;
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(root, { attributeFilter: ['data-entering'] });
+  });
+  trigger.click();
+  await marked;
+  const opacity = Number(style(overlay).opacity);
+  while (root.hasAttribute('data-entering')) {
+    await new Promise(requestAnimationFrame);
+  }
+  return opacity;
+}
+
 /** The first root of a component in the container. */
 export function rootOf(kind: string): HTMLElement {
   const root = page.container.querySelector<HTMLElement>(

@@ -418,6 +418,20 @@ on the root; in CSS mode, `position-anchor` on the root and an `anchor-name`
 entry on the anchor; in both, the CSS variables and the arrow's `left` or
 `top`. The trigger and close parts get Button's `touch-action`.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles every part, as in the demo
+above, whose CSS tab holds only the page's layout. The popover is the surface
+[Select](./select.mdx#default-styles)'s popup uses, with its parts in a column
+8 pixels apart and 12 pixels in from its edge. Its 8-pixel margin is the gap
+from the trigger and keeps it off the viewport's edges, and it is no larger
+than the room UniAria measures. Without an arrow it scrolls inside; with one
+it keeps its overflow for the arrow, so scroll an element inside it. The
+arrow points at the trigger from whichever side the popover opened on. The
+trigger and the close part look like [Button](./button.mdx#default-styles),
+`data-variant` included. Opening, it fades in and grows from 90% from the
+trigger's side, in 120 milliseconds.
+
 ## Keyboard
 
 | Key            | Behavior                                                                                                                                                                                                           |

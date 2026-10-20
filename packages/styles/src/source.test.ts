@@ -10,15 +10,18 @@ import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
 import { combobox } from '@uniaria/core/combobox';
+import { dialog } from '@uniaria/core/dialog';
 import { field } from '@uniaria/core/field';
 import { listbox } from '@uniaria/core/listbox';
 import { numberField } from '@uniaria/core/number-field';
+import { popover } from '@uniaria/core/popover';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
 import { select } from '@uniaria/core/select';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
+import { tooltip } from '@uniaria/core/tooltip';
 import { describe, expect, test } from 'vitest';
 
 import { buildCss, componentsCss } from './build';
@@ -47,6 +50,9 @@ const DEFINITIONS: Record<
   listbox,
   select,
   combobox,
+  dialog,
+  popover,
+  tooltip,
 };
 
 /** Elements of the consumer's own that the styles expect, by component. */
@@ -76,6 +82,7 @@ const UNIARIA_STATES = new Set([
   'placeholder',
   'empty',
   'virtualized',
+  'instant',
 ]);
 
 /** Attributes the consumer writes, which the styles read. */

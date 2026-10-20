@@ -4,8 +4,10 @@
     <button data-uni-part="popover-trigger">Share</button>
     <div data-uni="popover">
       <div data-element="Arrow"></div>
-      <p>Anyone with the link can view.</p>
-      <button class="copy">Copy link</button>
+      <p data-element="Description">Anyone with the link can view.</p>
+      <uni-button id="copy">
+        <button data-uni="button" data-variant="primary">Copy link</button>
+      </uni-button>
     </div>
   </uni-popover>
   <uni-popover position-area="bottom span-right">
@@ -14,8 +16,18 @@
       <div data-element="Arrow"></div>
       <h3 data-element="Title">Image size</h3>
       <div class="fields">
-        <label>Width <input type="number" value="1280" /></label>
-        <label>Height <input type="number" value="720" /></label>
+        <uni-number-field default-value="1280" min-value="1">
+          <div data-uni="number-field">
+            <label data-element="Label">Width</label>
+            <div data-element="Wrapper"><input data-element="Input" /></div>
+          </div>
+        </uni-number-field>
+        <uni-number-field default-value="720" min-value="1">
+          <div data-uni="number-field">
+            <label data-element="Label">Height</label>
+            <div data-element="Wrapper"><input data-element="Input" /></div>
+          </div>
+        </uni-number-field>
       </div>
       <button data-element="Close">Apply</button>
     </div>

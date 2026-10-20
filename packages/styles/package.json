@@ -78,6 +78,21 @@
       "types": "./dist/combobox.d.ts",
       "default": "./dist/combobox.js"
     },
+    "./dialog": {
+      "uniaria-source": "./src/components/dialog.ts",
+      "types": "./dist/dialog.d.ts",
+      "default": "./dist/dialog.js"
+    },
+    "./popover": {
+      "uniaria-source": "./src/components/popover.ts",
+      "types": "./dist/popover.d.ts",
+      "default": "./dist/popover.js"
+    },
+    "./tooltip": {
+      "uniaria-source": "./src/components/tooltip.ts",
+      "types": "./dist/tooltip.d.ts",
+      "default": "./dist/tooltip.js"
+    },
     "./build": {
       "uniaria-source": "./src/build.ts",
       "types": "./dist/build.d.ts",

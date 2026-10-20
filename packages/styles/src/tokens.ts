@@ -75,6 +75,8 @@ export const STATES = {
   // A list that is its own tab stop, empty or with no option to focus
   // (Listbox spec, Focus): with `focus-visible`, focus is on the list.
   '@uni-list-tab-stop': ':has(List[tabindex="0"])',
+  // An overlay with an arrow, which needs its overflow.
+  '@uni-arrowed': ':has(> Arrow)',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;

@@ -1,5 +1,6 @@
 import type { Styles } from '@tenphi/tasty';
 
+import { arrowStyles } from './arrow';
 import { popupMotionStyles } from './motion';
 import { optionPartStyles } from './option';
 
@@ -14,9 +15,8 @@ import { optionPartStyles } from './option';
  *
  * The popover is `popover="manual"`, or `hidden` without the Popover API,
  * so its `display` is set only while it is shown: open, or closed and
- * still exiting (`./motion.ts`). The arrow is a turned square with the
- * border on its two outer sides; UniAria places it along its side inline
- * and writes `data-placement` on it.
+ * still exiting (`./motion.ts`). The arrow is the shared one
+ * (`./arrow.ts`).
  */
 export const popupStyles = {
   Popover: {
@@ -41,28 +41,8 @@ export const popupStyles = {
     zIndex: '$uni-z-overlay',
   },
   Arrow: {
-    position: 'absolute',
-    boxSizing: 'border-box',
-    inlineSize: 'fixed 1x',
-    blockSize: 'fixed 1x',
-    fill: '#uni-surface',
-    rotate: '45deg',
-    pointerEvents: 'none',
-    border: {
-      '': '1bw #uni-border top left',
-      '@own(placement=top)': '1bw #uni-border right bottom',
-      '@own(placement=left)': '1bw #uni-border top right',
-      '@own(placement=right)': '1bw #uni-border bottom left',
-    },
-    // Its center on the popover's outer edge, so its outer half sits in
-    // the gap and its inner half covers the border. UniAria writes the
-    // other axis inline: `left` above or below, `top` beside.
-    inset: {
-      '': '(-.5x - 1bw) top',
-      '@own(placement=top)': '(-.5x - 1bw) bottom',
-      '@own(placement=left)': '(-.5x - 1bw) right',
-      '@own(placement=right)': '(-.5x - 1bw) left',
-    },
+    // eslint-disable-next-line tasty/no-style-spread -- the shared arrow
+    ...arrowStyles,
   },
   Scroller: {
     overflow: 'auto',
