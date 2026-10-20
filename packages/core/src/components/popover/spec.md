@@ -71,7 +71,7 @@ of these, and when it opens while a modal `<dialog>` that doesn't contain it
 is open (the dialog makes it inert: Opening and closing).
 
 State attributes on every part: `data-open` while open, `data-entering` for
-the first frame after opening, `data-exiting` while closing, as Dialog.
+the first two frames after opening, `data-exiting` while closing, as Dialog.
 
 Render the root always; it is hidden while closed. Place it right after the
 trigger in the DOM when you can: older browsers order Tab by the DOM (Focus).
@@ -113,7 +113,7 @@ part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 | Field      | Type                                                  | Meaning                                                                       |
 | ---------- | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
 | isOpen     | `boolean`                                             | The current value.                                                            |
-| isEntering | `boolean`                                             | The first frame after opening, for enter animations.                          |
+| isEntering | `boolean`                                             | The first two frames after opening, for enter animations.                     |
 | isExiting  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
 | placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
@@ -186,7 +186,7 @@ and these are the only members of it consumers may call. They are
 | open             | every part | + `data-open`; the root is `:popover-open`, in the top layer                                                    |
 | open             | root       | + `data-placement`; positioning styles                                                                          |
 | open, modal      | the page   | `aria-hidden="true"` on everything outside the root, through `hideOutside` (no `inert`: the page takes presses) |
-| first frame      | every part | + `data-entering`                                                                                               |
+| first two frames | every part | + `data-entering`                                                                                               |
 | closing          | every part | − `data-open`, + `data-exiting`; the page is exposed again                                                      |
 | trigger disabled | trigger    | Button's `disabled` or `aria-disabled`, `data-disabled`                                                         |
 
@@ -305,17 +305,17 @@ closes. Everything else on the root is the consumer's.
 
 ## Styling tokens
 
-| Token                                                                                          | On                                 | Meaning                                                                |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| `data-uni="popover"`                                                                           | root                               | The root part.                                                         |
-| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                            | trigger, anchor                    | Which part an element is: they sit outside the root.                   |
-| `data-element`                                                                                 | its other parts                    | Which part an element is.                                              |
-| `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first frame after opening; closing until its animations end. |
-| `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                            |
-| Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                             |
-| `--anchor-width`                                                                               | root                               | The anchor's width, in pixels (for `min-width`).                       |
-| `--available-width`, `--available-height`                                                      | root                               | The most room it could take, in pixels, in any of its options.         |
-| `isOpen`, `isEntering`, `isExiting`, `placement`                                               | public state (`useComponentState`) | The same, for a framework's own bindings.                              |
+| Token                                                                                          | On                                 | Meaning                                                                     |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| `data-uni="popover"`                                                                           | root                               | The root part.                                                              |
+| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                            | trigger, anchor                    | Which part an element is: they sit outside the root.                        |
+| `data-element`                                                                                 | its other parts                    | Which part an element is.                                                   |
+| `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first two frames after opening; closing until its animations end. |
+| `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                                 |
+| Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                                  |
+| `--anchor-width`                                                                               | root                               | The anchor's width, in pixels (for `min-width`).                            |
+| `--available-width`, `--available-height`                                                      | root                               | The most room it could take, in pixels, in any of its options.              |
+| `isOpen`, `isEntering`, `isExiting`, `placement`                                               | public state (`useComponentState`) | The same, for a framework's own bindings.                                   |
 
 The variables resolve on the root only, so use them there, not on its
 children. Nothing caps the size unless the consumer uses them.

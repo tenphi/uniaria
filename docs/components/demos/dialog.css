@@ -72,7 +72,7 @@ body {
   background: rgb(0 0 0 / 0.4);
   transition: opacity 150ms;
 }
-/* The first frame after opening, and the closing phase. */
+/* The first two frames after opening, and the closing phase. */
 [data-uni='dialog']:is([data-entering], [data-exiting]) {
   opacity: 0;
   scale: 0.96;

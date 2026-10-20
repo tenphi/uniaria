@@ -60,7 +60,7 @@ Not part of Tooltip:
 | arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                                    | Optional, as Popover's.                                                                                                                       |
 
 State attributes on the root and the arrow: `data-open` while open,
-`data-entering` for the first frame after opening, `data-exiting` while
+`data-entering` for the first two frames after opening, `data-exiting` while
 closing, as Popover, and `data-instant` while it is open after opening
 without its delay (Warm-up). The trigger gets none: when it is another
 component's part, its attributes are that component's, and a tooltip's state
@@ -105,7 +105,7 @@ pointer moving on, for a reason to be useful.
 | Field      | Type                                                  | Meaning                                                                       |
 | ---------- | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
 | isOpen     | `boolean`                                             | The current value.                                                            |
-| isEntering | `boolean`                                             | The first frame after opening, for enter animations.                          |
+| isEntering | `boolean`                                             | The first two frames after opening, for enter animations.                     |
 | isExiting  | `boolean`                                             | Closed, but still shown until its exit animations end.                        |
 | isInstant  | `boolean`                                             | Open after opening without its delay (Warm-up), so CSS can skip the entrance. |
 | placement  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
@@ -202,7 +202,7 @@ UI Kit:
 | open               | root    | + `data-open`, `data-placement`; positioning styles; `:popover-open`, in the top layer |
 | open               | arrow   | + `data-open`, `data-placement`                                                        |
 | open after warm-up | root    | + `data-instant`                                                                       |
-| first frame        | root    | + `data-entering`                                                                      |
+| first two frames   | root    | + `data-entering`                                                                      |
 | closing            | root    | − `data-open`, + `data-exiting`                                                        |
 | disabled (tooltip) | trigger | no relation                                                                            |
 
@@ -286,7 +286,7 @@ to these tokens, so it can change with state. UniAria sets no look.
 | `data-uni="tooltip"`                                                | root                               | The root part.                                                               |
 | `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor                    | Which part an element is: they sit outside the root.                         |
 | `data-element`                                                      | its other parts                    | Which part an element is.                                                    |
-| `data-open`, `data-entering`, `data-exiting`                        | root, arrow                        | Open; the first frame after opening; closing until its animations end.       |
+| `data-open`, `data-entering`, `data-exiting`                        | root, arrow                        | Open; the first two frames after opening; closing until its animations end.  |
 | `data-instant`                                                      | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
 | `data-placement`                                                    | root, arrow                        | The side it was placed on, after fallbacks.                                  |
 | `--anchor-width`                                                    | root                               | The anchor's width, in pixels.                                               |
