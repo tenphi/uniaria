@@ -1,7 +1,6 @@
 # Styles spec (`@uniaria/styles`)
 
-Status: approved by @tenphi on 2026-10-19. Delivery phases 1 to 3 done;
-phase 4 (screenshots) waits for the look's approval.
+Status: approved by @tenphi on 2026-10-19. Delivery phases 1 to 4 done.
 
 ## Summary
 
@@ -689,6 +688,9 @@ packages/styles/
     components/        one file per component (/<name>)
     testing/           the uniStylesCss browser command and test helpers
     *.test.ts          Testing
+    __references__/    the screenshots' references, Chromium on Linux
+  scripts/
+    screenshots.sh     remakes the references in Docker (`pnpm screenshots`)
 ```
 
 Exports: `.` (all style objects), `./<name>` (16), `./tasty`, `./palette`,
@@ -846,8 +848,17 @@ command, which runs in Node, so they need no build first.
   - at 200% text size and with WCAG 1.4.12 text spacing, no text clips;
   - at 320 CSS pixels wide, dialogs and popups fit without scrolling the
     page sideways.
-- **Screenshots** of each component in each scheme, later, once the look is
-  approved, Chromium on Linux only (Resolved questions 12).
+- **Screenshots** (browser, Chromium on Linux only, Resolved questions
+  12): `src/screenshots.browser.test.ts` renders a gallery for each
+  component, its resting states with keyboard focus on the first, or its
+  overlay open (Select and Combobox have both). Each gallery is shot in
+  the light, dark and both high-contrast schemes, and in forced colors,
+  and compared with its reference in `src/__references__/`. The text is
+  Liberation Sans, which Playwright installs with its Linux dependencies,
+  so CI's runner and Playwright's Docker image draw it alike; elsewhere
+  the test skips. `pnpm -C packages/styles screenshots` remakes every
+  reference in that image (`scripts/screenshots.sh`, Docker needed), and a
+  change to a look commits them with it.
 
 ## Documentation
 
@@ -887,6 +898,11 @@ Approved with the spec (owner, 2026-10-19):
   includes `packages/*`) or the TypeScript configs beyond the package's
   own `tsconfig.json`.
 
+With phase 4 (owner's go, 2026-10-20): the root `vitest.config.ts` keeps
+`toMatchScreenshot()` references in `__references__/`, since
+`.gitignore` ignores `__screenshots__/`, and `.gitignore` ignores
+`.vitest/`, where a failed screenshot's actual and diff images go.
+
 ## Delivery
 
 1. **Foundations:** the package, tokens and palette, the build, Button and
@@ -895,7 +911,7 @@ Approved with the spec (owner, 2026-10-19):
 3. **Customizing:** `buildCss()` options beyond the defaults (palette,
    overrides, component lists), `createPalette()` and `paletteCss()`, the
    plugin, the ESLint config, and the two docs pages.
-4. **Screenshots**, after the look is approved.
+4. **Screenshots**, after the look is approved (Testing).
 
 ## Resolved questions
 

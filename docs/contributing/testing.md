@@ -198,6 +198,24 @@ every push to `main` and every pull request.
 The spec's "Expected spoken output" section is where these checks come
 from.
 
+## Screenshots
+
+`packages/styles/src/screenshots.browser.test.ts` compares each component
+with the default styles, in every scheme and in forced colors, with
+reference images in `packages/styles/src/__references__/`. Text renders
+differently on every engine and OS, so the references are Chromium's on
+Linux, as CI runs it, and the test skips anywhere else. A change to how a
+component looks fails it in CI until the references change too. Remake
+them in Playwright's Docker image, then review the changed images and
+commit them with the change:
+
+```sh
+pnpm -C packages/styles screenshots
+```
+
+The script needs Docker. It copies the working tree into the image, with
+your uncommitted changes, and replaces every reference.
+
 ## Real screen readers
 
 `.github/workflows/screen-readers.yml` runs the scenarios that need a real

@@ -67,6 +67,11 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             screenshotFailures: false,
+            // References for `toMatchScreenshot()`, which are committed;
+            // `__screenshots__/` is ignored.
+            expect: {
+              toMatchScreenshot: { screenshotDirectory: '__references__' },
+            },
             // `stylesCommands` build `@uniaria/styles`' CSS in Node.
             commands: { ...uniCommands, ...stylesCommands },
             instances: [

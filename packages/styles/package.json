@@ -130,6 +130,7 @@
   ],
   "scripts": {
     "build": "tsdown",
+    "screenshots": "sh scripts/screenshots.sh",
     "typecheck": "tsc -p tsconfig.json"
   },
   "repository": {
