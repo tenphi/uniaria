@@ -98,13 +98,35 @@
       "types": "./dist/build.d.ts",
       "default": "./dist/build.js"
     },
+    "./palette": {
+      "uniaria-source": "./src/palette/index.ts",
+      "types": "./dist/palette.d.ts",
+      "default": "./dist/palette.js"
+    },
+    "./tasty": {
+      "uniaria-source": "./src/plugin.ts",
+      "types": "./dist/tasty.d.ts",
+      "default": "./dist/tasty.js"
+    },
+    "./tasty.config": {
+      "uniaria-source": "./tasty.config.ts",
+      "types": "./dist/tasty.config.d.ts",
+      "default": "./dist/tasty.config.js"
+    },
     "./css": "./dist/css/index.css",
     "./css/layered": "./dist/css/layered.css",
     "./css/*.css": "./dist/css/*.css",
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#default-palette": {
+      "uniaria-source": "./src/palette/default.ts",
+      "default": "./dist/default-palette.js"
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "tasty.config.js"
   ],
   "scripts": {
     "build": "tsdown",

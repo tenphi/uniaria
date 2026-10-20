@@ -27,7 +27,8 @@ import { describe, expect, test } from 'vitest';
 import { buildCss, componentsCss } from './build';
 import { COMPONENT_NAMES, COMPONENTS } from './components';
 import type { ComponentName } from './components';
-import { baseCss, createPalette, paletteCss } from './palette';
+import { createPalette, paletteCss } from './palette';
+import { baseCss } from './palette/css';
 import { STATES } from './tokens';
 
 const DEFINITIONS: Record<

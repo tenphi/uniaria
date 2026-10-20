@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { buildCss, componentsCss, excludeNestedRoots } from './build';
+import type { BuildCssOptions } from './build';
 import { COMPONENT_NAMES } from './components';
-import { stylesheets } from './generate';
-import { baseCss, createPalette, paletteCss } from './palette';
+import { defaultPaletteModule, stylesheets } from './generate';
+import { createPalette, paletteCss } from './palette';
+import { BASE_TOKENS, baseCss } from './palette/css';
 
 const files = stylesheets();
 const file = (name: string): string => {
@@ -59,6 +61,126 @@ describe('the prebuilt stylesheets', () => {
 
   test('palette: false leaves every color token out', () => {
     expect(buildCss({ palette: false, components: [] })).toBe(baseCss());
+  });
+});
+
+describe('buildCss options', () => {
+  const tokensCss = (options: BuildCssOptions) =>
+    buildCss({ components: [], ...options });
+  /** Every value a stylesheet gives a custom property, in order. */
+  const values = (css: string, property: string) =>
+    [...css.matchAll(new RegExp(`${property}: ([^;]+);`, 'g'))].map(
+      ([, value]) => value,
+    );
+  // `:root`, the OS's dark, forced light and dark, then their high
+  // contrast: the palette's eight scheme blocks.
+  const SCHEME_BLOCKS = 8;
+
+  test('a size token stays on `:root`', () => {
+    const css = tokensCss({ tokens: { '$uni-radius': '4px' } });
+    expect(values(css, '--uni-radius')).toEqual(['4px']);
+  });
+
+  test('a color token with one value goes into every scheme’s block', () => {
+    const css = tokensCss({ tokens: { '#uni-accent-outline': '#0a7' } });
+    expect(values(css, '--uni-accent-outline-color')).toEqual(
+      Array.from({ length: SCHEME_BLOCKS }, () => '#0a7'),
+    );
+  });
+
+  test('a token with a value per scheme goes into those schemes’ blocks', () => {
+    const palette = createPalette();
+    const css = tokensCss({
+      tokens: { '#uni-accent-outline': { light: 'red', darkContrast: 'blue' } },
+    });
+    expect(values(css, '--uni-accent-outline-color')).toEqual([
+      'red',
+      palette.dark['#uni-accent-outline'],
+      'red',
+      palette.dark['#uni-accent-outline'],
+      palette.lightContrast['#uni-accent-outline'],
+      palette.lightContrast['#uni-accent-outline'],
+      'blue',
+      'blue',
+    ]);
+  });
+
+  test('without a palette, a color token with one value goes on `:root`', () => {
+    expect(
+      tokensCss({ palette: false, tokens: { '#uni-surface': 'white' } }),
+    ).toBe(baseCss({ ...BASE_TOKENS, '#uni-surface': 'white' }));
+  });
+
+  test('a name that is no token throws', () => {
+    expect(() => tokensCss({ tokens: { 'uni-radius': '4px' } })).toThrow(
+      'Not a Tasty token',
+    );
+  });
+
+  test('extraThemes keeps only the status themes listed', () => {
+    const warning = tokensCss({ extraThemes: ['warning'] });
+    expect(warning).toContain('--uni-warning-surface-color:');
+    expect(warning).not.toContain('--uni-note-');
+    const none = tokensCss({ extraThemes: [] });
+    expect(none).not.toMatch(/--uni-(warning|note)-/);
+    expect(none).toContain('--uni-danger-surface-color:');
+  });
+
+  test('schemes leaves out the dark or the high-contrast blocks', () => {
+    const light = tokensCss({ schemes: { dark: false } });
+    expect(light).not.toContain('prefers-color-scheme');
+    expect(light).not.toContain('data-uni-scheme');
+    expect(values(light, '--uni-surface-color')).toHaveLength(2);
+    const normal = tokensCss({ schemes: { highContrast: false } });
+    expect(normal).not.toContain('prefers-contrast');
+    expect(values(normal, '--uni-surface-color')).toHaveLength(4);
+    expect(tokensCss({ schemes: { dark: false, highContrast: false } })).toBe(
+      [
+        baseCss(),
+        paletteCss(createPalette(), { dark: false, highContrast: false }),
+      ].join('\n'),
+    );
+  });
+
+  test('overrides merge into a component and a part outside its root', () => {
+    const options: BuildCssOptions = {
+      palette: false,
+      components: ['checkbox', 'popover'],
+    };
+    const css = buildCss({
+      ...options,
+      overrides: {
+        checkbox: { Indicator: { radius: '2r' } },
+        'popover-trigger': { fill: { hovered: '#uni-note-fill' } },
+      },
+    });
+    expect(buildCss(options)).not.toContain('calc(2 * var(--uni-radius))');
+    expect(css).toMatch(
+      /\[data-uni="checkbox"\] \[data-element="Indicator"\][^{]* \{[^}]*border-radius: calc\(2 \* var\(--uni-radius\)\)/,
+    );
+    expect(css).toMatch(
+      /\[data-uni-part="popover-trigger"\]:where\(\[data-hovered\][^{]*\{ background-color: var\(--uni-note-fill-color\)/,
+    );
+  });
+
+  test('replaceTokens compiles a token to another', () => {
+    const css = buildCss({
+      palette: false,
+      components: ['checkbox'],
+      replaceTokens: { '#uni-accent-fill': '#brand-600' },
+    });
+    expect(css).toContain('var(--brand-600-color)');
+    expect(css).not.toContain('var(--uni-accent-fill-color)');
+  });
+});
+
+describe('the default palette’s data', () => {
+  test('is the default palette', async () => {
+    const url = `data:text/javascript,${encodeURIComponent(defaultPaletteModule())}`;
+    const { DEFAULT_PALETTE } = (await import(/* @vite-ignore */ url)) as {
+      DEFAULT_PALETTE: unknown;
+    };
+    expect(DEFAULT_PALETTE).toStrictEqual(createPalette());
   });
 });
 

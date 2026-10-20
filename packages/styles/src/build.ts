@@ -13,21 +13,59 @@ import {
 import type { Styles } from '@tenphi/tasty';
 
 import { COMPONENT_NAMES, COMPONENTS } from './components';
-import type { ComponentName, ComponentStyles } from './components';
-import { baseCss, createPalette, paletteCss } from './palette';
-import type { Palette } from './palette';
+import type {
+  ComponentName,
+  ComponentStyles,
+  StylesTarget,
+} from './components';
+import { mergeStyles } from './merge';
+import { createPalette } from './palette/create';
+import type { Palette } from './palette/create';
+import { baseCss, paletteCss } from './palette/css';
+import type { SchemeOptions } from './palette/css';
+import { tokenSheet } from './palette/sheet';
+import type { ExtraTheme, TokenValues } from './palette/sheet';
 import { STATES, UNITS } from './tokens';
 
-export type { ComponentName } from './components';
+export type { ComponentName, StylesTarget } from './components';
+export type { Palette } from './palette/create';
+export type { SchemeOptions } from './palette/css';
+export type { ExtraTheme, TokenValue, TokenValues } from './palette/sheet';
 
-export interface BuildCssOptions {
+/** Tokens Tasty replaces as it compiles: `'#uni-accent-fill': '#brand-600'`. */
+export type ReplaceTokens = Readonly<
+  Record<`$${string}` | `#${string}`, string>
+>;
+
+export interface ComponentsCssOptions {
+  /**
+   * Styles merged into a component's, by its name, or into a part outside
+   * its root, by the part's marker (`'popover-trigger'`), with Tasty's
+   * merge rules.
+   */
+  readonly overrides?: Readonly<Partial<Record<StylesTarget, Styles>>>;
+  /** Tokens to compile to other values, as Tasty's `replaceTokens`. */
+  readonly replaceTokens?: ReplaceTokens;
+}
+
+export interface BuildCssOptions extends ComponentsCssOptions {
   /**
    * The colors: a palette, or `false` to leave them out and set the
    * `--uni-*-color` properties yourself. Default: the package's palette.
    */
   readonly palette?: Palette | false;
+  /**
+   * Tokens over the sizes and the palette, as CSS: one value for every
+   * scheme, or one per scheme (`light`, `dark`, `lightContrast`,
+   * `darkContrast`).
+   */
+  readonly tokens?: TokenValues;
   /** The components to style. Default: all; `[]` writes the tokens only. */
   readonly components?: readonly ComponentName[];
+  /** The status themes no component uses to keep. Default: both. */
+  readonly extraThemes?: readonly ExtraTheme[];
+  /** The schemes besides light. Default: dark and high contrast. */
+  readonly schemes?: SchemeOptions;
   /** A cascade layer to put the whole stylesheet in. Default: none. */
   readonly layer?: string;
 }
@@ -37,11 +75,17 @@ export interface BuildCssOptions {
  * components.
  */
 export function buildCss(options: BuildCssOptions = {}): string {
-  const { palette, components = COMPONENT_NAMES, layer } = options;
+  const { components = COMPONENT_NAMES, layer } = options;
+  const sheet = tokenSheet({
+    palette:
+      options.palette === false ? false : (options.palette ?? createPalette()),
+    tokens: options.tokens,
+    extraThemes: options.extraThemes,
+  });
   const css = [
-    baseCss(),
-    palette === false ? '' : paletteCss(palette ?? createPalette()),
-    components.length > 0 ? componentsCss(components) : '',
+    baseCss(sheet.base),
+    sheet.palette ? paletteCss(sheet.palette, options.schemes) : '',
+    components.length > 0 ? componentsCss(components, options) : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -49,25 +93,42 @@ export function buildCss(options: BuildCssOptions = {}): string {
 }
 
 /** The components' rules alone, as each `<name>.css` holds them. */
-export function componentsCss(names: readonly ComponentName[]): string {
+export function componentsCss(
+  names: readonly ComponentName[],
+  options: ComponentsCssOptions = {},
+): string {
   configure({
     units: { ...UNITS },
     states: { ...STATES },
+    replaceTokens: { ...options.replaceTokens },
   });
   try {
-    return names.map(componentCss).join('\n');
+    return names
+      .map((name) => componentCss(name, options.overrides ?? {}))
+      .join('\n');
   } finally {
     resetConfig();
   }
 }
 
-function componentCss(name: ComponentName): string {
+function componentCss(
+  name: ComponentName,
+  overrides: Readonly<Partial<Record<string, Styles>>>,
+): string {
   const component: ComponentStyles = COMPONENTS[name];
+  const merged = (styles: Styles, target: string) => {
+    const override = overrides[target];
+    return override ? mergeStyles(styles, override) : styles;
+  };
   const rules = [
-    excludeNestedRoots(extract(`[data-uni="${name}"]`, component.styles), name),
+    excludeNestedRoots(
+      extract(`[data-uni="${name}"]`, merged(component.styles, name)),
+      name,
+    ),
   ];
   for (const [part, styles] of Object.entries(component.outside ?? {})) {
-    rules.push(extract(`[data-uni-part="${name}-${part}"]`, styles));
+    const marker = `${name}-${part}`;
+    rules.push(extract(`[data-uni-part="${marker}"]`, merged(styles, marker)));
   }
   return `/* ${name} */\n${rules.join('\n')}`;
 }

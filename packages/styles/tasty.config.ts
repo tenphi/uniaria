@@ -1,8 +1,10 @@
 /**
  * What the Tasty ESLint rules accept in this package's style source: the
  * `uni-` tokens, the units the build points at them, the state aliases,
- * and no presets or recipes (spec: Source of truth). Consumers will extend
- * it for their own overrides (spec: Outputs → Tasty style objects).
+ * and no presets or recipes (spec: Source of truth). Published as
+ * `@uniaria/styles/tasty.config`, and through `tasty.config.js` for a
+ * project's `extends: '@uniaria/styles'` (spec: Outputs → Tasty style
+ * objects).
  */
 
 import type { TastyValidationConfig } from '@tenphi/eslint-plugin-tasty';

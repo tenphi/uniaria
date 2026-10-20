@@ -2,10 +2,24 @@ import { SIZES, SYSTEM_COLORS, tokenProperty } from '../tokens';
 import type { Palette } from './create';
 import type { Scheme } from './themes';
 
-const LIGHT = '[data-uni-scheme="light"]';
-const DARK = '[data-uni-scheme="dark"]';
+export const LIGHT = '[data-uni-scheme="light"]';
+export const DARK = '[data-uni-scheme="dark"]';
 // The page follows the OS unless `<html>` forces light.
-const PAGE_DARK = `:root:not(${LIGHT})`;
+export const PAGE_DARK = `:root:not(${LIGHT})`;
+
+/** The schemes a stylesheet has besides light. Default: both. */
+export interface SchemeOptions {
+  /** Dark: the OS's, or forced with `data-uni-scheme="dark"`. */
+  readonly dark?: boolean;
+  /** High contrast, under `prefers-contrast: more`. */
+  readonly highContrast?: boolean;
+}
+
+/** The tokens on `:root` in every scheme: the sizes and the system colors. */
+export const BASE_TOKENS: Readonly<Record<string, string>> = {
+  ...SIZES,
+  ...SYSTEM_COLORS,
+};
 
 function block(
   selector: string,
@@ -30,35 +44,58 @@ function media(query: string, blocks: readonly string[]): string {
 }
 
 /** The size and motion tokens and the system colors, on `:root`. */
-export function baseCss(): string {
-  return block(':root', { ...SIZES, ...SYSTEM_COLORS });
+export function baseCss(
+  tokens: Readonly<Record<string, string>> = BASE_TOKENS,
+): string {
+  return block(':root', tokens);
 }
 
 /**
  * A palette's colors, one flat block per scheme selector (spec: Tokens →
  * Schemes): the OS's scheme by default, `data-uni-scheme` on `<html>` or
  * any element to force one, and the high-contrast colors under
- * `prefers-contrast: more`. Each block brings its `color-scheme`.
+ * `prefers-contrast: more`. Each block brings its `color-scheme`. Without
+ * the dark or the high-contrast scheme, their blocks are left out.
  */
-export function paletteCss(palette: Palette): string {
+export function paletteCss(
+  palette: Palette,
+  schemes: SchemeOptions = {},
+): string {
+  const { dark = true, highContrast = true } = schemes;
   const scheme = (selector: string, name: Scheme) =>
     block(
       selector,
       palette[name],
       name === 'dark' || name === 'darkContrast' ? 'dark' : 'light',
     );
-  return [
-    scheme(':root', 'light'),
-    media('(prefers-color-scheme: dark)', [scheme(PAGE_DARK, 'dark')]),
-    scheme(LIGHT, 'light'),
-    scheme(DARK, 'dark'),
-    media('(prefers-contrast: more)', [
-      scheme(':root', 'lightContrast'),
-      scheme(LIGHT, 'lightContrast'),
-      scheme(DARK, 'darkContrast'),
-    ]),
-    media('(prefers-contrast: more) and (prefers-color-scheme: dark)', [
-      scheme(PAGE_DARK, 'darkContrast'),
-    ]),
-  ].join('\n');
+  const blocks = [scheme(':root', 'light')];
+  if (dark) {
+    blocks.push(
+      media('(prefers-color-scheme: dark)', [scheme(PAGE_DARK, 'dark')]),
+      scheme(LIGHT, 'light'),
+      scheme(DARK, 'dark'),
+    );
+  }
+  if (highContrast) {
+    blocks.push(
+      media(
+        '(prefers-contrast: more)',
+        dark
+          ? [
+              scheme(':root', 'lightContrast'),
+              scheme(LIGHT, 'lightContrast'),
+              scheme(DARK, 'darkContrast'),
+            ]
+          : [scheme(':root', 'lightContrast')],
+      ),
+    );
+  }
+  if (dark && highContrast) {
+    blocks.push(
+      media('(prefers-contrast: more) and (prefers-color-scheme: dark)', [
+        scheme(PAGE_DARK, 'darkContrast'),
+      ]),
+    );
+  }
+  return blocks.join('\n');
 }

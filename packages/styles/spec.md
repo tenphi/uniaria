@@ -1,6 +1,6 @@
 # Styles spec (`@uniaria/styles`)
 
-Status: approved by @tenphi on 2026-10-19. Delivery phase 1 in progress.
+Status: approved by @tenphi on 2026-10-19. Delivery phase 3 in progress.
 
 ## Summary
 
@@ -86,12 +86,19 @@ writeFileSync(
       default: { hue: 262, saturation: 8 },
       accent: { hue: 262 },
     }),
-    // Any token, after the palette.
-    tokens: { '$uni-radius': '4px', '#uni-accent-outline': '#0a7' },
+    // Any token, over the palette: one value, or one per scheme.
+    tokens: {
+      '$uni-radius': '4px',
+      '#uni-accent-outline': { light: '#0a7', dark: '#3c9' },
+    },
     // Default: all 16.
     components: ['checkbox', 'select'],
-    // Merged into the source with Tasty's mergeStyles().
-    overrides: { checkbox: { Indicator: { radius: '0.5r' } } },
+    // Merged into the source with Tasty's merge rules, by component or by
+    // the marker of a part outside its root.
+    overrides: {
+      checkbox: { Indicator: { radius: '0.5r' } },
+      'popover-trigger': { fill: '#uni-accent-fill' },
+    },
     // Themes no component uses, written for your own; default: both.
     extraThemes: ['warning'],
     schemes: { dark: true, highContrast: true },
@@ -109,7 +116,18 @@ writeFileSync(
   needs no React (Tasty 3.10).
 - `overrides` take Tasty syntax and Tasty's merge rules: a state map with
   no `''` key extends the default's, one with `''` replaces it, `null`
-  removes a property or a sub-element.
+  removes a property or a sub-element. Tasty exports `mergeStyles()` only
+  from entries that load React, so the package keeps a port of it (Tasty
+  gaps 17).
+- `tokens` take CSS values. A size or a system color with one value goes
+  on `:root`; a color with one value goes into every scheme's block, since
+  a forced scheme would otherwise keep the palette's; a value per scheme
+  (`light`, `dark`, `lightContrast`, `darkContrast`) goes into those
+  schemes' blocks. With `palette: false`, a color with one value goes on
+  `:root`.
+- `replaceTokens` is Tasty's: a token compiles to another
+  (`'#uni-accent-fill': '#brand-600'`), for a palette of your own
+  (Tokens).
 
 ### 3. Tasty style objects
 
@@ -141,8 +159,12 @@ const CompactCheckbox = tasty(CheckboxRoot, {
 - The plugin brings only what the objects need: the token blocks for
   every scheme, as global styles, and the state aliases
   (`@uni-reduced-motion` and the like). It sets no units.
-- `@uniaria/styles/tasty.config` is a Tasty ESLint config for `extends`,
-  listing the same tokens and aliases.
+- `@uniaria/styles/tasty.config` is a Tasty ESLint config listing the
+  same tokens and aliases. The ESLint plugin reads an `extends` package's
+  config from that package's root, so a project writes
+  `extends: '@uniaria/styles'`, which finds the published
+  `tasty.config.js`; a subpath such as `@uniaria/styles/tasty.config`
+  would be ignored.
 - Types come from `@tenphi/tasty` (`Styles`), a type-only import.
 
 ## Configuration at run time
@@ -179,9 +201,18 @@ configure({
   So `data-uni-scheme` works in Tasty's runtime as with the prebuilt CSS.
   The plugin declares no Tasty `tokens`: those render on `:root` only, so
   a scheme forced on an element inside the page would never reach them.
+  A scheme's high-contrast colors are a `@media` state of its selector,
+  and the OS's dark scheme a state of the page's. The system colors are
+  held in `color-mix(in srgb, Canvas, Canvas)`, since Tasty takes no
+  system color in a color token (Tasty gaps 18).
+- **The default palette is data.** The plugin takes it from
+  `#default-palette` (package.json `imports`): in the source, a module that
+  runs Glaze; in the package, `dist/default-palette.js`, which the build
+  writes. So the plugin needs no Glaze unless you call `createPalette()`.
 - **Your values go through the plugin's options:** `palette` replaces the
-  palette (`false` leaves it out, Glaze is opt-out), `tokens` single tokens, with a value for every scheme or one per
-  scheme (`light`, `dark`, `lightContrast`, `darkContrast`). A token in
+  palette (`false` leaves it out, Glaze is opt-out), `tokens` single
+  tokens, in Tasty's syntax, laid out as `buildCss()` lays them out (Outputs
+  → Customized CSS). A token in
   `configure({ tokens })` would render on `:root` only and lose to the
   plugin's dark and `data-uni-scheme` blocks.
 - **Next to other plugins:** Tasty applies plugins in order, and options
@@ -640,16 +671,19 @@ What the styles cover beyond each component's resting look:
 packages/styles/
   package.json         @uniaria/styles, private until release
   tsdown.config.ts     JS entries; generates the CSS after the build
-  tasty.config.ts      the ESLint config consumers extend
+  tasty.config.ts      the ESLint config (/tasty.config)
+  tasty.config.js      published: the built config, where `extends` finds it
   spec.md
   src/
     palette/           createPalette() and paletteCss() (/palette); the
-                       default palette, generated as data at build time
+                       token sheet both outputs lay out; the default
+                       palette (#default-palette), data in a build
     tokens.ts          sizes, system colors, units and state aliases
     plugin.ts          uniaria(): the Tasty plugin (/tasty)
     build.ts           buildCss() (/build, Node only)
-    generate.ts        writes dist/css/*.css with buildCss() defaults; an
-                       internal entry, not exported
+    merge.ts           Tasty's mergeStyles(), ported (Tasty gaps 17)
+    generate.ts        writes dist/css/*.css with buildCss() defaults and
+                       dist/default-palette.js; an internal entry
     shared/            fragments: field text, input box, option, popup, focus, marks
     components/        one file per component (/<name>)
     testing/           the uniStylesCss browser command and test helpers
@@ -660,7 +694,10 @@ Exports: `.` (all style objects), `./<name>` (16), `./tasty`, `./palette`,
 `./build`,
 `./tasty.config`, `./css` (`dist/css/index.css`), `./css/layered`
 (`dist/css/layered.css`) and `./css/*.css`.
-`sideEffects` lists the CSS files only.
+`sideEffects` lists the CSS files only. `imports` maps
+`#default-palette` to `src/palette/default.ts` under the `uniaria-source`
+condition and to `dist/default-palette.js` otherwise; the build leaves it
+external.
 
 Dependencies: none at run time. `@tenphi/tasty` (Output 2 and 3) and
 `@tenphi/glaze` (`createPalette()`) are optional peers and development
@@ -686,7 +723,8 @@ component tests through both adapters.
    part rule (Selectors). The hook writes `dist/css/`, with
    `layered.css` as `index.css` inside `@layer uniaria`. `tokens.css`
    starts with a base block of the sizes and the system colors, which
-   `index.css` carries too; `components.css` reads them.
+   `index.css` carries too; `components.css` reads them. It also writes
+   `dist/default-palette.js`, the default palette as data, for the plugin.
 3. The output is deterministic, so a snapshot test catches any change a
    Tasty upgrade makes.
 
@@ -759,6 +797,15 @@ need a change in Tasty are filed (owner, 2026-10-20).
     `false` elsewhere writes nothing
     ([tenphi/tasty#413](https://github.com/tenphi/tasty/issues/413)).
     Workaround: a map that applies under one state leaves its default out.
+17. **`mergeStyles()` comes only from entries that load React**
+    ([tenphi/tasty#414](https://github.com/tenphi/tasty/issues/414)), so
+    `buildCss({ overrides })` can't take it from `/zero`. Workaround: a port
+    in `src/merge.ts`, which a test compares with the original.
+18. **A color token can't hold a system color**: Tasty warns
+    `unable to parse color` and writes nothing
+    ([tenphi/tasty#410](https://github.com/tenphi/tasty/issues/410)).
+    Workaround: the plugin writes the `#uni-system-*` tokens as
+    `color-mix(in srgb, Canvas, Canvas)`; `tokens.css` writes the keywords.
 
 ## Testing
 
@@ -771,6 +818,14 @@ command, which runs in Node, so they need no build first.
   component's definition in `@uniaria/core` or a documented own element
   (`Thumb`), every state is one UniAria writes, and the built CSS has none
   of the excluded syntax (Web platform baseline).
+- **Customizing** (node): each `buildCss()` option, the token layout by
+  scheme, the default palette's data against `createPalette()`, and the
+  merge port against Tasty's `mergeStyles()` on every component.
+- **The plugin** (node and browser): its global styles render with Tasty,
+  every token included; in Tasty's runtime with React and no prebuilt
+  CSS, the page and forced schemes resolve to the palette's colors under
+  each OS scheme and contrast, and a component styles itself from its
+  object.
 - **Contrast** (browser, all three engines): renders every role's pairs
   in every theme and scheme, reads the resolved colors, and checks the
   contrast column in Tokens. WCAG 2 contrast is a small in-house function.

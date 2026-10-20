@@ -52,4 +52,16 @@ export const COMPONENTS = {
 
 export type ComponentName = keyof typeof COMPONENTS;
 
+/** A part outside its root, by its marker: `'popover-trigger'`. */
+export type OutsidePart = {
+  [Name in ComponentName]: (typeof COMPONENTS)[Name] extends {
+    readonly outside: infer Parts;
+  }
+    ? `${Name}-${Extract<keyof Parts, string>}`
+    : never;
+}[ComponentName];
+
+/** What a style override applies to: a component, or a part outside it. */
+export type StylesTarget = ComponentName | OutsidePart;
+
 export const COMPONENT_NAMES = Object.keys(COMPONENTS) as ComponentName[];

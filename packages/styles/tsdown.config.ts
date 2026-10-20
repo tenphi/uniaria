@@ -24,6 +24,9 @@ export default defineConfig({
     popover: 'src/components/popover.ts',
     tooltip: 'src/components/tooltip.ts',
     build: 'src/build.ts',
+    palette: 'src/palette/index.ts',
+    tasty: 'src/plugin.ts',
+    'tasty.config': 'tasty.config.ts',
     // Internal: the hook below runs it.
     generate: 'src/generate.ts',
   },
@@ -33,10 +36,12 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  // `build` and `generate` run in Node.
-  deps: { neverBundle: [/^node:/] },
+  // `build` and `generate` run in Node. The plugin's default palette is
+  // the data the hook writes, not the source, which runs Glaze.
+  deps: { neverBundle: [/^node:/, '#default-palette'] },
   hooks: {
-    // The prebuilt CSS, from the same source (spec: Build). Built first:
+    // The prebuilt CSS and the default palette's data, from the same
+    // source (spec: Build). Built first:
     // Node loads this config, and can't import the sources' extensionless
     // paths.
     async 'build:done'() {
@@ -45,7 +50,7 @@ export default defineConfig({
       const { generate } = (await import(entry)) as {
         generate: typeof Generate;
       };
-      generate('dist/css');
+      generate('dist');
     },
   },
 });

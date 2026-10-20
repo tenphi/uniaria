@@ -32,5 +32,12 @@ Read the root [AGENTS.md](../../AGENTS.md) first, then this package's
   a deliberate change, update them with
   `pnpm vitest run --project node packages/styles -u` and read the diff.
 - The build's `build:done` hook imports the built `dist/generate.js`, so
-  `generate` stays a tsdown entry, though not an export.
+  `generate` stays a tsdown entry, though not an export. It also writes
+  `dist/default-palette.js`: the plugin takes the default palette from
+  `#default-palette`, never from `./palette/create`, so it loads no Glaze.
+- `src/merge.ts` ports Tasty's `mergeStyles()` (spec: Tasty gaps 17);
+  `merge.test.ts` compares it with the original, so a Tasty upgrade that
+  changes the merge rules fails there. Keep Tasty and its ESLint plugin on
+  their latest versions, and file what they get wrong in their repos with
+  a reproduction (spec: Tasty gaps).
 - Never commit probe files; delete them before committing.
