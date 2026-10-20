@@ -33,6 +33,23 @@
         <p data-element="Description">In euros, formatted for German.</p>
       </div>
     </uni-number-field>
+
+    <uni-number-field
+      id="deposit"
+      locale="de-DE"
+      min-value="0"
+      default-value="50"
+    >
+      <div data-uni="number-field">
+        <label data-element="Label">Deposit</label>
+        <div data-element="Wrapper">
+          <input data-element="Input" />
+          <span aria-hidden="true">€</span>
+        </div>
+        <input type="hidden" data-element="HiddenInput" name="deposit" />
+        <p data-element="Description">In euros, the sign as a suffix.</p>
+      </div>
+    </uni-number-field>
   </div>
 
   <uni-button type="submit">

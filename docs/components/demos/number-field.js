@@ -6,6 +6,11 @@ document.getElementById('price').formatOptions = {
   style: 'currency',
   currency: 'EUR',
 };
+// The sign is markup beside the input, so the format has none.
+document.getElementById('deposit').formatOptions = {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
 
 form.addEventListener('valuechange', (event) => {
   log.textContent = `valuechange on ${event.target.id}: ${event.detail}`;

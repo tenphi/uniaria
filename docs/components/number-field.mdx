@@ -192,6 +192,68 @@ const price = useComponent(numberField, {
 - A new locale or format formats the text again. The text stays formatted
   while focused: there is no separate editing format.
 
+### A unit as a suffix
+
+A format puts the currency sign, `%` or unit word in the text, where the
+locale places it, so screen readers read it and typing or pasting it works.
+When the unit should stay in place while you type, or look apart from the
+number, put it beside the input instead, as the Deposit field above does:
+
+<Tabs label="A unit as a suffix">
+<Tab label="React">
+
+```tsx
+const deposit = useComponent(numberField, {
+  formatOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+  minValue: 0,
+});
+return (
+  <div {...deposit.parts.root}>
+    <label {...deposit.parts.label}>Deposit</label>
+    <div {...deposit.parts.wrapper}>
+      <input {...deposit.parts.input} />
+      <span aria-hidden="true">€</span>
+    </div>
+    <p {...deposit.parts.description}>In euros</p>
+  </div>
+);
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-number-field id="deposit" min-value="0">
+  <div data-uni="number-field">
+    <label data-element="Label">Deposit</label>
+    <div data-element="Wrapper">
+      <input data-element="Input" />
+      <span aria-hidden="true">€</span>
+    </div>
+    <p data-element="Description">In euros</p>
+  </div>
+</uni-number-field>
+
+<script type="module">
+  document.querySelector('#deposit').formatOptions = {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  };
+</script>
+```
+
+</Tab>
+</Tabs>
+
+- **Name the unit where it is read.** The suffix is `aria-hidden`, so put
+  the unit in the label or, as here, the description.
+- **The format has no sign,** so the input takes digits and separators
+  only: a typed `€` is refused, as any text that isn't a number.
+- **The place is yours,** not the locale's: a suffix stays a suffix where
+  the locale writes the sign first.
+- With [the default styles](#default-styles), the suffix sits inside the
+  box, 4 pixels from the input; the same goes for a prefix.
+
 ### Controlled value
 
 <Tabs label="Controlled value">
