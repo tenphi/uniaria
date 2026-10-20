@@ -10,9 +10,11 @@ import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
 import { field } from '@uniaria/core/field';
+import { numberField } from '@uniaria/core/number-field';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
 import { toggleSwitch } from '@uniaria/core/switch';
+import { textField } from '@uniaria/core/text-field';
 import { toggleButton } from '@uniaria/core/toggle-button';
 import { describe, expect, test } from 'vitest';
 
@@ -34,6 +36,8 @@ const DEFINITIONS: Record<
   'checkbox-group': checkboxGroup,
   'radio-group': radioGroup,
   field,
+  'text-field': textField,
+  'number-field': numberField,
 };
 
 /** Elements of the consumer's own that the styles expect, by component. */

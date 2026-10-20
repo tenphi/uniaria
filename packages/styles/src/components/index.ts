@@ -10,9 +10,11 @@ import { buttonStyles } from './button';
 import { checkboxStyles } from './checkbox';
 import { checkboxGroupStyles } from './checkbox-group';
 import { fieldStyles } from './field';
+import { numberFieldStyles } from './number-field';
 import { radioStyles } from './radio';
 import { radioGroupStyles } from './radio-group';
 import { switchStyles } from './switch';
+import { textFieldStyles } from './text-field';
 import { toggleButtonStyles } from './toggle-button';
 
 export interface ComponentStyles {
@@ -29,6 +31,8 @@ export const COMPONENTS = {
   'checkbox-group': { styles: checkboxGroupStyles },
   'radio-group': { styles: radioGroupStyles },
   field: { styles: fieldStyles },
+  'text-field': { styles: textFieldStyles },
+  'number-field': { styles: numberFieldStyles },
 } as const satisfies Record<string, ComponentStyles>;
 
 export type ComponentName = keyof typeof COMPONENTS;

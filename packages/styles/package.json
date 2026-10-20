@@ -53,6 +53,16 @@
       "types": "./dist/field.d.ts",
       "default": "./dist/field.js"
     },
+    "./text-field": {
+      "uniaria-source": "./src/components/text-field.ts",
+      "types": "./dist/text-field.d.ts",
+      "default": "./dist/text-field.js"
+    },
+    "./number-field": {
+      "uniaria-source": "./src/components/number-field.ts",
+      "types": "./dist/number-field.d.ts",
+      "default": "./dist/number-field.js"
+    },
     "./build": {
       "uniaria-source": "./src/build.ts",
       "types": "./dist/build.d.ts",

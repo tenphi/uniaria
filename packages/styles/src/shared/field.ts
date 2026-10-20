@@ -1,5 +1,7 @@
 import type { Styles } from '@tenphi/tasty';
 
+import { inputBoxStyles, inputTextStyles } from './input';
+
 /**
  * A field's label, as Field and the groups show it: UI Kit's 14/20 at
  * weight 500. A checkbox's or a radio's own label is the row's text.
@@ -58,54 +60,47 @@ export const fieldErrorStyles = {
 } satisfies Styles;
 
 /**
- * Field's control as a box you type in: UI Kit's input, a control-height
- * box with one line of text and 7 pixels inside its border. Only a native
- * text control takes it, so a group of radios as the control keeps its
- * own look. Its focus ring is the control's own `:focus-visible`, which a
- * text control matches on any focus; while invalid it is the danger
- * theme's.
+ * A field's column, as UI Kit's: the label 8 pixels over what it names,
+ * the description and error 4 pixels under it. Field, TextField and
+ * NumberField share it.
+ */
+export const fieldStackStyles = {
+  display: 'grid',
+  // As UI Kit's: the column narrows with the field, below its content's width.
+  gridColumns: 'minmax(0, 1fr)',
+  gap: '.5x',
+
+  Label: {
+    // eslint-disable-next-line tasty/no-style-spread -- the shared field text
+    ...fieldLabelStyles,
+    blockMargin: '0 .5x',
+  },
+  Description: {
+    // eslint-disable-next-line tasty/no-style-spread -- the shared field text
+    ...fieldDescriptionStyles,
+  },
+  Error: {
+    // eslint-disable-next-line tasty/no-style-spread -- the shared field text
+    ...fieldErrorStyles,
+  },
+} satisfies Styles;
+
+/**
+ * Field's control as the input box (`./input.ts`), with 7 pixels inside
+ * its border. Only a native text control takes it, so a group of radios as
+ * the control keeps its own look.
  */
 export const textControlStyles = {
   Control: {
     // eslint-disable-next-line tasty/no-nested-selector -- the control is any element, and only a native text control is a box; a sub-element can't say which it is
     '&:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select)':
       {
-        boxSizing: 'border-box',
-        blockSize: 'min max(24px, $uni-control-height)',
-        margin: 0,
+        // eslint-disable-next-line tasty/no-style-spread -- the shared input box
+        ...inputBoxStyles,
+        // eslint-disable-next-line tasty/no-style-spread -- the shared input text
+        ...inputTextStyles,
         padding:
           '(($uni-control-height - $uni-line-height) / 2 - 1bw) (1x - 1bw)',
-        radius: '1r',
-        fill: {
-          '': '#uni-surface',
-          'disabled | @own(@uni-disabled)': '#uni-disabled-surface',
-        },
-        border: {
-          '': '1bw #uni-border',
-          invalid: '1bw #uni-danger-border',
-          'disabled | @own(@uni-disabled)': '1bw #uni-disabled-border',
-        },
-        color: {
-          '': '#uni-text',
-          'disabled | @own(@uni-disabled)': '#uni-disabled-text',
-        },
-        outline: {
-          '': '0 #clear / 1bw',
-          '@own(@uni-focus-visible)': '1ow #uni-accent-outline / 1bw',
-          '@own(@uni-focus-visible) & invalid': '1ow #uni-danger-outline / 1bw',
-          '@own(@uni-focus-visible) & @uni-forced-colors':
-            '1ow #uni-system-highlight / 1bw',
-        },
-        // No presets: the type follows the page, sizes come from the uni tokens.
-        fontFamily: 'inherit',
-        fontSize: '$uni-font-size',
-        lineHeight: '$uni-line-height',
-        transition: {
-          '': 'border $uni-transition',
-          '@uni-reduced-motion': false,
-        },
-
-        '&::placeholder': { color: '#uni-text-soft' },
       },
   },
 } satisfies Styles;

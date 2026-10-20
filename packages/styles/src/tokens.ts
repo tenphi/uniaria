@@ -59,14 +59,16 @@ export const UNITS = {
  * before the element upgrades (spec: Resolved questions 15):
  * `@uni-disabled` where the root is the native control (Button),
  * `@uni-selected` and `@uni-input-disabled` where an `Input` part inside
- * the root is (Checkbox), and `@uni-focus-visible` on a part UniAria
- * writes no focus state on (Field's control, inside `@own()`).
+ * the root is (Checkbox), and `@uni-focused` on an input box, inside
+ * `@own()`: any focus within it, as a text control shows focus, whether
+ * UniAria writes `data-focused` on it (TextField's wrapper) or not (Field's
+ * control).
  */
 export const STATES = {
   '@uni-disabled': 'disabled | :disabled',
   '@uni-selected': 'selected | :has(Input:checked)',
   '@uni-input-disabled': 'disabled | :has(Input:disabled)',
-  '@uni-focus-visible': 'focus-visible | :focus-visible',
+  '@uni-focused': 'focused | :focus-within',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;

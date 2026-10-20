@@ -15,6 +15,8 @@ export default defineConfig({
     'checkbox-group': 'src/components/checkbox-group.ts',
     'radio-group': 'src/components/radio-group.ts',
     field: 'src/components/field.ts',
+    'text-field': 'src/components/text-field.ts',
+    'number-field': 'src/components/number-field.ts',
     build: 'src/build.ts',
     // Internal: the hook below runs it.
     generate: 'src/generate.ts',

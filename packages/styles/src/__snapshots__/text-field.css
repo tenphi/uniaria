@@ -1,0 +1,84 @@
+/* text-field */
+[data-uni="text-field"] [data-element="Label"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; margin-block: 0 calc(0.5 * var(--uni-gap)); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+[data-uni="text-field"] [data-element="Description"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="text-field"] [data-element="Error"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"] [data-element="Error"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
+}
+
+[data-uni="text-field"] [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; border-radius: var(--uni-radius); display: flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; padding: 0 calc(var(--uni-gap) - var(--uni-border-width)); }
+
+[data-uni="text-field"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:not(:disabled, [data-disabled])) { background-color: var(--uni-surface-color); color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+
+[data-uni="text-field"]:where(:not([data-disabled]):not([data-invalid]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:not(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+[data-uni="text-field"] [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:not(:focus-within, [data-focused])) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="text-field"] [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="text-field"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { cursor: text; }
+
+[data-uni="text-field"] [data-element="Input"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *))::placeholder { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+
+[data-uni="text-field"] [data-element="Input"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; flex-grow: 1; inline-size: auto; min-inline-size: 0px; max-inline-size: initial; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2 - var(--uni-border-width)) 0; border: 0 solid transparent; border-radius: 0px; background-color: transparent; color: inherit; --current-color: inherit; outline: 0 solid transparent; resize: vertical; }
+
+[data-uni="text-field"] { display: grid; gap: calc(0.5 * var(--uni-gap)); grid-template-columns: minmax(0, 1fr); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="text-field"] [data-element="Error"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+[data-uni="text-field"]:where(:is(:not([data-disabled]):has([data-element="Input"]:disabled), [data-disabled])) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)), [data-uni="text-field"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:is(:disabled, [data-disabled])) { background-color: var(--uni-disabled-surface-color); color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="text-field"]:where([data-invalid]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:not(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where(:not([data-invalid])) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="text-field"]:where(:is(:has([data-element="Input"]:disabled), [data-disabled])) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { cursor: default; }
+
+@media (forced-colors: active) {
+  [data-uni="text-field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="text-field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="text-field"]:where([data-invalid]) [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="text-field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="text-field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="text-field"] [data-element="Wrapper"]:where(:not([data-uni="text-field"] [data-uni]:not([data-uni="text-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+}

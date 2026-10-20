@@ -273,6 +273,15 @@ messages can follow the input: draw the focus ring on the wrapper with
 `[data-focused]`, color the label with `[data-invalid]`. The error part also
 gets `hidden` while it isn't shown. TextField sets no inline styles.
 
+### Default styles
+
+The optional `@uniaria/styles` package styles every part, as in the demo
+above, whose CSS tab holds only the page's layout. The wrapper is the box,
+with the focus ring on any focus inside it and the danger border while
+invalid; the input is bare inside it, beside your own prefix or suffix.
+Without a wrapper the input has no box: use [Field](./field.mdx) around a
+native input for that.
+
 ## Keyboard
 
 TextField handles no keys; the input keeps its native editing.

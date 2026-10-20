@@ -12,3 +12,5 @@ export { radioStyles } from './components/radio';
 export { checkboxGroupStyles } from './components/checkbox-group';
 export { radioGroupStyles } from './components/radio-group';
 export { fieldStyles } from './components/field';
+export { textFieldStyles } from './components/text-field';
+export { numberFieldStyles } from './components/number-field';
