@@ -341,8 +341,8 @@ can only be the default theme's.
 | `text`                             | Text in the theme: body text, an error message.                                                                                       | 4.5:1 on its own surface and on `#uni-surface` |
 | `text-soft`                        | Secondary text: descriptions, placeholders.                                                                                           | As `text`.                                     |
 | `border`                           | Edges: a field's box, an invalid field, a checkbox.                                                                                   | 3:1 against `#uni-surface` (WCAG 1.4.11)       |
-| `fill`                             | The theme's strong color: a selected indicator, a primary button; in the default theme, a tooltip.                                    | 3:1 against `#uni-surface`                     |
-| `fill-hover`, `fill-pressed`       | That fill hovered and pressed.                                                                                                        | As `fill`.                                     |
+| `fill`                             | The theme's strong color: a selected indicator, a primary button; in the default theme, a tooltip.                                    | None of its own.                               |
+| `fill-hover`, `fill-pressed`       | That fill hovered and pressed.                                                                                                        | None of their own.                             |
 | `fill-text`                        | Text and marks on the fill: a check mark, a primary button's label.                                                                   | 4.5:1 on its fill                              |
 | `outline`                          | The focus ring.                                                                                                                       | 3:1 against its surface and `#uni-surface`     |
 
@@ -350,18 +350,16 @@ can only be the default theme's.
   Glaze's shadow colors) and `#uni-backdrop` (the dialog's underlay).
 - `disabled` keeps 3:1 for its text and its fill's text, and nothing
   more: WCAG exempts disabled controls.
-- **The focus ring isn't checked against the fill** (2026-10-19, for the
-  owner to confirm; the approved draft said "its surface and its fill").
-  The ring is drawn with an offset, so what lies next to it is the page,
-  never the fill. A ring at 3:1 against the white surface and a mid-tone
-  fill at once would have to be nearly black in the light scheme.
-- **Fills follow the scheme:** in the light schemes a fill is Cube UI
-  Kit's, set from its white text; in the dark ones it is lighter than the
-  surface and its text dark. UI Kit keeps the fill and its white text in
-  the dark too, but a fill at 3:1 against the dark surface and 4.5:1 under
-  white text has no room between the two: UI Kit's recipe measures 2.6 to
-  3.0:1 against the dark surface with these hues, and less in high
-  contrast. Hover and press step further from the text (5:1, 5.5:1).
+- **The focus ring isn't checked against the fill** (owner, 2026-10-20;
+  the approved draft said "its surface and its fill"). The ring is drawn
+  with an offset, so what lies next to it is the page, never the fill. A
+  ring at 3:1 against the white surface and a mid-tone fill at once would
+  have to be nearly black in the light scheme.
+- **Fills are the same in every scheme** (owner, 2026-10-20): Cube UI
+  Kit's, set from their white text, darker for hover and press. A fill
+  needs no contrast against the page, since the text or mark on it
+  identifies it; its text keeps 4.5:1 on it (7:1 in high contrast). On the
+  dark surface UI Kit's fills measure about 2.4 to 3.2:1.
 - **Borders are darker than UI Kit's**, which are decoration at about
   1.3:1: here a border is a field's or a checkbox's edge, which needs 3:1.
 - A checkbox, for example: `#uni-surface` and `#uni-border` at rest,

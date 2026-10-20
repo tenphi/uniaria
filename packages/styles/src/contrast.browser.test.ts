@@ -44,12 +44,10 @@ function floors(theme: Theme): [Role, readonly [Theme, Role], number][] {
   ];
   // WCAG exempts disabled controls: their text, and nothing more.
   if (theme === 'disabled') return list;
+  // A fill needs none against the page: its text or mark identifies it.
   return [
     ...list,
     ['border', page, 3],
-    ['fill', page, 3],
-    ['fill-hover', page, 3],
-    ['fill-pressed', page, 3],
     ['outline', [theme, 'surface'], 3],
     ['outline', page, 3],
   ];

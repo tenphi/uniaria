@@ -83,11 +83,11 @@ export function colorToken(theme: Theme, role: string): string {
 /**
  * The roles in a colored theme, after UI Kit's: a lightly tinted surface,
  * the theme's color as text and border, and a fill set from its white text,
- * as UI Kit's primary button is, darker for hover and press. UI Kit keeps
- * that fill and its white text in the dark schemes too, but there it can't
- * meet 3:1 against the dark surface, so here the text turns dark with the
- * scheme and the fills lighter. Tones are UI Kit's; a contrast floor moves
- * a color only where it would fall short (spec: Tokens).
+ * as UI Kit's primary button is, darker for hover and press. Fills and
+ * their text are the same in every scheme (`fixed`), and need no contrast
+ * against the page: the text or mark on a fill identifies it (owner,
+ * 2026-10-20). Tones are UI Kit's; a contrast floor moves a color only
+ * where it would fall short (spec: Tokens).
  */
 const COLORED: ColorMap = {
   surface: { tone: [98, 96], saturation: 0.2 },
@@ -96,12 +96,20 @@ const COLORED: ColorMap = {
   text: { base: 'surface', tone: '-49', contrast: [6, 11] },
   'text-soft': { base: 'surface', tone: '-49', contrast: [4.5, 7] },
   border: { base: 'surface', tone: '-47', contrast: [3, 4.5] },
-  'fill-text': { tone: 100, saturation: 0.25 },
-  fill: { base: 'fill-text', tone: '-49', contrast: [4.5, 7] },
-  // Further from the text, in contrast: in the dark schemes the floors set
-  // the fills, so they step there too.
-  'fill-hover': { base: 'fill-text', tone: '-52', contrast: [5, 7.5] },
-  'fill-pressed': { base: 'fill-text', tone: '-55', contrast: [5.5, 8] },
+  'fill-text': { tone: 100, mode: 'fixed' },
+  fill: { base: 'fill-text', tone: '-49', contrast: [4.5, 7], mode: 'fixed' },
+  'fill-hover': {
+    base: 'fill-text',
+    tone: '-52',
+    contrast: [4.5, 7],
+    mode: 'fixed',
+  },
+  'fill-pressed': {
+    base: 'fill-text',
+    tone: '-55',
+    contrast: [4.5, 7],
+    mode: 'fixed',
+  },
   outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
 };
 
@@ -124,9 +132,20 @@ export const DEFAULT_COLORS: ColorMap = {
     saturation: 0.875,
     contrast: [3, 4.5],
   },
-  fill: { base: 'fill-text', tone: '-88', contrast: [4.5, 7] },
-  'fill-hover': { base: 'fill-text', tone: '-91', contrast: [5, 7.5] },
-  'fill-pressed': { base: 'fill-text', tone: '-94', contrast: [5.5, 8] },
+  // UI Kit's inverse surface: dark in every scheme.
+  fill: { base: 'fill-text', tone: '-88', contrast: [4.5, 7], mode: 'fixed' },
+  'fill-hover': {
+    base: 'fill-text',
+    tone: '-91',
+    contrast: [4.5, 7],
+    mode: 'fixed',
+  },
+  'fill-pressed': {
+    base: 'fill-text',
+    tone: '-94',
+    contrast: [4.5, 7],
+    mode: 'fixed',
+  },
   outline: { base: 'surface', tone: '-49', contrast: [3, 4.5] },
   shadow: {
     type: 'shadow',
