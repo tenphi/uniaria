@@ -29,6 +29,7 @@ import {
   mountReact,
   page,
   part,
+  recordExit,
   rootOf,
   settle,
   setUpPage,
@@ -451,17 +452,11 @@ describe.each([
       await emulateMedia({ reducedMotion: 'no-preference' });
       const root = await adapter.select();
       const popover = await open(root);
+      const exit = recordExit(popover);
       await keyboard.press('Escape');
-      await new Promise(requestAnimationFrame);
-      expect(popover.hasAttribute('data-exiting')).toBe(true);
-      expect(style(popover).display).toBe('flex');
-      expect(
-        popover
-          .getAnimations()
-          .map((animation) => (animation as CSSTransition).transitionProperty),
-      ).toContain('opacity');
       await settle();
       await settle();
+      expect([...exit]).toContain('opacity');
       expect(style(popover).display).toBe('none');
       await emulateMedia({ reducedMotion: null });
     });

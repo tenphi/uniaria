@@ -79,6 +79,27 @@ export async function startOpening(
   return opacity;
 }
 
+/**
+ * Records how an overlay closes from now on: the properties transitions
+ * start on while it is marked `exiting`. Read after it has closed, so a
+ * test needn't catch a short transition across a round trip to the test
+ * runner.
+ */
+export function recordExit(overlay: Element): ReadonlySet<string> {
+  const properties = new Set<string>();
+  overlay.addEventListener('transitionrun', (event) => {
+    const transition = event as TransitionEvent;
+    if (
+      transition.target === overlay &&
+      transition.pseudoElement === '' &&
+      overlay.hasAttribute('data-exiting')
+    ) {
+      properties.add(transition.propertyName);
+    }
+  });
+  return properties;
+}
+
 /** The first root of a component in the container. */
 export function rootOf(kind: string): HTMLElement {
   const root = page.container.querySelector<HTMLElement>(

@@ -26,6 +26,7 @@ import {
   mountReact,
   page,
   part,
+  recordExit,
   rootOf,
   settle,
   setUpPage,
@@ -247,13 +248,11 @@ describe.each([
       await emulateMedia({ reducedMotion: 'no-preference' });
       const root = (await adapter.dialog()) as HTMLDialogElement;
       await open(outside('dialog-trigger'));
+      const exit = recordExit(root);
       await keyboard.press('Escape');
-      await new Promise(requestAnimationFrame);
-      expect(root.hasAttribute('data-exiting')).toBe(true);
-      expect(root.open).toBe(true);
-      expect(transitioning(root)).toContain('opacity');
       await settle();
       await settle();
+      expect([...exit]).toContain('opacity');
       expect(root.open).toBe(false);
     });
 
@@ -323,14 +322,11 @@ describe.each([
       await emulateMedia({ reducedMotion: 'no-preference' });
       const root = await adapter.popover();
       await open(outside('popover-trigger'));
+      const exit = recordExit(root);
       await keyboard.press('Escape');
-      await new Promise(requestAnimationFrame);
-      expect(root.hasAttribute('data-exiting')).toBe(true);
-      expect(transitioning(root)).toEqual(
-        expect.arrayContaining(['opacity', 'scale']),
-      );
       await settle();
       await settle();
+      expect([...exit]).toEqual(expect.arrayContaining(['opacity', 'scale']));
       expect(style(root).display).toBe('none');
     });
   });
