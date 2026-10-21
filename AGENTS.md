@@ -98,7 +98,7 @@ uniaria/
 | `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                                                |
 | `pnpm check:conformance`                         | Check that no unpushed commit changes both conformance and implementation. CI runs it too. |
 | `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).                                 |
-| `pnpm changeset`                                 | Create a changeset entry, from the first release on (Releasing).                           |
+| `pnpm changeset`                                 | Create a changeset for a user-visible package change (Before pushing changes).             |
 | `pnpm -C apps/docs dev`                          | The documentation site with live reload (see Documentation).                               |
 | `pnpm -C apps/docs validate`                     | Type check, Cookbook's checks, the production build and its output checks. CI runs it.     |
 
@@ -113,9 +113,9 @@ uniaria/
   Chromium, Firefox and WebKit through Playwright.
 - **Lint:** ESLint 10 flat config + typescript-eslint + `eslint-config-prettier`.
 - **Format:** Prettier — single quotes, semicolons, trailing commas, 80 cols.
-- **Versioning:** Changesets with `@changesets/changelog-github`.
-  `.changeset/first-release.md` is the first release's; until that release
-  is out, there are no other changesets and no version bumps (Releasing).
+- **Versioning:** Changesets with `@changesets/changelog-github`. Every
+  user-visible change to a published package carries a changeset (Before
+  pushing changes); the owner releases them in batches (Releasing).
 - **Package manager:** pnpm 11 workspaces. Node ≥ 22.
 
 Workspace packages resolve each other's `src/` through the `uniaria-source`
@@ -550,7 +550,8 @@ Approved development dependencies for testing: `@guidepup/virtual-screen-reader`
 owner's approval**, including small utility packages, Lit, state libraries
 (nanostores, signals) and Zag.js packages.
 
-Agents review Dependabot's pull requests: land updates on `main` once CI
+Dependabot's pull requests wait for now (owner, 2026-10-21): leave them
+open. When they resume, agents review them: land updates on `main` once CI
 passes, and fix what they break (run `pnpm dedupe` when a workspace package
 keeps the old version as a peer). Dependabot skips major versions of the
 packages that set what we support (owner, 2026-10-15): `@types/node`, which
@@ -823,17 +824,26 @@ also by hand (`gh workflow run pages.yml` on `main`).
 
 ## Before pushing changes
 
-Until the first release, work goes straight to `main`: no branches, pull
-requests or changesets. Follow
-[`.cursor/commands/submit-changes.md`](.cursor/commands/submit-changes.md). At
-minimum:
+Since the first release (owner, 2026-10-21), work lands through pull
+requests, and bigger ones: a branch per piece of work, carrying all of it
+(a spec's implementation, its tests, docs and changeset) rather than a pull
+request per commit. The owner merges and releases. Follow
+[`.cursor/commands/submit-changes.md`](.cursor/commands/submit-changes.md).
+At minimum:
 
-1. `pnpm hygiene` — lint, format check, typecheck. Fix errors before going on.
-2. `pnpm test` — all projects pass.
-3. **Commit** with Conventional Commits (`feat`, `fix`, `refactor`, `test`,
+1. **Branch** from an up-to-date `main`.
+2. `pnpm hygiene` — lint, format check, typecheck. Fix errors before going on.
+3. `pnpm test` — all projects pass.
+4. **Commit** with Conventional Commits (`feat`, `fix`, `refactor`, `test`,
    `docs`, `chore`, `perf`, `ci`); scope is the component or layer
    (`feat(checkbox): …`, `fix(runtime): …`). Conformance scenarios and
-   implementation go in separate commits.
-4. `pnpm check:conformance` — no unpushed commit touches both.
-5. **Push** to `main` and make sure CI passes; fix a failure in a follow-up
-   commit.
+   implementation go in separate commits, and separate pull requests
+   (Conformance).
+5. **Changeset.** `pnpm changeset` for every user-visible change to a
+   published package: `minor` for a feature or a breaking change while
+   versions are 0.x, `patch` for the rest. Tests, docs and tooling need
+   none.
+6. `pnpm check:conformance` — no commit on the branch touches both.
+7. **Push** the branch and open a pull request against `main` with
+   `gh pr create`. Make sure its CI passes, fixing a failure in a follow-up
+   commit, and leave the merge to the owner.

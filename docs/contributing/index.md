@@ -104,7 +104,7 @@ export condition, so tests and type checks never need a build first.
 | `pnpm check:conformance`                         | Fails when an unpushed commit changes both conformance scenarios and implementation.                                     |
 | `pnpm bench`                                     | Times UniAria's Button, React Aria's and a plain one in a production build; rewrites `packages/react/bench/results.md`.  |
 | `pnpm references [name …]`                       | Clones or updates the reference repos.                                                                                   |
-| `pnpm changeset`                                 | Creates a changeset. Not used until the first release.                                                                   |
+| `pnpm changeset`                                 | Creates a changeset for a user-visible package change (see [How changes land](#how-changes-land)).                       |
 
 The site has its own commands; see [Documentation](./documentation.md#commands).
 
@@ -128,16 +128,23 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org):
 
 ## How changes land
 
-Until the first release, work goes straight to `main`: no branches, pull
-requests or changesets, and no version bumps. Before you push:
+Since the first release, work lands through pull requests, and big ones: a
+branch carries a whole piece of work (the implementation, its tests, docs
+and changeset), not one commit. The owner merges and releases.
 
-1. `pnpm hygiene`, and fix what it reports.
-2. `pnpm test`: every project passes.
-3. `pnpm format`, then commit.
-4. `pnpm check:conformance`: no unpushed commit touches both conformance and
-   implementation. Split a commit that does.
-5. `git pull --rebase`, then `git push`.
-6. Watch CI (`gh run watch --exit-status`) and fix a failure in a follow-up
+1. Branch from an up-to-date `main`.
+2. `pnpm hygiene`, and fix what it reports.
+3. `pnpm test`: every project passes.
+4. `pnpm format`, then commit.
+5. `pnpm changeset` for every user-visible change to a published package:
+   `minor` for a feature or a breaking change while versions are 0.x,
+   `patch` for the rest. Tests, docs and tooling need none.
+6. `pnpm check:conformance`: no commit on the branch touches both
+   conformance and implementation. Split a commit that does; scenarios and
+   implementation also go in separate pull requests.
+7. Push the branch and open a pull request against `main`
+   (`gh pr create`); a draft while it waits for a spec's approval.
+8. Watch CI (`gh pr checks --watch`) and fix a failure in a follow-up
    commit.
 
 The same steps are in `.cursor/commands/submit-changes.md`.
@@ -164,8 +171,9 @@ Real screen readers run nightly in a separate workflow; see
 ### Dependency updates
 
 Dependabot opens grouped update pull requests weekly, for releases at least
-14 days old, and agents review them: an update lands on `main` once CI
-passes, with fixes for whatever it breaks. Dependabot skips major versions
+14 days old. They wait for now (owner, 2026-10-21); when they resume, agents
+review them: an update lands on `main` once CI passes, with fixes for
+whatever it breaks. Dependabot skips major versions
 of the packages that set what UniAria supports: `@types/node`, React and its
 types, TypeScript and Vitest. Those are raised by hand, only for a concrete
 need. Adding a dependency is a different matter; see
