@@ -36,6 +36,19 @@ export default defineConfig({
   },
   // Reference repos are large and read-only; watching them wastes file handles.
   server: { watch: { ignored: ['**/references/**', '**/specs/**'] } },
+  // Vue's compile-time flags, which its esm-bundler builds warn about when a
+  // bundler leaves them undefined (Vue adapter spec: Changes outside the
+  // package).
+  define: {
+    __VUE_OPTIONS_API__: 'true',
+    __VUE_PROD_DEVTOOLS__: 'false',
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
+  },
+  // Bundled up front: Vite reloads the page when it finds a dependency to
+  // bundle while a test runs, which fails the test.
+  optimizeDeps: {
+    include: ['vue', 'vue/server-renderer', 'vue/dist/vue.esm-bundler.js'],
+  },
   test: {
     projects: [
       {
