@@ -98,7 +98,7 @@ uniaria/
 | `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                                                |
 | `pnpm check:conformance`                         | Check that no unpushed commit changes both conformance and implementation. CI runs it too. |
 | `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).                                 |
-| `pnpm changeset`                                 | Create a changeset entry. Not used until the first release.                                |
+| `pnpm changeset`                                 | Create a changeset entry, from the first release on (Releasing).                           |
 | `pnpm -C apps/docs dev`                          | The documentation site with live reload (see Documentation).                               |
 | `pnpm -C apps/docs validate`                     | Type check, Cookbook's checks, the production build and its output checks. CI runs it.     |
 
@@ -113,8 +113,9 @@ uniaria/
   Chromium, Firefox and WebKit through Playwright.
 - **Lint:** ESLint 10 flat config + typescript-eslint + `eslint-config-prettier`.
 - **Format:** Prettier — single quotes, semicolons, trailing commas, 80 cols.
-- **Versioning:** Changesets with `@changesets/changelog-github`, from the
-  first release on. Until then there are no changesets and no version bumps.
+- **Versioning:** Changesets with `@changesets/changelog-github`.
+  `.changeset/first-release.md` is the first release's; until that release
+  is out, there are no other changesets and no version bumps (Releasing).
 - **Package manager:** pnpm 11 workspaces. Node ≥ 22.
 
 Workspace packages resolve each other's `src/` through the `uniaria-source`
@@ -805,9 +806,19 @@ readable overview of this file for people; this file stays the binding one.
 ## Not set up yet
 
 Planned by the design, added when the owner asks: public API reports (API
-Extractor), size budgets per subpath (size-limit), the release workflow (npm
-trusted publishing), Custom Elements Manifest generation, and publishing the
-documentation site.
+Extractor), size budgets per subpath (size-limit), Custom Elements Manifest
+generation, and publishing the documentation site.
+
+## Releasing
+
+Only the owner releases. `.github/workflows/release.yml` runs by hand, never
+on a push (`gh workflow run release.yml` on `main`, once its CI passed). With
+changesets in `.changeset/`, a run opens or updates the "chore: version
+packages" pull request; once it is merged, the next run checks the commit
+again, publishes the new versions to npm with trusted publishing, and creates
+the GitHub release. The published packages share one version, the `fixed`
+group in `.changeset/config.json`; `@uniaria/styles` stays private and out of
+it until the owner adds it.
 
 ## Before pushing changes
 

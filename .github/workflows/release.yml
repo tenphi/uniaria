@@ -1,0 +1,89 @@
+name: Release
+
+# Run by hand from the Actions tab (`gh workflow run release.yml`), so
+# nothing reaches npm without the owner. With changesets in `.changeset/`,
+# a run opens or updates the "chore: version packages" pull request; once
+# it is merged, the next run publishes the versions it set, tags them and
+# creates their GitHub releases. Publishing uses npm trusted publishing
+# (OIDC): each package's settings on npmjs.com name this workflow and the
+# `release` environment.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      # Node 24, not CI's 22: trusted publishing needs npm 11.5.1 or later,
+      # which Node 24 ships. Don't upgrade npm in place on a hosted runner.
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # What CI checks, again on the commit being released.
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Check
+        run: pnpm lint && pnpm format:check && pnpm typecheck && pnpm build && pnpm test
+
+      - name: Clear the npm token, for OIDC
+        run: npm config delete //registry.npmjs.org/:_authToken || true
+
+      - name: Create the version pull request, or publish
+        id: changesets
+        uses: changesets/action@v2.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish-script: pnpm release
+          pr-title: 'chore: version packages'
+          commit-message: 'chore: version packages'
+        env:
+          # npm makes provenance only from a public repository.
+          NPM_CONFIG_PROVENANCE: ${{ !github.event.repository.private }}
+
+      # One version for every package (the `fixed` group), so one release.
+      - name: Create the GitHub release
+        if: steps.changesets.outputs.published == 'true'
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const [first] = JSON.parse(
+              process.env.PUBLISHED_PACKAGES,
+            );
+            const tag = `v${first.version}`;
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: tag,
+              generate_release_notes: true,
+              prerelease: first.version.startsWith('0.'),
+            });
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.published-packages }}
