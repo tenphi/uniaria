@@ -36,7 +36,7 @@
 [data-uni="popover"]:where(:not([data-placement="left"]):not([data-placement="right"]):not([data-placement="top"])) { transform-origin: top; }
 
 @media (not (prefers-reduced-motion: reduce)) {
-  [data-uni="popover"]:where(:not([data-entering])) { transition: opacity var(--uni-overlay-transition) linear, transform var(--uni-overlay-transition) ease-out, scale var(--uni-overlay-transition) ease-out; }
+  [data-uni="popover"] { transition: opacity var(--uni-overlay-transition) linear, transform var(--uni-overlay-transition) ease-out, scale var(--uni-overlay-transition) ease-out; }
 }
 
 [data-uni="popover"]:where(:not([data-exiting]):not([data-open]):not(:has(> [data-element="Arrow"]))) { overflow: auto; }

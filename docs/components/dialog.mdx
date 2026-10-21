@@ -406,9 +406,8 @@ On the custom element, read `element.instance.getState()`. See
 The root matches `:modal` the whole time it is shown, closing phase included,
 and its `::backdrop` is the underlay.
 
-To animate, style the hidden look on `[data-entering]` and `[data-exiting]`,
-with no transition while entering, so the hidden look applies at once (see
-[Animating overlays](../guide/styling.md#animating-overlays)). UniAria waits
+To animate, style the hidden look on `[data-entering]` and `[data-exiting]`
+(see [Animating overlays](../guide/styling.md#animating-overlays)). UniAria waits
 for the animations and transitions running on the dialog and inside it,
 `::backdrop` included, before it calls `close()`. Nothing waits for a fixed
 time: a dialog with no running animation closes in the next frame, and opening
@@ -430,10 +429,6 @@ it again while it exits cancels the exit.
 }
 [data-uni='dialog']:is([data-entering], [data-exiting])::backdrop {
   opacity: 0;
-}
-[data-uni='dialog'][data-entering],
-[data-uni='dialog'][data-entering]::backdrop {
-  transition: none;
 }
 ```
 

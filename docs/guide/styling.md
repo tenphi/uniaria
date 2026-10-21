@@ -193,8 +193,9 @@ selectable, but they differ between a native element and a custom one. The
 Overlays (Dialog, Popover, Tooltip, and the popups of Select and Combobox)
 stay mounted and move through three phases you can animate:
 
-- `data-entering` is present for the first frames after opening. Transition
-  from it, with no transition while it is present:
+- `data-entering` is present for the first frames after opening, from the
+  overlay's first style: UniAria shows it once the attribute is there.
+  Transition from it:
 
   ```css
   [data-uni='popover'] {
@@ -205,14 +206,8 @@ stay mounted and move through three phases you can animate:
   [data-uni='popover'][data-entering] {
     opacity: 0;
     translate: 0 -4px;
-    transition: none;
   }
   ```
-
-  The browser can compute an overlay's style as it shows, before
-  `data-entering` lands: a dialog moving focus in, a popover being measured.
-  A transition into the hidden look would then start from the shown one and
-  turn back, and the opening would barely show.
 
 - `data-exiting` is present after closing until the animations running on the
   part and inside it finish, `::backdrop` included. UniAria reads them from

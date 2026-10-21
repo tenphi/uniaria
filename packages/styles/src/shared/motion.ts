@@ -8,10 +8,9 @@ import type { Styles } from '@tenphi/tasty';
  * scale ease out; under reduced motion nothing transitions, so overlays
  * show and hide at once.
  *
- * Nothing transitions while `entering`: the browser can compute an
- * overlay's style once it shows and before `data-entering` lands, and the
- * hidden look would then fade in from the shown one and turn back. So the
- * hidden look applies at once, and only leaving it animates.
+ * An overlay is `entering` from its first style (UniAria shows it once the
+ * state is written), so opening needs no `transition: none`: it starts from
+ * the hidden look, and reopening while it exits turns back smoothly.
  */
 
 /**
@@ -48,7 +47,6 @@ export const popupMotionStyles = {
   },
   transition: {
     '': 'opacity $uni-transition linear, translate $uni-transition ease-out, scale $uni-transition ease-out',
-    entering: false,
     '@uni-reduced-motion': false,
   },
 } satisfies Styles;
@@ -81,7 +79,6 @@ export const tooltipMotionStyles = {
   },
   transition: {
     '': 'opacity $uni-transition linear, translate $uni-transition ease-out, scale $uni-transition ease-out',
-    entering: false,
     instant: false,
     '@uni-reduced-motion': false,
   },
@@ -107,7 +104,6 @@ export const popoverMotionStyles = {
   },
   transition: {
     '': 'opacity $uni-overlay-transition linear, scale $uni-overlay-transition ease-out',
-    entering: false,
     '@uni-reduced-motion': false,
   },
 } satisfies Styles;
@@ -121,7 +117,6 @@ export const dialogMotionStyles = {
   translate: { '': 'none', 'entering | exiting': '0 -3x' },
   transition: {
     '': 'opacity $uni-dialog-transition linear, translate $uni-dialog-transition ease-out',
-    entering: false,
     '@uni-reduced-motion': false,
   },
 
@@ -129,7 +124,6 @@ export const dialogMotionStyles = {
     opacity: { '': 1, 'entering | exiting': 0 },
     transition: {
       '': 'opacity $uni-dialog-transition linear',
-      entering: false,
       '@uni-reduced-motion': false,
     },
   },

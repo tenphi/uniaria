@@ -42,7 +42,7 @@
 [data-uni="select"] [data-element="Popover"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-placement="left"]):not([data-placement="right"]):not([data-placement="top"])) { transform-origin: top; }
 
 @media (not (prefers-reduced-motion: reduce)) {
-  [data-uni="select"]:where(:not([data-entering])) [data-element="Popover"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { transition: opacity var(--uni-transition) linear, transform var(--uni-transition) ease-out, translate var(--uni-transition) ease-out, scale var(--uni-transition) ease-out; }
+  [data-uni="select"] [data-element="Popover"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { transition: opacity var(--uni-transition) linear, transform var(--uni-transition) ease-out, translate var(--uni-transition) ease-out, scale var(--uni-transition) ease-out; }
 }
 
 [data-uni="select"]:where(:not([data-exiting]):not([data-open])) [data-element="Popover"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { overflow: visible; }

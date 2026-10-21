@@ -2,7 +2,7 @@
 [data-uni="dialog"]:where(:not([data-entering]):not([data-exiting]))::backdrop { opacity: 1; }
 
 @media (not (prefers-reduced-motion: reduce)) {
-  [data-uni="dialog"]:where(:not([data-entering]))::backdrop { transition: opacity var(--uni-dialog-transition) linear; }
+  [data-uni="dialog"]::backdrop { transition: opacity var(--uni-dialog-transition) linear; }
 }
 
 [data-uni="dialog"]::backdrop { background-color: var(--uni-backdrop-color); }
@@ -36,7 +36,7 @@
 [data-uni="dialog"]:where(:not([data-entering]):not([data-exiting])) { opacity: 1; translate: none; }
 
 @media (not (prefers-reduced-motion: reduce)) {
-  [data-uni="dialog"]:where(:not([data-entering])) { transition: opacity var(--uni-dialog-transition) linear, transform var(--uni-dialog-transition) ease-out, translate var(--uni-dialog-transition) ease-out; }
+  [data-uni="dialog"] { transition: opacity var(--uni-dialog-transition) linear, transform var(--uni-dialog-transition) ease-out, translate var(--uni-dialog-transition) ease-out; }
 }
 
 [data-uni="dialog"]:where(:not([data-exiting]):not([data-open])) { overflow: auto; }

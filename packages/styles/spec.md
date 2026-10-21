@@ -607,12 +607,10 @@ hides it; the styles key the hidden look on `entering | exiting`
 Opacity transitions linearly, movement and scale ease. Under reduced
 motion no transition runs, so overlays appear and disappear at once.
 
-Nothing transitions while `entering`, so the hidden look applies at once
-and only leaving it animates. A browser can compute an overlay's style as
-it shows and before `data-entering` lands (a dialog moving focus in,
-UniAria measuring a popup), and a transition into the hidden look would
-then start from the overlay's own look and turn back, so opening would
-barely show.
+An overlay carries `data-entering` from its first style: UniAria shows it
+once the binder has written the state. So opening starts from the hidden
+look with no `transition: none` while `entering`, and reopening while it
+exits turns back from where it is.
 
 ## Cases
 
