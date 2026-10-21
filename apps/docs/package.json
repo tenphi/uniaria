@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "@tenphi/cookbook": "^0.28.0",
-    "astro": "^7.3.2"
+    "astro": "^7.3.6"
   },
   "devDependencies": {
     "@uniaria/elements": "workspace:*",
     "@uniaria/styles": "workspace:*",
     "typescript": "^6.0.3",
-    "vite": "^8.3.1"
+    "vite": "^8.3.3"
   },
   "engines": {
     "node": ">=22.19"
