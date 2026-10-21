@@ -76,7 +76,10 @@ export default defineConfig({
             commands: { ...uniCommands, ...stylesCommands },
             instances: [
               { browser: 'chromium' },
-              { browser: 'firefox' },
+              // One file at a time: Firefox runs parallel files in pages of
+              // one browser, and a page that takes input takes focus events
+              // from the others (microsoft/playwright#42933).
+              { browser: 'firefox', fileParallelism: false },
               { browser: 'webkit' },
             ],
           },
