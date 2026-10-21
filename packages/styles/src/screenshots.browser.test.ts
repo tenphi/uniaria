@@ -270,7 +270,7 @@ interface PickerProps {
 }
 
 // A value is an array, which no attribute holds: `data-value` stands in
-// for the property, which the test sets.
+// for the property, which the test sets before the element connects.
 const pickerAttributes = (props: PickerProps) =>
   `${props.value ? ` data-value='${JSON.stringify(props.value)}'` : ''}${
     props.isMultiple ? ' selection-mode="multiple"' : ''
@@ -592,12 +592,17 @@ describe.skipIf(!isReference)('screenshots', () => {
         '--columns',
         String(gallery.columns ?? 1),
       );
-      page.container.innerHTML = gallery.html;
-      for (const host of page.container.querySelectorAll<
+      // Values first, as markup would give them: a picker open on mount
+      // focuses its list's selected option as it shows.
+      const cases = document.createElement('template');
+      cases.innerHTML = gallery.html;
+      const content = document.importNode(cases.content, true);
+      for (const host of content.querySelectorAll<
         HTMLElement & { value: unknown }
       >('[data-value]')) {
         host.value = JSON.parse(host.dataset.value ?? '[]');
       }
+      page.container.replaceChildren(content);
       await settle();
       if (gallery.isFocused) await tabInto();
       // An overlay opened on mount: wait out its entering frames.
