@@ -681,7 +681,7 @@ What the styles cover beyond each component's resting look:
 
 ```
 packages/styles/
-  package.json         @uniaria/styles, private until release
+  package.json         @uniaria/styles, published with the others
   tsdown.config.ts     JS entries; generates the CSS after the build
   tasty.config.ts      the ESLint config (/tasty.config)
   tasty.config.js      published: the built config, where `extends` finds it

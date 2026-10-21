@@ -41,7 +41,7 @@ whole file before changing anything; it is the binding summary of the design.
 | `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                                                          | Yes       |
 | `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
 | `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
-| `@uniaria/styles`      | `packages/styles`   | Optional default styles: prebuilt CSS (`./css`), a Tasty style object per component (`./button`), the palette; its own `spec.md`                                  | Later     |
+| `@uniaria/styles`      | `packages/styles`   | Optional default styles: prebuilt CSS (`./css`), a Tasty style object per component (`./button`), the palette; its own `spec.md`                                  | Yes       |
 | `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                                                | No        |
 
 All published packages share one version (Changesets `fixed` group). Each
@@ -817,8 +817,7 @@ changesets in `.changeset/`, a run opens or updates the "chore: version
 packages" pull request; once it is merged, the next run checks the commit
 again, publishes the new versions to npm with trusted publishing, and creates
 the GitHub release. The published packages share one version, the `fixed`
-group in `.changeset/config.json`; `@uniaria/styles` stays private and out of
-it until the owner adds it.
+group in `.changeset/config.json`.
 
 ## Before pushing changes
 

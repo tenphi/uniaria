@@ -1,7 +1,6 @@
 {
   "name": "@uniaria/styles",
   "version": "0.0.0",
-  "private": true,
   "description": "Default styles for UniAria components: prebuilt CSS, a CSS builder and Tasty style objects",
   "type": "module",
   "sideEffects": [

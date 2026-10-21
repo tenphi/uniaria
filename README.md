@@ -14,6 +14,7 @@ Styling stays with your design system: every part carries a marker
 | `@uniaria/react`    | React adapter: `useComponent(definition, props)`              |
 | `@uniaria/elements` | Custom-elements adapter: `defineElement(definition, options)` |
 | `@uniaria/testing`  | Test instances, conformance runner, screen-reader helpers     |
+| `@uniaria/styles`   | Optional default styles: prebuilt CSS and Tasty style objects |
 
 The first release covers Button, ToggleButton, Field, TextField (inputs and
 textareas), Checkbox, CheckboxGroup, Switch, RadioGroup, Dialog, Popover,

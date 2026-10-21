@@ -3,9 +3,10 @@ title: Packages
 description: The UniAria packages and their entry points.
 ---
 
-UniAria is four packages. `@uniaria/core` holds every component's behavior;
+UniAria is five packages. `@uniaria/core` holds every component's behavior;
 the two adapters bind it to React and to custom elements; `@uniaria/testing`
-checks an adapter or a component against real input and screen readers.
+checks an adapter or a component against real input and screen readers;
+`@uniaria/styles` is an optional look for every component.
 
 | Package             | What it is                                                                       | Install it when                                                      |
 | ------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -13,25 +14,31 @@ checks an adapter or a component against real input and screen readers.
 | `@uniaria/react`    | `useComponent`, `useComponentState` and `OwnerProvider`                          | You render with React                                                |
 | `@uniaria/elements` | `defineElement` and one registering entry per component                          | You render HTML: plain pages, server templates, Vue, Svelte, Angular |
 | `@uniaria/testing`  | The conformance runner, the mount contract, real input and screen-reader helpers | You write an adapter or test your own components                     |
+| `@uniaria/styles`   | Default styles: prebuilt CSS, a CSS builder, Tasty style objects and the palette | You want a look to start from                                        |
 
 ## Entry points
 
 Each package exposes only the entries below (its `package.json` `exports`).
 Import from these paths, never from files inside a package.
 
-| Entry                           | Exports                                                                                                                                                                  | Reference                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `@uniaria/core`                 | `defineComponent`, `prop`, `bindable`, `event`, `createInstance` and the runtime types                                                                                   | [Runtime](./core.md)                                 |
-| `@uniaria/core/dom`             | `configure` for page-wide settings; interactions, focus, layers, positioning and the announcer for definition authors; the binder and part discovery for adapter authors | [DOM layer](./dom.md)                                |
-| `@uniaria/core/collections`     | `createListCollection`, `createTypeahead`, `findByText`                                                                                                                  | [Collections](./collections.md)                      |
-| `@uniaria/core/virtual`         | `virtualizer`, the engine a virtualized Listbox, Select or Combobox takes                                                                                                | [Collections](./collections.md#virtualization)       |
-| `@uniaria/core/<component>`     | One definition, plus its `<Name>Props` and `<Name>State` types (table below)                                                                                             | The component's page                                 |
-| `@uniaria/react`                | `useComponent`, `useComponentState`, `OwnerProvider`                                                                                                                     | [React](./react.md)                                  |
-| `@uniaria/elements`             | `defineElement` and the element types                                                                                                                                    | [Custom elements](./elements.md)                     |
-| `@uniaria/elements/<component>` | Registers `<uni-<component>>` on import, and exports its class and element type                                                                                          | [Custom elements](./elements.md#registering-entries) |
-| `@uniaria/testing`              | `defineConformance`, the templates (`h`, `nested`, `rows`) and the mount contract types                                                                                  | [Testing](./testing.md)                              |
-| `@uniaria/testing/browser`      | `runConformance`, real input and spoken output, for Vitest browser mode                                                                                                  | [Testing](./testing.md#running-suites)               |
-| `@uniaria/testing/commands`     | `uniCommands` and `screenReaderCommands`, the Playwright commands for your Vitest config                                                                                 | [Testing](./testing.md#running-suites)               |
+| Entry                           | Exports                                                                                                                                                                  | Reference                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `@uniaria/core`                 | `defineComponent`, `prop`, `bindable`, `event`, `createInstance` and the runtime types                                                                                   | [Runtime](./core.md)                                             |
+| `@uniaria/core/dom`             | `configure` for page-wide settings; interactions, focus, layers, positioning and the announcer for definition authors; the binder and part discovery for adapter authors | [DOM layer](./dom.md)                                            |
+| `@uniaria/core/collections`     | `createListCollection`, `createTypeahead`, `findByText`                                                                                                                  | [Collections](./collections.md)                                  |
+| `@uniaria/core/virtual`         | `virtualizer`, the engine a virtualized Listbox, Select or Combobox takes                                                                                                | [Collections](./collections.md#virtualization)                   |
+| `@uniaria/core/<component>`     | One definition, plus its `<Name>Props` and `<Name>State` types (table below)                                                                                             | The component's page                                             |
+| `@uniaria/react`                | `useComponent`, `useComponentState`, `OwnerProvider`                                                                                                                     | [React](./react.md)                                              |
+| `@uniaria/elements`             | `defineElement` and the element types                                                                                                                                    | [Custom elements](./elements.md)                                 |
+| `@uniaria/elements/<component>` | Registers `<uni-<component>>` on import, and exports its class and element type                                                                                          | [Custom elements](./elements.md#registering-entries)             |
+| `@uniaria/testing`              | `defineConformance`, the templates (`h`, `nested`, `rows`) and the mount contract types                                                                                  | [Testing](./testing.md)                                          |
+| `@uniaria/testing/browser`      | `runConformance`, real input and spoken output, for Vitest browser mode                                                                                                  | [Testing](./testing.md#running-suites)                           |
+| `@uniaria/testing/commands`     | `uniCommands` and `screenReaderCommands`, the Playwright commands for your Vitest config                                                                                 | [Testing](./testing.md#running-suites)                           |
+| `@uniaria/styles/css`           | The prebuilt stylesheets: everything, `layered`, `tokens.css`, `components.css`, one per component and `positioning.css`                                                 | [Default styles](../guide/default-styles.md#prebuilt-css)        |
+| `@uniaria/styles/build`         | `buildCss()`, the stylesheets built with your tokens, palette and overrides, in Node                                                                                     | [Default styles](../guide/default-styles.md#customized-css)      |
+| `@uniaria/styles`               | The Tasty style object of every component, also one per subpath (`@uniaria/styles/checkbox`)                                                                             | [Default styles](../guide/default-styles.md#tasty-style-objects) |
+| `@uniaria/styles/palette`       | `createPalette()` from Glaze seeds and `paletteCss()`, for colors of your own                                                                                            | [Theming](../guide/theming.mdx#your-palette)                     |
+| `@uniaria/styles/tasty`         | `uniaria()`, the Tasty plugin that adds the tokens and the palette to Tasty's runtime                                                                                    | [Theming](../guide/theming.mdx#in-tastys-runtime)                |
 
 ### Components
 
@@ -88,8 +95,9 @@ framework. `@uniaria/react` needs `react` only; it doesn't import
   Node 22 or later wherever Node loads them.
 - **Tree-shakable.** `@uniaria/core`, `@uniaria/react` and `@uniaria/testing`
   have no side effects. In `@uniaria/elements` only the registering entries
-  do (they define an element), and they are listed in its `sideEffects`.
-- **One version.** The four packages are released together under one version
+  do (they define an element), and they are listed in its `sideEffects`; in
+  `@uniaria/styles`, only the stylesheets.
+- **One version.** The five packages are released together under one version
   number. Install the same version of each.
 - **Several copies on one page.** Page-wide state (the layer stack, focus
   scopes, the input-modality tracker, the live announcer, scroll lock and the

@@ -3,7 +3,13 @@
   "changelog": ["@changesets/changelog-github", { "repo": "tenphi/uniaria" }],
   "commit": false,
   "fixed": [
-    ["@uniaria/core", "@uniaria/react", "@uniaria/elements", "@uniaria/testing"]
+    [
+      "@uniaria/core",
+      "@uniaria/react",
+      "@uniaria/elements",
+      "@uniaria/testing",
+      "@uniaria/styles"
+    ]
   ],
   "linked": [],
   "access": "public",
