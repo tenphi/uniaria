@@ -120,13 +120,13 @@ keep.
   }
   ```
 
-- With `buildCss()`, compile the roles straight to your tokens, so the CSS has
-  no `--uni-*` colors at all:
+- With `buildCss()`, the same properties as [tokens](#tokens), which go on
+  `:root` without a palette:
 
   ```ts
   buildCss({
     palette: false,
-    replaceTokens: { '#uni-accent-fill': '#brand-600' },
+    tokens: { '#uni-accent-fill': 'var(--brand-600)' },
   });
   ```
 
@@ -148,11 +148,11 @@ keep.
   });
   ```
 
-  A role that points at a token of yours takes that token's value where the
-  role is set, so set the roles where your tokens change with the scheme, or
-  below. Not with `replaceTokens`: it writes your token into each style in
-  place of the role, and leaves no `--uni-*` property to change while the page
-  runs.
+  Not with `replaceTokens`: it writes your token into each style in place of
+  the role, and leaves no `--uni-*` property to change while the page runs.
+
+A role that points at a token of yours takes that token's value where the role
+is set, so set the roles where your tokens change with the scheme, or below.
 
 ## Tokens
 

@@ -119,16 +119,15 @@ writeFileSync(
 );
 ```
 
-| Option          | Default                | What it does                                                                                                                            |
-| --------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `palette`       | The package's          | The colors: a palette from [`createPalette()`](./theming.mdx#your-palette), or `false` to leave them out.                               |
-| `tokens`        | None                   | Tokens over the sizes and the palette, as CSS: one value, or one per scheme ([Theming](./theming.mdx#tokens)).                          |
-| `components`    | All 16                 | The components to style; `[]` writes the tokens only.                                                                                   |
-| `overrides`     | None                   | Tasty styles merged into a component's, by its name (`checkbox`), or into a part outside its root, by its marker (`'popover-trigger'`). |
-| `replaceTokens` | None                   | Tokens compiled to others, as Tasty's option: `{ '#uni-accent-fill': '#brand-600' }`.                                                   |
-| `extraThemes`   | `['warning', 'note']`  | The status themes to write, which no component uses: they are there for yours.                                                          |
-| `schemes`       | Dark and high contrast | `{ dark: false }` or `{ highContrast: false }` leaves those schemes out.                                                                |
-| `layer`         | None                   | A cascade layer for the whole file.                                                                                                     |
+| Option        | Default                | What it does                                                                                                                            |
+| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `palette`     | The package's          | The colors: a palette from [`createPalette()`](./theming.mdx#your-palette), or `false` to leave them out.                               |
+| `tokens`      | None                   | Tokens over the sizes and the palette, as CSS: one value, or one per scheme ([Theming](./theming.mdx#tokens)).                          |
+| `components`  | All 16                 | The components to style; `[]` writes the tokens only.                                                                                   |
+| `overrides`   | None                   | Tasty styles merged into a component's, by its name (`checkbox`), or into a part outside its root, by its marker (`'popover-trigger'`). |
+| `extraThemes` | `['warning', 'note']`  | The status themes to write, which no component uses: they are there for yours.                                                          |
+| `schemes`     | Dark and high contrast | `{ dark: false }` or `{ highContrast: false }` leaves those schemes out.                                                                |
+| `layer`       | None                   | A cascade layer for the whole file.                                                                                                     |
 
 Overrides take Tasty's syntax and its merge rules: a state map without a `''`
 key extends the default one, a map with `''` replaces it, and `null` removes a

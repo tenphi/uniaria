@@ -32,11 +32,6 @@ export type { Palette } from './palette/create';
 export type { SchemeOptions } from './palette/css';
 export type { ExtraTheme, TokenValue, TokenValues } from './palette/sheet';
 
-/** Tokens Tasty replaces as it compiles: `'#uni-accent-fill': '#brand-600'`. */
-export type ReplaceTokens = Readonly<
-  Record<`$${string}` | `#${string}`, string>
->;
-
 export interface ComponentsCssOptions {
   /**
    * Styles merged into a component's, by its name, or into a part outside
@@ -44,8 +39,6 @@ export interface ComponentsCssOptions {
    * merge rules.
    */
   readonly overrides?: Readonly<Partial<Record<StylesTarget, Styles>>>;
-  /** Tokens to compile to other values, as Tasty's `replaceTokens`. */
-  readonly replaceTokens?: ReplaceTokens;
 }
 
 export interface BuildCssOptions extends ComponentsCssOptions {
@@ -97,11 +90,7 @@ export function componentsCss(
   names: readonly ComponentName[],
   options: ComponentsCssOptions = {},
 ): string {
-  configure({
-    units: { ...UNITS },
-    states: { ...STATES },
-    replaceTokens: { ...options.replaceTokens },
-  });
+  configure({ units: { ...UNITS }, states: { ...STATES } });
   try {
     return names
       .map((name) => componentCss(name, options.overrides ?? {}))

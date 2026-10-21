@@ -111,6 +111,16 @@ describe('buildCss options', () => {
     ).toBe(baseCss({ ...BASE_TOKENS, '#uni-surface': 'white' }));
   });
 
+  test('without a palette, a role points at a property of yours', () => {
+    const css = buildCss({
+      palette: false,
+      components: ['checkbox'],
+      tokens: { '#uni-accent-fill': 'var(--brand-600)' },
+    });
+    expect(css).toContain('--uni-accent-fill-color: var(--brand-600);');
+    expect(css).toContain('background-color: var(--uni-accent-fill-color)');
+  });
+
   test('a name that is no token throws', () => {
     expect(() => tokensCss({ tokens: { 'uni-radius': '4px' } })).toThrow(
       'Not a Tasty token',
@@ -161,16 +171,6 @@ describe('buildCss options', () => {
     expect(css).toMatch(
       /\[data-uni-part="popover-trigger"\]:where\(\[data-hovered\][^{]*\{ background-color: var\(--uni-note-fill-color\)/,
     );
-  });
-
-  test('replaceTokens compiles a token to another', () => {
-    const css = buildCss({
-      palette: false,
-      components: ['checkbox'],
-      replaceTokens: { '#uni-accent-fill': '#brand-600' },
-    });
-    expect(css).toContain('var(--brand-600-color)');
-    expect(css).not.toContain('var(--uni-accent-fill-color)');
   });
 });
 

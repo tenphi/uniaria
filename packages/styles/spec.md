@@ -124,10 +124,11 @@ writeFileSync(
   a forced scheme would otherwise keep the palette's; a value per scheme
   (`light`, `dark`, `lightContrast`, `darkContrast`) goes into those
   schemes' blocks. With `palette: false`, a color with one value goes on
-  `:root`.
-- `replaceTokens` is Tasty's: a token compiles to another
-  (`'#uni-accent-fill': '#brand-600'`), for a palette of your own
-  (Tokens).
+  `:root`, so the roles can point at a palette of your own
+  (`'#uni-accent-fill': 'var(--brand-600)'`, Tokens).
+- No `replaceTokens` (owner, 2026-10-21): Tasty's option writes a token's
+  value in place of each use, which leaves no property to change at run
+  time.
 
 ### 3. Tasty style objects
 
@@ -434,15 +435,17 @@ can only be the default theme's.
   palette out and points the roles at its own:
   - prebuilt CSS: `components.css` without `tokens.css`, and the variables
     set in your CSS (`--uni-accent-fill-color: var(--brand-600)`);
-  - `buildCss({ palette: false, replaceTokens })`: the roles compile
-    straight to your tokens (`'#uni-accent-fill': '#brand-600'`), with no
-    `--uni-*` colors in the output;
+  - `buildCss({ palette: false, tokens })`: the same variables, on
+    `:root` (`'#uni-accent-fill': 'var(--brand-600)'`);
   - Tasty's runtime: `uniaria({ palette: false })`, and the roles set as
     tokens, as the project's own are: in global styles such as `body`'s
     (`'#uni-accent-fill': '#brand-600'`), in the plugin's `tokens`
-    option, or in an element's styles. Not Tasty's `replaceTokens` (owner,
-    2026-10-21): it compiles the roles away, and nothing is left to change
-    at run time.
+    option, or in an element's styles.
+
+  Never with Tasty's `replaceTokens` (owner, 2026-10-21): it compiles the
+  roles away, and nothing is left to change at run time. A role takes
+  its value where it is set, so it is set where the project's tokens
+  change with its scheme, or below.
 
   Glaze isn't needed then, and the contrast column becomes your
   palette's to meet: the tests check the package's palette only.
