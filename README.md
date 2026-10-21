@@ -6,7 +6,7 @@ bound to React or to light-DOM custom elements by thin generic adapters.
 Styling stays with your design system: every part carries a marker
 (`data-uni` on the root, `data-element` on the others) and state attributes.
 
-> **Status:** pre-alpha. Nothing is published yet.
+> **Status:** pre-release, 0.x on npm. The API can change in any 0.x version.
 
 | Package             | Purpose                                                       |
 | ------------------- | ------------------------------------------------------------- |

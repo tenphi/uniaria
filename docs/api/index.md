@@ -104,8 +104,8 @@ framework. `@uniaria/react` needs `react` only; it doesn't import
   [settings](./dom.md#settings)) is stored under `Symbol.for('@uniaria/…')`
   keys, so two copies of UniAria on one page share it instead of fighting.
 
-UniAria is pre-alpha: nothing is on npm yet, and every package is at
-`0.0.0`.
+UniAria is a pre-release: every package is at 0.x, and its API can change
+in any 0.x version.
 
 ## Server rendering
 

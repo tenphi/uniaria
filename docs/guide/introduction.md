@@ -80,7 +80,7 @@ See [Components](../components/index.mdx).
 
 ## Status
 
-UniAria is pre-alpha and nothing is published yet. It is built by AI agents
+UniAria is a pre-release, at 0.x on npm. It is built by AI agents
 and reviewed by its author, [@tenphi](https://github.com/tenphi), who also
 made [Tasty](https://tasty.style) and [Glaze](https://glaze.tenphi.me). Its
 first consumer is [Cube UI Kit](https://github.com/cube-js/cube-ui-kit). See [Contributing](../contributing/index.md)
