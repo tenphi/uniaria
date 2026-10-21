@@ -7,7 +7,7 @@ Some components work together as separate instances: a radio and its radio
 group, a checkbox and its checkbox group, a button and its tooltip. The child
 needs its owner's state (which value is selected, whether the group is
 disabled) from its first render, wherever it sits in your tree. UniAria links
-them for you, in both adapters.
+them for you, in every adapter.
 
 | Child                                                                                  | Owner or link | How the element names it                             |
 | -------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------- |
@@ -25,17 +25,18 @@ id the element carries.
 
 A child looks for its owner in this order:
 
-1. **An explicit link.** In React, the owner's instance in the child's `owner`
-   prop (`tooltip` for a tooltip). On elements, an attribute naming the
+1. **An explicit link.** In React and Vue, the owner's instance in the child's
+   `owner` prop (`tooltip` for a tooltip). On elements, an attribute naming the
    owner's `id`, like HTML's `for`: `<uni-radio group="plan">`. Use it when
    the two sit in different branches of the page.
-2. **React context.** Inside an `OwnerProvider`, a React child finds its owner
-   during its first render, so server-rendered HTML already shows the right
-   state, such as the selected radio's `checked`.
+2. **The component tree.** Inside a React `OwnerProvider`, or inside a Vue
+   component that rendered its owner, a child finds its owner during its
+   first render, so server-rendered HTML already shows the right state, such
+   as the selected radio's `checked`.
 3. **The nearest owner around it in the DOM.** A child asks with a bubbling
    event when it connects, and the nearest owner answers. An owner that
    connects later announces itself, so upgrade order doesn't matter. This also
-   links a React child rendered inside a custom-element owner.
+   links a React or Vue child rendered inside a custom-element owner.
 
 ## In React
 
@@ -87,6 +88,60 @@ const save = useComponent(button, {
   tooltip: hint.instance,
 });
 ```
+
+## In Vue
+
+Every `useComponent` provides its instance to the components inside it, slot
+content included, so a group needs nothing more than a `<slot />` or child
+components:
+
+```vue
+<!-- PlanPicker.vue -->
+<script setup lang="ts">
+import { radioGroup } from '@uniaria/core/radio-group';
+import { useComponent } from '@uniaria/vue';
+
+import PlanOption from './PlanOption.vue';
+
+const plan = useComponent(radioGroup, { defaultValue: 'pro' });
+</script>
+
+<template>
+  <div v-bind="plan.parts.root">
+    <span v-bind="plan.parts.label">Plan</span>
+    <PlanOption value="free">Free</PlanOption>
+    <PlanOption value="pro">Pro</PlanOption>
+  </div>
+</template>
+```
+
+```vue
+<!-- PlanOption.vue -->
+<script setup lang="ts">
+import { radio } from '@uniaria/core/radio';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ value: string }>();
+const option = useComponent(radio, () => ({
+  value: props.value,
+  labelElementType: 'span',
+}));
+</script>
+
+<template>
+  <label v-bind="option.parts.root">
+    <input v-bind="option.parts.input" />
+    <span v-bind="option.parts.label"><slot /></span>
+  </label>
+</template>
+```
+
+Vue provides the stable instance, never state, so the group renders nothing
+again when its value changes. A radio teleported elsewhere with `<Teleport>`
+still finds it. For a child rendered in another branch, pass the owner
+instance: `useComponent(radio, { value: 'pro', owner: plan.instance })`. A
+tooltip goes by its own prop, as in React:
+`useComponent(button, { tooltip: hint.instance })`.
 
 ## On custom elements
 

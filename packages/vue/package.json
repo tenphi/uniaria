@@ -1,0 +1,59 @@
+{
+  "name": "@uniaria/vue",
+  "version": "0.1.0",
+  "description": "Vue adapter for UniAria: one generic useComponent composable over any UniAria component definition",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "uniaria-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenphi/uniaria.git",
+    "directory": "packages/vue"
+  },
+  "keywords": [
+    "headless",
+    "ui",
+    "vue",
+    "accessibility",
+    "a11y",
+    "aria"
+  ],
+  "author": "Andrey Yamanov",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/tenphi/uniaria/issues"
+  },
+  "homepage": "https://github.com/tenphi/uniaria#readme",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@uniaria/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@uniaria/conformance": "workspace:*",
+    "@uniaria/elements": "workspace:*",
+    "@uniaria/testing": "workspace:*",
+    "vue": "^3.5.43"
+  }
+}

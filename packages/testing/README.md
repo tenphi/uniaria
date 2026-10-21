@@ -31,9 +31,8 @@ peer.
 
 ## Documentation
 
-The [Testing API](https://github.com/tenphi/uniaria/blob/main/docs/api/testing.md)
-page, in the repository's
-[`docs`](https://github.com/tenphi/uniaria/tree/main/docs) folder.
+The [Testing API](https://uniaria.tenphi.me/api/testing/) page, on
+[uniaria.tenphi.me](https://uniaria.tenphi.me).
 
 ## License
 

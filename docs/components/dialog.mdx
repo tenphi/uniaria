@@ -64,6 +64,36 @@ export function DeleteFile(props: { onDelete(): void }) {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { dialog } from '@uniaria/core/dialog';
+import { useComponent } from '@uniaria/vue';
+
+const emit = defineEmits<{ delete: [] }>();
+
+const confirm = useComponent(dialog, {
+  onDismiss: (event) => {
+    if (event.returnValue === 'delete') emit('delete');
+  },
+});
+</script>
+
+<template>
+  <button v-bind="confirm.parts.trigger">Delete file…</button>
+  <dialog v-bind="confirm.parts.root">
+    <h2 v-bind="confirm.parts.title">Delete “report.pdf”?</h2>
+    <p v-bind="confirm.parts.description">It stays in the trash for 30 days.</p>
+    <form method="dialog">
+      <button v-bind="confirm.parts.close">Cancel</button>
+      <button value="delete">Delete</button>
+    </form>
+  </dialog>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -155,6 +185,45 @@ mount, while the dialog is still closed), so mark the field with
 `data-autofocus`.
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { dialog } from '@uniaria/core/dialog';
+import { useComponent } from '@uniaria/vue';
+
+defineProps<{ name: string }>();
+const emit = defineEmits<{ rename: [name: string] }>();
+
+const rename = useComponent(dialog);
+
+function submit(event: SubmitEvent) {
+  const data = new FormData(event.currentTarget as HTMLFormElement);
+  emit('rename', String(data.get('name')));
+}
+</script>
+
+<template>
+  <button v-bind="rename.parts.trigger">Rename…</button>
+  <dialog v-bind="rename.parts.root">
+    <h2 v-bind="rename.parts.title">Rename file</h2>
+    <form method="dialog" @submit="submit">
+      <label>
+        Name
+        <input name="name" :value.attr="name" required data-autofocus />
+      </label>
+      <button v-bind="rename.parts.close">Cancel</button>
+      <button value="rename">Rename</button>
+    </form>
+  </dialog>
+</template>
+```
+
+`:value.attr` sets the starting value, as React's `defaultValue` does, so
+what the user types stays. As in React, mark the field with
+`data-autofocus`: the dialog focuses it when it opens.
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -226,6 +295,37 @@ return (
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const emit = defineEmits<{ discard: [] }>();
+
+const discard = useComponent(dialog, {
+  role: 'alertdialog',
+  isDismissable: false,
+  onDismiss: (event) => {
+    if (event.returnValue === 'discard') emit('discard');
+  },
+});
+</script>
+
+<template>
+  <button v-bind="discard.parts.trigger">Close editor</button>
+  <dialog v-bind="discard.parts.root">
+    <h2 v-bind="discard.parts.title">Discard changes?</h2>
+    <p v-bind="discard.parts.description">
+      Your edits to this page will be lost.
+    </p>
+    <form method="dialog">
+      <button v-bind="discard.parts.close" data-autofocus>Keep editing</button>
+      <button value="discard">Discard</button>
+    </form>
+  </dialog>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -268,6 +368,25 @@ return (
     <dialog {...settings.parts.root}>…</dialog>
   </>
 );
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const isOpen = ref(false);
+
+const settings = useComponent(dialog, () => ({
+  isOpen: isOpen.value,
+  onOpenChange: (open) => (isOpen.value = open),
+}));
+</script>
+
+<template>
+  <MenuItem @action="isOpen = true">Settings…</MenuItem>
+  <dialog v-bind="settings.parts.root">…</dialog>
+</template>
 ```
 
 </Tab>
@@ -334,7 +453,7 @@ element has no role of its own and never takes focus.
 
 ## Events
 
-| Event        | React prop     | Detail               | When                                                                                                             |
+| Event        | Callback prop  | Detail               | When                                                                                                             |
 | ------------ | -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `openchange` | `onOpenChange` | `boolean`            | The trigger, a dismissal, the close part or a dialog form asks to open or close it. Never when you set `isOpen`. |
 | `dismiss`    | `onDismiss`    | `DialogDismissEvent` | The user asked to close it, just before `openchange` with `false`.                                               |
@@ -364,10 +483,10 @@ dispatches both events on itself, bubbling, with the value in `detail`.
 | `open()`  | Opens the dialog, as its trigger does, and moves focus inside. `isDisabled` only disables the trigger, so `open()` still works. |
 | `close()` | Closes it after its exit animations and returns focus. Reports `openChange`, but no `dismiss`: no user asked.                   |
 
-In React they are on the handle (`confirm.actions.open()`); on the custom
-element they are methods (`document.querySelector('uni-dialog').open()`).
-While `isOpen` is controlled, each only reports `openChange` and leaves the
-change to you.
+In React and Vue they are on the handle (`confirm.actions.open()`); on the
+custom element they are methods
+(`document.querySelector('uni-dialog').open()`). While `isOpen` is
+controlled, each only reports `openChange` and leaves the change to you.
 
 ## State
 

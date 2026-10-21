@@ -49,13 +49,15 @@ and an id you change or remove later is followed too.
 ```
 
 In React, write the id after the part spread, so it wins over the part's
-own: `<label {...ui.parts.label} id="email-label">`. The first render can't
+own: `<label {...ui.parts.label} id="email-label">`; in Vue, after `v-bind`:
+`<label v-bind="ui.parts.label" id="email-label">`. The first render can't
 see the element, so until hydration the server HTML refers to the part's
 own id. Where that matters, as for a label's `for` before JavaScript runs,
 name the control's id through the component's prop instead (`inputId`,
 `controlId`, `triggerId`, `listId`): the server render uses it.
 
-Without either, ids are generated from the component's id (React's `useId`).
+Without either, ids are generated from the component's id (`useId` in React
+and Vue).
 Options and the other repeated parts of a list always get ids made from the
 list's id and their key, `<list id>-option-<key>`, since a combo box refers
 to the highlighted option by its key.
@@ -67,10 +69,10 @@ specification before its implementation. The same scenarios run:
 
 | Run                   | When        | What                                                                                                                                                             |
 | --------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Browsers              | Every push  | Real mouse, touch and keyboard input through Playwright, in Chromium, Firefox and WebKit, through both the React adapter and the custom elements.                |
+| Browsers              | Every push  | Real mouse, touch and keyboard input through Playwright, in Chromium, Firefox and WebKit, through the React and Vue adapters and the custom elements.            |
 | Virtual screen reader | Every push  | What a screen reader would say for each state, with [Guidepup's virtual screen reader](https://www.guidepup.dev/docs/virtual).                                   |
 | VoiceOver and NVDA    | Every night | VoiceOver on macOS and NVDA on Windows, with Chromium, driven through [Guidepup](https://www.guidepup.dev), for scenarios whose speech only a real reader shows. |
-| React render counts   | Every push  | Hovering, pressing, focusing, highlighting and opening an overlay render the owning component zero times.                                                        |
+| Render counts         | Every push  | In React and Vue, hovering, pressing, focusing, highlighting and opening an overlay render the owning component zero times.                                      |
 
 Manual testing with screen readers, on mobile screen readers in particular,
 hasn't been done yet.

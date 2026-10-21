@@ -61,6 +61,37 @@ export function TermsCheckbox(props: {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { checkbox } from '@uniaria/core/checkbox';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ isInvalid: boolean }>();
+const emit = defineEmits<{ acceptedChange: [isAccepted: boolean] }>();
+
+const terms = useComponent(checkbox, () => ({
+  labelElementType: 'span',
+  isRequired: true,
+  isInvalid: props.isInvalid,
+  onSelectedChange: (isSelected) => emit('acceptedChange', isSelected),
+}));
+</script>
+
+<template>
+  <div v-bind="terms.parts.root">
+    <label v-bind="terms.parts.wrapper">
+      <input v-bind="terms.parts.input" name="terms" />
+      <span v-bind="terms.parts.indicator" />
+      <span v-bind="terms.parts.label">Accept the terms</span>
+    </label>
+    <p v-bind="terms.parts.error">You must accept the terms to continue.</p>
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -100,7 +131,7 @@ UniAria toggles its `hidden` attribute and announces it when it appears. See
 A click toggles the checkbox natively in both, with no script:
 
 - **A `label` around the input**, the indicator and a `span` label part, so
-  a click anywhere in it toggles. Labels can't nest, so in React pass
+  a click anywhere in it toggles. Labels can't nest, so in React and Vue pass
   `labelElementType: 'span'`; the custom element reads the tag itself. The
   `label` is the `wrapper` part, and the root goes around it, the
   description and the error, which stay outside the `label` so a click on
@@ -122,6 +153,23 @@ return (
     <p {...newsletter.parts.description}>One email a month.</p>
   </div>
 );
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const newsletter = useComponent(checkbox, { defaultSelected: true });
+</script>
+
+<template>
+  <div v-bind="newsletter.parts.root">
+    <input v-bind="newsletter.parts.input" name="newsletter" />
+    <label v-bind="newsletter.parts.label">Subscribe to the newsletter</label>
+    <p v-bind="newsletter.parts.description">One email a month.</p>
+  </div>
+</template>
 ```
 
 </Tab>
@@ -166,6 +214,33 @@ const all = useComponent(checkbox, {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const toppings = ['cheese', 'olives', 'basil'];
+const selected = ref<string[]>([]);
+
+const all = useComponent(checkbox, () => ({
+  labelElementType: 'span',
+  isSelected: selected.value.length === toppings.length,
+  isIndeterminate:
+    selected.value.length > 0 && selected.value.length < toppings.length,
+  onSelectedChange: (isSelected) =>
+    (selected.value = isSelected ? [...toppings] : []),
+}));
+</script>
+
+<template>
+  <label v-bind="all.parts.root">
+    <input v-bind="all.parts.input" />
+    <span v-bind="all.parts.indicator" />
+    <span v-bind="all.parts.label">All toppings</span>
+  </label>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```js
@@ -193,8 +268,8 @@ For a list of checkboxes with one value, use a
 
 Pass `isSelected` and the checkbox shows that value. A click still toggles the
 input natively and fires `selectedchange` with the new state; if you don't
-pass it back by the end of that event (React's state update included), the
-checkbox goes back to `isSelected`. On the element, set the `isSelected`
+pass it back by the end of that event (a React state update or a Vue ref set
+in the callback counts), the checkbox goes back to `isSelected`. On the element, set the `isSelected`
 property, and set it again in a `selectedchange` listener to accept a change.
 See [State](../guide/state.md).
 
@@ -255,7 +330,7 @@ You own every part's content. UniAria fills none of them.
 
 ## Events
 
-| Event            | React prop         | Detail    | When                                                                                                    |
+| Event            | Callback prop      | Detail    | When                                                                                                    |
 | ---------------- | ------------------ | --------- | ------------------------------------------------------------------------------------------------------- |
 | `selectedchange` | `onSelectedChange` | `boolean` | The user toggled the checkbox (right before the native `change`), or a form reset asks for its default. |
 | `focuschange`    | `onFocusChange`    | `boolean` | The input gained or lost focus.                                                                         |
@@ -264,7 +339,8 @@ You own every part's content. UniAria fills none of them.
 reports through the group's `valuechange` instead. The custom element
 dispatches each event on itself, bubbling, with the value in `detail`. In
 React, UniAria's part props include the input's `onInput`, `onClick`,
-`onFocus` and `onBlur`: use the events above rather than replacing them.
+`onFocus` and `onBlur`: use the events above rather than replacing them. In
+Vue, a listener of your own runs beside UniAria's.
 
 ## State
 
@@ -281,10 +357,10 @@ React, UniAria's part props include the input's `onInput`, `onClick`,
 | `isInvalid`       | `boolean` | Invalid, by the prop or the group.                                                             |
 | `isErrorShown`    | `boolean` | The error part is shown: invalid and not disabled.                                             |
 
-To render something from state in React, select it, and the component renders
-again only when that value changes:
+To render something from state in React or Vue, select it, and the component
+renders again only when that value changes (Vue gives a ref):
 
-```tsx
+```ts
 const isAccepted = useComponentState(terms, (state) => state.isSelected);
 ```
 
@@ -350,7 +426,7 @@ Checkbox handles no keys itself.
 - **Disabled with a reason.** Natively disabled checkboxes can't be reached
   by keyboard. To explain one with a [Tooltip](./tooltip.mdx), set
   `isFocusableWhenDisabled` and link the tooltip through the `tooltip` prop
-  (React) or attribute (an id).
+  (React and Vue) or attribute (an id).
 
 ## Compared with other libraries
 

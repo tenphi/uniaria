@@ -40,10 +40,8 @@ peer dependencies: add them only for the outputs that need them.
 
 ## Documentation
 
-[Default styles](https://github.com/tenphi/uniaria/blob/main/docs/guide/default-styles.md)
-and [Theming](https://github.com/tenphi/uniaria/blob/main/docs/guide/theming.mdx),
-in the repository's [`docs`](https://github.com/tenphi/uniaria/tree/main/docs)
-folder.
+[Default styles](https://uniaria.tenphi.me/guide/default-styles/) and
+[Theming](https://uniaria.tenphi.me/guide/theming/), on [uniaria.tenphi.me](https://uniaria.tenphi.me).
 
 ## License
 

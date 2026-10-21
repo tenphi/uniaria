@@ -57,6 +57,33 @@ export function SaveButton(props: { onSave(): void }) {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/vue';
+
+const emit = defineEmits<{ save: [] }>();
+
+const hint = useComponent(tooltip);
+const save = useComponent(button, {
+  onPress: () => emit('save'),
+  tooltip: hint.instance,
+});
+</script>
+
+<template>
+  <button v-bind="save.parts.root">Save</button>
+  <div v-bind="hint.parts.root">
+    Saves the file
+    <div v-bind="hint.parts.arrow" />
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -91,9 +118,9 @@ its focusable part's `aria-describedby` (so it is in the server HTML), lets
 the tooltip listen for hover on its visible part and for focus and presses on
 its focusable part, and is the tooltip's anchor.
 
-- **In React**, pass the tooltip's `instance` as the component's `tooltip`
-  prop, as above. The two can live in different components: pass the instance
-  down.
+- **In React and Vue**, pass the tooltip's `instance` as the component's
+  `tooltip` prop, as above. The two can live in different components: pass
+  the instance down.
 - **On elements**, a UniAria element sitting directly in `<uni-tooltip>`
   (with no other UniAria element between them) links itself. One elsewhere
   names the tooltip by id with a `tooltip` attribute, looked up in its
@@ -145,6 +172,20 @@ return (
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const hint = useComponent(tooltip);
+</script>
+
+<template>
+  <a v-bind="hint.parts.trigger" href="/pricing">Pricing</a>
+  <div v-bind="hint.parts.root">Plans and billing</div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -191,6 +232,23 @@ return (
     <div {...hint.parts.root}>Bold</div>
   </>
 );
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const hint = useComponent(tooltip, { relation: 'label' });
+const bold = useComponent(toggleButton, { tooltip: hint.instance });
+</script>
+
+<template>
+  <button v-bind="bold.parts.root">
+    <BoldIcon aria-hidden="true" />
+  </button>
+  <div v-bind="hint.parts.root">Bold</div>
+</template>
 ```
 
 </Tab>
@@ -257,6 +315,15 @@ const hint = useComponent(tooltip, { positionArea: 'right' });
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const hint = useComponent(tooltip, { positionArea: 'right' });
+</script>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -308,7 +375,7 @@ element marked `data-uni-part="tooltip-trigger"`.
 
 ## Events
 
-| Event        | React prop     | Detail    | When                                                                                                                       |
+| Event        | Callback prop  | Detail    | When                                                                                                                       |
 | ------------ | -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `openchange` | `onOpenChange` | `boolean` | Hover, focus, Escape, a press, scrolling or another tooltip opening asks to open or close it. Never when you set `isOpen`. |
 
@@ -322,8 +389,9 @@ like the pointer moving on, for a reason to help.
 | `open()`  | Shows the tooltip at once, without its delay. Does nothing while disabled. It stays open until `close()` or one of its usual closes: Escape, a press on the trigger, or hover or focus on the trigger ending. |
 | `close()` | Closes it. Unlike Escape, it doesn't keep the tooltip closed: the next hover opens it as usual.                                                                                                               |
 
-In React they are on the handle (`hint.actions.open()`); on the custom
-element they are methods (`document.querySelector('uni-tooltip').open()`).
+In React and Vue they are on the handle (`hint.actions.open()`); on the
+custom element they are methods
+(`document.querySelector('uni-tooltip').open()`).
 While `isOpen` is controlled, each only reports `openChange` and leaves the
 change to you.
 

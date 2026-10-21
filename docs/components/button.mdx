@@ -47,6 +47,29 @@ export function SaveButton(props: { isSaving: boolean; onSave(): void }) {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ isSaving: boolean }>();
+const emit = defineEmits<{ save: [] }>();
+
+const save = useComponent(button, () => ({
+  onPress: () => emit('save'),
+  isDisabled: props.isSaving,
+  isFocusableWhenDisabled: true,
+}));
+</script>
+
+<template>
+  <button v-bind="save.parts.root">{{ isSaving ? 'Saving…' : 'Save' }}</button>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -86,6 +109,23 @@ Render your router's link component as the root and spread the part props onto
 it for client-side routing.
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const docs = useComponent(button, { href: '/docs' });
+</script>
+
+<template>
+  <a v-bind="docs.parts.root">Docs</a>
+</template>
+```
+
+For client-side routing, bind the part props onto your router's link
+component, `<RouterLink v-bind="docs.parts.root" to="/docs">`: Vue passes them
+on to the `<a>` it renders.
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -118,13 +158,13 @@ never takes focus.
 | `isFocusableWhenDisabled`   | `focusable-when-disabled` | `boolean`                         | `false`    | While disabled, keeps the root focusable with `aria-disabled` instead of `disabled`, so focus stays put. Presses and form submission stay blocked. |
 | `href`                      | `href`                    | `string`                          | —          | Link mode. Removed while disabled.                                                                                                                 |
 | `type`                      | `type`                    | `'button' \| 'submit' \| 'reset'` | `'button'` | For a native `button` root. Deliberately not HTML's `submit` default.                                                                              |
-| `elementType`               | — (read from the tag)     | `string`                          | `'button'` | The tag you render as the root. React warns in development when it doesn't match.                                                                  |
+| `elementType`               | — (read from the tag)     | `string`                          | `'button'` | The tag you render as the root. React and Vue warn in development when it doesn't match.                                                           |
 | `shouldExcludeFromTabOrder` | `exclude-from-tab-order`  | `boolean`                         | `false`    | `tabindex="-1"`: focusable by pointer and script, skipped by Tab.                                                                                  |
 | `shouldPreventFocusOnPress` | `prevent-focus-on-press`  | `boolean`                         | `false`    | A pointer press leaves focus where it was, for buttons that act on something else, such as a toolbar over an editor.                               |
 
 ## Events
 
-| Event         | React prop      | Detail       | When                                                                         |
+| Event         | Callback prop   | Detail       | When                                                                         |
 | ------------- | --------------- | ------------ | ---------------------------------------------------------------------------- |
 | `pressstart`  | `onPressStart`  | `PressEvent` | A press begins: pointer down, Enter or Space down, or a screen-reader click. |
 | `pressend`    | `onPressEnd`    | `PressEvent` | A press ends, whether or not it activates.                                   |
@@ -165,10 +205,10 @@ with the press event in `detail`.
 | `isDisabled`     | `boolean` | The `isDisabled` prop.                                                         |
 
 Most of the time the state attributes below are all you need. To render
-something from state in React, select it, and the component renders again only
-when that value changes:
+something from state in React or Vue, select it, and the component renders
+again only when that value changes (Vue gives a ref):
 
-```tsx
+```ts
 const isPressed = useComponentState(save, (state) => state.isPressed);
 ```
 

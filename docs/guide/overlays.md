@@ -15,11 +15,11 @@ opened with `showModal()`, and a popover's root gets `popover="manual"` and
 opens with `showPopover()`. The top layer sits above
 everything else on the page, whatever its `z-index` or `overflow`, so UniAria
 never moves your elements into a portal. An overlay's markup stays where you
-wrote it, next to its trigger, which keeps the tab order, React context and
-CSS inheritance intact.
+wrote it, next to its trigger, which keeps the tab order, React context, what
+Vue provides and CSS inheritance intact.
 
 Overlays stay mounted while closed. Opening one changes attributes, not your
-component tree, so it renders nothing in React. To mount expensive content
+component tree, so it renders nothing in React or Vue. To mount expensive content
 only while open, select `isOpen` with
 [`useComponentState`](./state.md#reading-state).
 

@@ -98,7 +98,7 @@ export default defineDocsConfig({
           },
           {
             label: 'Adapters',
-            items: ['/api/react', '/api/elements'],
+            items: ['/api/react', '/api/vue', '/api/elements'],
           },
           { label: 'Tools', items: ['/api/testing'] },
         ],

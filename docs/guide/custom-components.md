@@ -6,13 +6,13 @@ description: Write your own component definition and use it in every adapter.
 Every UniAria component is a _definition_: a plain object that names the
 component's parts, declares its props and events, and turns state into
 attributes. The adapters are generic over definitions, so a definition you
-write works in React and as a custom element, renders on the server, and
-never re-renders React for its internal state, exactly like the built-in
-components.
+write works in React, in Vue and as a custom element, renders on the server,
+and never re-renders a framework component for its internal state, exactly
+like the built-in components.
 
 This guide builds a disclosure (a button that shows and hides a panel, the
 WAI-ARIA [Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/)),
-uses it from both adapters and tests it. The reference for everything used
+uses it from every adapter and tests it. The reference for everything used
 here is in [Runtime](../api/core.md) and [DOM layer](../api/dom.md).
 
 ## Plan the component
@@ -160,6 +160,31 @@ Pressing the button changes the panel's `hidden`, `aria-expanded` and
 because the label reads `isExpanded` through `useComponentState`; drop that
 line and the component renders once. See [React](../api/react.md).
 
+## Use it in Vue
+
+```vue
+<script setup lang="ts">
+import { useComponent, useComponentState } from '@uniaria/vue';
+
+import { disclosure } from './disclosure';
+
+const ui = useComponent(disclosure, { defaultExpanded: true });
+const isExpanded = useComponentState(ui, (state) => state.isExpanded);
+</script>
+
+<template>
+  <section>
+    <button v-bind="ui.parts.trigger" type="button" class="disclosure">
+      {{ isExpanded ? 'Hide shipping' : 'Show shipping' }}
+    </button>
+    <div v-bind="ui.parts.panel">Ships in two business days.</div>
+  </section>
+</template>
+```
+
+The same definition, with nothing Vue-specific in it. The template renders
+again only for the label, which reads `isExpanded`. See [Vue](../api/vue.md).
+
 ## Register it as an element
 
 ```ts
@@ -202,7 +227,7 @@ returns `undefined` on a server, so the module is safe to import anywhere.
 
 The element finds its parts by `data-element`, a root part by `data-uni`
 and a part outside the root by `data-uni-part`, at any depth, and writes the
-same attributes React does.
+same attributes React and Vue do.
 The `hidden` in the markup keeps the panel shut before the script runs;
 UniAria removes it when the panel opens. Add `default-expanded` to start open,
 or set the `isExpanded` property to control it. See
@@ -285,18 +310,19 @@ it('toggles with the mouse and the keyboard', async () => {
 });
 ```
 
-To check that both adapters behave the same, write a conformance suite with
+To check that every adapter behaves the same, write a conformance suite with
 `defineConformance` and run it against each; see [Testing](../api/testing.md).
 
 ## Going further
 
 - **Events.** Declare one with `event<Detail>()` under `events` and report it
-  from `setup()` with `ctx.emit(name, detail)`. React receives it as
+  from `setup()` with `ctx.emit(name, detail)`. React and Vue receive it as
   `on<Name>`, the element dispatches the lowercase DOM event. See
   [event](../api/core.md#event).
 - **Actions.** To let consumers expand the panel from elsewhere, return an
   `expand` function from `setup()` and list it: `actions: ['expand']`. React
-  calls `ui.actions.expand()`, and the element gets an `expand()` method. See
+  and Vue call `ui.actions.expand()`, and the element gets an `expand()`
+  method. See
   [Actions](../api/core.md#actions).
 - **Hover and focus.** `createHover` and `createFocus` add `isHovered`,
   `isFocused` and `isFocusVisible`; merge their handlers with the press's.

@@ -6,6 +6,7 @@
     [
       "@uniaria/core",
       "@uniaria/react",
+      "@uniaria/vue",
       "@uniaria/elements",
       "@uniaria/testing",
       "@uniaria/styles"

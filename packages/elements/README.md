@@ -41,9 +41,9 @@ register a component under another prefix, pass its definition to
 
 ## Documentation
 
-[Getting started](https://github.com/tenphi/uniaria/blob/main/docs/guide/getting-started.mdx)
-and every component's page are in the repository's
-[`docs`](https://github.com/tenphi/uniaria/tree/main/docs) folder.
+[Getting started](https://uniaria.tenphi.me/guide/getting-started/), the
+[custom elements API](https://uniaria.tenphi.me/api/elements/) and every component's page are on
+[uniaria.tenphi.me](https://uniaria.tenphi.me).
 
 ## License
 

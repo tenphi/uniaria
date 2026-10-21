@@ -36,6 +36,24 @@ disabled button's `disabled`, a listbox's selected options.
   `defaultOpen` opens after hydration, since opening a modal `<dialog>` needs a
   browser.
 
+## Vue
+
+`renderToString` from `vue/server-renderer`, and Nuxt with it, gives the same
+HTML: `useComponent` renders each part with its current props during setup
+and the first render.
+
+- **Ids** come from Vue's `useId`, so they match between the server and the
+  client, with the same rule for an id you write after `v-bind` as in React.
+  An app's `idPrefix` must be the same on both sides.
+- **Live values** render once as `^value` and `^checked`, attributes only, so
+  the server HTML shows them and Vue never controls the element afterwards.
+- **Owners** provided by the components around a child resolve during setup,
+  so a radio's `checked` from its group's value is in the server HTML.
+- **References to optional parts** and **overlays** work as in React: added
+  once the part is in the DOM, and closed in the HTML.
+
+Hydration attaches UniAria to the server's elements without rendering again.
+
 ## Custom elements
 
 On the server, a custom element is just your markup. It works as HTML until

@@ -11,8 +11,8 @@ A component is one task, built in small commits, in this order:
    the spec.
 3. **Definition.** The behavior, iterated until the scenarios pass in both
    adapters.
-4. **Adapters and docs.** The element entry, React sugar if it is needed, and
-   the component's page with a live demo.
+4. **Adapters and docs.** The element entry, React or Vue sugar if it is
+   needed, and the component's page with a live demo.
 
 The binding version of this workflow is in the
 [root `AGENTS.md`](https://github.com/tenphi/uniaria/blob/main/AGENTS.md)
@@ -88,7 +88,7 @@ definition module, an `index.ts` that exports it with its `<Name>Props` and
 module starts with a JSDoc block stating its responsibility and the design
 decision it implements.
 
-- **Iterate until the scenarios pass in both adapters.** Never edit a
+- **Iterate until the scenarios pass in every adapter.** Never edit a
   scenario to make the implementation pass. If a scenario looks wrong, stop
   and describe the problem to the owner.
 - **Compose, don't duplicate.** A composite component composes other
@@ -98,9 +98,10 @@ decision it implements.
   `packages/core/tsdown.config.ts`, an `exports` entry in
   `packages/core/package.json` with the `uniaria-source` condition first,
   and a line in `packages/core/src/ssr-safety.test.ts`.
-- **Make it known to both conformance runs:** add the definition to the
-  `definitions` map in `packages/react/src/conformance-adapter.tsx`, and
-  import its element entry in `packages/elements/src/conformance-adapter.ts`.
+- **Make it known to every conformance run:** add the definition to the
+  `definitions` maps in `packages/react/src/conformance-adapter.tsx` and
+  `packages/vue/src/conformance-adapter.ts`, and import its element entry in
+  `packages/elements/src/conformance-adapter.ts`.
   Each adapter's `conformance.browser.test.ts` runs suites up to the roadmap
   phase it declares; raise it as the roadmap advances.
 
@@ -114,9 +115,9 @@ decision it implements.
   `src/ssr-safety.test.ts`, plus a place in `sideEffects` in
   `packages/elements/package.json`, because importing it registers the
   element.
-- **React sugar** only if it is needed. `@uniaria/react` holds no
-  component-specific behavior; sugar may only wrap `useComponent` and
-  `useComponentState`.
+- **React or Vue sugar** only if it is needed. `@uniaria/react` and
+  `@uniaria/vue` hold no component-specific behavior; sugar may only wrap
+  `useComponent` and `useComponentState`.
 - **Docs.** A page in `docs/components/<name>.mdx` with a live demo, listed
   in the site's navigation. See [Documentation](./documentation.md).
 
@@ -133,7 +134,7 @@ decision it implements.
 | Part names                     | camelCase; `data-element` capitalizes them  | `hiddenInput`, `data-element="HiddenInput"`                     |
 | A name that is a reserved word | A descriptive export instead                | `toggleSwitch` for `name: 'switch'`                             |
 | Booleans                       | Predicates                                  | `isDisabled`, `isOpen`, `shouldPreventFocusOnPress`, `hasArrow` |
-| Events                         | camelCase; DOM lowercase; React `on` + name | `pressStart`, `pressstart`, `onPressStart`                      |
+| Events                         | camelCase; DOM lowercase; props `on` + name | `pressStart`, `pressstart`, `onPressStart`                      |
 | Bindable change events         | `<name>Change`, without the `is` prefix     | `isOpen` → `openChange`, seeded by `defaultOpen`                |
 
 - **Booleans read as predicates** everywhere, in public API and inside the

@@ -46,9 +46,8 @@ optional ones.
 
 ## Documentation
 
-[Getting started](https://github.com/tenphi/uniaria/blob/main/docs/guide/getting-started.mdx)
-and every component's page are in the repository's
-[`docs`](https://github.com/tenphi/uniaria/tree/main/docs) folder.
+[Getting started](https://uniaria.tenphi.me/guide/getting-started/) and every component's page
+are on [uniaria.tenphi.me](https://uniaria.tenphi.me).
 
 ## License
 
