@@ -774,8 +774,9 @@ its latest default branch and discards local changes, so never edit them.
 ## Documentation
 
 The site is built by `apps/docs` with [Cookbook](https://cookbook.tenphi.me),
-an Astro toolkit, from the pages in `docs/` (owner, 2026-10-19). It isn't
-published yet: CI only validates and builds it. `docs/contributing/` is the
+an Astro toolkit, from the pages in `docs/` (owner, 2026-10-19). CI
+validates and builds it; the owner publishes it to https://uniaria.tenphi.me
+by hand (`.github/workflows/pages.yml`, on `main`). `docs/contributing/` is the
 readable overview of this file for people; this file stays the binding one.
 
 - **Pages.** `docs/guide/`, `docs/components/<name>.mdx` (one per component,
@@ -806,8 +807,8 @@ readable overview of this file for people; this file stays the binding one.
 ## Not set up yet
 
 Planned by the design, added when the owner asks: public API reports (API
-Extractor), size budgets per subpath (size-limit), Custom Elements Manifest
-generation, and publishing the documentation site.
+Extractor), size budgets per subpath (size-limit) and Custom Elements
+Manifest generation.
 
 ## Releasing
 
@@ -817,7 +818,8 @@ changesets in `.changeset/`, a run opens or updates the "chore: version
 packages" pull request; once it is merged, the next run checks the commit
 again, publishes the new versions to npm with trusted publishing, and creates
 the GitHub release. The published packages share one version, the `fixed`
-group in `.changeset/config.json`.
+group in `.changeset/config.json`. The documentation site deploys on its own,
+also by hand (`gh workflow run pages.yml` on `main`).
 
 ## Before pushing changes
 

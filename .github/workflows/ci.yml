@@ -79,7 +79,7 @@ jobs:
 
   # The documentation site (apps/docs): type check, Cookbook's content and
   # link checks, the production build with its demo bundles, and the built
-  # output's checks. It isn't published anywhere yet.
+  # output's checks. The owner publishes it by hand (pages.yml).
   docs:
     if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
     runs-on: ubuntu-latest

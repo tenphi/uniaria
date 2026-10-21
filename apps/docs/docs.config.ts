@@ -4,6 +4,7 @@ export default defineDocsConfig({
   root: '../..',
   site: {
     title: 'UniAria',
+    url: 'https://uniaria.tenphi.me',
     description:
       'Accessible component behavior written once, for React, custom elements and any framework.',
     repository: 'https://github.com/tenphi/uniaria',
