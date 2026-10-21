@@ -67,6 +67,9 @@ Not part of the package:
   can carry similar rules, never conflicting ones).
 - No layer, except in `layered.css`, the layered form of `index.css`
   (Specificity and overrides).
+- `positioning.css`, opt-in and in no other file: each overlay's default
+  placement for CSS positioning mode, inside
+  `@supports (position-area: top)` (Cases).
 - The files are generated into `dist/` at build time; nothing generated is
   committed.
 
@@ -692,6 +695,7 @@ packages/styles/
     tokens.ts          sizes, units and state aliases
     plugin.ts          uniaria(): the Tasty plugin (/tasty)
     build.ts           buildCss() (/build, Node only)
+    positioning.ts     css/positioning.css: the overlays' placements
     generate.ts        writes dist/css/*.css with buildCss() defaults and
                        dist/default-palette.js; an internal entry
     shared/            fragments: field text, input box, option, popup, focus, marks
@@ -831,8 +835,12 @@ command, which runs in Node, so they need no build first.
   (`Thumb`), every state is one UniAria writes, and the built CSS has none
   of the excluded syntax (Web platform baseline).
 - **Customizing** (node): each `buildCss()` option, the token layout by
-  scheme, the default palette's data against `createPalette()`, and the
-  merge port against Tasty's `mergeStyles()` on every component.
+  scheme, and the default palette's data against `createPalette()`.
+- **CSS positioning mode** (node and browser): `positioning.css` takes
+  each component's default `positionArea` and `positionTryFallbacks` from
+  `@uniaria/core`, and with it, in CSS mode, the browser puts each
+  overlay on that side of its anchor, the default styles' margin away
+  (where anchor positioning is supported).
 - **The plugin** (node and browser): its global styles render with Tasty,
   every token included; in Tasty's runtime with React and no prebuilt
   CSS, the page and forced schemes resolve to the palette's colors under

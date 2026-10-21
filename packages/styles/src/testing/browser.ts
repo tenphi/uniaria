@@ -7,6 +7,7 @@ import type { BuildCssOptions } from '../build';
 declare module 'vitest/browser' {
   interface BrowserCommands {
     uniStylesCss(options?: BuildCssOptions): Promise<string>;
+    uniStylesPositioningCss(): Promise<string>;
   }
 }
 

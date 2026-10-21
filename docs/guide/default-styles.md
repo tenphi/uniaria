@@ -34,13 +34,14 @@ that need them.
 That is everything: the tokens and all 16 components. The package has a file
 for each part of it too:
 
-| Import                               | Holds                                                                  |
-| ------------------------------------ | ---------------------------------------------------------------------- |
-| `@uniaria/styles/css`                | The tokens and every component.                                        |
-| `@uniaria/styles/css/layered`        | The same, inside `@layer uniaria`.                                     |
-| `@uniaria/styles/css/tokens.css`     | The sizes, the durations, and the palette's colors in every scheme.    |
-| `@uniaria/styles/css/components.css` | Every component and the sizes, without colors: for colors of your own. |
-| `@uniaria/styles/css/<name>.css`     | One component, such as `checkbox.css`. It needs `tokens.css`.          |
+| Import                                | Holds                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| `@uniaria/styles/css`                 | The tokens and every component.                                        |
+| `@uniaria/styles/css/layered`         | The same, inside `@layer uniaria`.                                     |
+| `@uniaria/styles/css/tokens.css`      | The sizes, the durations, and the palette's colors in every scheme.    |
+| `@uniaria/styles/css/components.css`  | Every component and the sizes, without colors: for colors of your own. |
+| `@uniaria/styles/css/<name>.css`      | One component, such as `checkbox.css`. It needs `tokens.css`.          |
+| `@uniaria/styles/css/positioning.css` | Opt-in: each overlay's default placement in CSS positioning mode.      |
 
 So a page with a few components takes the tokens and those:
 
@@ -49,6 +50,12 @@ So a page with a few components takes the tokens and those:
 @import '@uniaria/styles/css/checkbox.css';
 @import '@uniaria/styles/css/select.css';
 ```
+
+In [CSS positioning mode](./overlays.md#script-mode-and-css-mode), UniAria
+leaves placing overlays to your CSS. `positioning.css` places each one on its
+component's default side with CSS anchor positioning, where the browser has
+it, and the component's styles keep the gap from the trigger as a `margin`.
+Without it, place the overlays in your own CSS.
 
 The styles select the markers and state attributes UniAria writes
 ([Parts](./styling.md#parts)), and add no class or attribute of their own,
@@ -200,7 +207,3 @@ export default {
   CSS; text takes the page's font, at the sizes of the tokens.
 - **Custom element hosts.** The styles target the parts inside
   `<uni-checkbox>`, never the host, which keeps its default display.
-- **Overlay placement in CSS mode.** In
-  [CSS positioning mode](./overlays.md#script-mode-and-css-mode), place
-  overlays in your CSS; the styles give them their gap from the trigger as a
-  `margin`.

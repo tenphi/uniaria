@@ -205,7 +205,7 @@ describe('the built CSS', () => {
   test('has no syntax the web platform baseline rules out', () => {
     expect(css).not.toMatch(/@starting-style/);
     expect(css).not.toMatch(/light-dark\(/);
-    // Relative color syntax, which `#token.N` alpha compiles to.
+    // Relative color syntax, which `#token.N` alpha compiled to before Tasty 3.12.
     expect(css).not.toMatch(
       /\b(?:rgb|hsl|hwb|lab|lch|oklab|oklch|color)\(\s*from\b/,
     );

@@ -8,10 +8,15 @@ import type { BrowserCommand } from 'vitest/node';
 
 import { buildCss } from '../build';
 import type { BuildCssOptions } from '../build';
+import { positioningCss } from '../positioning';
 
 export const uniStylesCss: BrowserCommand<[options?: BuildCssOptions]> = (
   _context,
   options,
 ) => buildCss(options);
 
-export const stylesCommands = { uniStylesCss };
+/** `css/positioning.css`. */
+export const uniStylesPositioningCss: BrowserCommand<[]> = () =>
+  positioningCss();
+
+export const stylesCommands = { uniStylesCss, uniStylesPositioningCss };

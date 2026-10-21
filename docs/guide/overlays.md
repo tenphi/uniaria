@@ -137,7 +137,9 @@ configure({ positioning: 'css' });
 }
 ```
 
-Script mode stays the default until anchor positioning is Baseline widely
-available. In both modes UniAria writes `--anchor-width`,
+With the [default styles](./default-styles.md),
+`@uniaria/styles/css/positioning.css` places every overlay this way, on its
+default side. Script mode stays the default until anchor positioning is
+Baseline widely available. In both modes UniAria writes `--anchor-width`,
 `--available-width` and `--available-height` on the overlay's root, and the
 arrow's offset along its edge. See [Styling](./styling.md#css-variables).

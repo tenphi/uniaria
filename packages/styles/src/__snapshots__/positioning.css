@@ -1,0 +1,6 @@
+@supports (position-area: top) {
+  [data-uni="select"] [data-element="Popover"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { inset: auto; position-area: block-end span-inline-end; position-try-fallbacks: flip-block, flip-inline; }
+  [data-uni="combobox"] [data-element="Popover"]:where(:not([data-uni="combobox"] [data-uni]:not([data-uni="combobox"]) *)) { inset: auto; position-area: block-end span-inline-end; position-try-fallbacks: flip-block, flip-inline; }
+  [data-uni="popover"] { inset: auto; position-area: bottom; position-try-fallbacks: flip-block, flip-inline; }
+  [data-uni="tooltip"] { inset: auto; position-area: top; position-try-fallbacks: flip-block, flip-inline; }
+}

@@ -16,12 +16,13 @@ const file = (name: string): string => {
 
 describe('the prebuilt stylesheets', () => {
   // A Tasty upgrade that changes the output shows up here.
-  test.each(['tokens.css', ...COMPONENT_NAMES.map((name) => `${name}.css`)])(
-    '%s matches its snapshot',
-    async (name) => {
-      await expect(file(name)).toMatchFileSnapshot(`./__snapshots__/${name}`);
-    },
-  );
+  test.each([
+    'tokens.css',
+    ...COMPONENT_NAMES.map((name) => `${name}.css`),
+    'positioning.css',
+  ])('%s matches its snapshot', async (name) => {
+    await expect(file(name)).toMatchFileSnapshot(`./__snapshots__/${name}`);
+  });
 
   test('index.css is tokens.css and every component file', () => {
     const components = COMPONENT_NAMES.map((name) => file(`${name}.css`));
