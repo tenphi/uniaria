@@ -63,6 +63,8 @@ jobs:
           publish-script: pnpm release
           pr-title: 'chore: version packages'
           commit-message: 'chore: version packages'
+          # One release for the version, below, not one per package.
+          create-github-releases: false
         env:
           # npm makes provenance only from a public repository.
           NPM_CONFIG_PROVENANCE: ${{ !github.event.repository.private }}
