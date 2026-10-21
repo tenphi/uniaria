@@ -380,6 +380,21 @@ describe.each([
       expect(ring(part(root, 'List')).offset).toBe(1);
     });
 
+    test('an empty list holds its text in an option’s place, under the label', async () => {
+      const root = await adapter.listbox({ isEmpty: true });
+      const list = box(part(root, 'List'));
+      const text = box(part(root, 'Empty'));
+      // Inside the list's padding and border, 4 and 1 pixels.
+      expect(text.top - list.top).toBeCloseTo(5, 0);
+      expect(list.bottom - text.bottom).toBeCloseTo(5, 0);
+      expect(text.left - list.left).toBeCloseTo(5, 0);
+      expect(list.right - text.right).toBeCloseTo(5, 0);
+      expect(list.top - box(part(root, 'Label')).bottom).toBeCloseTo(8, 0);
+      // A click on the text reaches the list.
+      await pointer.click(part(root, 'Empty'));
+      expect(document.activeElement).toBe(part(root, 'List'));
+    });
+
     test('a disabled option takes the disabled text and no fill', async () => {
       const root = await adapter.listbox();
       const cherry = option(root, 'cherry');
@@ -570,9 +585,10 @@ describe('a virtualized listbox', () => {
     ));
   }
 
-  function VirtualListbox() {
+  /** With no label, so the list's box opens the column. */
+  function VirtualListbox(props: { items?: readonly Item[] }) {
     const list = useComponent(listbox, {
-      items: MANY,
+      items: props.items ?? MANY,
       virtualizer,
       itemSize: 32,
     });
@@ -583,6 +599,7 @@ describe('a virtualized listbox', () => {
             <Rows list={list} />
           </div>
         </div>
+        <p {...list.parts.empty}>No items</p>
       </div>
     );
   }
@@ -603,5 +620,15 @@ describe('a virtualized listbox', () => {
     expect(first.left - box(scroller).left).toBeCloseTo(5, 0);
     expect(first.width).toBeCloseTo(box(list).width, 0);
     expect(first.height).toBeCloseTo(32, 0);
+  });
+
+  test('empty, its text is inside the scroller, which opens the column', async () => {
+    await mountReact(<VirtualListbox items={[]} />);
+    const root = rootOf('listbox');
+    const scroller = box(part(root, 'Scroller'));
+    const text = box(part(root, 'Empty'));
+    expect(scroller.top).toBeCloseTo(box(root).top, 0);
+    expect(text.top - scroller.top).toBeCloseTo(5, 0);
+    expect(scroller.bottom - text.bottom).toBeCloseTo(5, 0);
   });
 });

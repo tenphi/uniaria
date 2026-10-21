@@ -62,6 +62,8 @@ export const STATES = {
   '@uni-list-tab-stop': ':has(List[tabindex="0"])',
   // An overlay with an arrow, which needs its overflow.
   '@uni-arrowed': ':has(> Arrow)',
+  // A field with its own label, over what it names.
+  '@uni-labelled': ':has(> Label)',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',
   '@uni-forced-colors': '@media(forced-colors: active)',
 } as const;
