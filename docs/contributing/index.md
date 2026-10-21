@@ -15,6 +15,7 @@ every command; read it in full before you change anything. Each package adds
 a short file with its local rules:
 [`@uniaria/core`](https://github.com/tenphi/uniaria/blob/main/packages/core/AGENTS.md),
 [`@uniaria/react`](https://github.com/tenphi/uniaria/blob/main/packages/react/AGENTS.md),
+[`@uniaria/vue`](https://github.com/tenphi/uniaria/blob/main/packages/vue/AGENTS.md),
 [`@uniaria/elements`](https://github.com/tenphi/uniaria/blob/main/packages/elements/AGENTS.md),
 [`@uniaria/testing`](https://github.com/tenphi/uniaria/blob/main/packages/testing/AGENTS.md)
 and [`conformance`](https://github.com/tenphi/uniaria/blob/main/conformance/AGENTS.md).
@@ -40,6 +41,7 @@ links to the rules rather than repeating each one. If a page here and an
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | `packages/core`     | `@uniaria/core`: the runtime, `dom/` (the binder, interactions, overlays, positioning), collections, the virtualizer and one subpath per component            | Yes                  |
 | `packages/react`    | `@uniaria/react`: `useComponent`, `useComponentState` and `OwnerProvider`                                                                                     | Yes                  |
+| `packages/vue`      | `@uniaria/vue`: `useComponent` and `useComponentState`; its spec in `spec.md`                                                                                 | Yes                  |
 | `packages/elements` | `@uniaria/elements`: `defineElement` and one registering entry per component                                                                                  | Yes                  |
 | `packages/testing`  | `@uniaria/testing`: the mount contract, the conformance runner, real input and screen-reader helpers                                                          | Yes, for development |
 | `conformance`       | `@uniaria/conformance`: the scenarios every adapter must pass, one folder per component                                                                       | No                   |
@@ -52,7 +54,7 @@ links to the rules rather than repeating each one. If a page here and an
 
 All published packages share one version, a Changesets `fixed` group. Inside
 `packages/core/src`, `runtime/` and `collections/` are DOM-free, `dom/` holds
-what both adapters share, and `components/<name>/` holds each component's
+what every adapter shares, and `components/<name>/` holds each component's
 spec, definition and tests. See [Architecture](./architecture.md#layers).
 
 ## Setup
@@ -157,7 +159,7 @@ request, on Ubuntu with Node 22:
 - **`ci`:** `pnpm install --frozen-lockfile`, the Playwright browsers (cached
   per lockfile), then `pnpm lint`, `pnpm format:check`, `pnpm typecheck`,
   `pnpm build` and `pnpm test`. That runs the conformance scenarios in three
-  engines and both adapters, spoken-output checks included; only the
+  engines and every adapter, spoken-output checks included; only the
   scenarios that need a real screen reader wait for the nightly run.
 - **`conformance-separation`:** `scripts/check-conformance-separation.mjs`
   checks each pushed commit, or a pull request's whole diff, for changes to

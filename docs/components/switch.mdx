@@ -62,6 +62,34 @@ export function WifiSwitch(props: {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { toggleSwitch } from '@uniaria/core/switch';
+import { useComponent } from '@uniaria/vue';
+
+const isOn = defineModel<boolean>({ required: true });
+
+const wifi = useComponent(toggleSwitch, () => ({
+  labelElementType: 'span',
+  isSelected: isOn.value,
+  onSelectedChange: (isSelected) => (isOn.value = isSelected),
+}));
+</script>
+
+<template>
+  <label v-bind="wifi.parts.root">
+    <input v-bind="wifi.parts.input" name="wifi" />
+    <span v-bind="wifi.parts.indicator">
+      <span data-element="Thumb" />
+    </span>
+    <span v-bind="wifi.parts.label">Wi-Fi</span>
+  </label>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -98,11 +126,11 @@ one of Switch's parts, so UniAria leaves it alone.
 Everything else works as in Checkbox:
 
 - **Layouts.** A `label` (with a `span` label part, and
-  `labelElementType: 'span'` in React) makes the whole row toggle. It is the
-  root of a plain switch, or the `wrapper` part inside the root when the
-  switch has a description or an error, which stay outside the `label`, as
-  in the demo. A `div` root with a `label` label part toggles from the input
-  and the label only. See [Checkbox](./checkbox.mdx).
+  `labelElementType: 'span'` in React and Vue) makes the whole row toggle.
+  It is the root of a plain switch, or the `wrapper` part inside the root
+  when the switch has a description or an error, which stay outside the
+  `label`, as in the demo. A `div` root with a `label` label part toggles
+  from the input and the label only. See [Checkbox](./checkbox.mdx).
 - **Hiding the input.** Lay it over the `label` with `opacity: 0`, or clip it.
   Never `display: none`, which takes it out of the tab order and the
   accessibility tree.
@@ -165,7 +193,7 @@ yours, and a switch is either on or off.
 
 ## Events
 
-| Event            | React prop         | Detail    | When                                                                                                  |
+| Event            | Callback prop      | Detail    | When                                                                                                  |
 | ---------------- | ------------------ | --------- | ----------------------------------------------------------------------------------------------------- |
 | `selectedchange` | `onSelectedChange` | `boolean` | The user toggled the switch (right before the native `change`), or a form reset asks for its default. |
 | `focuschange`    | `onFocusChange`    | `boolean` | The input gained or lost focus.                                                                       |
@@ -173,7 +201,8 @@ yours, and a switch is either on or off.
 `selectedchange` never fires for a value you set. The custom element
 dispatches each event on itself, bubbling, with the value in `detail`. In
 React, UniAria's part props include the input's `onInput`, `onClick`,
-`onFocus` and `onBlur`: use the events above rather than replacing them.
+`onFocus` and `onBlur`: use the events above rather than replacing them. In
+Vue, listeners you add next to `v-bind` run as well as UniAria's.
 
 ## State
 
@@ -189,8 +218,8 @@ React, UniAria's part props include the input's `onInput`, `onClick`,
 | `isInvalid`      | `boolean` | The `isInvalid` prop.                                                                          |
 | `isErrorShown`   | `boolean` | The error part is shown: invalid and not disabled.                                             |
 
-To render something from state in React, select it, and the component renders
-again only when that value changes:
+To render something from state in React or Vue, select it, and the component
+renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
 const isOn = useComponentState(wifi, (state) => state.isSelected);
@@ -256,7 +285,7 @@ Switch handles no keys itself.
   exposes an indeterminate switch as "mixed", which ARIA treats as off.
 - **Disabled with a reason.** To explain a disabled switch with a
   [Tooltip](./tooltip.mdx), set `isFocusableWhenDisabled` and link the
-  tooltip through the `tooltip` prop (React) or attribute (an id).
+  tooltip through the `tooltip` prop (React and Vue) or attribute (an id).
 
 ## Compared with other libraries
 

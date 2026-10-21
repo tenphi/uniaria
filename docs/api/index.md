@@ -3,18 +3,19 @@ title: Packages
 description: The UniAria packages and their entry points.
 ---
 
-UniAria is five packages. `@uniaria/core` holds every component's behavior;
-the two adapters bind it to React and to custom elements; `@uniaria/testing`
+UniAria is six packages. `@uniaria/core` holds every component's behavior;
+the three adapters bind it to React, to Vue and to custom elements; `@uniaria/testing`
 checks an adapter or a component against real input and screen readers;
 `@uniaria/styles` is an optional look for every component.
 
-| Package             | What it is                                                                       | Install it when                                                      |
-| ------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `@uniaria/core`     | The runtime, the DOM layer, collections and one definition per component         | Always: the adapters depend on it                                    |
-| `@uniaria/react`    | `useComponent`, `useComponentState` and `OwnerProvider`                          | You render with React                                                |
-| `@uniaria/elements` | `defineElement` and one registering entry per component                          | You render HTML: plain pages, server templates, Vue, Svelte, Angular |
-| `@uniaria/testing`  | The conformance runner, the mount contract, real input and screen-reader helpers | You write an adapter or test your own components                     |
-| `@uniaria/styles`   | Default styles: prebuilt CSS, a CSS builder, Tasty style objects and the palette | You want a look to start from                                        |
+| Package             | What it is                                                                       | Install it when                                                 |
+| ------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `@uniaria/core`     | The runtime, the DOM layer, collections and one definition per component         | Always: the adapters depend on it                               |
+| `@uniaria/react`    | `useComponent`, `useComponentState` and `OwnerProvider`                          | You render with React                                           |
+| `@uniaria/vue`      | `useComponent` and `useComponentState`                                           | You render with Vue                                             |
+| `@uniaria/elements` | `defineElement` and one registering entry per component                          | You render HTML: plain pages, server templates, Svelte, Angular |
+| `@uniaria/testing`  | The conformance runner, the mount contract, real input and screen-reader helpers | You write an adapter or test your own components                |
+| `@uniaria/styles`   | Default styles: prebuilt CSS, a CSS builder, Tasty style objects and the palette | You want a look to start from                                   |
 
 ## Entry points
 
@@ -29,6 +30,7 @@ Import from these paths, never from files inside a package.
 | `@uniaria/core/virtual`         | `virtualizer`, the engine a virtualized Listbox, Select or Combobox takes                                                                                                | [Collections](./collections.md#virtualization)                   |
 | `@uniaria/core/<component>`     | One definition, plus its `<Name>Props` and `<Name>State` types (table below)                                                                                             | The component's page                                             |
 | `@uniaria/react`                | `useComponent`, `useComponentState`, `OwnerProvider`                                                                                                                     | [React](./react.md)                                              |
+| `@uniaria/vue`                  | `useComponent`, `useComponentState`                                                                                                                                      | [Vue](./vue.md)                                                  |
 | `@uniaria/elements`             | `defineElement` and the element types                                                                                                                                    | [Custom elements](./elements.md)                                 |
 | `@uniaria/elements/<component>` | Registers `<uni-<component>>` on import, and exports its class and element type                                                                                          | [Custom elements](./elements.md#registering-entries)             |
 | `@uniaria/testing`              | `defineConformance`, the templates (`h`, `nested`, `rows`) and the mount contract types                                                                                  | [Testing](./testing.md)                                          |

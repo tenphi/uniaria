@@ -5,7 +5,7 @@ description: Node and browser tests, conformance scenarios, render counts, and s
 
 Behavior is tested in real browsers, not in a simulated DOM. Logic that
 needs no DOM is tested in Node. Every component has conformance scenarios
-that both adapters must pass, and they check what a screen reader says as
+that every adapter must pass, and they check what a screen reader says as
 well as what the DOM holds.
 
 The rules are in the
@@ -33,13 +33,14 @@ needed first.
 - **Node:** the runtime, collections, component definitions driven through
   `createInstance` (call actions and part handlers, read `attrs` and
   `getState()`), server rendering with `renderToString`, and the
-  `ssr-safety.test.ts` files of `@uniaria/core`, `@uniaria/react` and
-  `@uniaria/elements`, which import every entry without a DOM.
+  `ssr-safety.test.ts` files of `@uniaria/core` and the adapters, which
+  import every entry without a DOM.
 - **Browser:** anything that renders, touches the DOM, moves focus or
   listens to a screen reader. The interactions in `dom/` have their own
   `*.browser.test.ts` files, and the adapters have theirs: render counts,
-  StrictMode, hydration, owner lookup, and custom elements mounted inside
-  React to prove the two never fight over nodes.
+  StrictMode in React, `<KeepAlive>`, `<Teleport>` and compiled templates in
+  Vue, hydration, owner lookup, and custom elements mounted inside React and
+  Vue to prove they never fight over nodes.
 
 ## Running tests
 
@@ -136,15 +137,20 @@ reached, `runConformance(adapter, suites, { phase: 4 })`, and later scenarios
 are reported as skipped, not failed. Raise the phase in the adapter's
 `conformance.browser.test.ts` as the roadmap advances.
 
-### Both adapters
+### Every adapter
 
-`packages/react/src/conformance.browser.test.ts` and
+`packages/react/src/conformance.browser.test.ts`,
+`packages/vue/src/conformance.browser.test.ts` and
 `packages/elements/src/conformance.browser.test.ts` run every suite:
 
 - **React** renders the template inside StrictMode, so every scenario also
   runs through a double mount, spreading `ui.parts.<name>` onto the part
   elements. A nested component renders with its own `useComponent()` inside
   its owner's `OwnerProvider`.
+- **Vue** renders the template with `h()` in a harness component, binding
+  `ui.parts.<name>` onto the part elements as `v-bind` does. A nested
+  component renders with its own `useComponent()`, which finds the component
+  around it as its owner.
 - **Custom elements** render the template as plain DOM, wrap the parts in
   the component's host, `<uni-<name>>`, and set props as properties. A nested
   component's children are wrapped in its own host.
@@ -157,10 +163,11 @@ scenarios that place a part run in both positioning modes, `'script'` and
 
 ## Render counts
 
-An internal interaction re-renders the owning React component zero times:
-hover, press, focus, highlight, opening an overlay. Conformance scenarios
-check it through `renderCount()`. The React adapter counts every render of
-the component that owns the instance; the elements adapter returns `0`. A
+An internal interaction re-renders the owning React or Vue component zero
+times: hover, press, focus, highlight, opening an overlay. Conformance
+scenarios check it through `renderCount()`. The React and Vue adapters count
+every render of the component that owns the instance; the elements adapter
+returns `0`. A
 scenario reads the count, interacts, and expects the same count:
 
 ```ts
@@ -173,7 +180,8 @@ expect(mounted.renderCount()).toBe(renders);
 The hook tests in `packages/react/src/use-component.browser.test.tsx` count
 renders exactly, outside StrictMode where they need to: a selector
 re-renders only when its selected value changes, and a prop change renders
-once.
+once. `packages/vue/src/use-component.browser.test.ts` does the same for
+Vue.
 
 `packages/react/src/compare/compare.browser.test.tsx` compares Button with
 React Aria's: at every step of one real-input script it requires the same

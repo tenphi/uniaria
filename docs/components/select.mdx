@@ -78,6 +78,51 @@ export function FruitSelect() {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { select } from '@uniaria/core/select';
+import { useComponent } from '@uniaria/vue';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry' },
+];
+
+const fruit = useComponent(select, {
+  items: fruits,
+  placeholder: 'Pick a fruit',
+  isRequired: true,
+});
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    <span v-bind="fruit.parts.label">Fruit</span>
+    <button v-bind="fruit.parts.trigger">
+      <span v-bind="fruit.parts.value" />
+      <ChevronIcon aria-hidden="true" />
+    </button>
+    <div v-bind="fruit.parts.popover">
+      <div v-bind="fruit.parts.list">
+        <div
+          v-for="item in fruits"
+          :key="item.key"
+          v-bind="fruit.getItemProps('option', item.key)"
+        >
+          {{ item.textValue }}
+        </div>
+      </div>
+      <p v-bind="fruit.parts.empty">No fruit</p>
+    </div>
+    <select v-bind="fruit.parts.hiddenSelect" name="fruit" />
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -123,8 +168,8 @@ focus within it: without a root, `focuschange` never fires and the
 UniAria writes the `value` part's text: the selected option's `getTextValue`,
 the selected options' texts joined with `, ` in multiple mode, or the
 `placeholder` while nothing is selected, when it also sets
-`data-placeholder`. Leave the part empty. In React the text appears once the
-component mounts.
+`data-placeholder`. Leave the part empty. In React and Vue the text appears once
+the component mounts.
 
 For an icon or other markup in the trigger, leave the `value` part out and
 render the value yourself:
@@ -139,6 +184,23 @@ return (
     {selected ? <FruitBadge fruit={selected} /> : 'Pick a fruit'}
   </button>
 );
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const fruit = useComponent(select, { items: fruits });
+const selected = useComponentState(fruit, (state) => state.value[0]);
+</script>
+
+<template>
+  <button v-bind="fruit.parts.trigger">
+    <FruitBadge v-if="selected" :fruit="selected" />
+    <template v-else>Pick a fruit</template>
+  </button>
+</template>
 ```
 
 </Tab>
@@ -197,6 +259,23 @@ const fruit = useComponent(select, {
   isOpen,
   onOpenChange: setOpen,
 });
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const value = ref<readonly string[]>([]);
+const isOpen = ref(false);
+const fruit = useComponent(select, () => ({
+  items: fruits,
+  value: value.value,
+  onValueChange: (keys) => (value.value = keys),
+  isOpen: isOpen.value,
+  onOpenChange: (open) => (isOpen.value = open),
+}));
+</script>
 ```
 
 </Tab>
@@ -286,7 +365,7 @@ name: no `label` part, no `labelledBy` and no `aria-label` on the trigger.
 
 ## Events
 
-| Event                | React prop             | Detail                                                     | When                                                                                                                                   |
+| Event                | Callback prop          | Detail                                                     | When                                                                                                                                   |
 | -------------------- | ---------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `valuechange`        | `onValueChange`        | `readonly string[]`                                        | The user changed the selection, in the list or by typing or ArrowLeft and ArrowRight on the closed trigger. Never for a value you set. |
 | `openchange`         | `onOpenChange`         | `boolean`                                                  | The user opened or closed the list. Once per change, never for an `isOpen` you set.                                                    |
@@ -300,8 +379,9 @@ name: no `label` part, no `labelledBy` and no `aria-label` on the trigger.
 | `open()`  | Opens the list, as Enter on the trigger does: focus goes to the selected option, else the first one. Does nothing while disabled. |
 | `close()` | Closes the list and returns focus to the trigger if it was in the list.                                                           |
 
-In React they are on the handle (`fruit.actions.open()`); on the custom
-element they are methods (`document.querySelector('uni-select').open()`).
+In React and Vue they are on the handle (`fruit.actions.open()`); on the
+custom element they are methods
+(`document.querySelector('uni-select').open()`).
 While `isOpen` is controlled, each only reports `openChange` and leaves the
 change to you.
 

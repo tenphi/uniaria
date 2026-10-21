@@ -49,6 +49,28 @@ export function BoldButton(props: {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { toggleButton } from '@uniaria/core/toggle-button';
+import { useComponent } from '@uniaria/vue';
+
+const isBold = defineModel<boolean>({ required: true });
+
+const bold = useComponent(toggleButton, () => ({
+  isSelected: isBold.value,
+  onSelectedChange: (isSelected) => (isBold.value = isSelected),
+  shouldPreventFocusOnPress: true,
+}));
+</script>
+
+<template>
+  <button v-bind="bold.parts.root">Bold</button>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -95,6 +117,23 @@ const mute = useComponent(toggleButton, {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const isMuted = ref(false);
+const mute = useComponent(toggleButton, () => ({
+  isSelected: isMuted.value,
+  onSelectedChange: (isSelected) => (isMuted.value = isSelected),
+}));
+</script>
+
+<template>
+  <button v-bind="mute.parts.root">Mute</button>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```js
@@ -130,7 +169,7 @@ own and never takes focus.
 | `defaultSelected`           | `default-selected`        | `boolean` | `false`    | The starting state, uncontrolled.                                                                                     |
 | `isDisabled`                | `disabled`                | `boolean` | `false`    | Native `disabled` on a `button`; `aria-disabled="true"` and no tab stop elsewhere. Keeps its state and never toggles. |
 | `isFocusableWhenDisabled`   | `focusable-when-disabled` | `boolean` | `false`    | While disabled, keeps the root focusable with `aria-disabled` instead of `disabled`. It still never toggles.          |
-| `elementType`               | — (read from the tag)     | `string`  | `'button'` | The tag you render as the root. React warns in development when it doesn't match.                                     |
+| `elementType`               | — (read from the tag)     | `string`  | `'button'` | The tag you render as the root. React and Vue warn in development when it doesn't match.                              |
 | `shouldExcludeFromTabOrder` | `exclude-from-tab-order`  | `boolean` | `false`    | `tabindex="-1"`: focusable by pointer and script, skipped by Tab.                                                     |
 | `shouldPreventFocusOnPress` | `prevent-focus-on-press`  | `boolean` | `false`    | A pointer press toggles and leaves focus where it was, such as in the editor a formatting toggle acts on.             |
 
@@ -141,7 +180,7 @@ submits.
 
 ## Events
 
-| Event            | React prop         | Detail       | When                                                                                        |
+| Event            | Callback prop      | Detail       | When                                                                                        |
 | ---------------- | ------------------ | ------------ | ------------------------------------------------------------------------------------------- |
 | `pressstart`     | `onPressStart`     | `PressEvent` | A press begins, as in Button.                                                               |
 | `pressend`       | `onPressEnd`       | `PressEvent` | A press ends, whether or not it activates.                                                  |
@@ -168,10 +207,10 @@ itself, bubbling, with the detail in `detail`.
 | `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or screen reader. |
 | `isDisabled`     | `boolean` | The `isDisabled` prop.                                                       |
 
-To render something from state in React, select it, and the component renders
-again only when that value changes:
+To render something from state in React or Vue, select it, and the component
+renders again only when that value changes (Vue gives a ref):
 
-```tsx
+```ts
 const isBold = useComponentState(bold, (state) => state.isSelected);
 ```
 

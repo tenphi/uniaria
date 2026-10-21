@@ -66,6 +66,37 @@ export function QuantityField(props: {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { numberField } from '@uniaria/core/number-field';
+import { useComponent } from '@uniaria/vue';
+
+const emit = defineEmits<{ quantityChange: [quantity: number | null] }>();
+
+const quantity = useComponent(numberField, {
+  defaultValue: 1,
+  minValue: 1,
+  maxValue: 99,
+  onValueChange: (value) => emit('quantityChange', value),
+});
+</script>
+
+<template>
+  <div v-bind="quantity.parts.root">
+    <label v-bind="quantity.parts.label">Quantity</label>
+    <div v-bind="quantity.parts.wrapper">
+      <button v-bind="quantity.parts.decrement">−</button>
+      <input v-bind="quantity.parts.input" />
+      <button v-bind="quantity.parts.increment">+</button>
+    </div>
+    <input v-bind="quantity.parts.hiddenInput" name="quantity" />
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -159,6 +190,20 @@ const price = useComponent(numberField, {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const price = useComponent(numberField, {
+  locale: 'de-DE',
+  formatOptions: { style: 'currency', currency: 'EUR' },
+  minValue: 0,
+});
+// 12.5 shows as "12,50 €"
+</script>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -220,6 +265,29 @@ return (
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const deposit = useComponent(numberField, {
+  formatOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+  minValue: 0,
+});
+</script>
+
+<template>
+  <div v-bind="deposit.parts.root">
+    <label v-bind="deposit.parts.label">Deposit</label>
+    <div v-bind="deposit.parts.wrapper">
+      <input v-bind="deposit.parts.input" />
+      <span aria-hidden="true">€</span>
+    </div>
+    <p v-bind="deposit.parts.description">In euros</p>
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -272,6 +340,29 @@ function AmountField({ limit }: { limit: number }) {
   });
   // …
 }
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const props = defineProps<{ limit: number }>();
+const amount = ref<number | null>(0);
+
+const field = useComponent(numberField, () => ({
+  value: amount.value,
+  onValueChange: (value) => (amount.value = value),
+  minValue: 0,
+  maxValue: props.limit,
+  // The limit can drop below a stored amount.
+  isInvalid: amount.value !== null && amount.value > props.limit,
+}));
+</script>
+
+<template>
+  <!-- … -->
+</template>
 ```
 
 </Tab>
@@ -386,7 +477,7 @@ count as unset.
 
 ## Events
 
-| Event         | React prop      | Detail           | When                                                                                                   |
+| Event         | Callback prop   | Detail           | When                                                                                                   |
 | ------------- | --------------- | ---------------- | ------------------------------------------------------------------------------------------------------ |
 | `valuechange` | `onValueChange` | `number \| null` | A commit or a step changed the value, or a form reset asks for the default. Never for a value you set. |
 | `focuschange` | `onFocusChange` | `boolean`        | The input gained or lost focus.                                                                        |
@@ -395,7 +486,8 @@ The custom element dispatches each event on itself, bubbling, with the value
 in `detail`. In React, the input's `onFocus`, `onBlur`, `onKeyDown`,
 `onInput`, `onPaste`, `onPointerEnter`, `onPointerLeave`,
 `onCompositionStart` and `onCompositionEnd` come from UniAria, and passing
-your own replaces them.
+your own replaces them. In Vue, listeners you add next to `v-bind` run as
+well as UniAria's.
 
 ## State
 
@@ -416,7 +508,8 @@ your own replaces them.
 `canIncrement` and `canDecrement` follow the text as it is typed: typing 100
 with a maximum of 15 makes `canIncrement` false before the text is committed.
 Typing, stepping, hovering and focusing never render your component again. To
-render something from state in React, select it:
+render something from state in React or Vue, select it (in Vue, it is a
+ref):
 
 ```tsx
 const canIncrement = useComponentState(quantity, (state) => state.canIncrement);
@@ -465,7 +558,8 @@ Keys with a modifier keep their native meaning (Shift+ArrowUp selects text).
 No key steps while an input method is composing text, or while the field is
 read-only or disabled. A key whose default is already prevented is left
 alone, so you can take a key over: with a `keydown` listener on the input
-element, or `onKeyDownCapture` in React.
+element, `onKeyDownCapture` in React, or in Vue a `@keydown` written before
+`v-bind`, which Vue runs first.
 
 On phones, `inputmode` picks a keyboard that has what can be typed. On an
 iPhone, whose number keyboards have no minus sign, it is `text` when a minus

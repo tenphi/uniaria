@@ -2,7 +2,8 @@
 
 UniAria is a framework-agnostic headless UI library. Component behavior (state,
 keyboard, focus, ARIA, dismissal, selection) is written once in plain
-TypeScript; thin adapters bind it to React and to light-DOM custom elements.
+TypeScript; thin adapters bind it to React, to Vue and to light-DOM custom
+elements.
 Internal state changes never re-render a framework component: they go straight
 to the DOM, and a component re-renders only for state it reads explicitly.
 This is the reason UniAria exists.
@@ -39,6 +40,7 @@ whole file before changing anything; it is the binding summary of the design.
 | ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), the virtualizer (`./virtual`), one subpath per component (`./button`, …) | Yes       |
 | `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                                                          | Yes       |
+| `@uniaria/vue`         | `packages/vue`      | The same two composables for Vue, called in `setup()`; peer `vue` ≥ 3.5; its own `spec.md`                                                                        | Yes       |
 | `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
 | `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
 | `@uniaria/styles`      | `packages/styles`   | Optional default styles: prebuilt CSS (`./css`), a Tasty style object per component (`./button`), the palette; its own `spec.md`                                  | Yes       |
@@ -64,6 +66,7 @@ uniaria/
 │   │   ├── tsconfig.core.json      runtime/ + collections/ without DOM lib
 │   │   └── tsdown.config.ts
 │   ├── react/
+│   ├── vue/                        Vue adapter; spec.md there
 │   ├── elements/
 │   ├── testing/
 │   └── styles/                     Optional default styles; spec.md there
@@ -130,7 +133,7 @@ owner's approval.
 ### Layers
 
 ```
-@uniaria/react, @uniaria/elements  →  components/  →  dom/  →  runtime/, collections/
+@uniaria/react, @uniaria/vue, @uniaria/elements  →  components/  →  dom/  →  runtime/, collections/
 ```
 
 An arrow means "may import". Nothing imports upward. `runtime/` and
@@ -144,14 +147,15 @@ reaches the core through `ctx.env`. Framework imports never appear in
 
 - Adapters render each part once with its current part props (correct server
   HTML and first paint) plus a `ref`. After mount, the DOM binder in `dom/`,
-  shared by both adapters, subscribes to the store, re-runs `connect()` after
+  shared by every adapter, subscribes to the store, re-runs `connect()` after
   each flush and writes only the changed attributes to the part elements. No
   framework render happens.
 - State reaches React only on demand: `useComponentState(instance, selector,
 isEqual?)` reads one selected value through `useSyncExternalStore` and
   re-renders only when it changes (`Object.is` by default). Per-component
   sugar looks like `useButtonState(button, (s) => s.isPressed)`. Never
-  subscribe a component to the whole store.
+  subscribe a component to the whole store. Vue's `useComponentState`
+  returns a ref that triggers only when the selected value changes.
 - Controlled props still arrive through normal renders (`setProps()`, then
   `sync()`).
 - Handlers are passed as stable wrappers (same identity on every render) that
@@ -166,7 +170,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   them too. It never removes what it didn't write: the consumer's markers
   (`data-uni`, `data-uni-part`, `data-element`, `data-key`), the consumer's
   id, and
-  what React rendered from the part props.
+  what React or Vue rendered from the part props.
 - Every render reads current state, so a parent re-render writes the values
   the binder already set.
 - Changing the rendered tree by state (other content, lazy mounting) needs a
@@ -192,7 +196,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   lowercase (`pressstart`) and the callback prop is `onPressStart`. A
   bindable's change event defaults to `<name>Change`, where the name drops an
   `is` prefix (`isOpen` → `openChange`, seeded by `defaultOpen`).
-- Adapters are generic over definitions. `@uniaria/react` and
+- Adapters are generic over definitions. `@uniaria/react`, `@uniaria/vue` and
   `@uniaria/elements` contain no component-specific behavior, only optional thin sugar
   (`@uniaria/elements` also has one registering entry per component).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
@@ -214,13 +218,13 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `expose()` returns the public state selectors read (`isOpen`, `isPressed`,
   …); it is public API, and the spec documents it.
 - `actions` lists the members of `api` consumers may call, each run in a
-  batch: `instance.actions`, the React handle's `actions`, and one method per
+  batch: `instance.actions`, the React and Vue handles' `actions`, and one method per
   action on the custom element (`element.open()`). Only the overlays have any:
   `open` and `close` on Dialog, Popover, Tooltip, Select and Combobox (owner,
   2026-10-19). An action is public API, and its spec's Actions section
   documents it.
 - `createInstance(definition, { props, id, env })` in the runtime is the
-  instance both adapters drive. Node tests use it directly: call part
+  instance every adapter drives. Node tests use it directly: call part
   handlers from `instance.connect()` and read `attrs` and `getState()`
   without a framework or a DOM.
 - Interactions (`createPress`, `createFocus`) live in `dom/` and take the
@@ -258,16 +262,18 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   1. **Explicit link** for parts that sit apart: an id-reference attribute on
      elements, like HTML's `for` (`<uni-radio group="plan">`), resolved in
      the instance's root node; the instance itself in an `owner` prop in
-     React.
+     React and Vue.
   2. **React instance context.** `OwnerProvider` provides an instance (or
      the handle `useComponent` returned) through a context that holds only
      the stable instance, so first render and SSR know the owner. React
-     context crosses portals.
+     context crosses portals. In Vue every `useComponent` provides its
+     instance (`provide()`) and a child injects the nearest during setup,
+     which crosses `<Teleport>` (Vue adapter spec).
   3. **Nearest DOM ancestor.** The child dispatches a bubbling request event
      on connect, following the Context Community Protocol's shape
      (`references/community-protocols/proposals/context.md`). An owner that
      connects later announces itself and waiting children ask again.
-- React contexts carry instances, never state. A context value that changes
+- React contexts and Vue's provides carry instances, never state. A context value that changes
   is a bug.
 - State flows between stores: `ctx.owner(def)` returns the owner's actions
   and exposed state and subscribes the child's binder to the owner's store.
@@ -284,11 +290,12 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   instead of a definition, so the linking component doesn't bundle the one
   it links to: a definition takes it in `links`, the one answering lists it
   in `provides`, and `ctx.link(key)` reads it as `ctx.owner()` does. It comes
-  from the prop of the key's name in React (`tooltip`), else on elements from
+  from the prop of the key's name in React and Vue (`tooltip`), else on elements from
   the attribute of that name (an id) or the UniAria host the element sits in
   directly, never through another host.
-- Tests cover each path: nested, consumer portal (React), another branch,
-  React child inside a custom-element owner, and an owner that connects late.
+- Tests cover each path: nested, consumer portal (React) or `<Teleport>`
+  (Vue), another branch, a React or Vue child inside a custom-element owner,
+  and an owner that connects late.
 
 ### Store
 
@@ -297,7 +304,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 - `setProps()` is silent: it stores props and never notifies, because
   notifying during a React render triggers React's update-while-rendering
   warning. Adapters call `service.sync()` afterwards (React: layout effect
-  after commit; elements: `attributeChangedCallback`), which runs watchers for
+  after commit; Vue: after the patch; elements: `attributeChangedCallback`), which runs watchers for
   whatever props changed.
 - Every handler returned by `connect()` runs inside `store.batch()`, so one
   action notifies once.
@@ -305,7 +312,7 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `ctx.memo(deps, compute)` caches by explicit dependencies.
 - `ctx.effect()` and `ctx.watch()` run only between `start()` and `stop()`,
   never on the server. `start()` and `stop()` are idempotent and restartable
-  (React StrictMode mounts twice).
+  (React StrictMode mounts twice; Vue's `<KeepAlive>` stops and starts).
 
 ### Part props
 
@@ -330,7 +337,9 @@ handler with its event.
 - Handlers read only native events. The React adapter passes
   `event.nativeEvent` and maps names (`focusin` → `onFocus`, `click` →
   `onClick`, `input` → `onInput`, `class` → `className`, `for` → `htmlFor`,
-  `tabindex` → `tabIndex`).
+  `tabindex` → `tabIndex`). The Vue adapter passes the native event and keeps
+  DOM names, events as `on` and the capitalized name (`onKeydown`,
+  `onFocusin`).
 - Every part carries its part markers (below) and its state attributes
   (`data-state`, `data-disabled`, …).
 - `properties` are live DOM properties no attribute holds once the user acts
@@ -338,7 +347,8 @@ handler with its event.
   sets each only when it differs from the element; `undefined` leaves it
   alone. React renders `value` and `checked` once, from the first render, as
   `defaultValue` and `defaultChecked`, so React never controls the element
-  and server HTML shows the starting value.
+  and server HTML shows the starting value. Vue renders them once as
+  `^value` and `^checked`, attributes only, for the same reason.
 
 ### Part markers
 
@@ -357,8 +367,8 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
 - **Every other part**, item parts included, carries `data-element` with the
   part's name capitalized (`trigger` → `Trigger`), which is how Tasty names
   a sub-element. Part names in code don't change (`parts.trigger`).
-- Markers are attributes in the part props, so React spreads them with the
-  rest and warns when the JSX replaces one. A custom element finds its parts
+- Markers are attributes in the part props, so React and Vue bind them with
+  the rest and warn when the markup replaces one. A custom element finds its parts
   by them, so the consumer's markup has them. Nothing writes `class`: it is
   the consumer's. There is no `data-scope` (dropped by the owner on
   2026-10-19).
@@ -381,12 +391,13 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
 
 - Nothing touches `document` or `window` at module scope. Every entry has a
   Node import test (`ssr-safety.test.ts`).
-- ARIA relationships use stable ids from the adapter (`useId` in React).
+- ARIA relationships use stable ids from the adapter (`useId` in React and
+  Vue).
   Consumers can override every id, except an item part's, which is made from
   its component's id and the item's key and moves with them (Listbox spec,
   Resolved questions 1).
 - **A part keeps an id already on its element** (owner, 2026-10-19), in
-  both adapters, and every reference to the part (`for`, `aria-labelledby`,
+  every adapter, and every reference to the part (`for`, `aria-labelledby`,
   `aria-describedby`, `aria-controls`, `aria-activedescendant`, item ids made
   from a list's id) follows it. A part's id is, in order: the id its element
   carries, its `idOf` prop (`controlId`, `inputId`, `listId`, `triggerId`),
@@ -398,7 +409,7 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
   remove gives the part back its own. An id equal to the part's own, or one
   the binder wrote, isn't the consumer's. Item parts never adopt.
 - In React the consumer's id goes after the part spread
-  (`<label {...ui.parts.label} id="email-label">`). The first render can't
+  (`<label {...ui.parts.label} id="email-label">`), in Vue after `v-bind`. The first render can't
   see the element, so server HTML references the id the part has without
   one (its `idOf` prop, else generated) until hydration attaches the parts;
   an `idOf` prop gives the right id before then. React keeps an id it once
@@ -460,7 +471,7 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
   a custom element may read its items from its markup, as it adopts props
   (Listbox spec, Resolved questions 2 and 3).
 - Item parts repeat per item: a definition's `itemParts` get their props from
-  `connectItem(part, key)`, computed lazily per rendered item (React
+  `connectItem(part, key)`, computed lazily per rendered item (React and Vue
   `getItemProps(part, key)`), never for every row at once. After a flush only
   the keys the definition invalidates are rewritten. Custom elements find
   them by `data-element` and the consumer's `data-key`.
@@ -485,7 +496,7 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
   attribute, `id` included: UniAria
   writes an id only on a part that has none.
   A part can be declared element-owned: the consumer leaves it empty and
-  UniAria writes its content, in both adapters. Select's displayed value
+  UniAria writes its content, in every adapter. Select's displayed value
   (its text) and its hidden `<select>` (its `<option>`s) are the two (Select
   spec, Resolved questions 10 and 11).
 - Parts are found by a query that stops at nested UniAria elements of any
@@ -539,7 +550,8 @@ that policy (2026-10-18): its `minimumReleaseAgeExclude` entry in
 The documentation site's (owner, 2026-10-19): `@tenphi/cookbook`, `astro`
 and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root.
 `@uniaria/styles`' (owner, 2026-10-19): `@tenphi/tasty` and `@tenphi/glaze`,
-as optional peers and development dependencies. The
+as optional peers and development dependencies. `@uniaria/vue`'s (owner,
+2026-10-21): `vue`, a peer (`^3.5.0`) and a development dependency. The
 owner's own `@tenphi/*` packages are exempt from the 14-day release age
 (`minimumReleaseAgeExclude` in `pnpm-workspace.yaml`).
 
@@ -584,11 +596,11 @@ One component per task, small commits, in this order:
    `conformance/src/<name>/`, in commits of their own, including
    spoken-output checks with the virtual screen reader.
 3. **Definition.** `packages/core/src/components/<name>/`, iterated until the
-   scenarios pass in both adapters. Register the subpath in three places:
+   scenarios pass in every adapter. Register the subpath in three places:
    `tsdown.config.ts` entry, `package.json` `exports`, and
    `src/ssr-safety.test.ts`.
-4. **Adapters and docs.** Element registering entry, React sugar only if
-   needed, and the component's page in `docs/components/` with a live demo
+4. **Adapters and docs.** Element registering entry, React or Vue sugar only
+   if needed, and the component's page in `docs/components/` with a live demo
    (see Documentation).
 
 Naming: folder and subpath in kebab-case (`checkbox-group`,
@@ -638,17 +650,19 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   part; every other key is a consumer-owned attribute.
   `nested('checkbox', { value: 'email' }, …)` puts another component inside:
   React renders it with its own `useComponent()` inside its owner's
-  `OwnerProvider`, custom elements wrap its children in `<uni-checkbox>`.
+  `OwnerProvider`, Vue with its own `useComponent()`, which injects its
+  owner, custom elements wrap its children in `<uni-checkbox>`.
 - **Adapters** implement `mount(request)`: render the template (React spreads
-  part props onto it; custom elements wrap it in `<uni-<name>>`), apply props
+  part props onto it, Vue binds them as `v-bind` does; custom elements wrap
+  it in `<uni-<name>>`), apply props
   the way their consumers do, call `record()` for the component's own events
   (not a nested component's, which bubble through a custom element), and
   return `setProps`, `state` (what `expose()` returns), `renderCount` (React
-  renders of the owning component; 0 for elements) and `unmount`. Attribute
+  or Vue renders of the owning component; 0 for elements) and `unmount`. Attribute
   changes must be visible as soon as the interaction that caused them
   resolves.
 - **Events** are camelCase in scenarios (`pressStart`); the DOM event is
-  lowercase (`pressstart`) and the React prop is `onPressStart`.
+  lowercase (`pressstart`) and the React and Vue prop is `onPressStart`.
 - **Scenarios** get `mount`, real `pointer` and `keyboard` input through
   Playwright (they can hold a button or key), `spoken()` for the virtual
   screen reader, `listen()` to hear what live regions announce, and
@@ -668,7 +682,7 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   `*.browser.test.ts(x)` runs in Chromium, Firefox and WebKit.
 - Import test functions explicitly from `vitest`; there are no globals.
 - Interactions are tested in real browsers, not in a simulated DOM.
-- React tests count renders: an internal interaction (hover, press, focus,
+- React and Vue tests count renders: an internal interaction (hover, press, focus,
   highlight, opening an overlay) re-renders the owning component zero times.
 - Spoken output is checked with `@guidepup/virtual-screen-reader` in CI on
   every push. Real screen readers run nightly

@@ -14,7 +14,7 @@ It comes three ways, all from one source written as
 
 | Output              | For                                                     | Needs                                                          |
 | ------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
-| Prebuilt CSS        | Any project, React or custom elements                   | Nothing: plain stylesheets                                     |
+| Prebuilt CSS        | Any project: React, Vue or custom elements              | Nothing: plain stylesheets                                     |
 | Customized CSS      | Your tokens, palette and overrides, built in Node       | `@tenphi/tasty`, and `@tenphi/glaze` for a palette of your own |
 | Tasty style objects | A project that styles its components with Tasty already | `@tenphi/tasty`                                                |
 

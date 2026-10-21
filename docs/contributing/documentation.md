@@ -77,18 +77,19 @@ order, skipping any that don't apply:
 2. **Intro:** what the component is and does, the native element underneath,
    and the WAI-ARIA Authoring Practices pattern it follows, linked.
 3. **The live demo**, right after the intro.
-4. **Usage:** `<Tabs label="Usage">` with a React tab and an HTML tab, each a
-   realistic, complete and minimal example. Then a subsection for each
-   important variant or recipe, with both tabs where both help.
+4. **Usage:** `<Tabs label="Usage">` with a React tab, a Vue tab and an HTML
+   tab, in that order, each a realistic, complete and minimal example (the
+   Vue one a `<script setup lang="ts">` component). Then a subsection for
+   each important variant or recipe, with the tabs that help.
 5. **Anatomy:** a table of Part, Element and Notes. Say which parts are
    optional, which are item parts and how items are keyed, and which parts
    the component fills itself.
 6. **Props:** Prop, Attribute (`—` with a reason when there is none), Type,
    Default and Description. Show a bindable value as its
    `value`/`defaultValue`-style pair and its change event.
-7. **Events:** the DOM event name, the React prop, the detail, and when it
-   fires.
-8. **State:** the public state, and how to read it in React
+7. **Events:** the DOM event name, the callback prop React and Vue take, the
+   detail, and when it fires.
+8. **State:** the public state, and how to read it in React and Vue
    (`useComponentState`) and on the element (`element.instance.getState()`).
 9. **Styling:** every data attribute and when it is present, the CSS custom
    properties UniAria writes, and any style UniAria sets inline for a

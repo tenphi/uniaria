@@ -28,5 +28,6 @@ tested on devices yet.
 
 - **JavaScript:** ES2022, ES modules only.
 - **React:** 18 and 19, for `@uniaria/react`.
+- **Vue:** 3.5 and later, for `@uniaria/vue`.
 - **Node:** 22 and later, for server rendering and the tooling.
 - **Custom elements:** any framework that renders HTML, or none.

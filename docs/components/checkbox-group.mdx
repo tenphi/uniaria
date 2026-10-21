@@ -78,6 +78,63 @@ function Channel(props: { value: string; children: ReactNode }) {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<!-- Notifications.vue -->
+<script setup lang="ts">
+import { checkboxGroup } from '@uniaria/core/checkbox-group';
+import { useComponent } from '@uniaria/vue';
+import Channel from './Channel.vue';
+
+const value = defineModel<readonly string[]>({ required: true });
+
+const group = useComponent(checkboxGroup, () => ({
+  name: 'notify',
+  isRequired: true,
+  isInvalid: value.value.length === 0,
+  value: value.value,
+  onValueChange: (next) => (value.value = next),
+}));
+</script>
+
+<template>
+  <div v-bind="group.parts.root">
+    <span v-bind="group.parts.label">Notifications</span>
+    <Channel value="email">Email</Channel>
+    <Channel value="sms">SMS</Channel>
+    <span v-bind="group.parts.error">Pick at least one.</span>
+  </div>
+</template>
+```
+
+```vue
+<!-- Channel.vue -->
+<script setup lang="ts">
+import { checkbox } from '@uniaria/core/checkbox';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ value: string }>();
+
+const channel = useComponent(checkbox, () => ({
+  value: props.value,
+  labelElementType: 'span',
+}));
+</script>
+
+<template>
+  <label v-bind="channel.parts.root">
+    <input v-bind="channel.parts.input" />
+    <span v-bind="channel.parts.indicator" />
+    <span v-bind="channel.parts.label"><slot /></span>
+  </label>
+</template>
+```
+
+The channels render inside the group's component, so they find the group
+while they set up: there is no provider to add.
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -122,7 +179,7 @@ reads.
 
 Every checkbox in a group needs a `value`: its key in the group's value,
 which UniAria also writes to the input. A `fieldset` root with a `legend`
-label works too (pass `labelElementType: 'legend'` in React).
+label works too (pass `labelElementType: 'legend'` in React and Vue).
 
 ### Finding the group
 
@@ -132,12 +189,15 @@ A checkbox finds its group in one of three ways:
   on its own. In React, render the checkboxes inside
   `<OwnerProvider owner={group}>`: they are linked from their first render,
   so server HTML already has the right boxes checked. Without the provider,
-  a React checkbox inside the group's root links after it mounts.
+  a React checkbox inside the group's root links after it mounts. In Vue, a
+  checkbox component inside the group's component, directly or through a
+  slot, finds the group as it sets up, in time for server HTML too.
 - **Elsewhere, by id.** A `<uni-checkbox group="notify">` joins the
   `<uni-checkbox-group id="notify">` from anywhere in the same document or
   shadow root.
-- **Elsewhere, in React.** Pass the group's instance as the checkbox's
-  `owner` prop: `useComponent(checkbox, { value: 'sms', owner: group.instance })`.
+- **Elsewhere, in React or Vue.** Pass the group's instance as the
+  checkbox's `owner` prop:
+  `useComponent(checkbox, { value: 'sms', owner: group.instance })`.
 
 A checkbox can move in or out of a group at any time. See
 [Composition](../guide/composition.md).
@@ -223,7 +283,7 @@ A checkbox in a group takes from it:
 
 ## Events
 
-| Event         | React prop      | Detail              | When                                                                                                         |
+| Event         | Callback prop   | Detail              | When                                                                                                         |
 | ------------- | --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `valuechange` | `onValueChange` | `readonly string[]` | A checkbox in the group was toggled, or a form reset asks for the default. A newly selected value goes last. |
 | `focuschange` | `onFocusChange` | `boolean`           | Focus entered or left the group, such as for a form that validates on blur.                                  |
@@ -246,8 +306,8 @@ own `focuschange` events bubble through the group element too, so check
 | `isFocusWithin`  | `boolean`           | A checkbox in the group has focus.                         |
 | `isFocusVisible` | `boolean`           | Focus within came from a keyboard or assistive technology. |
 
-To render something from state in React, select it, and the component renders
-again only when that value changes:
+To render something from state in React or Vue, select it, and the component
+renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
 const count = useComponentState(group, (state) => state.value.length);

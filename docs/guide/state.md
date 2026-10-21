@@ -10,8 +10,10 @@ covers how each reaches your code.
 
 ## Props
 
-Pass props to `useComponent` in React; they update on every render. On a
-custom element, set the attribute or the property of the same name:
+Pass props to `useComponent` in React; they update on every render. In Vue,
+pass them as a getter (`() => ({ isDisabled: props.isSaving })`), which
+follows the props and refs it reads. On a custom element, set the attribute or
+the property of the same name:
 
 | Prop                        | Attribute                | Property                    |
 | --------------------------- | ------------------------ | --------------------------- |
@@ -51,6 +53,22 @@ const [isOpen, setOpen] = useState(false);
 const settings = useComponent(dialog, { isOpen, onOpenChange: setOpen });
 ```
 
+In Vue, the same props, with a getter for the controlled one; `defineModel()`
+turns it into your component's `v-model` (see [Vue](../api/vue.md#v-model)):
+
+```ts
+const terms = useComponent(checkbox, {
+  defaultSelected: false,
+  onSelectedChange: (isSelected) => track('terms', isSelected),
+});
+
+const isOpen = ref(false);
+const settings = useComponent(dialog, () => ({
+  isOpen: isOpen.value,
+  onOpenChange: (open) => (isOpen.value = open),
+}));
+```
+
 On a custom element, the `default-<name>` attribute seeds an uncontrolled
 value, setting the property makes it controlled, and reading the property
 gives the current value either way, like a native input's `value`. Writing
@@ -81,15 +99,17 @@ checkbox reads its input's `checked` attribute, a text field its input's
 
 Components report what happened through events, typed per component:
 
-| In React               | On a custom element                           |
+| In React and Vue props | On a custom element                           |
 | ---------------------- | --------------------------------------------- |
-| `onPress={(e) => …}`   | `addEventListener('press', (e) => …)`         |
-| `onSelectedChange={…}` | `selectedchange`, the value in `event.detail` |
-| `onFocusChange={…}`    | `focuschange`                                 |
+| `onPress: (e) => …`    | `addEventListener('press', (e) => …)`         |
+| `onSelectedChange: …`  | `selectedchange`, the value in `event.detail` |
+| `onFocusChange: …`     | `focuschange`                                 |
 
 DOM events are the camelCase name in lowercase. They bubble, aren't
-`composed`, and carry their value in `detail`. In React, callbacks are read
-when they run, so inline functions are fine: there is nothing to memoize.
+`composed`, and carry their value in `detail`. In React and Vue, callbacks are
+read when they run, so inline functions are fine: there is nothing to
+memoize. In Vue they are props, not emits; call `emit` from one to pass the
+event on.
 
 ## Reading state
 
@@ -127,6 +147,32 @@ argument to compare such values yourself. Never select the whole state.
 Hovering, pressing, focusing, moving a highlight or opening an overlay renders
 the component zero times unless a selector asks for that value. UniAria's own
 tests count renders to keep it that way.
+
+### In Vue
+
+`useComponentState` returns a read-only ref of one selected value. A template
+that reads it renders again only when that value changes:
+
+```vue
+<script setup lang="ts">
+import { popover } from '@uniaria/core/popover';
+import { useComponent, useComponentState } from '@uniaria/vue';
+
+import ExpensiveContent from './ExpensiveContent.vue';
+
+const menu = useComponent(popover);
+const isOpen = useComponentState(menu, (state) => state.isOpen);
+</script>
+
+<template>
+  <button v-bind="menu.parts.trigger">Options</button>
+  <div v-bind="menu.parts.root"><ExpensiveContent v-if="isOpen" /></div>
+</template>
+```
+
+The same rules hold: select the smallest value, and pass an `isEqual` for one
+built anew each time. The rest of the state reaches the elements without
+rendering the component, and Vue's tests count renders as React's do.
 
 ### On custom elements
 

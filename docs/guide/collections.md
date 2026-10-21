@@ -43,6 +43,41 @@ function FruitList() {
 moves, UniAria rewrites only the options that changed, and the component that
 renders the list renders again zero times.
 
+In Vue, the same with `v-for`:
+
+```vue
+<script setup lang="ts">
+import { listbox } from '@uniaria/core/listbox';
+import { useComponent } from '@uniaria/vue';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry', isDisabled: true },
+];
+
+const list = useComponent(listbox, { items: fruits });
+</script>
+
+<template>
+  <div v-bind="list.parts.root">
+    <span v-bind="list.parts.label">Fruit</span>
+    <div v-bind="list.parts.list">
+      <div
+        v-for="fruit in fruits"
+        :key="fruit.key"
+        v-bind="list.getItemProps('option', fruit.key)"
+      >
+        {{ fruit.textValue }}
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+UniAria compares items by identity, so when they change, pass a new array
+rather than changing the one you passed.
+
 Your items can have any shape. Tell UniAria how to read them:
 
 | Prop             | Default                    | Reads                                   |
@@ -133,7 +168,29 @@ function UserRows({ list }: { list: ComponentHandle<typeof listbox> }) {
 You render the keys in `renderedKeys`; UniAria positions each row, measures
 rows whose height differs from `itemSize`, and keeps the view steady when a
 row above it changes size. Keep the rows in a child component, as above, so
-scrolling renders that component and not the one that owns the list.
+scrolling renders that component and not the one that owns the list. In Vue,
+the child reads the keys the same way, as a ref:
+
+```vue
+<!-- UserRows.vue -->
+<script setup lang="ts">
+import type { listbox } from '@uniaria/core/listbox';
+import type { ComponentHandle } from '@uniaria/vue';
+import { useComponentState } from '@uniaria/vue';
+
+const props = defineProps<{
+  list: ComponentHandle<typeof listbox>;
+  names: ReadonlyMap<string, string>;
+}>();
+const keys = useComponentState(props.list, (state) => state.renderedKeys);
+</script>
+
+<template>
+  <div v-for="key in keys" :key="key" v-bind="list.getItemProps('option', key)">
+    {{ names.get(key) }}
+  </div>
+</template>
+```
 
 On a custom element, set `items` and `virtualizer` as properties and render
 the rows yourself on each `renderedkeyschange` event. The

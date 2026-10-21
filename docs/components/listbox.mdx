@@ -74,6 +74,50 @@ changing the selection later doesn't render the list again: UniAria writes the
 change to the option elements.
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { listbox } from '@uniaria/core/listbox';
+import { useComponent } from '@uniaria/vue';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry', isDisabled: true },
+];
+
+const emit = defineEmits<{ change: [keys: readonly string[]] }>();
+
+const fruit = useComponent(listbox, {
+  items: fruits,
+  defaultValue: ['banana'],
+  onValueChange: (keys) => emit('change', keys),
+});
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    <span v-bind="fruit.parts.label">Fruit</span>
+    <ul v-bind="fruit.parts.list">
+      <li
+        v-for="item in fruits"
+        :key="item.key"
+        v-bind="fruit.getItemProps('option', item.key)"
+      >
+        {{ item.textValue }}
+      </li>
+    </ul>
+    <p v-bind="fruit.parts.empty">No fruit</p>
+  </div>
+</template>
+```
+
+`getItemProps(part, key)` returns the props of one item part. Moving focus or
+changing the selection later doesn't render the list again: UniAria writes the
+change to the option elements.
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -193,6 +237,49 @@ return (
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const produce = [
+  { key: 'apple', textValue: 'Apple' },
+  {
+    key: 'citrus',
+    textValue: 'Citrus',
+    items: [
+      { key: 'lemon', textValue: 'Lemon' },
+      { key: 'lime', textValue: 'Lime' },
+    ],
+  },
+];
+
+const fruit = useComponent(listbox, { items: produce });
+</script>
+
+<template>
+  <div v-bind="fruit.parts.list">
+    <template v-for="item in produce" :key="item.key">
+      <div v-if="item.items" v-bind="fruit.getItemProps('group', item.key)">
+        <span v-bind="fruit.getItemProps('groupLabel', item.key)">
+          {{ item.textValue }}
+        </span>
+        <div
+          v-for="child in item.items"
+          :key="child.key"
+          v-bind="fruit.getItemProps('option', child.key)"
+        >
+          {{ child.textValue }}
+        </div>
+      </div>
+      <div v-else v-bind="fruit.getItemProps('option', item.key)">
+        {{ item.textValue }}
+      </div>
+    </template>
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -251,6 +338,21 @@ const fruit = useComponent(listbox, {
   value,
   onValueChange: setValue,
 });
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const value = ref<readonly string[]>([]);
+const fruit = useComponent(listbox, () => ({
+  items: fruits,
+  selectionMode: 'multiple',
+  value: value.value,
+  onValueChange: (keys) => (value.value = keys),
+}));
+</script>
 ```
 
 </Tab>
@@ -325,6 +427,68 @@ function UserRows(props: {
     </div>
   ));
 }
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<!-- UserList.vue -->
+<script setup lang="ts">
+import { listbox } from '@uniaria/core/listbox';
+import { virtualizer } from '@uniaria/core/virtual';
+import { useComponent } from '@uniaria/vue';
+
+import UserRows from './UserRows.vue';
+
+const props = defineProps<{ users: readonly User[] }>();
+
+const list = useComponent(listbox, () => ({
+  items: props.users,
+  getKey: (user: User) => user.id,
+  getTextValue: (user: User) => user.name,
+  virtualizer,
+  itemSize: 32,
+}));
+</script>
+
+<template>
+  <div v-bind="list.parts.root">
+    <span v-bind="list.parts.label">Users</span>
+    <div v-bind="list.parts.scroller" class="scroller">
+      <div v-bind="list.parts.list">
+        <UserRows :list="list" :users="users" />
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+```vue
+<!-- UserRows.vue -->
+<script setup lang="ts">
+import type { listbox } from '@uniaria/core/listbox';
+import type { ComponentHandle } from '@uniaria/vue';
+import { useComponentState } from '@uniaria/vue';
+import { computed } from 'vue';
+
+const props = defineProps<{
+  list: ComponentHandle<typeof listbox>;
+  users: readonly User[];
+}>();
+
+// The rows render again when the rendered set changes; the list doesn't.
+const keys = useComponentState(props.list, (state) => state.renderedKeys);
+const byId = computed(
+  () => new Map(props.users.map((user) => [user.id, user])),
+);
+</script>
+
+<template>
+  <div v-for="key in keys" :key="key" v-bind="list.getItemProps('option', key)">
+    {{ byId.get(key)!.name }}
+  </div>
+</template>
 ```
 
 </Tab>
@@ -416,9 +580,9 @@ follows it; UniAria writes an `id` only on a part that has none (see
 [Ids](../guide/accessibility.md#ids)). Option ids are always made from the
 list's id and the option's key.
 
-Item parts repeat once per item and are keyed by the item's key: in React you
-pass it to `getItemProps(part, key)`, on the element each part carries it as
-`data-key`.
+Item parts repeat once per item and are keyed by the item's key: in React and
+Vue you pass it to `getItemProps(part, key)`, on the element each part carries
+it as `data-key`.
 
 | Part                | Element                    | Notes                                                                                |
 | ------------------- | -------------------------- | ------------------------------------------------------------------------------------ |
@@ -467,7 +631,7 @@ Development builds warn when the list has no name: no `label` part, no
 
 ## Events
 
-| Event                | React prop             | Detail                                                     | When                                                                                                                                        |
+| Event                | Callback prop          | Detail                                                     | When                                                                                                                                        |
 | -------------------- | ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `valuechange`        | `onValueChange`        | `readonly string[]`                                        | The user changed the selection: a press, Enter, Space, a range or Ctrl+A. Never for a value you set.                                        |
 | `action`             | `onAction`             | `string`                                                   | The user chose an option with a press, Enter or Space, after any `valuechange`, also when the selection didn't change. Not while read-only. |
@@ -496,8 +660,9 @@ The element dispatches each event on itself, bubbling, with the detail in
 | `renderedKeys`     | `readonly string[]`      | The options to render, in list order: every option unless virtualized. |
 | `renderedSections` | `readonly string[]`      | The sections whose groups to render: those holding a rendered option.  |
 
-To show something from state in React, select it. Per option, select what that
-option needs, and the component renders again only when that value changes:
+To show something from state in React or Vue, select it. Per option, select
+what that option needs, and the component renders again only when that value
+changes:
 
 ```tsx
 const isBananaSelected = useComponentState(fruit, (state) =>

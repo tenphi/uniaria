@@ -82,6 +82,61 @@ function Option(props: { value: string; children: ReactNode }) {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<!-- PlanPicker.vue -->
+<script setup lang="ts">
+import { radioGroup } from '@uniaria/core/radio-group';
+import { useComponent } from '@uniaria/vue';
+import PlanOption from './PlanOption.vue';
+
+const selected = defineModel<string | null>({ required: true });
+
+const plan = useComponent(radioGroup, () => ({
+  name: 'plan',
+  value: selected.value,
+  onValueChange: (value) => (selected.value = value),
+}));
+</script>
+
+<template>
+  <div v-bind="plan.parts.root">
+    <span v-bind="plan.parts.label">Plan</span>
+    <PlanOption value="free">Free</PlanOption>
+    <PlanOption value="pro">Pro</PlanOption>
+    <PlanOption value="team">Team</PlanOption>
+  </div>
+</template>
+```
+
+```vue
+<!-- PlanOption.vue -->
+<script setup lang="ts">
+import { radio } from '@uniaria/core/radio';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ value: string }>();
+
+const option = useComponent(radio, () => ({
+  value: props.value,
+  labelElementType: 'span',
+}));
+</script>
+
+<template>
+  <label v-bind="option.parts.root">
+    <input v-bind="option.parts.input" />
+    <span v-bind="option.parts.indicator" />
+    <span v-bind="option.parts.label"><slot /></span>
+  </label>
+</template>
+```
+
+The options render inside the group's component, so they find the group
+while they set up: there is no provider to add.
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -122,15 +177,14 @@ reads.
 </Tab>
 </Tabs>
 
-Every radio needs a `value`: its key in the group's value, which UniAria
-writes to the input. As with [Checkbox](./checkbox.mdx), a `label` makes the
-whole row select the radio (with a `span` label part, and
-`labelElementType: 'span'` in React): the root, or the `wrapper` part inside
-the root when the radio has a description, which stays outside the `label`.
-A `div` root with a `label` label part works too. The group's root is its
-outermost element, around its label, description and error. A `fieldset`
-root with a `legend` label works for the group (pass
-`labelElementType: 'legend'` in React).
+Every radio needs a `value`: its key in the group's value, which UniAria writes
+to the input. As with [Checkbox](./checkbox.mdx), a `label` makes the whole row
+select the radio (with a `span` label part, and `labelElementType: 'span'` in
+React and Vue): the root, or the `wrapper` part inside the root when the radio
+has a description, which stays outside the `label`. A `div` root with a `label`
+label part works too. The group's root is its outermost element, around its
+label, description and error. A `fieldset` root with a `legend` label works for
+the group (pass `labelElementType: 'legend'` in React and Vue).
 
 ### The value
 
@@ -150,7 +204,9 @@ A radio finds its group in one of three ways:
   own. In React, render the radios inside `<OwnerProvider owner={plan}>`:
   they are linked from their first render, so server HTML already has the
   right radio checked. Without the provider, a React radio inside the
-  group's root links after it mounts.
+  group's root links after it mounts. In Vue, a radio component inside the
+  group's component, directly or through a slot, finds the group as it sets
+  up, in time for server HTML too.
 - **Elsewhere, by id.** The `group` attribute names the id of the
   `<uni-radio-group>` element, in the same document or shadow root:
 
@@ -159,8 +215,9 @@ A radio finds its group in one of three ways:
   <uni-radio value="custom" group="plan">…</uni-radio>
   ```
 
-- **Elsewhere, in React.** Pass the group's instance as the radio's `owner`
-  prop: `useComponent(radio, { value: 'custom', owner: plan.instance })`.
+- **Elsewhere, in React or Vue.** Pass the group's instance as the radio's
+  `owner` prop:
+  `useComponent(radio, { value: 'custom', owner: plan.instance })`.
 
 The arrow keys move only between the radios inside the group's root. A radio
 linked from outside it still joins the value, the `name` and the tab stop,
@@ -256,7 +313,7 @@ Radio:
 
 ## Events
 
-| Component  | Event         | React prop      | Detail           | When                                                                                          |
+| Component  | Event         | Callback prop   | Detail           | When                                                                                          |
 | ---------- | ------------- | --------------- | ---------------- | --------------------------------------------------------------------------------------------- |
 | RadioGroup | `valuechange` | `onValueChange` | `string \| null` | A radio was selected by a click, Space or an arrow key, or a form reset asks for the default. |
 | RadioGroup | `focuschange` | `onFocusChange` | `boolean`        | Focus entered or left the group, such as for a form that validates on blur.                   |
@@ -268,7 +325,8 @@ custom elements dispatch each event on themselves, bubbling, with the value
 in `detail`; a radio's `focuschange` bubbles through the group element too,
 so check `event.target` when you listen there. In React, UniAria's part props
 include the radio input's `onInput`, `onClick`, `onFocus` and `onBlur`, and
-the group root's `onKeyDown`: don't replace them.
+the group root's `onKeyDown`: don't replace them. In Vue, listeners you add
+next to `v-bind` run as well as UniAria's.
 
 ## State
 
@@ -297,8 +355,8 @@ Radio:
 | `isReadOnly`     | `boolean` | The group is read-only.                                                                        |
 | `isInvalid`      | `boolean` | The group is invalid.                                                                          |
 
-To render something from state in React, select it, and the component renders
-again only when that value changes:
+To render something from state in React or Vue, select it, and the component
+renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
 const selected = useComponentState(plan, (state) => state.value);
@@ -379,8 +437,8 @@ keys, so a group nested in an option works.
 - **Disabled with a reason.** A natively disabled radio is skipped by Tab
   and the arrows. To explain one with a [Tooltip](./tooltip.mdx), set
   `isFocusableWhenDisabled` and link the tooltip through the `tooltip` prop
-  (React) or attribute (an id). The arrows then stop on it, which the APG
-  doesn't do.
+  (React and Vue) or attribute (an id). The arrows then stop on it, which
+  the APG doesn't do.
 - **Native state.** UniAria never writes `aria-checked`; screen readers read
   the input's `checked` state.
 

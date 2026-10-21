@@ -40,7 +40,8 @@ classes.
 
 The markers are attributes, so `class` is all yours. In React, spreading the
 part props is enough, and any `className` you pass sits beside them; UniAria
-warns in development when your JSX replaces a marker. With the custom
+warns in development when your JSX replaces a marker. In Vue, `v-bind` does
+the same, with your `class` beside it. With the custom
 elements, you write the markers in your markup, where the element finds its
 parts by them.
 
@@ -267,5 +268,5 @@ label.uni-checkbox,
 ## State in your framework
 
 When a style can't come from an attribute, such as a different icon for an
-open popover, read the state in your framework: `useComponentState` in React,
-or the element's events and `instance.getState()`. See [State](./state.md).
+open popover, read the state in your framework: `useComponentState` in React
+or Vue, or the element's events and `instance.getState()`. See [State](./state.md).

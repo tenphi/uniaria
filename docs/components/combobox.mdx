@@ -72,6 +72,49 @@ export function FruitCombobox() {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { combobox } from '@uniaria/core/combobox';
+import { useComponent } from '@uniaria/vue';
+
+const fruits = [
+  { key: 'apple', textValue: 'Apple' },
+  { key: 'banana', textValue: 'Banana' },
+  { key: 'cherry', textValue: 'Cherry' },
+];
+
+const fruit = useComponent(combobox, { items: fruits });
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    <label v-bind="fruit.parts.label">Fruit</label>
+    <div v-bind="fruit.parts.anchor">
+      <input v-bind="fruit.parts.input" />
+      <button v-bind="fruit.parts.button">
+        <ChevronIcon aria-hidden="true" />
+      </button>
+    </div>
+    <div v-bind="fruit.parts.popover">
+      <div v-bind="fruit.parts.list">
+        <div
+          v-for="item in fruits"
+          :key="item.key"
+          v-bind="fruit.getItemProps('option', item.key)"
+        >
+          {{ item.textValue }}
+        </div>
+      </div>
+      <p v-bind="fruit.parts.empty">No fruit matches</p>
+    </div>
+    <input v-bind="fruit.parts.hiddenInput" name="fruit" />
+  </div>
+</template>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```html
@@ -227,6 +270,29 @@ const clear = () => {
 ```
 
 </Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const value = ref<readonly string[]>([]);
+const inputValue = ref('');
+const fruit = useComponent(combobox, () => ({
+  items: fruits,
+  value: value.value,
+  onValueChange: (keys) => (value.value = keys),
+  inputValue: inputValue.value,
+  onInputChange: (text) => (inputValue.value = text ?? ''),
+}));
+
+// A clear button of your own.
+function clear() {
+  value.value = [];
+  inputValue.value = '';
+}
+</script>
+```
+
+</Tab>
 <Tab label="HTML">
 
 ```js
@@ -337,7 +403,7 @@ Development builds warn when the input has no name: no `label` part, no
 
 ## Events
 
-| Event                | React prop             | Detail                                                     | When                                                                                                                        |
+| Event                | Callback prop          | Detail                                                     | When                                                                                                                        |
 | -------------------- | ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `valuechange`        | `onValueChange`        | `readonly string[]`                                        | The value settled to something new: an option chosen, or the text settling. Never per keystroke, never for a value you set. |
 | `inputchange`        | `onInputChange`        | `string`                                                   | The text changed: typing, pasting, a chosen option's text written in, or the text going back as it settles.                 |
@@ -352,8 +418,9 @@ Development builds warn when the input has no name: no `label` part, no
 | `open()`  | Opens the list, as a press on the button does, without moving focus: the selected option is highlighted, and every option shows when the text matches none. Does nothing while disabled. |
 | `close()` | Closes the list and leaves the text as it is.                                                                                                                                            |
 
-In React they are on the handle (`fruit.actions.open()`); on the custom
-element they are methods (`document.querySelector('uni-combobox').open()`).
+In React and Vue they are on the handle (`fruit.actions.open()`); on the
+custom element they are methods
+(`document.querySelector('uni-combobox').open()`).
 While `isOpen` is controlled, each only reports `openChange` and leaves the
 change to you.
 

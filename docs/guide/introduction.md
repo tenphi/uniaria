@@ -10,17 +10,19 @@ positioning and the small browser fixes that real users need. You bring the
 markup and the CSS.
 
 Each component's behavior is written once, in plain TypeScript, as a
-_definition_. Two small adapters bind every definition to a framework:
+_definition_. Three small adapters bind every definition to a framework:
 
 - [`@uniaria/react`](../api/react.md): `useComponent(definition, props)`
   returns props to spread onto your elements.
+- [`@uniaria/vue`](../api/vue.md): the same composable, with props to bind
+  with `v-bind`.
 - [`@uniaria/elements`](../api/elements.md): every component is also a
   light-DOM custom element, such as `<uni-button>`, that wraps your markup. It
-  works in plain HTML and in any framework that renders HTML: Vue, Svelte,
+  works in plain HTML and in any framework that renders HTML: Svelte,
   Angular, server templates.
 
-Both adapters run the same definition, and the same conformance tests check
-both.
+Every adapter runs the same definition, and the same conformance tests check
+each.
 
 ## Principles
 
@@ -37,8 +39,8 @@ parts: ARIA attributes, the part markers (`data-uni` on the root,
 [Styling](./styling.md).
 
 **No re-renders for internal state.** Hovering a button, pressing it, moving
-the highlight through a long list or opening a popover changes no React state
-of yours. UniAria writes the change straight to the DOM. A component renders
+the highlight through a long list or opening a popover changes no React or
+Vue state of yours. UniAria writes the change straight to the DOM. A component renders
 again only for state it asks for, through a selector. See
 [State](./state.md#reading-state).
 
@@ -67,9 +69,9 @@ locale-aware numbers, and TanStack Virtual, bundled into the optional
   `touch-action` on pressable elements, and such rules yield to yours.
 - **Not a form library.** Fields show validation state you give them; they
   don't validate. See [Forms](./forms.md).
-- **Not a set of framework components.** In React you get hooks that return
-  props, not `<Button>` components, so your design system decides the
-  component API.
+- **Not a set of framework components.** In React and Vue you get a hook or
+  a composable that returns props, not `<Button>` components, so your design
+  system decides the component API.
 
 ## Components
 

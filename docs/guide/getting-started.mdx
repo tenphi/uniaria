@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Install UniAria and render your first component in React or as a custom element.
+description: Install UniAria and render your first component in React, in Vue or as a custom element.
 ---
 
 import { Callout, Tab, Tabs } from '@tenphi/cookbook/components';
@@ -11,7 +11,7 @@ import { Callout, Tab, Tabs } from '@tenphi/cookbook/components';
 
 ## Install
 
-Pick the adapter for your stack. Both bring `@uniaria/core`, where the
+Pick the adapter for your stack. Each brings `@uniaria/core`, where the
 component definitions live.
 
 <Tabs label="Install">
@@ -22,6 +22,15 @@ pnpm add @uniaria/core @uniaria/react
 ```
 
 React 18 or 19.
+
+</Tab>
+<Tab label="Vue">
+
+```sh
+pnpm add @uniaria/core @uniaria/vue
+```
+
+Vue 3.5 or later.
 
 </Tab>
 <Tab label="Custom elements">
@@ -86,6 +95,59 @@ Hovering, pressing or toggling the switch doesn't render `WifiSwitch` again:
 UniAria writes the new state straight to the elements. When your render needs
 a value, select it with `useComponentState`. See [State](./state.md).
 
+## Vue
+
+The same definitions work in Vue. Pass one to `useComponent` in
+`<script setup>`, with props, and bind each part's props onto your element
+with `v-bind`:
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/vue';
+
+const emit = defineEmits<{ save: [] }>();
+const save = useComponent(button, { onPress: () => emit('save') });
+</script>
+
+<template>
+  <button v-bind="save.parts.root">Save</button>
+</template>
+```
+
+As in React, `save.parts.root` carries the attributes, event handlers, a `ref`
+and the `data-uni="button"` marker. Write your own attributes after `v-bind`,
+`class` included, and leave ARIA state and the `data-*` attributes to
+UniAria. Props that change come as a getter, which reads your props and refs
+like `computed()` does:
+
+```vue
+<script setup lang="ts">
+import { toggleSwitch } from '@uniaria/core/switch';
+import { useComponent } from '@uniaria/vue';
+
+const props = defineProps<{ isOffline: boolean }>();
+
+const wifi = useComponent(toggleSwitch, () => ({
+  defaultSelected: true,
+  isDisabled: props.isOffline,
+  labelElementType: 'span',
+}));
+</script>
+
+<template>
+  <label v-bind="wifi.parts.root">
+    <input v-bind="wifi.parts.input" name="wifi" />
+    <span v-bind="wifi.parts.indicator" />
+    <span v-bind="wifi.parts.label">Wi-Fi</span>
+  </label>
+</template>
+```
+
+Toggling the switch doesn't render this component again either. When your
+template needs a value, read it with `useComponentState`. See
+[Vue](../api/vue.md).
+
 ## Custom elements
 
 Import a component's registering entry once, anywhere on the page. It defines
@@ -133,8 +195,8 @@ The parts keep their markers: the root is still `data-uni="button"`.
 
 The elements work wherever HTML does. Tell your framework that `uni-*` tags
 are custom elements if it asks (Vue's `compilerOptions.isCustomElement`, for
-example), listen for the lowercase events, and set controlled values as
-properties:
+example, though Vue has [its own adapter](#vue) too), listen for the
+lowercase events, and set controlled values as properties:
 
 ```html
 <!-- Vue -->

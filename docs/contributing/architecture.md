@@ -3,10 +3,10 @@ title: Architecture
 description: Layers, the runtime and its store, the DOM binder, the adapters, owners, overlays and custom elements.
 ---
 
-UniAria is one implementation of each component's behavior with two thin
+UniAria is one implementation of each component's behavior with thin
 bindings. A component is a _definition_: plain TypeScript that holds its
-state, handles its events and computes the attributes of its parts. The React
-adapter and the custom-elements adapter run every definition through the same
+state, handles its events and computes the attributes of its parts. The React,
+Vue and custom-elements adapters run every definition through the same
 runtime and write to the DOM through the same binder. This page goes through
 those pieces from the bottom up.
 
@@ -20,14 +20,16 @@ needs the owner's approval.
 ```mermaid
 flowchart TD
   accTitle: UniAria's layers
-  accDescr: The React and custom-element adapters import component definitions. Definitions import dom/, which imports the DOM-free runtime/ and collections/. Nothing imports upward.
+  accDescr: The React, Vue and custom-element adapters import component definitions. Definitions import dom/, which imports the DOM-free runtime/ and collections/. Nothing imports upward.
   react["@uniaria/react"]
+  vue["@uniaria/vue"]
   elements["@uniaria/elements"]
   components["components/ (one definition per component)"]
   dom["dom/ (binder, interactions, overlays, positioning)"]
   runtime["runtime/ (store, schema, instances)"]
   collections["collections/ (keys, navigation, selection, typeahead)"]
   react --> components
+  vue --> components
   elements --> components
   components --> dom
   dom --> runtime
@@ -52,8 +54,8 @@ in `packages/core/src/`.
   `stopPropagation` and `stopImmediatePropagation` in `components/`.
 - **Nothing runs at import.** No module touches `document` or `window` at
   module scope, so every entry imports in Node. The `ssr-safety.test.ts`
-  files of `@uniaria/core`, `@uniaria/react` and `@uniaria/elements` import
-  each entry in the `node` test project.
+  files of `@uniaria/core` and the adapters import each entry in the `node`
+  test project.
 
 `@uniaria/core` publishes the runtime as `.`, `dom/` as `./dom`,
 `collections/` as `./collections`, the virtualizer as `./virtual` and each
@@ -138,10 +140,11 @@ export const disclosure = defineComponent({
 ### Instances
 
 `createInstance(definition, { props, id, env })` creates the running
-component both adapters drive: its props, its store, the `api` its `setup()`
+component every adapter drives: its props, its store, the `api` its `setup()`
 returned and its lifecycle. A part's id is the id its element carries, else
 the prop that names it (`idOf`, such as `controlId`), else `<id>-<part>`;
-React passes an id from `useId()`, and an element gets a generated one.
+React and Vue pass an id from their `useId()`, and an element gets a
+generated one.
 
 Node tests drive definitions through it directly, without a framework or a
 DOM: call actions or part handlers from `instance.connect()`, then read
@@ -287,11 +290,11 @@ which gives each handler its real event type, and read part elements with
 ## The DOM binder
 
 `createBinder(instance, { host? })` in `packages/core/src/dom/binder.ts` is
-shared by both adapters. An adapter renders each part once and hands the
-binder its element: React through the part's `ref`, an element through part
-discovery. From then on the binder subscribes to the store, runs `connect()`
-after every flush and writes only what differs. Both adapters start the
-instance and then the binder inside one `instance.batch()`, so the start's
+shared by every adapter. An adapter renders each part once and hands the
+binder its element: React and Vue through the part's `ref`, an element
+through part discovery. From then on the binder subscribes to the store, runs
+`connect()` after every flush and writes only what differs. Every adapter
+starts the instance and then the binder inside one `instance.batch()`, so the start's
 element effects run after the binder's first write:
 
 - It compares with the element itself, not with what it wrote last, so a
@@ -307,7 +310,7 @@ element effects run after the binder's first write:
 - When an element stops being a part, it removes the attributes and styles
   it wrote there that still hold what it wrote, unless another part bound to
   the element writes them too. What it never wrote (the consumer's markers
-  and id, what React rendered) stays.
+  and id, what a framework rendered) stays.
 - It sets a live property only when it differs, so an input's caret stays
   where it is.
 - For item parts it rewrites only the keys the instance reports changed.
@@ -316,7 +319,8 @@ element effects run after the binder's first write:
 
 Hover, press, focus, a highlight moving through a list, an overlay opening:
 each is a change of internal state that only part attributes show. If each
-one re-rendered the React component that owns it, it would also re-render
+one re-rendered the React or Vue component that owns it, it would also
+re-render
 everything inside: a whole form for one hover, a thousand-row list for one
 arrow key. So the change goes from the store to the binder to the DOM, and no
 framework render happens. This is the reason UniAria exists.
@@ -325,8 +329,8 @@ framework render happens. This is the reason UniAria exists.
   `useComponentState`, and only when the selected value changes.
 - Every render reads the current state, so a parent's re-render writes the
   values the binder already set. The two never fight.
-- Both adapters write through the same binder, so React and custom elements
-  produce the same DOM.
+- Every adapter writes through the same binder, so React, Vue and custom
+  elements produce the same DOM.
 - What still renders: controlled props arrive through normal renders, and
   changing the rendered tree by state (other content, lazy mounting) needs a
   selector. Overlays stay mounted in the top layer, so opening one renders
@@ -367,6 +371,36 @@ notification brings, since React records the rendered snapshot only in a
 passive effect and would otherwise render every prop change twice. Never
 subscribe a component to the whole store. The package holds no
 component-specific code; any per-component sugar may only wrap these hooks.
+
+### Vue
+
+`useComponent(definition, props)` in `packages/vue/src/use-component.ts`,
+called in `setup()`:
+
+1. Creates the instance in setup, with an id from Vue's `useId()`. Props come
+   as a getter, a ref, a reactive object or a plain object; a pre-flush
+   watcher calls `setProps()` before the render, and `sync()` runs after the
+   patch (`queuePostFlushCb`).
+2. Returns `parts` as a getter: each read takes the current `connect()`, so
+   every render reads current state, and since the store isn't reactive, the
+   read subscribes the render to nothing. Attribute names stay DOM names,
+   events become `on` + the capitalized DOM name (`onKeydown`, `onFocusin`),
+   and handlers are stable.
+3. Renders `value` and `checked` once, from the first render, as `^value`
+   and `^checked`: attributes only, so Vue never controls the element.
+4. Vue calls a function ref during the patch, and on first mount before the
+   element is in the document. Refs only record elements, which reach the
+   binder after the patch, in one batch: in `onMounted` before the instance
+   starts, or in a post-flush callback.
+5. In `onMounted` (and `onActivated`), starts the instance and the binder and
+   answers owner requests; `onDeactivated` and `onBeforeUnmount` stop them.
+
+It warns in development as React does, including about attributes a parent
+lets fall through onto a part. `useComponentState` returns a `customRef` that
+reads the state when it is read and triggers only when the store's
+notification changes the value a render last read, so a prop change renders
+once. Owners go through `provide()`: every `useComponent` provides its
+instance, and finds its owner by `inject()` during setup.
 
 ### Custom elements
 
@@ -434,8 +468,8 @@ as its own, so the child's binder runs `connect()` again; nothing renders.
 
 A child finds its owner in this order:
 
-1. **An explicit link**, for parts that sit apart. In React, the `owner`
-   prop takes the owner's instance. On elements, the owner attribute names
+1. **An explicit link**, for parts that sit apart. In React and Vue, the
+   `owner` prop takes the owner's instance. On elements, the owner attribute names
    the owner's host by id, resolved in the child's root node, like HTML's
    `for`: `<uni-radio group="plan">`. An element's `owner` property, set to
    an instance, wins over both.
@@ -444,7 +478,9 @@ A child finds its owner in this order:
    the stable instance, never state, so it re-renders nothing. Components find
    it during render, so the first render and the server HTML know the owner,
    and React context crosses portals. Providers nest; each component takes
-   the nearest owner of the definition it names.
+   the nearest owner of the definition it names. In Vue, every
+   `useComponent` provides its instance this way through `provide()`, and a
+   child finds it with `inject()` during setup; it crosses `<Teleport>`.
 3. **The nearest DOM ancestor.** After mount the child dispatches a bubbling
    request event from its element, in the shape of the
    [Context Community Protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md).
@@ -453,9 +489,9 @@ A child finds its owner in this order:
 ```mermaid
 flowchart TD
   accTitle: How a child finds its owner
-  accDescr: A child first uses an explicit link, the owner prop in React or an id attribute on an element. Without one, a React component takes the nearest OwnerProvider. Otherwise the child dispatches a request event that the nearest owning ancestor answers. A request nobody answers waits for an owner that connects later.
+  accDescr: A child first uses an explicit link, the owner prop in React and Vue or an id attribute on an element. Without one, a React component takes the nearest OwnerProvider and a Vue component the nearest provided owner. Otherwise the child dispatches a request event that the nearest owning ancestor answers. A request nobody answers waits for an owner that connects later.
   explicit["1. Explicit link: the owner prop, or an id attribute"]
-  context["2. React context: the nearest OwnerProvider"]
+  context["2. The component tree: React's OwnerProvider, Vue's provide()"]
   request["3. A request event to the nearest owning ancestor"]
   wait["Wait for an owner that connects later"]
   found(["Owner found"])
@@ -472,16 +508,16 @@ A request nobody answered waits. An owner that connects later answers the
 waiting requests it matches, so mount and upgrade order don't matter. An
 owner that disconnects releases its children, which ask again. The lookup
 code lives in `dom/owner.ts`; the runtime sees only `ctx.owner()` and
-`ctx.link()`. Tests cover each path: nested, a consumer portal in React,
-another branch of the page, a React child inside a custom-element owner, and
-an owner that connects late.
+`ctx.link()`. Tests cover each path: nested, a consumer portal in React and
+a `<Teleport>` in Vue, another branch of the page, a React or Vue child
+inside a custom-element owner, and an owner that connects late.
 
 **Links** work like owners but name a small key, a `LinkKey`, instead of a
 definition, so the linking component doesn't bundle the component it links
 to: Button links to a Tooltip without bundling its definition. The linking
 definition lists the key in `links`, the answering one in `provides`, and
-`ctx.link(key)` reads it as `ctx.owner()` does. In React the instance comes
-from the prop named after the key (`tooltip`). On elements it comes from the
+`ctx.link(key)` reads it as `ctx.owner()` does. In React and Vue the
+instance comes from the prop named after the key (`tooltip`). On elements it comes from the
 attribute of that name, an id, or else from the UniAria host the element sits
 in directly, never through another host.
 
@@ -501,7 +537,7 @@ in directly, never through another host.
 - **Item parts** repeat per item. A definition lists them in `itemParts` and
   returns their props from `connectItem(part, key)`, computed lazily for each
   rendered item, never for every row at once, and cached per part and key.
-  React renders them with `getItemProps(part, key)`; a custom element finds
+  React and Vue render them with `getItemProps(part, key)`; a custom element finds
   them by `data-element` and the consumer's `data-key`.
 - **Only changed rows are rewritten.** After a flush the binder rewrites
   only the keys the instance reports invalidated: those a definition names in
@@ -584,8 +620,8 @@ run in both modes.
   props, so server HTML and the first paint carry the right attributes.
   `start()` never runs on the server, so neither do effects and watchers;
   React's layout effects fall back to `useEffect` there, which the server
-  never runs.
-- **Stable ids** come from the adapter (`useId()` in React), so ARIA
+  never runs, and Vue never runs `onMounted` there.
+- **Stable ids** come from the adapter (`useId()` in React and Vue), so ARIA
   relationships match between the server and the client. Consumers can
   override every id except an item part's: a part keeps an id on its
   element. React's first render can't see the element, so server HTML refers
