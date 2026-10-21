@@ -1,6 +1,6 @@
 {
   "name": "@uniaria/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic headless UI behavior: the runtime, interactions and component definitions behind the UniAria adapters",
   "type": "module",
   "sideEffects": false,
