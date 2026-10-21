@@ -130,7 +130,29 @@ keep.
   });
   ```
 
-- In Tasty, `uniaria({ palette: false })` and Tasty's own `replaceTokens`.
+- In Tasty, `uniaria({ palette: false })`, and the roles set as tokens, as
+  your own are: in global styles such as your `body`'s, where a state map can
+  switch them with your schemes, in the plugin's `tokens` option, which writes
+  them on `:root`, or in an element's styles, for what is inside it:
+
+  ```ts
+  configure({
+    plugins: [uniaria({ palette: false })],
+    globalStyles: {
+      body: {
+        '#uni-surface': '#surface',
+        '#uni-accent-fill': '#brand-600',
+        // …and the other roles.
+      },
+    },
+  });
+  ```
+
+  A role that points at a token of yours takes that token's value where the
+  role is set, so set the roles where your tokens change with the scheme, or
+  below. Not with `replaceTokens`: it writes your token into each style in
+  place of the role, and leaves no `--uni-*` property to change while the page
+  runs.
 
 ## Tokens
 

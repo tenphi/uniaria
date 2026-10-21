@@ -437,8 +437,12 @@ can only be the default theme's.
   - `buildCss({ palette: false, replaceTokens })`: the roles compile
     straight to your tokens (`'#uni-accent-fill': '#brand-600'`), with no
     `--uni-*` colors in the output;
-  - Tasty's runtime: `uniaria({ palette: false })` and Tasty's own
-    `replaceTokens` in `configure()`.
+  - Tasty's runtime: `uniaria({ palette: false })`, and the roles set as
+    tokens, as the project's own are: in global styles such as `body`'s
+    (`'#uni-accent-fill': '#brand-600'`), in the plugin's `tokens`
+    option, or in an element's styles. Not Tasty's `replaceTokens` (owner,
+    2026-10-21): it compiles the roles away, and nothing is left to change
+    at run time.
 
   Glaze isn't needed then, and the contrast column becomes your
   palette's to meet: the tests check the package's palette only.
@@ -837,7 +841,8 @@ command, which runs in Node, so they need no build first.
   every token included; in Tasty's runtime with React and no prebuilt
   CSS, the page and forced schemes resolve to the palette's colors under
   each OS scheme and contrast, and a component styles itself from its
-  object.
+  object. With `palette: false`, the roles set as tokens in the project's
+  global styles take its colors, in its own schemes too.
 - **Contrast** (browser, all three engines): renders every role's pairs
   in every theme and scheme, reads the resolved colors, and checks the
   contrast column in Tokens. WCAG 2 contrast is a small in-house function.
