@@ -118,4 +118,60 @@ describe('createStore', () => {
 
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('runs afterFlush at once while nothing is under way', () => {
+    const store = createStore();
+    const fn = vi.fn();
+
+    store.afterFlush(fn);
+
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs afterFlush from a listener after every listener, every pass included', () => {
+    const store = createStore();
+    const seen: string[] = [];
+    store.subscribe(() => {
+      seen.push(`a${store.getSnapshot()}`);
+      if (store.getSnapshot() === 1) {
+        store.afterFlush(() => seen.push(`after${store.getSnapshot()}`));
+        store.notify();
+      }
+    });
+    store.subscribe(() => seen.push(`b${store.getSnapshot()}`));
+
+    store.notify();
+
+    expect(seen).toEqual(['a1', 'b1', 'a2', 'b2', 'after2']);
+  });
+
+  it('runs afterFlush in a batch once the batch has flushed', () => {
+    const store = createStore();
+    const seen: string[] = [];
+    store.subscribe(() => seen.push('listener'));
+
+    store.batch(() => {
+      store.afterFlush(() => seen.push('after'));
+      store.notify();
+      seen.push('batch');
+    });
+
+    expect(seen).toEqual(['batch', 'listener', 'after']);
+  });
+
+  it('flushes a change afterFlush makes before the next callback', () => {
+    const store = createStore();
+    const seen: string[] = [];
+    store.subscribe(() => seen.push(`listener${store.getSnapshot()}`));
+
+    store.batch(() => {
+      store.afterFlush(() => {
+        seen.push('first');
+        store.notify();
+      });
+      store.afterFlush(() => seen.push('second'));
+    });
+
+    expect(seen).toEqual(['first', 'listener1', 'second']);
+  });
 });

@@ -257,6 +257,14 @@ export interface SetupContext<
   /** Groups changes so the store flushes once. */
   batch<T>(fn: () => T): T;
   /**
+   * Runs `fn` once the store has flushed: after every watcher and every
+   * adapter's binder, so the parts carry the attributes of the state that
+   * made the change; at once when no flush or batch is under way. For work
+   * on elements that their state attributes affect, such as showing an
+   * overlay (`partEffect` runs through it).
+   */
+  afterFlush(fn: () => void): void;
+  /**
    * Composes another definition into this instance (decision 9): its
    * `setup()` runs here, on this instance's store and lifecycle, and reads
    * its props from `props()` on every access, so pass this component's props

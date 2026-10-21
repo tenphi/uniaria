@@ -366,8 +366,13 @@ export function useComponent<D extends AnyDefinition>(
 
   useIsomorphicLayoutEffect(() => {
     flushAttaching(internal);
-    instance.start();
-    binder.start();
+    // In one batch, so the start's element effects run once the binder has
+    // written the parts: an overlay open from the start is `data-entering`
+    // as it shows.
+    instance.batch(() => {
+      instance.start();
+      binder.start();
+    });
     // Answers owner requests from custom elements and React components that
     // find their owner through the DOM.
     const unprovide = isOwnerDefinition(definition)

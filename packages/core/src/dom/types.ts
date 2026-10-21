@@ -31,6 +31,7 @@ export interface InteractionContext {
   watch<T>(read: () => T, callback: (value: T, previous: T) => void): void;
   element(part: string): unknown;
   batch<T>(fn: () => T): T;
+  afterFlush(fn: () => void): void;
 }
 
 /** The element registered for a part, typed for the DOM. */
@@ -63,26 +64,42 @@ export function partEffect(
 /**
  * Runs `effect` with the element `read()` returns while the instance is
  * started, and again (after the previous cleanup) whenever it changes: any
- * element, such as another component's part.
+ * element, such as another component's part. It runs once the store has
+ * flushed (`ctx.afterFlush`), so the element already carries the state
+ * attributes of the change: an overlay shown here is `data-entering` from
+ * its first style. The cleanup runs at once on `stop()`.
  */
 export function elementEffect(
   ctx: InteractionContext,
   read: () => HTMLElement | null,
   effect: (element: HTMLElement) => void | (() => void),
 ): void {
+  let current: HTMLElement | null = null;
   let cleanup: (() => void) | undefined;
+  let isLive = false;
   const run = (element: HTMLElement | null) => {
+    if (element === current) return;
+    current = element;
     const previous = cleanup;
     cleanup = undefined;
     previous?.();
     const next = element ? effect(element) : undefined;
     if (typeof next === 'function') cleanup = next;
   };
+  // Read again when it runs: the element can change twice in one flush.
+  const update = () =>
+    ctx.afterFlush(() => {
+      if (isLive) run(read());
+    });
   ctx.effect(() => {
-    run(read());
-    return () => run(null);
+    isLive = true;
+    update();
+    return () => {
+      isLive = false;
+      run(null);
+    };
   });
-  ctx.watch(read, run);
+  ctx.watch(read, update);
 }
 
 /**

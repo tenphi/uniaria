@@ -26,7 +26,11 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
 - Anything that needs a part element goes through `partEffect()`, never a
   `ctx.effect()` that reads the element once: a custom element connects
   before the parser adds its children, so parts often attach after
-  `start()`. Several interactions on one part combine with
+  `start()`. It runs once the store has flushed (`ctx.afterFlush()`), after
+  the binder has written the change; other DOM work that depends on an
+  element effect (placing, scrolling into view) waits the same way, and
+  reading markup the binder will write over (an input's `checked`) belongs
+  in a watcher. Several interactions on one part combine with
   `mergeHandlers()`; spreading handler objects drops handlers. An item
   part's elements come and go with the rows a list renders: anything that
   needs one goes through `ctx.itemEffect()`, which runs per key as each

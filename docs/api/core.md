@@ -236,6 +236,7 @@ and the few members the definition lists as [actions](#actions). Everything
 | `itemEffect(part, effect)`         | Runs `effect(key, element)` for each element of an item part as it attaches, while started; its cleanup runs when the element detaches or the instance stops. |
 | `invalidateItems(keys?)`           | Marks the items whose `connectItem()` props changed for a reason other than props, so only they are written again. With no keys, every item.                  |
 | `batch(fn)`                        | Runs `fn` and flushes once at the end. Part handlers are batched already; batch listeners you add to the document yourself.                                   |
+| `afterFlush(fn)`                   | Runs `fn` once the flush under way has called every watcher and the adapter's binder, so the DOM shows the change; at once when nothing is flushing.          |
 | `use(definition, props, options?)` | Composes another definition into this instance. See [composition](#composition).                                                                              |
 | `owner(definition)`                | The owner instance, or `undefined`. See [owners and links](#owners-and-links).                                                                                |
 | `link(key)`                        | The linked instance, or `undefined`.                                                                                                                          |

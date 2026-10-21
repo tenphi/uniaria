@@ -497,6 +497,7 @@ export function createInstance<D extends AnyDefinition>(
       },
       invalidateItems,
       batch: store.batch,
+      afterFlush: store.afterFlush,
       owner(ownerDefinition) {
         const owner = currentOwner();
         return owner?.definition === ownerDefinition

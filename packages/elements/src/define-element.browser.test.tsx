@@ -2037,6 +2037,27 @@ describe('<uni-popover>', () => {
     await vi.waitFor(() => expect(root.matches(':popover-open')).toBe(false));
   });
 
+  it('is data-entering as it shows, opened or open from the start', () => {
+    const entering: boolean[] = [];
+    const showPopover = HTMLElement.prototype.showPopover;
+    const spy = vi
+      .spyOn(HTMLElement.prototype, 'showPopover')
+      .mockImplementation(function (this: HTMLElement) {
+        entering.push(this.hasAttribute('data-entering'));
+        showPopover.call(this);
+      });
+    try {
+      const container = mount(`
+        <uni-popover id="closed">${POPOVER}</uni-popover>
+        <uni-popover id="open" default-open>${POPOVER}</uni-popover>`);
+      expect(entering).toEqual([true]);
+      popoverIn(hostIn(container, '#closed')).trigger.click();
+      expect(entering).toEqual([true, true]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('asks shouldCloseOnInteractOutside about a press outside', async () => {
     const container = mount(`
       <uni-popover>${POPOVER}</uni-popover>

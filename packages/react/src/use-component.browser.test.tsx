@@ -2,6 +2,7 @@ import { defineComponent, itemId, prop } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { field } from '@uniaria/core/field';
 import type { ButtonProps } from '@uniaria/core/button';
+import { popover } from '@uniaria/core/popover';
 import { toggleButton } from '@uniaria/core/toggle-button';
 import { keyboard, pointer, releaseInput } from '@uniaria/testing/browser';
 import { StrictMode, useLayoutEffect, useState } from 'react';
@@ -784,5 +785,47 @@ describe('item parts', () => {
     expect(instance.itemElement('row', 'c')).toBeNull();
     expect(instance.itemElement('rowLabel', 'c')).toBeNull();
     expect(instance.itemElement('row', 'b')).not.toBeNull();
+  });
+});
+
+describe('element effects', () => {
+  it('show a popover once it is data-entering, opened or open from the start', () => {
+    const entering: boolean[] = [];
+    const showPopover = HTMLElement.prototype.showPopover;
+    const spy = vi
+      .spyOn(HTMLElement.prototype, 'showPopover')
+      .mockImplementation(function (this: HTMLElement) {
+        entering.push(this.hasAttribute('data-entering'));
+        showPopover.call(this);
+      });
+    function Size(props: {
+      readonly id: string;
+      readonly defaultOpen?: boolean;
+    }) {
+      const { id, ...rest } = props;
+      const ui = useComponent(popover, rest);
+      return (
+        <div id={id}>
+          <button {...ui.parts.trigger}>Size</button>
+          <div {...ui.parts.root}>Content</div>
+        </div>
+      );
+    }
+    try {
+      // Without StrictMode, which would show the open one twice.
+      const element = renderPlain(
+        <>
+          <Size id="closed" />
+          <Size id="open" defaultOpen />
+        </>,
+      );
+      expect(entering).toEqual([true]);
+      flushSync(() =>
+        element.querySelector<HTMLElement>('#closed button')!.click(),
+      );
+      expect(entering).toEqual([true, true]);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

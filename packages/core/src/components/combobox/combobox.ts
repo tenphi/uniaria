@@ -446,7 +446,7 @@ export const combobox = defineComponent({
     };
 
     // After Popover's, so the popover is shown before an option scrolls
-    // into view.
+    // into view: both wait for the flush, and run in this order.
     ctx.watch(
       () => isOpen.get(),
       (isNowOpen) => {

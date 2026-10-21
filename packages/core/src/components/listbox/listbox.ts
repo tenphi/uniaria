@@ -314,16 +314,21 @@ export const listbox = defineComponent({
       });
     });
 
-    /** Scrolls an option into view: by its position while virtualized. */
-    const reveal = (key: string) => {
-      if (virtual.isOn()) virtual.scrollTo(key);
-      else {
-        optionElement(key)?.scrollIntoView({
-          block: 'nearest',
-          inline: 'nearest',
-        });
-      }
-    };
+    /**
+     * Scrolls an option into view: by its position while virtualized. Once
+     * the store has flushed, as an element effect runs, so a list that opens
+     * with it is shown by then.
+     */
+    const reveal = (key: string) =>
+      ctx.afterFlush(() => {
+        if (virtual.isOn()) virtual.scrollTo(key);
+        else {
+          optionElement(key)?.scrollIntoView({
+            block: 'nearest',
+            inline: 'nearest',
+          });
+        }
+      });
 
     // Each change an option shows names its keys (see the module notes).
     const invalidate = (...keys: (string | null)[]) => {

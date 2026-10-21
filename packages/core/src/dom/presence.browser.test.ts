@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createInstance, defineComponent, prop } from '../runtime';
+import { createBinder } from './binder';
 import { createPresence } from './presence';
+import { partEffect } from './types';
 
 const overlay = defineComponent({
   name: 'overlay',
@@ -83,6 +85,74 @@ describe('createPresence entering', () => {
       isExiting: false,
     });
     await vi.waitFor(() => expect(state().isEntering).toBe(false));
+  });
+});
+
+describe('createPresence with the binder', () => {
+  /** Whether the root was `data-entering` each time the overlay showed. */
+  const shownEntering: boolean[] = [];
+
+  // An overlay as Dialog's: shown by a part effect, its state written by
+  // the binder.
+  const shownOverlay = defineComponent({
+    name: 'shown-overlay',
+    parts: ['root'],
+    props: { isOpen: prop(false) },
+    events: {},
+    setup(ctx) {
+      const presence = createPresence(ctx, {
+        part: 'root',
+        isOpen: ctx.props.isOpen,
+      });
+      partEffect(
+        ctx,
+        'root',
+        (root) => {
+          shownEntering.push(root.hasAttribute('data-entering'));
+        },
+        presence.isShown,
+      );
+      return presence;
+    },
+    expose: () => ({}),
+    connect: ({ api }) => ({
+      root: { attrs: { 'data-entering': api.isEntering() ? '' : undefined } },
+    }),
+  });
+
+  /** Starts as both adapters do: the instance, then the binder, in a batch. */
+  function bind(isOpen: boolean) {
+    render(`<div id="root"></div>`);
+    const instance = createInstance(shownOverlay, { props: { isOpen } });
+    const binder = createBinder(instance);
+    binder.attach('root', byId('root'));
+    instance.batch(() => {
+      instance.start();
+      binder.start();
+    });
+    running.push({
+      stop() {
+        binder.stop();
+        instance.stop();
+      },
+    });
+    return instance;
+  }
+
+  afterEach(() => {
+    shownEntering.length = 0;
+  });
+
+  it('shows an opening overlay once it is marked entering', () => {
+    const instance = bind(false);
+    instance.setProps({ isOpen: true });
+    instance.sync();
+    expect(shownEntering).toEqual([true]);
+  });
+
+  it('shows an overlay open from the start once it is marked entering', () => {
+    bind(true);
+    expect(shownEntering).toEqual([true]);
   });
 });
 

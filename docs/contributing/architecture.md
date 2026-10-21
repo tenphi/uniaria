@@ -216,6 +216,14 @@ change.
   subscribes its watchers before any adapter subscribes, so they settle
   state, in a batch, before the binder and selectors read it.
 - `ctx.effect(fn)` runs `fn` on `start()` and its cleanup on `stop()`.
+- `ctx.afterFlush(fn)` runs `fn` once the flush under way has called every
+  listener, the binder included (at once when none is). Element effects
+  (`partEffect`, `elementEffect`) and other DOM work that depends on them
+  (placing a popover, scrolling an option into view) go through it, so they
+  see the parts as the binder wrote them: an overlay shown there is
+  `data-entering` from its first style. Reading what the markup had before
+  the binder writes over it (a checkbox `checked` in the markup) belongs in
+  a watcher or an effect instead.
 - Watchers and effects are live only between `start()` and `stop()`, which
   never run on the server. Both are idempotent and restartable, since React's
   StrictMode mounts twice.
@@ -226,7 +234,7 @@ change.
 ```mermaid
 sequenceDiagram
   accTitle: From an event to the DOM
-  accDescr: A DOM event reaches a part handler, which runs inside a batch and changes state. When the batch ends the store flushes once. Watchers run first, then the binder runs connect() again and writes only the attributes that changed. No framework component renders.
+  accDescr: A DOM event reaches a part handler, which runs inside a batch and changes state. When the batch ends the store flushes once. Watchers run first, then the binder runs connect() again and writes only the attributes that changed, then element effects run. No framework component renders.
   participant Part as Part element
   participant Handler as Part handler
   participant Store as Store
@@ -238,6 +246,7 @@ sequenceDiagram
   Store->>Watchers: Run watchers first
   Store->>Binder: Notify
   Binder->>Part: Write the changed attributes
+  Store->>Part: Run element effects (afterFlush)
 ```
 
 ## Part props
@@ -281,7 +290,9 @@ which gives each handler its real event type, and read part elements with
 shared by both adapters. An adapter renders each part once and hands the
 binder its element: React through the part's `ref`, an element through part
 discovery. From then on the binder subscribes to the store, runs `connect()`
-after every flush and writes only what differs:
+after every flush and writes only what differs. Both adapters start the
+instance and then the binder inside one `instance.batch()`, so the start's
+element effects run after the binder's first write:
 
 - It compares with the element itself, not with what it wrote last, so a
   framework render that writes the same attributes never leaves the two out
@@ -379,7 +390,8 @@ registering entry, `@uniaria/elements/<name>`.
 - **Events out.** Every event and change event is dispatched on the host as
   a bubbling, non-composed `CustomEvent`, with the value in `detail`.
 - **Lifecycle.** `connectedCallback` finds the parts, starts watching for new
-  ones, answers owner requests, links to its owner, then calls `start()`;
+  ones, answers owner requests, links to its owner, then starts the instance
+  and the binder in one batch;
   `disconnectedCallback` calls `stop()`; `attributeChangedCallback` calls
   `setProps()` and then `sync()`.
 - **State.** `element.instance` is the instance; `element.instance.getState()`

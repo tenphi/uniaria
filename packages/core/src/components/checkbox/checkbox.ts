@@ -9,7 +9,7 @@
  * modes, required and invalid states and error.
  */
 
-import { isDevelopment, partEffect, partElement, warn } from '../../dom';
+import { isDevelopment, partElement, warn } from '../../dom';
 import { bindable, defineComponent, event, prop } from '../../runtime';
 import { checkboxGroup } from '../checkbox-group/checkbox-group';
 import { tooltipLink } from '../tooltip/link';
@@ -127,7 +127,9 @@ export const checkbox = defineComponent({
         owner.api.adopt(props.value()!);
       }
     };
-    partEffect(ctx, 'input', joinChecked);
+    // Read as it attaches, before the binder writes the group's state to it.
+    ctx.effect(joinChecked);
+    ctx.watch(() => partElement(ctx, 'input'), joinChecked);
     ctx.watch(() => group()?.instance, joinChecked);
 
     return { ...toggle, groupName: () => group()?.api.name() };

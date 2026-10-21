@@ -16,6 +16,14 @@ export interface Store {
   notify(): void;
   /** Runs `fn`, then flushes at most once when the outermost batch ends. */
   batch<T>(fn: () => T): T;
+  /**
+   * Runs `fn` once the store is settled: when the flush in progress has
+   * called every listener, an adapter's binder included, or the outermost
+   * batch has ended and flushed; at once when neither is under way.
+   * Callbacks run in order, and one that changes the store flushes it
+   * before the next.
+   */
+  afterFlush(fn: () => void): void;
 }
 
 /**
@@ -29,7 +37,21 @@ export function createStore(): Store {
   let depth = 0;
   let isDirty = false;
   let isFlushing = false;
+  let isSettling = false;
   const listeners = new Set<() => void>();
+  const settled: (() => void)[] = [];
+
+  // Runs what waits for the store to settle. A callback that changes the
+  // store flushes it at once, and the loop goes on with the rest.
+  const settle = (): void => {
+    if (depth > 0 || isFlushing || isSettling) return;
+    isSettling = true;
+    try {
+      for (let fn = settled.shift(); fn; fn = settled.shift()) fn();
+    } finally {
+      isSettling = false;
+    }
+  };
 
   // A change made by a listener (a watcher reacting to a prop, say) is not
   // flushed in the middle of the pass that caused it: it marks the store dirty
@@ -53,6 +75,7 @@ export function createStore(): Store {
     } finally {
       isFlushing = false;
     }
+    settle();
   };
 
   return {
@@ -74,7 +97,12 @@ export function createStore(): Store {
       } finally {
         depth--;
         flush();
+        settle();
       }
+    },
+    afterFlush(fn) {
+      settled.push(fn);
+      settle();
     },
   };
 }

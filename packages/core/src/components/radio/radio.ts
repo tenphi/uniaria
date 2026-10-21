@@ -173,7 +173,9 @@ export const radio = defineComponent({
         group()?.api.adopt(value);
       }
     };
-    partEffect(ctx, 'input', joinChecked);
+    // Read as it attaches, before the binder writes the group's state to it.
+    ctx.effect(joinChecked);
+    ctx.watch(() => partElement(ctx, 'input'), joinChecked);
     ctx.watch(() => group()?.instance, joinChecked);
 
     // A focusable disabled radio isn't submitted, as a natively disabled one

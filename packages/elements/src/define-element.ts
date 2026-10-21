@@ -342,8 +342,13 @@ export function defineElement<D extends AnyDefinition>(
       // the group's state.
       this.#relink();
       for (const key of links) this.#relinkKey(key);
-      this.instance.start();
-      this.#binder.start();
+      // In one batch, so the start's element effects run once the binder
+      // has written the parts: an overlay open from the start is
+      // `data-entering` as it shows.
+      this.instance.batch(() => {
+        this.instance.start();
+        this.#binder.start();
+      });
     }
 
     disconnectedCallback(): void {

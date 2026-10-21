@@ -875,29 +875,44 @@ export function createPosition(
     if (!placed) side.set(undefined);
   };
 
+  // Measured once the store has flushed, as an element effect runs: the
+  // floating element is shown and carries the change's state by then.
+  let isLive = false;
+  const later = (fn: () => void) => () =>
+    ctx.afterFlush(() => {
+      if (isLive) fn();
+    });
   ctx.effect(() => {
-    sync();
+    isLive = true;
+    later(sync)();
     return () => {
+      isLive = false;
       placed?.stop();
       placed = null;
       side.set(undefined);
     };
   });
-  ctx.watch(floatingElement, sync);
-  ctx.watch(options.anchor, sync);
-  ctx.watch(settings, () => {
-    if (!placed) return;
-    const view = placed.floating.ownerDocument.defaultView;
-    if (view && getSettings().positioning === 'script') {
-      checkOptions(
-        view,
-        options.positionArea(),
-        options.positionTryFallbacks(),
-      );
-    }
-    placed.update();
-  });
-  ctx.watch(arrowElement, () => placed?.update());
+  ctx.watch(floatingElement, later(sync));
+  ctx.watch(options.anchor, later(sync));
+  ctx.watch(
+    settings,
+    later(() => {
+      if (!placed) return;
+      const view = placed.floating.ownerDocument.defaultView;
+      if (view && getSettings().positioning === 'script') {
+        checkOptions(
+          view,
+          options.positionArea(),
+          options.positionTryFallbacks(),
+        );
+      }
+      placed.update();
+    }),
+  );
+  ctx.watch(
+    arrowElement,
+    later(() => placed?.update()),
+  );
 
   return { side: () => side.get() };
 }

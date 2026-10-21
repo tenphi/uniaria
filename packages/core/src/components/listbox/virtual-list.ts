@@ -27,6 +27,7 @@ type Context = Pick<
   | 'effect'
   | 'element'
   | 'batch'
+  | 'afterFlush'
   | 'env'
   | 'itemEffect'
   | 'itemElement'
