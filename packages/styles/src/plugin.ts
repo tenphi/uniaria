@@ -15,7 +15,7 @@ import { tokenSheet } from './palette/sheet';
 import type { TokenSheet, TokenValues } from './palette/sheet';
 import { SCHEMES } from './palette/themes';
 import type { Scheme } from './palette/themes';
-import { STATES, SYSTEM_COLORS } from './tokens';
+import { STATES } from './tokens';
 
 export type { Palette } from './palette/create';
 export type { TokenValue, TokenValues } from './palette/sheet';
@@ -52,16 +52,10 @@ const OS_DARK = '@media(prefers-color-scheme: dark)';
 /**
  * The token blocks as Tasty global styles (spec: Tokens → Schemes): a
  * scheme's high-contrast colors are a state of its selector, and the OS's
- * dark scheme a state of the page's. A system color is held in
- * `color-mix()`, since Tasty takes no system color in a color token (spec:
- * Tasty gaps 18).
+ * dark scheme a state of the page's.
  */
 function globalStyles(sheet: TokenSheet): Record<string, Styles> {
-  const root: Record<string, unknown> = {};
-  for (const [token, value] of Object.entries(sheet.base)) {
-    root[token] =
-      token in SYSTEM_COLORS ? `color-mix(in srgb, ${value}, ${value})` : value;
-  }
+  const root: Record<string, unknown> = { ...sheet.base };
   const { palette } = sheet;
   if (!palette) return { ':root': root as Styles };
   const tokens = [

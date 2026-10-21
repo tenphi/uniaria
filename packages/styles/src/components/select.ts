@@ -87,7 +87,7 @@ export const selectStyles = {
     color: '#uni-text',
     outline: {
       '': '1ow #uni-accent-outline / (-1ow)',
-      '@uni-forced-colors': '1ow #uni-system-highlight / (-1ow)',
+      '@uni-forced-colors': '1ow Highlight / (-1ow)',
     },
     // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
     fontFamily: 'inherit',

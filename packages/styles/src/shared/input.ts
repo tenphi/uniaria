@@ -31,8 +31,7 @@ export const inputBoxStyles = {
     '': '0 #clear / 1bw',
     '@own(@uni-focused)': '1ow #uni-accent-outline / 1bw',
     '@own(@uni-focused) & invalid': '1ow #uni-danger-outline / 1bw',
-    '@own(@uni-focused) & @uni-forced-colors':
-      '1ow #uni-system-highlight / 1bw',
+    '@own(@uni-focused) & @uni-forced-colors': '1ow Highlight / 1bw',
   },
   transition: {
     '': 'border $uni-transition',
@@ -126,13 +125,13 @@ export const boxButtonStyles = {
     '@own(hovered)': '#uni-surface-hover',
     '@own(pressed)': '#uni-surface-pressed',
     '@own(disabled)': '#clear',
-    '@uni-forced-colors': '#uni-system-button-face',
+    '@uni-forced-colors': 'ButtonFace',
   },
   color: {
     '': '#uni-text',
     '@own(disabled)': '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-button-text',
-    '(@uni-forced-colors & @own(disabled))': '#uni-system-gray-text',
+    '@uni-forced-colors': 'ButtonText',
+    '(@uni-forced-colors & @own(disabled))': 'GrayText',
   },
   cursor: { '': 'pointer', '@own(disabled)': 'default' },
   // No presets: the type follows the page, sizes come from the uni tokens.

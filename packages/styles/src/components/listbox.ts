@@ -26,7 +26,7 @@ const listBoxStyles = {
     'focus-visible & @uni-list-tab-stop & invalid':
       '1ow #uni-danger-outline / 1bw',
     'focus-visible & @uni-list-tab-stop & @uni-forced-colors':
-      '1ow #uni-system-highlight / 1bw',
+      '1ow Highlight / 1bw',
   },
   overflow: 'auto',
   transition: {
@@ -36,9 +36,8 @@ const listBoxStyles = {
 } satisfies Styles;
 
 /**
- * `styles` while the root is in `state`, and nothing otherwise: every
- * state map loses its default, which `false` can't stand for (Tasty reads
- * `padding: false` as its own gap).
+ * `styles` while the root is in `state`, and nothing otherwise: each state
+ * map's keys gain the state, so none of them applies outside it.
  */
 function onlyWhen(state: string, styles: Styles): Styles {
   return Object.fromEntries(

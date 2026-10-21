@@ -42,11 +42,10 @@ export const checkboxStyles = {
       '@uni-input-disabled': '#uni-disabled-surface',
       '(indeterminate | @uni-selected) & @uni-input-disabled':
         '#uni-disabled-fill',
-      '@uni-forced-colors': '#uni-system-canvas',
-      '(indeterminate | @uni-selected) & @uni-forced-colors':
-        '#uni-system-highlight',
+      '@uni-forced-colors': 'Canvas',
+      '(indeterminate | @uni-selected) & @uni-forced-colors': 'Highlight',
       '(indeterminate | @uni-selected) & @uni-input-disabled & @uni-forced-colors':
-        '#uni-system-gray-text',
+        'GrayText',
     },
     border: {
       '': '1bw #uni-border',
@@ -60,10 +59,9 @@ export const checkboxStyles = {
       '@uni-input-disabled': '1bw #uni-disabled-border',
       '(indeterminate | @uni-selected) & @uni-input-disabled':
         '1bw #uni-disabled-fill',
-      '@uni-forced-colors': '1bw #uni-system-canvas-text',
-      '(indeterminate | @uni-selected) & @uni-forced-colors':
-        '1bw #uni-system-highlight',
-      '(@uni-forced-colors & @uni-input-disabled)': '1bw #uni-system-gray-text',
+      '@uni-forced-colors': '1bw CanvasText',
+      '(indeterminate | @uni-selected) & @uni-forced-colors': '1bw Highlight',
+      '(@uni-forced-colors & @uni-input-disabled)': '1bw GrayText',
     },
     // Every color is set for forced colors too, the marks' included.
     forcedColorAdjust: { '': 'auto', '@uni-forced-colors': 'none' },
@@ -79,8 +77,8 @@ export const checkboxStyles = {
         '': '#uni-accent-fill-text',
         invalid: '#uni-danger-fill-text',
         '@uni-input-disabled': '#uni-disabled-fill-text',
-        '@uni-forced-colors': '#uni-system-highlight-text',
-        '(@uni-forced-colors & @uni-input-disabled)': '#uni-system-canvas',
+        '@uni-forced-colors': 'HighlightText',
+        '(@uni-forced-colors & @uni-input-disabled)': 'Canvas',
       },
     },
   },

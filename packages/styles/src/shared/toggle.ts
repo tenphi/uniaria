@@ -22,8 +22,8 @@ export const toggleRowStyles = {
   color: {
     '': '#uni-text',
     '@uni-input-disabled': '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
-    '(@uni-forced-colors & @uni-input-disabled)': '#uni-system-gray-text',
+    '@uni-forced-colors': 'CanvasText',
+    '(@uni-forced-colors & @uni-input-disabled)': 'GrayText',
   },
   // No presets: sizes come from the uni tokens.
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets

@@ -12,13 +12,6 @@
   --uni-overlay-transition: 120ms;
   --uni-dialog-transition: 250ms;
   --uni-z-overlay: 1000;
-  --uni-system-canvas-color: Canvas;
-  --uni-system-canvas-text-color: CanvasText;
-  --uni-system-highlight-color: Highlight;
-  --uni-system-highlight-text-color: HighlightText;
-  --uni-system-gray-text-color: GrayText;
-  --uni-system-button-face-color: ButtonFace;
-  --uni-system-button-text-color: ButtonText;
 }
 
 :root {

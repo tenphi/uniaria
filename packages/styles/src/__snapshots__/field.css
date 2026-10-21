@@ -42,7 +42,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"] [data-element="Error"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="field"] [data-element="Error"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 [data-uni="field"]:where(:is(:not([data-disabled]):has([data-element="Input"]:disabled), [data-disabled])) [data-element="Control"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)):where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select), [data-uni="field"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Control"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)):where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select):where(:is(:disabled, [data-disabled])) { background-color: var(--uni-disabled-surface-color); color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
@@ -54,11 +54,11 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (not (forced-colors: active)) {
@@ -66,13 +66,13 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="field"] [data-element="Control"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)):where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+  [data-uni="field"] [data-element="Control"]:where(:not([data-uni="field"] [data-uni]:not([data-uni="field"]) *)):where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid highlight; outline-offset: var(--uni-border-width); }
 }

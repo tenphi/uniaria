@@ -44,7 +44,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+  [data-uni="button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid highlight; outline-offset: var(--uni-border-width); }
 }
 
 @media (not (forced-colors: active)) {
@@ -68,7 +68,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="button"]:where(:not([data-disabled]):not(:disabled)) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); border: var(--uni-border-width) solid var(--uni-system-button-text-color); }
+  [data-uni="button"]:where(:not([data-disabled]):not(:disabled)) { color: ButtonText; --current-color: ButtonText; border: var(--uni-border-width) solid buttontext; }
 }
 
 @media (not (forced-colors: active)) {
@@ -80,7 +80,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="button"]:where(:is(:disabled, [data-disabled])) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); border: var(--uni-border-width) solid var(--uni-system-gray-text-color); }
+  [data-uni="button"]:where(:is(:disabled, [data-disabled])) { color: GrayText; --current-color: GrayText; border: var(--uni-border-width) solid graytext; }
 }
 
 @media (not (forced-colors: active)) {
@@ -100,5 +100,5 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="button"] { background-color: var(--uni-system-button-face-color); }
+  [data-uni="button"] { background-color: buttonface; }
 }

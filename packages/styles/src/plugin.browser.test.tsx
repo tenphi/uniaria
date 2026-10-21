@@ -97,12 +97,6 @@ describe.each([
   },
 );
 
-test('a system color token holds the system color', () => {
-  expect(
-    rgba(resolve(document.body, 'var(--uni-system-highlight-color)')),
-  ).toEqual(rgba(resolve(document.body, 'Highlight')));
-});
-
 test('a component styles itself from its object, its states included', () => {
   const indicator = container.querySelector('[data-element="Indicator"]');
   if (!indicator) throw new Error('No indicator.');

@@ -45,14 +45,13 @@ export const optionStyles = {
     '': '#uni-text-soft',
     '@own(selected)': '#uni-accent-text',
     '@own(disabled)': '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
-    '(@uni-forced-colors & @own(disabled))': '#uni-system-gray-text',
+    '@uni-forced-colors': 'CanvasText',
+    '(@uni-forced-colors & @own(disabled))': 'GrayText',
   },
   outline: {
     '': '0 #clear / (-1ow)',
     '@own(focus-visible)': '1ow #uni-accent-outline / (-1ow)',
-    '@own(focus-visible) & @uni-forced-colors':
-      '1ow #uni-system-highlight / (-1ow)',
+    '@own(focus-visible) & @uni-forced-colors': '1ow Highlight / (-1ow)',
   },
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets: the type follows the page
   fontFamily: 'inherit',
@@ -90,8 +89,8 @@ const smallTextStyles = {
   color: {
     '': '#uni-text-soft',
     disabled: '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
-    '(@uni-forced-colors & disabled)': '#uni-system-gray-text',
+    '@uni-forced-colors': 'CanvasText',
+    '(@uni-forced-colors & disabled)': 'GrayText',
   },
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontSize: '$uni-font-size-small',
@@ -142,8 +141,8 @@ export const optionPartStyles = {
     color: {
       '': '#uni-text-soft',
       disabled: '#uni-disabled-text',
-      '@uni-forced-colors': '#uni-system-canvas-text',
-      '(@uni-forced-colors & disabled)': '#uni-system-gray-text',
+      '@uni-forced-colors': 'CanvasText',
+      '(@uni-forced-colors & disabled)': 'GrayText',
     },
     // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
     fontSize: '$uni-font-size',

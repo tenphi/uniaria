@@ -39,7 +39,7 @@
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@eslint/js": "^10.0.1",
-    "@tenphi/eslint-plugin-tasty": "^1.8.0",
+    "@tenphi/eslint-plugin-tasty": "^1.8.1",
     "@types/node": "^22.20.4",
     "@vitest/browser-playwright": "^5.0.3",
     "eslint": "^10.11.0",

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createPalette } from './palette/create';
 import { BASE_TOKENS } from './palette/css';
 import { uniaria } from './plugin';
-import { STATES, SYSTEM_COLORS } from './tokens';
+import { STATES } from './tokens';
 
 const SELECTORS = [
   ':root',
@@ -48,15 +48,6 @@ describe('uniaria()', () => {
     });
   });
 
-  test('holds the system colors in color-mix(), which Tasty takes', () => {
-    const root = uniaria().globalStyles?.[':root'] ?? {};
-    for (const [token, color] of Object.entries(SYSTEM_COLORS)) {
-      expect(root[token as keyof typeof root]).toBe(
-        `color-mix(in srgb, ${color}, ${color})`,
-      );
-    }
-  });
-
   test('renders every block with Tasty, every token included', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     configure({});
@@ -67,9 +58,7 @@ describe('uniaria()', () => {
     );
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
-    expect(blocks[0]).toContain(
-      '--uni-system-highlight-color: color-mix(in srgb,highlight,highlight);',
-    );
+    expect(blocks[0]).toContain('--uni-gap: 0.5rem;');
     // Tasty writes a token once where two schemes give it one value.
     for (const token of Object.keys(createPalette().light)) {
       for (const css of blocks) {

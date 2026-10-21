@@ -28,7 +28,7 @@ export const buttonStyles = {
     'variant=danger & pressed': '#uni-danger-fill-pressed',
     '@uni-disabled': '#uni-disabled-surface',
     'variant=quiet & @uni-disabled': '#clear',
-    '@uni-forced-colors': '#uni-system-button-face',
+    '@uni-forced-colors': 'ButtonFace',
   },
   border: {
     '': '1bw #uni-border',
@@ -41,15 +41,15 @@ export const buttonStyles = {
     'variant=danger & pressed': '1bw #uni-danger-fill-pressed',
     '@uni-disabled': '1bw #uni-disabled-border',
     'variant=quiet & @uni-disabled': '1bw #clear',
-    '@uni-forced-colors': '1bw #uni-system-button-text',
-    '(@uni-forced-colors & @uni-disabled)': '1bw #uni-system-gray-text',
+    '@uni-forced-colors': '1bw ButtonText',
+    '(@uni-forced-colors & @uni-disabled)': '1bw GrayText',
   },
   color: {
     '': '#uni-text',
     'variant=primary': '#uni-accent-fill-text',
     'variant=danger': '#uni-danger-fill-text',
     '@uni-disabled': '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-button-text',
-    '(@uni-forced-colors & @uni-disabled)': '#uni-system-gray-text',
+    '@uni-forced-colors': 'ButtonText',
+    '(@uni-forced-colors & @uni-disabled)': 'GrayText',
   },
 } satisfies Styles;

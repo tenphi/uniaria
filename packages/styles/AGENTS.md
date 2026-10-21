@@ -15,8 +15,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first, then this package's
   (0,2,0)). `src/source.test.ts` checks all three.
 - Style objects pass the Tasty plugin's strict rules against
   `tasty.config.ts`; a disable comment says why. Colors are `#uni-*` tokens
-  from `src/palette/`, system colors `#uni-system-*` tokens, sizes `$uni-*`
-  tokens, never literals. Motion is transitions only (spec: Web platform
+  from `src/palette/`, or system colors under forced colors (`Highlight`),
+  sizes `$uni-*` tokens, never literals. Motion is transitions only (spec: Web platform
   baseline).
 - The plugin lints only a variable named `styles` or `*Styles`, or one
   annotated `: Styles` (`satisfies Styles` isn't enough). Name every style
@@ -35,11 +35,8 @@ Read the root [AGENTS.md](../../AGENTS.md) first, then this package's
   `generate` stays a tsdown entry, though not an export. It also writes
   `dist/default-palette.js`: the plugin takes the default palette from
   `#default-palette`, never from `./palette/create`, so it loads no Glaze.
-- `src/merge.ts` ports Tasty's `mergeStyles()` (spec: Tasty gaps 17);
-  `merge.test.ts` compares it with the original, so a Tasty upgrade that
-  changes the merge rules fails there. Keep Tasty and its ESLint plugin on
-  their latest versions, and file what they get wrong in their repos with
-  a reproduction (spec: Tasty gaps).
+- Keep Tasty and its ESLint plugin on their latest versions, and file what
+  they get wrong in their repos with a reproduction (spec: Tasty gaps).
 - `src/screenshots.browser.test.ts` compares every component in every
   scheme with its reference in `src/__references__/`, made in Chromium on
   Linux; elsewhere it skips. A change to how something looks, or a

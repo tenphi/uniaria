@@ -40,7 +40,7 @@
 [data-uni="checkbox-group"]:where([data-orientation="horizontal"]) [data-element="Description"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { flex-basis: 100%; }
 
 @media (forced-colors: active) {
-  [data-uni="checkbox-group"] [data-element="Error"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="checkbox-group"] [data-element="Error"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 [data-uni="checkbox-group"]:where([data-orientation="horizontal"]) [data-element="Error"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { flex-basis: 100%; }
@@ -48,17 +48,17 @@
 [data-uni="checkbox-group"]:where([data-orientation="horizontal"]) { gap: var(--uni-gap) calc(2 * var(--uni-gap)); flex-flow: row wrap; }
 
 @media (forced-colors: active) {
-  [data-uni="checkbox-group"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="checkbox-group"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="checkbox-group"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="checkbox-group"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="checkbox-group"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="checkbox-group"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="checkbox-group"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="checkbox-group"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="checkbox-group"] [data-uni]:not([data-uni="checkbox-group"]) *)) { color: GrayText; --current-color: GrayText; }
 }

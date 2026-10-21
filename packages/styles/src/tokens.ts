@@ -28,21 +28,6 @@ export const SIZES = {
 } as const;
 
 /**
- * CSS system colors as tokens, for forced colors: Tasty's border and
- * outline parsers and its lint rules don't take the keywords (spec: Tasty
- * gaps 13). Written on `:root` with the sizes.
- */
-export const SYSTEM_COLORS = {
-  '#uni-system-canvas': 'Canvas',
-  '#uni-system-canvas-text': 'CanvasText',
-  '#uni-system-highlight': 'Highlight',
-  '#uni-system-highlight-text': 'HighlightText',
-  '#uni-system-gray-text': 'GrayText',
-  '#uni-system-button-face': 'ButtonFace',
-  '#uni-system-button-text': 'ButtonText',
-} as const;
-
-/**
  * Tasty's units in the CSS this package builds. A Tasty project keeps its
  * own, so the style objects take that project's spacing and radii.
  */

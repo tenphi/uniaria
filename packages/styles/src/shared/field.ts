@@ -11,8 +11,8 @@ export const fieldLabelStyles = {
   color: {
     '': '#uni-text',
     disabled: '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
-    '(@uni-forced-colors & disabled)': '#uni-system-gray-text',
+    '@uni-forced-colors': 'CanvasText',
+    '(@uni-forced-colors & disabled)': 'GrayText',
   },
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontSize: '$uni-font-size',
@@ -34,8 +34,8 @@ export const fieldDescriptionStyles = {
   color: {
     '': '#uni-text-soft',
     disabled: '#uni-disabled-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
-    '(@uni-forced-colors & disabled)': '#uni-system-gray-text',
+    '@uni-forced-colors': 'CanvasText',
+    '(@uni-forced-colors & disabled)': 'GrayText',
   },
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontSize: '$uni-font-size-small',
@@ -49,7 +49,7 @@ export const fieldErrorStyles = {
   margin: 0,
   color: {
     '': '#uni-danger-text',
-    '@uni-forced-colors': '#uni-system-canvas-text',
+    '@uni-forced-colors': 'CanvasText',
   },
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   fontSize: '$uni-font-size-small',

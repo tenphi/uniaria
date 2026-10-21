@@ -112,15 +112,14 @@ writeFileSync(
   `buildCss()` configures it, extracts, and resets it (`resetConfig()`)
   before it returns; two builds never interleave.
 - Needs `@tenphi/tasty` and `@tenphi/glaze` installed (optional peers).
-  `configure()` and `resetConfig()` come from `@tenphi/tasty/zero`, which
-  needs no React (Tasty 3.10).
-- `overrides` take Tasty syntax and Tasty's merge rules: a state map with
-  no `''` key extends the default's, one with `''` replaces it, `null`
-  removes a property or a sub-element. Tasty exports `mergeStyles()` only
-  from entries that load React, so the package keeps a port of it (Tasty
-  gaps 17).
-- `tokens` take CSS values. A size or a system color with one value goes
-  on `:root`; a color with one value goes into every scheme's block, since
+  `configure()`, `resetConfig()` and `mergeStyles()` come from
+  `@tenphi/tasty/zero`, which needs no React (Tasty 3.10, and 3.12 for
+  `mergeStyles()`).
+- `overrides` take Tasty syntax and Tasty's merge rules, as its
+  `mergeStyles()` applies them: a state map with no `''` key extends the
+  default's, one with `''` replaces it, `null` removes a property or a
+  sub-element.
+- `tokens` take CSS values. A size with one value goes on `:root`; a color with one value goes into every scheme's block, since
   a forced scheme would otherwise keep the palette's; a value per scheme
   (`light`, `dark`, `lightContrast`, `darkContrast`) goes into those
   schemes' blocks. With `palette: false`, a color with one value goes on
@@ -203,9 +202,7 @@ configure({
   The plugin declares no Tasty `tokens`: those render on `:root` only, so
   a scheme forced on an element inside the page would never reach them.
   A scheme's high-contrast colors are a `@media` state of its selector,
-  and the OS's dark scheme a state of the page's. The system colors are
-  held in `color-mix(in srgb, Canvas, Canvas)`, since Tasty takes no
-  system color in a color token (Tasty gaps 18).
+  and the OS's dark scheme a state of the page's.
 - **The default palette is data.** The plugin takes it from
   `#default-palette` (package.json `imports`): in the source, a module that
   runs Glaze; in the package, `dist/default-palette.js`, which the build
@@ -423,8 +420,8 @@ can only be the default theme's.
 - `warning` and `note` cost about 180 declarations across the schemes,
   about 2 kB gzipped (estimated), and `buildCss()` can leave them out
   (Resolved questions 14).
-- Hover and press colors are roles, not Tasty's `#token.N` alpha, which
-  compiles to relative color syntax (Web platform baseline).
+- Hover and press colors are roles, a tone step from their fill in each
+  scheme, not Tasty's `#token.N` alpha over it.
 - **Palette:** generated at build time with Glaze, one hue and saturation
   per theme, which gives light, dark and high-contrast variants that meet
   the contrast column. The default palette is a neutral grey with a blue
@@ -491,10 +488,8 @@ needed (Tasty gaps 2):
   maps its fills and borders to system colors (`ButtonText`, `Highlight`,
   `GrayText` for disabled, `CanvasText` for marks), and drawn marks and the
   switch thumb get `forced-color-adjust: none` only where the system colors
-  are set explicitly. The styles name them as `#uni-system-<name>` tokens
-  (`#uni-system-highlight`), which the base block in `tokens.css` defines
-  (`--uni-system-highlight-color: Highlight`), since Tasty takes no system
-  color in a border or an outline (Tasty gaps 13). Tested (Testing).
+  are set explicitly. The styles write the keywords (`1bw Highlight`).
+  Tested (Testing).
 - **Reduced motion** (`@media (prefers-reduced-motion: reduce)`):
   transitions go; state changes are instant.
 
@@ -540,14 +535,14 @@ The styles follow AGENTS.md: Baseline widely available features only,
 checked with `web-features`. This rules out several things a Tasty source
 would otherwise reach for:
 
-| Feature                                   | Status (2026-10-19) | Instead                                                                             |
-| ----------------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
-| `@starting-style`                         | Baseline 2024 (low) | Overlays animate from `data-entering`, which UniAria sets for the first two frames. |
-| `light-dark()`                            | Baseline 2024 (low) | One token block per scheme (Tokens).                                                |
-| Relative color syntax (`#token.N` alpha)  | Baseline 2024 (low) | Hover and press tokens; `color-mix()` (widely available) where a tint is computed.  |
-| `@property`                               | Baseline 2024 (low) | Plain custom properties.                                                            |
-| `transition-behavior: allow-discrete`     | Baseline 2024 (low) | Exits wait for `data-exiting` transitions, which UniAria already does.              |
-| `::backdrop` inheriting custom properties | Changed in 2024     | `var(--uni-backdrop-color, rgb(0 0 0 / 40%))`, the default inline.                  |
+| Feature                                   | Status (2026-10-19) | Instead                                                                                       |
+| ----------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| `@starting-style`                         | Baseline 2024 (low) | Overlays animate from `data-entering`, which UniAria sets for the first two frames.           |
+| `light-dark()`                            | Baseline 2024 (low) | One token block per scheme (Tokens).                                                          |
+| Relative color syntax                     | Baseline 2024 (low) | `color-mix()` (widely available) where a tint is computed, as Tasty 3.12 compiles `#token.N`. |
+| `@property`                               | Baseline 2024 (low) | Plain custom properties.                                                                      |
+| `transition-behavior: allow-discrete`     | Baseline 2024 (low) | Exits wait for `data-exiting` transitions, which UniAria already does.                        |
+| `::backdrop` inheriting custom properties | Changed in 2024     | `var(--uni-backdrop-color, rgb(0 0 0 / 40%))`, the default inline.                            |
 
 Allowed and used: `:where()`/`:is()`, cascade layers (the layered export),
 logical properties, `color-mix()`, `oklch()`, `prefers-color-scheme`,
@@ -694,10 +689,9 @@ packages/styles/
     palette/           createPalette() and paletteCss() (/palette); the
                        token sheet both outputs lay out; the default
                        palette (#default-palette), data in a build
-    tokens.ts          sizes, system colors, units and state aliases
+    tokens.ts          sizes, units and state aliases
     plugin.ts          uniaria(): the Tasty plugin (/tasty)
     build.ts           buildCss() (/build, Node only)
-    merge.ts           Tasty's mergeStyles(), ported (Tasty gaps 17)
     generate.ts        writes dist/css/*.css with buildCss() defaults and
                        dist/default-palette.js; an internal entry
     shared/            fragments: field text, input box, option, popup, focus, marks
@@ -741,8 +735,7 @@ component tests through both adapters.
    (`x: 'var(--uni-gap)'`, …), and adds the nested-root exclusion to each
    part rule (Selectors). The hook writes `dist/css/`, with
    `layered.css` as `index.css` inside `@layer uniaria`. `tokens.css`
-   starts with a base block of the sizes and the system colors, which
-   `index.css` carries too; `components.css` reads them. It also writes
+   starts with a base block of the sizes, which `index.css` carries too; `components.css` reads them. It also writes
    `dist/default-palette.js`, the default palette as data, for the plugin.
 3. The output is deterministic, so a snapshot test catches any change a
    Tasty upgrade makes.
@@ -752,8 +745,9 @@ component tests through both adapters.
 Found while researching this spec (Tasty 3.9.10) and building it. Gaps 1
 to 4 and 6 were filed upstream (owner, 2026-10-19) and fixed in Tasty
 3.10.0; Tasty 3.11 fixed 11 and its ESLint plugin 1.7.1 fixed 14. The
-package requires Tasty 3.11.2. The rest stay workarounds, and those that
-need a change in Tasty are filed (owner, 2026-10-20).
+rest that needed a change in Tasty were filed (owner, 2026-10-20), and
+Tasty 3.12 fixed them, with the plugin's 1.8.1 for 13. The package
+requires Tasty 3.12.0. Gaps 5 and 9 stay workarounds.
 
 1. **`@starting` was dropped** outside generated classes
    ([tenphi/tasty#380](https://github.com/tenphi/tasty/issues/380)). Fixed:
@@ -776,10 +770,9 @@ need a change in Tasty are filed (owner, 2026-10-20).
 7. **Units default to pixels** (`x` is `8px`) where the docs said they used
    `--gap`. Tasty 3.11 corrected the docs: units are literal. The build
    still points them at the `$uni-*` tokens.
-8. **`#token.N` alpha emits relative color syntax**, which isn't widely
-   available. Workaround: explicit tokens and `color-mix()`. Requested: an
-   option to compile it with `color-mix()`
-   ([tenphi/tasty#415](https://github.com/tenphi/tasty/issues/415)).
+8. **`#token.N` alpha emitted relative color syntax**, which isn't widely
+   available ([tenphi/tasty#415](https://github.com/tenphi/tasty/issues/415)).
+   Fixed in Tasty 3.12.0: it compiles to `color-mix()`.
 9. **Global configuration**: one config per process. Workaround:
    `buildCss()` resets it and runs synchronously.
 10. **`$` affixes take no functional pseudo-classes** (`:is()`, `:where()`,
@@ -790,19 +783,20 @@ need a change in Tasty are filed (owner, 2026-10-20).
 11. **`#clear` was a token**, `var(--clear-color)`, which nothing defined
     outside a Tasty project. Fixed in Tasty 3.11.0: it compiles to
     `transparent`.
-12. **A transition's state value is read as a property name**:
-    `transition: { '@uni-reduced-motion': 'none' }` emits
+12. **A transition's state value was read as a property name**:
+    `transition: { '@uni-reduced-motion': 'none' }` emitted
     `none var(--none-transition, …)`
     ([tenphi/tasty#412](https://github.com/tenphi/tasty/issues/412)).
-    Workaround: the reduced-motion state sets `false`, so no transition is
-    written under it.
-13. **System colors** aren't accepted in a border or an outline (Tasty 3.11
-    replaces them with its default color token)
+    Fixed in Tasty 3.12.0. The reduced-motion state keeps `false`: the
+    transition is then written only outside it, which `none` would add a
+    rule to.
+13. **System colors** weren't accepted in a border or an outline (Tasty
+    3.11 replaced them with its default color token)
     ([tenphi/tasty#411](https://github.com/tenphi/tasty/issues/411)), and
-    the ESLint plugin reports them in any color position
+    the ESLint plugin reported them in any color position
     ([tenphi/eslint-plugin-tasty#86](https://github.com/tenphi/eslint-plugin-tasty/issues/86)).
-    Workaround: `#uni-system-*` tokens, defined as custom properties holding
-    the system colors (Tokens → Schemes).
+    Fixed in Tasty 3.12.0 and the plugin's 1.8.1: the styles write the
+    keywords, where `#uni-system-*` tokens stood in for them.
 14. **The ESLint plugin's `no-unknown-state-alias`** read a whole key that
     starts with an alias as one alias name. Fixed in its 1.7.1; the keys
     written around it stay.
@@ -812,19 +806,18 @@ need a change in Tasty are filed (owner, 2026-10-20).
     ESLint plugin reports it: a pseudo-element has no state of its own. So
     the part sets a custom property from its own state
     (`--uni-option-mark`), which the pseudo-element reads.
-16. **`padding: false`** in a state map writes Tasty's default gap, where
+16. **`padding: false`** in a state map wrote Tasty's default gap, where
     `false` elsewhere writes nothing
     ([tenphi/tasty#413](https://github.com/tenphi/tasty/issues/413)).
-    Workaround: a map that applies under one state leaves its default out.
-17. **`mergeStyles()` comes only from entries that load React**
+    Fixed in Tasty 3.12.0.
+17. **`mergeStyles()` came only from entries that load React**
     ([tenphi/tasty#414](https://github.com/tenphi/tasty/issues/414)), so
-    `buildCss({ overrides })` can't take it from `/zero`. Workaround: a port
-    in `src/merge.ts`, which a test compares with the original.
-18. **A color token can't hold a system color**: Tasty warns
-    `unable to parse color` and writes nothing
+    `buildCss({ overrides })` used a port. Fixed in Tasty 3.12.0: it comes
+    from `/zero`.
+18. **A color token couldn't hold a system color**: Tasty warned
+    `unable to parse color` and wrote nothing
     ([tenphi/tasty#410](https://github.com/tenphi/tasty/issues/410)).
-    Workaround: the plugin writes the `#uni-system-*` tokens as
-    `color-mix(in srgb, Canvas, Canvas)`; `tokens.css` writes the keywords.
+    Fixed in Tasty 3.12.0, and no token needs one since 13.
 
 ## Testing
 

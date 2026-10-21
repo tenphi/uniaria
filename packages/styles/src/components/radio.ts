@@ -28,7 +28,7 @@ export const radioStyles = {
       '': '#uni-surface',
       'hovered & !readonly': '#uni-surface-hover',
       '@uni-input-disabled': '#uni-disabled-surface',
-      '@uni-forced-colors': '#uni-system-canvas',
+      '@uni-forced-colors': 'Canvas',
     },
     border: {
       '': '1bw #uni-border',
@@ -37,17 +37,17 @@ export const radioStyles = {
       '(@uni-selected & invalid)': '1bw #uni-danger-text',
       '@uni-input-disabled': '1bw #uni-disabled-border',
       '(@uni-selected & @uni-input-disabled)': '1bw #uni-disabled-text',
-      '@uni-forced-colors': '1bw #uni-system-canvas-text',
-      '(@uni-selected & @uni-forced-colors)': '1bw #uni-system-highlight',
-      '(@uni-forced-colors & @uni-input-disabled)': '1bw #uni-system-gray-text',
+      '@uni-forced-colors': '1bw CanvasText',
+      '(@uni-selected & @uni-forced-colors)': '1bw Highlight',
+      '(@uni-forced-colors & @uni-input-disabled)': '1bw GrayText',
     },
     // The dot's color.
     color: {
       '': '#uni-accent-text',
       invalid: '#uni-danger-text',
       '@uni-input-disabled': '#uni-disabled-text',
-      '@uni-forced-colors': '#uni-system-highlight',
-      '(@uni-forced-colors & @uni-input-disabled)': '#uni-system-gray-text',
+      '@uni-forced-colors': 'Highlight',
+      '(@uni-forced-colors & @uni-input-disabled)': 'GrayText',
     },
     // Every color is set for forced colors too, the dot's included.
     forcedColorAdjust: { '': 'auto', '@uni-forced-colors': 'none' },

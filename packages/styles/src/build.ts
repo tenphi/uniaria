@@ -8,6 +8,7 @@
 import {
   configure,
   extractStylesForSelector,
+  mergeStyles,
   resetConfig,
 } from '@tenphi/tasty/zero';
 import type { Styles } from '@tenphi/tasty';
@@ -18,7 +19,6 @@ import type {
   ComponentStyles,
   StylesTarget,
 } from './components';
-import { mergeStyles } from './merge';
 import { createPalette } from './palette/create';
 import type { Palette } from './palette/create';
 import { baseCss, paletteCss } from './palette/css';
@@ -64,8 +64,7 @@ export interface BuildCssOptions extends ComponentsCssOptions {
 }
 
 /**
- * A stylesheet: the size tokens and system colors, the palette, then the
- * components.
+ * A stylesheet: the size tokens, the palette, then the components.
  */
 export function buildCss(options: BuildCssOptions = {}): string {
   const { components = COMPONENT_NAMES, layer } = options;

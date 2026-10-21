@@ -10,14 +10,13 @@
 import type { TastyValidationConfig } from '@tenphi/eslint-plugin-tasty';
 
 import { colorToken, DEFAULT_ONLY, ROLES, THEMES } from './src/palette/themes';
-import { SIZES, STATES, SYSTEM_COLORS, UNITS } from './src/tokens';
+import { SIZES, STATES, UNITS } from './src/tokens';
 
 export default {
   tokens: [
     ...THEMES.flatMap((theme) => ROLES.map((role) => colorToken(theme, role))),
     ...DEFAULT_ONLY.map((name) => colorToken('default', name)),
     ...Object.keys(SIZES),
-    ...Object.keys(SYSTEM_COLORS),
     // Tasty's own: `currentColor`, and `transparent` in the built CSS.
     '#current',
     '#clear',

@@ -82,7 +82,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Error"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="number-field"] [data-element="Error"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 [data-uni="number-field"]:where(:is(:not([data-disabled]):has([data-element="Input"]:disabled), [data-disabled])) [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)), [data-uni="number-field"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:is(:disabled, [data-disabled])) { background-color: var(--uni-disabled-surface-color); color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
@@ -120,11 +120,11 @@
 [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { cursor: default; }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="number-field"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: var(--uni-system-canvas-text-color); --current-color: var(--uni-system-canvas-text-color); }
+  [data-uni="number-field"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
 @media (not (forced-colors: active)) {
@@ -138,7 +138,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); }
+  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])) { color: ButtonText; --current-color: ButtonText; }
 }
 
 [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:last-child) { margin-inline: 0 calc(calc(calc(var(--uni-control-height) - calc(2 * var(--uni-border-width)) - max(24px, calc(3 * var(--uni-gap)))) / 2) - calc(var(--uni-gap) - var(--uni-border-width))); }
@@ -148,33 +148,33 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); }
+  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:not([data-disabled])) { color: ButtonText; --current-color: ButtonText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="number-field"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="number-field"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+  [data-uni="number-field"] [data-element="Wrapper"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid highlight; outline-offset: var(--uni-border-width); }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)):where([data-disabled]) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { background-color: var(--uni-system-button-face-color); }
+  [data-uni="number-field"] [data-element="Increment"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { background-color: buttonface; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { background-color: var(--uni-system-button-face-color); }
+  [data-uni="number-field"] [data-element="Decrement"]:where(:not([data-uni="number-field"] [data-uni]:not([data-uni="number-field"]) *)) { background-color: buttonface; }
 }

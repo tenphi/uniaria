@@ -1,4 +1,4 @@
-import { SIZES, SYSTEM_COLORS, tokenProperty } from '../tokens';
+import { SIZES, tokenProperty } from '../tokens';
 import type { Palette } from './create';
 import type { Scheme } from './themes';
 
@@ -15,11 +15,8 @@ export interface SchemeOptions {
   readonly highContrast?: boolean;
 }
 
-/** The tokens on `:root` in every scheme: the sizes and the system colors. */
-export const BASE_TOKENS: Readonly<Record<string, string>> = {
-  ...SIZES,
-  ...SYSTEM_COLORS,
-};
+/** The tokens on `:root` in every scheme: the sizes. */
+export const BASE_TOKENS: Readonly<Record<string, string>> = SIZES;
 
 function block(
   selector: string,
@@ -43,7 +40,7 @@ function media(query: string, blocks: readonly string[]): string {
   return `@media ${query} {\n${inner}\n}\n`;
 }
 
-/** The size and motion tokens and the system colors, on `:root`. */
+/** The size and motion tokens, on `:root`. */
 export function baseCss(
   tokens: Readonly<Record<string, string>> = BASE_TOKENS,
 ): string {

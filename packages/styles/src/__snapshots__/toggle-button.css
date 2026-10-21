@@ -48,7 +48,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-system-highlight-color); outline-offset: var(--uni-border-width); }
+  [data-uni="toggle-button"]:where([data-focus-visible]) { outline: var(--uni-outline-width) solid highlight; outline-offset: var(--uni-border-width); }
 }
 
 @media (not (forced-colors: active)) {
@@ -84,7 +84,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-selected]):not(:disabled)) { color: var(--uni-system-button-text-color); --current-color: var(--uni-system-button-text-color); border: var(--uni-border-width) solid var(--uni-system-button-text-color); }
+  [data-uni="toggle-button"]:where(:not([data-disabled]):not([data-selected]):not(:disabled)) { color: ButtonText; --current-color: ButtonText; border: var(--uni-border-width) solid buttontext; }
 }
 
 @media (not (forced-colors: active)) {
@@ -92,7 +92,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where([data-selected]:not([data-disabled]):not(:disabled)) { color: var(--uni-system-highlight-text-color); --current-color: var(--uni-system-highlight-text-color); border: var(--uni-border-width) solid var(--uni-system-highlight-color); background-color: var(--uni-system-highlight-color); }
+  [data-uni="toggle-button"]:where([data-selected]:not([data-disabled]):not(:disabled)) { color: HighlightText; --current-color: HighlightText; border: var(--uni-border-width) solid highlight; background-color: highlight; }
 }
 
 @media (not (forced-colors: active)) {
@@ -100,7 +100,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where(:not([data-selected]):is(:disabled, [data-disabled])) { color: var(--uni-system-gray-text-color); --current-color: var(--uni-system-gray-text-color); }
+  [data-uni="toggle-button"]:where(:not([data-selected]):is(:disabled, [data-disabled])) { color: GrayText; --current-color: GrayText; }
 }
 
 @media (not (forced-colors: active)) {
@@ -108,7 +108,7 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where([data-selected]:is(:disabled, [data-disabled])) { color: var(--uni-system-button-face-color); --current-color: var(--uni-system-button-face-color); background-color: var(--uni-system-gray-text-color); }
+  [data-uni="toggle-button"]:where([data-selected]:is(:disabled, [data-disabled])) { color: ButtonFace; --current-color: ButtonFace; background-color: graytext; }
 }
 
 @media (not (forced-colors: active)) {
@@ -120,9 +120,9 @@
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where(:is(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-system-gray-text-color); }
+  [data-uni="toggle-button"]:where(:is(:disabled, [data-disabled])) { border: var(--uni-border-width) solid graytext; }
 }
 
 @media (forced-colors: active) {
-  [data-uni="toggle-button"]:where(:not([data-selected])) { background-color: var(--uni-system-button-face-color); }
+  [data-uni="toggle-button"]:where(:not([data-selected])) { background-color: buttonface; }
 }

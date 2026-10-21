@@ -40,10 +40,9 @@ export const switchStyles = {
         '#uni-danger-fill-hover',
       '@uni-input-disabled': '#uni-disabled-surface',
       '(@uni-selected & @uni-input-disabled)': '#uni-disabled-fill',
-      '@uni-forced-colors': '#uni-system-canvas',
-      '(@uni-selected & @uni-forced-colors)': '#uni-system-highlight',
-      '(@uni-selected & @uni-input-disabled & @uni-forced-colors)':
-        '#uni-system-gray-text',
+      '@uni-forced-colors': 'Canvas',
+      '(@uni-selected & @uni-forced-colors)': 'Highlight',
+      '(@uni-selected & @uni-input-disabled & @uni-forced-colors)': 'GrayText',
     },
     border: {
       '': '1bw #uni-border',
@@ -55,9 +54,9 @@ export const switchStyles = {
         '1bw #uni-danger-fill-hover',
       '@uni-input-disabled': '1bw #uni-disabled-border',
       '(@uni-selected & @uni-input-disabled)': '1bw #uni-disabled-fill',
-      '@uni-forced-colors': '1bw #uni-system-canvas-text',
-      '(@uni-selected & @uni-forced-colors)': '1bw #uni-system-highlight',
-      '(@uni-forced-colors & @uni-input-disabled)': '1bw #uni-system-gray-text',
+      '@uni-forced-colors': '1bw CanvasText',
+      '(@uni-selected & @uni-forced-colors)': '1bw Highlight',
+      '(@uni-forced-colors & @uni-input-disabled)': '1bw GrayText',
     },
     // The thumb's color.
     color: {
@@ -66,11 +65,10 @@ export const switchStyles = {
       '(@uni-selected & invalid)': '#uni-danger-fill-text',
       '@uni-input-disabled': '#uni-disabled-text',
       '(@uni-selected & @uni-input-disabled)': '#uni-disabled-fill-text',
-      '@uni-forced-colors': '#uni-system-canvas-text',
-      '(@uni-selected & @uni-forced-colors)': '#uni-system-highlight-text',
-      '(@uni-forced-colors & @uni-input-disabled)': '#uni-system-gray-text',
-      '(@uni-selected & @uni-input-disabled & @uni-forced-colors)':
-        '#uni-system-canvas',
+      '@uni-forced-colors': 'CanvasText',
+      '(@uni-selected & @uni-forced-colors)': 'HighlightText',
+      '(@uni-forced-colors & @uni-input-disabled)': 'GrayText',
+      '(@uni-selected & @uni-input-disabled & @uni-forced-colors)': 'Canvas',
     },
     // Every color is set for forced colors too, the thumb's included.
     forcedColorAdjust: { '': 'auto', '@uni-forced-colors': 'none' },

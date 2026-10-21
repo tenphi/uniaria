@@ -1,7 +1,7 @@
 /**
  * The tokens an output writes (spec: Outputs, Configuration at run time):
- * the sizes and system colors, the palette, and the consumer's tokens over
- * both. `buildCss()` writes them as CSS, the Tasty plugin as global styles.
+ * the sizes, the palette, and the consumer's tokens over both. `buildCss()`
+ * writes them as CSS, the Tasty plugin as global styles.
  */
 
 import { tokenProperty } from '../tokens';
@@ -41,10 +41,10 @@ export interface TokenSheet {
 }
 
 /**
- * Lays tokens out by scheme. A size or a system color, given one value,
- * stays on `:root`; a color, given one value, goes into every scheme's
- * block, or else a forced scheme would keep the palette's; a value per
- * scheme goes into those schemes' blocks.
+ * Lays tokens out by scheme. A size, given one value, stays on `:root`; a
+ * color, given one value, goes into every scheme's block, or else a forced
+ * scheme would keep the palette's; a value per scheme goes into those
+ * schemes' blocks.
  */
 export function tokenSheet(options: TokenSheetOptions): TokenSheet {
   const { palette, tokens = {}, extraThemes = EXTRA_THEMES } = options;
@@ -62,8 +62,7 @@ export function tokenSheet(options: TokenSheetOptions): TokenSheet {
   for (const [token, value] of Object.entries(tokens)) {
     // Throws on a name that is no token.
     tokenProperty(token);
-    const isBase =
-      token.startsWith('$') || token in BASE_TOKENS || schemes === undefined;
+    const isBase = token.startsWith('$') || schemes === undefined;
     if (typeof value === 'string' && isBase) {
       base[token] = value;
       continue;

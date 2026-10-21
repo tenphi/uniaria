@@ -59,7 +59,7 @@ export const popupStyles = {
       '': '0 #clear / (-1ow)',
       'focus-visible & @uni-list-tab-stop': '1ow #uni-accent-outline / (-1ow)',
       'focus-visible & @uni-list-tab-stop & @uni-forced-colors':
-        '1ow #uni-system-highlight / (-1ow)',
+        '1ow Highlight / (-1ow)',
     },
   },
 
