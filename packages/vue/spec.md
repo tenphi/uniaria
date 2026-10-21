@@ -1,6 +1,7 @@
 # Vue adapter spec (`@uniaria/vue`)
 
-Status: draft, waiting for @tenphi's review.
+Status: approved by @tenphi on 2026-10-21, with the changes outside the
+package and the recommended answers below.
 
 ## Summary
 
@@ -489,19 +490,17 @@ adapter is wrong; if it looks wrong for Vue, I stop and describe it.
   would need another dependency, and the render counts already test the
   claim.
 
-## Open questions
+## Resolved questions
 
-1. **Props forms.** Recommended: a getter, a ref, the component's
-   `defineProps()` or a plain object, as above. The alternative is a getter
-   only, which is simpler but makes wrappers write
+The owner took every recommendation (2026-10-21).
+
+1. **Props forms.** A getter, a ref, the component's `defineProps()` or a
+   plain object. A getter only would make wrappers write
    `() => ({ ...props })`.
-2. **Owners.** Recommended: `useComponent` provides its instance
-   automatically. The alternative is an explicit `provideOwner(ui)`, to
-   mirror React's `OwnerProvider`. Provided instances are matched by
-   definition, so providing one no descendant asks for changes nothing.
-3. **Docs scope.** Recommended: a Vue tab beside every React tab, in the
-   same pull request, since writing every example in Vue is part of the
-   test. The alternative is the API page and the guides only.
-4. **Template tests.** Recommended: Vue's runtime compiler, no new
-   dependency. The alternative is `@vitejs/plugin-vue` (a new development
-   dependency) for `.vue` test files.
+2. **Owners.** `useComponent` provides its instance automatically; there is
+   no `provideOwner()`. Provided instances are matched by definition, so
+   providing one no descendant asks for changes nothing.
+3. **Docs scope.** A Vue tab beside every React tab, in the same pull
+   request, since writing every example in Vue is part of the test.
+4. **Template tests.** Vue's runtime compiler, with no new dependency, not
+   `@vitejs/plugin-vue`.
