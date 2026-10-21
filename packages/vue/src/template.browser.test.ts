@@ -105,6 +105,34 @@ describe('templates', () => {
     expect(onRender).toHaveBeenCalledTimes(1);
   });
 
+  it('take a function ref that hands the element on, and lose a plain one', async () => {
+    const onPress = vi.fn();
+    let own: Element | null = null;
+    const element = render({
+      setup() {
+        const plain = useComponent(button, { onPress });
+        const wrapped = useComponent(button, { onPress });
+        const mine = ref<HTMLElement | null>(null);
+        const keep = (target: unknown) => {
+          wrapped.parts.root.ref(target);
+          own = target as Element | null;
+        };
+        return { plain, wrapped, mine, keep };
+      },
+      template: `
+        <button v-bind="plain.parts.root" ref="mine">Plain</button>
+        <button v-bind="wrapped.parts.root" :ref="keep">Wrapped</button>`,
+    });
+    const [plain, wrapped] = Array.from(element.querySelectorAll('button'));
+    expect(own).toBe(wrapped);
+    plain!.focus();
+    await keyboard.press('Enter');
+    expect(onPress).not.toHaveBeenCalled();
+    wrapped!.focus();
+    await keyboard.press('Enter');
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
   it('read selected state as a ref the template unwraps', async () => {
     const element = render({
       setup() {

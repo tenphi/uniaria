@@ -1,5 +1,6 @@
 import { createInstance, defineComponent, itemId, prop } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
+import { checkbox } from '@uniaria/core/checkbox';
 import type { ButtonProps } from '@uniaria/core/button';
 import { field } from '@uniaria/core/field';
 import { popover } from '@uniaria/core/popover';
@@ -381,6 +382,69 @@ describe('props', () => {
     // Vue casts the absent prop to false: controlled, and closed.
     await pointer.click(closed!);
     expect(closed!.getAttribute('aria-expanded')).toBe('false');
+  });
+});
+
+describe('controlled values', () => {
+  /** A checkbox controlled by a ref, which its callback sets or leaves. */
+  function controlledCheckbox(isAccepting: boolean) {
+    const isSelected = ref(false);
+    const Terms = defineVueComponent(() => {
+      const ui = useComponent(checkbox, () => ({
+        isSelected: isSelected.value,
+        labelElementType: 'span',
+        onSelectedChange: (value) => {
+          if (isAccepting) isSelected.value = value;
+        },
+      }));
+      return () =>
+        h('label', ui.parts.root, [
+          h('input', ui.parts.input),
+          h('span', ui.parts.label, 'Accept'),
+        ]);
+    });
+    return { isSelected, Terms };
+  }
+
+  it('keep a change the callback accepts, though Vue applies it later', async () => {
+    const { isSelected, Terms } = controlledCheckbox(true);
+    const input = render(() => h(Terms)).querySelector('input')!;
+    await pointer.click(input);
+    expect(isSelected.value).toBe(true);
+    expect(input.checked).toBe(true);
+    await nextTick();
+    expect(input.checked).toBe(true);
+  });
+
+  it('go back from a change the callback refuses', async () => {
+    const { isSelected, Terms } = controlledCheckbox(false);
+    const input = render(() => h(Terms)).querySelector('input')!;
+    await pointer.click(input);
+    await nextTick();
+    expect(isSelected.value).toBe(false);
+    expect(input.checked).toBe(false);
+  });
+
+  it('follow typing the callback accepts', async () => {
+    const text = ref('');
+    const Name = defineVueComponent(() => {
+      const ui = useComponent(textField, () => ({
+        value: text.value,
+        onValueChange: (value) => (text.value = value),
+      }));
+      return () =>
+        h('div', ui.parts.root, [
+          h('label', ui.parts.label, 'Name'),
+          h('input', ui.parts.input),
+        ]);
+    });
+    const input = render(() => h(Name)).querySelector('input')!;
+    input.focus();
+    await keyboard.press('A');
+    await keyboard.press('B');
+    await nextTick();
+    expect(text.value).toBe('AB');
+    expect(input.value).toBe('AB');
   });
 });
 
