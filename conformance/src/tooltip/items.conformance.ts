@@ -62,7 +62,8 @@ const CUT = 'Save the quarterly report';
 
 /**
  * Fixed places: triggers at (150, 100), 80×30, cutting their text with an
- * ellipsis, a second one at (330, 100); the tooltip beside what it
+ * ellipsis, a second one at (330, 100); the lists at (20, 100), so a
+ * tooltip beside them fits the 414px page; the tooltip beside what it
  * describes; `#page` (not focusable), where the pointer rests, lower left;
  * `#before` and `#after`, text fields for Tab, at the left; `#natural`, the
  * cut text at its natural width, out of the way.
@@ -79,7 +80,7 @@ const LAYOUT = h(
    .sc-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
    .sc-natural { position: fixed; left: 0; top: 500px; display: inline-block; margin: 0; padding: 0; font: 14px/20px sans-serif; white-space: nowrap }
    .sc-tip { width: 160px; margin: 8px; padding: 0; border: 0; box-sizing: border-box; font: 12px/16px sans-serif; white-space: pre-line }
-   .sc-lists { position: fixed; left: 150px; top: 100px; margin: 0 }
+   .sc-lists { position: fixed; left: 20px; top: 100px; margin: 0 }
    .sc-list { width: 120px; margin: 0; padding: 0; list-style: none }
    .sc-option { display: block; height: 24px; margin: 0; padding: 0; font: 14px/20px sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
    .sc-lists p, .sc-lists label { display: block; margin: 0; height: 20px }
@@ -163,11 +164,15 @@ interface Fruit {
   readonly textValue: string;
 }
 
-/** Apple and Cherry are cut off in a 120px list; Banana and Date fit. */
+/**
+ * Apple and Cherry are cut off in a 120px list; Banana and Date fit. Apple
+ * and Cherry are next to each other: the pointer moves in two steps, and
+ * its midpoint between them lands on neither of the others.
+ */
 const ORCHARD: readonly Fruit[] = [
   { key: 'apple', textValue: 'Apple, the long red one from the orchard' },
-  { key: 'banana', textValue: 'Banana' },
   { key: 'cherry', textValue: 'Cherry, the dark sweet one from the hill' },
+  { key: 'banana', textValue: 'Banana' },
   { key: 'date', textValue: 'Date' },
 ];
 
@@ -495,10 +500,7 @@ export const tooltipItemsConformance = defineConformance<
       'internal interactions and measuring never re-render the owner',
       async (context) => {
         const { mount, pointer, keyboard } = context;
-        const mounted = await mount({
-          template: [...tip(), trigger(FITS, 'sc-second')],
-          props: OVERFLOW,
-        });
+        const mounted = await mount({ template: tip(), props: OVERFLOW });
         const renders = mounted.renderCount();
         await hoverOpen(context, mounted);
         await rest(context, mounted);
@@ -507,10 +509,10 @@ export const tooltipItemsConformance = defineConformance<
         await keyboard.tab();
         expect(isInTopLayer(root(mounted))).toBe(true);
         (activeElement(mounted) as HTMLElement).blur();
-        await pointer.move(
-          mounted.container.querySelector('.sc-trigger.sc-second')!,
-        );
-        await pause(PAST_DELAY);
+        await closed(root(mounted));
+        await pointer.move(mounted.part('trigger'));
+        await mounted.call('open');
+        expect(isInTopLayer(root(mounted))).toBe(true);
         expect(mounted.renderCount()).toBe(renders);
       },
     );
@@ -944,6 +946,7 @@ export const tooltipItemsConformance = defineConformance<
         await closed(tooltip);
         await staysClosed(mounted);
 
+        // Apple is cut off too: open again, then moved to Cherry.
         await keyboard.press('ArrowUp');
         await keyboard.press('ArrowDown');
         expect(activeElement(mounted)).toBe(
@@ -979,9 +982,13 @@ export const tooltipItemsConformance = defineConformance<
         expect(activeElement(mounted)).toBe(input);
 
         await keyboard.press('ArrowDown');
+        expect(highlighted()).toBe('cherry');
+        expect(isInTopLayer(tooltip)).toBe(true);
+        await expect.poll(() => text(mounted)).toBe(textOf('cherry'));
+        await keyboard.press('ArrowDown');
         expect(highlighted()).toBe('banana');
         await closed(tooltip);
-        await keyboard.press('ArrowDown');
+        await keyboard.press('ArrowUp');
         expect(highlighted()).toBe('cherry');
         await expect.poll(() => isInTopLayer(tooltip)).toBe(true);
         expect(text(mounted)).toBe(textOf('cherry'));

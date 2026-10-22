@@ -94,7 +94,8 @@ function save({
 
 /**
  * A frame: a button "Fruit", a gap, and the extras: "Clear Fruit", "Remove
- * Fruit" and a count "3".
+ * Fruit" and a count "3". The extras have a tabindex: WebKit tabs to a
+ * button only with one, as macOS.
  */
 function fruit(): TemplateNode[] {
   return page(
@@ -112,12 +113,22 @@ function fruit(): TemplateNode[] {
         { part: 'extras', class: 'sc-extras' },
         h(
           'button',
-          { id: 'clear', class: 'sc-extra', 'aria-label': 'Clear Fruit' },
+          {
+            id: 'clear',
+            class: 'sc-extra',
+            tabindex: '0',
+            'aria-label': 'Clear Fruit',
+          },
           '×',
         ),
         h(
           'button',
-          { id: 'remove', class: 'sc-extra', 'aria-label': 'Remove Fruit' },
+          {
+            id: 'remove',
+            class: 'sc-extra',
+            tabindex: '0',
+            'aria-label': 'Remove Fruit',
+          },
           '−',
         ),
         h('span', { id: 'count' }, '3'),
