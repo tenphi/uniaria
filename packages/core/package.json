@@ -141,7 +141,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@internationalized/number": "^3.6.8"
+    "@internationalized/number": "^3.6.9"
   },
   "devDependencies": {
     "@tanstack/virtual-core": "3.19.6"
