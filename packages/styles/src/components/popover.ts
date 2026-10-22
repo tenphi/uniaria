@@ -3,7 +3,12 @@ import type { Styles } from '@tenphi/tasty';
 import { arrowStyles } from '../shared/arrow';
 import { closeStyles } from '../shared/close';
 import { popoverMotionStyles } from '../shared/motion';
-import { buttonStyles } from './button';
+import {
+  itemDescriptionStyles,
+  itemExtrasStyles,
+  itemLabelStyles,
+} from '../shared/item';
+import { buttonFrameStyles, buttonItemStyles } from './button';
 
 /**
  * Popover: the popup surface Select's and Combobox's share
@@ -66,5 +71,15 @@ export const popoverStyles: Styles = {
   },
 };
 
-/** The trigger, outside the popover: a Button. */
-export const popoverTriggerStyles = buttonStyles;
+/**
+ * The trigger and its parts, outside the popover: a Button, with the item
+ * look while it has a `triggerLabel` (`../shared/item.ts`).
+ */
+export const popoverTriggerStyles = buttonItemStyles({
+  label: '[data-uni-part="popover-trigger-label"]',
+  description: '[data-uni-part="popover-trigger-description"]',
+});
+export const popoverTriggerLabelStyles = itemLabelStyles;
+export const popoverTriggerDescriptionStyles = itemDescriptionStyles;
+export const popoverTriggerFrameStyles = buttonFrameStyles;
+export const popoverTriggerExtrasStyles = itemExtrasStyles;

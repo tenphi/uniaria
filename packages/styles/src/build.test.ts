@@ -6,6 +6,7 @@ import { COMPONENT_NAMES } from './components';
 import { defaultPaletteModule, stylesheets } from './generate';
 import { createPalette, paletteCss } from './palette';
 import { BASE_TOKENS, baseCss } from './palette/css';
+import { SCHEME_STEPS } from './tokens';
 
 const files = stylesheets();
 const file = (name: string): string => {
@@ -33,7 +34,10 @@ describe('the prebuilt stylesheets', () => {
 
   test('components.css has the size tokens and every component, no palette', () => {
     expect(file('components.css')).toBe(
-      [baseCss(), componentsCss(COMPONENT_NAMES)].join('\n'),
+      [
+        baseCss({ ...BASE_TOKENS, ...SCHEME_STEPS.light }),
+        componentsCss(COMPONENT_NAMES),
+      ].join('\n'),
     );
     expect(file('components.css')).not.toContain('--uni-surface-color:');
   });
@@ -60,8 +64,10 @@ describe('the prebuilt stylesheets', () => {
     expect(buildCss()).toBe(buildCss());
   });
 
-  test('palette: false leaves every color token out', () => {
-    expect(buildCss({ palette: false, components: [] })).toBe(baseCss());
+  test('palette: false leaves every color token out, and the light steps on `:root`', () => {
+    expect(buildCss({ palette: false, components: [] })).toBe(
+      baseCss({ ...BASE_TOKENS, ...SCHEME_STEPS.light }),
+    );
   });
 });
 
@@ -109,7 +115,13 @@ describe('buildCss options', () => {
   test('without a palette, a color token with one value goes on `:root`', () => {
     expect(
       tokensCss({ palette: false, tokens: { '#uni-surface': 'white' } }),
-    ).toBe(baseCss({ ...BASE_TOKENS, '#uni-surface': 'white' }));
+    ).toBe(
+      baseCss({
+        ...BASE_TOKENS,
+        ...SCHEME_STEPS.light,
+        '#uni-surface': 'white',
+      }),
+    );
   });
 
   test('without a palette, a role points at a property of yours', () => {

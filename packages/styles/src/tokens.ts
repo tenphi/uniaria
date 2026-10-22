@@ -4,6 +4,8 @@
  * style objects use (spec: Tokens → Sizes and motion).
  */
 
+import type { Scheme } from './palette/themes';
+
 /**
  * Sizes and motion, written once on `:root` by `tokens.css`. Cube UI Kit's,
  * in `rem` where they size text or controls: its 8-pixel gap, 6-pixel
@@ -26,6 +28,32 @@ export const SIZES = {
   '$uni-dialog-transition': '250ms',
   '$uni-z-overlay': '1000',
 } as const;
+
+const LIGHT_STEPS = {
+  '$uni-quiet-hover': '.04',
+  '$uni-quiet-pressed': '.06',
+} as const;
+
+const DARK_STEPS = {
+  '$uni-quiet-hover': '.031',
+  '$uni-quiet-pressed': '.046',
+} as const;
+
+/**
+ * How much of its text color a quiet button mixes into its fill, hovered
+ * and pressed, per scheme: UI Kit's `current` theme, whose dark steps keep
+ * the light ones' difference in tone from the surface (items spec, The
+ * item look). Written in every scheme's block, so a scheme forced on a
+ * subtree brings its own; the light ones are on `:root` without a palette.
+ */
+export const SCHEME_STEPS: Readonly<
+  Record<Scheme, Readonly<Record<string, string>>>
+> = {
+  light: LIGHT_STEPS,
+  dark: DARK_STEPS,
+  lightContrast: LIGHT_STEPS,
+  darkContrast: DARK_STEPS,
+};
 
 /**
  * Tasty's units in the CSS this package builds. A Tasty project keeps its
@@ -62,6 +90,10 @@ export const STATES = {
   '@uni-list-tab-stop': ':has(List[tabindex="0"])',
   // An overlay with an arrow, which needs its overflow.
   '@uni-arrowed': ':has(> Arrow)',
+  // A button in an item's extras, or in an element of its own there
+  // (items spec, The item look).
+  '@uni-extra':
+    ':is([data-uni-part$="-extras"] > *, [data-uni-part$="-extras"] > * > *, TriggerExtras > *, TriggerExtras > * > *)',
   // A field with its own label, over what it names.
   '@uni-labelled': ':has(> Label)',
   '@uni-reduced-motion': '@media(prefers-reduced-motion: reduce)',

@@ -26,9 +26,7 @@ import { describe, expect, test } from 'vitest';
 
 import { buildCss, componentsCss } from './build';
 import { COMPONENT_NAMES, COMPONENTS } from './components';
-import type { ComponentName } from './components';
-import { createPalette, paletteCss } from './palette';
-import { baseCss } from './palette/css';
+import type { ComponentName, ComponentStyles } from './components';
 import { STATES } from './tokens';
 
 const DEFINITIONS: Record<
@@ -125,6 +123,16 @@ function splitList(list: string): string[] {
   return parts.map((part) => part.trim());
 }
 
+/** How many parentheses are open at `end`. */
+function depthAt(text: string, end: number): number {
+  let depth = 0;
+  for (let i = 0; i < end; i++) {
+    if (text[i] === '(') depth++;
+    else if (text[i] === ')') depth--;
+  }
+  return depth;
+}
+
 /** A selector without its `:where()` groups, which count for nothing. */
 function withoutWhere(selector: string): string {
   let counted = '';
@@ -143,19 +151,85 @@ function withoutWhere(selector: string): string {
   return counted;
 }
 
-/** A selector's specificity, as [ids, classes, elements]. */
-function specificity(selector: string): [number, number, number] {
-  const counted = withoutWhere(selector);
+/** The end of the group a `(` at `start` opens. */
+function groupEnd(text: string, start: number): number {
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '(') depth++;
+    else if (text[i] === ')' && --depth === 0) return i;
+  }
+  return text.length;
+}
+
+/**
+ * A state key without what tests the DOM rather than a state: structural
+ * pseudo-classes, `@parent()` and attribute selectors.
+ */
+function withoutStructure(key: string): string {
+  let rest = '';
+  for (let i = 0; i < key.length;) {
+    const match = /^(?::(?:has|is|not|where)|@parent)\(/.exec(key.slice(i));
+    if (match) {
+      i = groupEnd(key, i + match[0].length - 1) + 1;
+      continue;
+    }
+    rest += key[i++];
+  }
+  return rest.replaceAll(/\[[^\]]*\]/g, '');
+}
+
+type Specificity = [number, number, number];
+
+const larger = (a: Specificity, b: Specificity): Specificity =>
+  a[0] !== b[0]
+    ? a[0] > b[0]
+      ? a
+      : b
+    : a[1] !== b[1]
+      ? a[1] > b[1]
+        ? a
+        : b
+      : a[2] >= b[2]
+        ? a
+        : b;
+
+/**
+ * A selector's specificity, as [ids, classes, elements]: `:where()` counts
+ * nothing, and `:is()`, `:not()` and `:has()` their largest argument.
+ */
+function specificity(selector: string): Specificity {
+  let total: Specificity = [0, 0, 0];
+  let counted = '';
+  for (let i = 0; i < selector.length;) {
+    const match = /^:(has|is|not|where)\(/.exec(selector.slice(i));
+    if (!match) {
+      counted += selector[i++];
+      continue;
+    }
+    const open = i + match[0].length - 1;
+    const end = groupEnd(selector, open);
+    if (match[1] !== 'where') {
+      const inner = splitList(selector.slice(open + 1, end))
+        .map((argument) => specificity(argument.replace(/^[>~+]\s*/, '')))
+        .reduce(larger, [0, 0, 0]);
+      total = [total[0] + inner[0], total[1] + inner[1], total[2] + inner[2]];
+    }
+    i = end + 1;
+  }
   const count = (pattern: RegExp) => counted.match(pattern)?.length ?? 0;
   return [
-    count(/#[\w-]+/g),
-    count(/\[[^\]]*\]/g) + count(/\.[a-z_][\w-]*/gi) + count(/(?<!:):[\w-]+/g),
-    count(/::[\w-]+/g),
+    total[0] + count(/#[\w-]+/g),
+    total[1] +
+      count(/\[[^\]]*\]/g) +
+      count(/\.[a-z_][\w-]*/gi) +
+      count(/(?<!:):[\w-]+/g),
+    total[2] + count(/::[\w-]+/g),
   ];
 }
 
 describe.each(COMPONENT_NAMES)('%s', (name) => {
-  const { styles } = COMPONENTS[name];
+  const component: ComponentStyles = COMPONENTS[name];
+  const { styles, outside = {} } = component;
 
   test('styles only the parts of its definition', () => {
     const elements = [
@@ -164,13 +238,21 @@ describe.each(COMPONENT_NAMES)('%s', (name) => {
         .map(partElement),
       ...(OWN_ELEMENTS[name] ?? []),
     ];
-    const subElements = Object.keys(styles).filter((key) => /^[A-Z]/.test(key));
-    for (const element of subElements) expect(elements).toContain(element);
+    // Keys with a `$` that names no part reach the consumer's elements in
+    // a part (the item grid's), so the CSS is what counts.
+    for (const prelude of selectors(componentsCss([name]))) {
+      for (const match of prelude.matchAll(/\[data-element="(\w+)"\]/g)) {
+        // A part a state tests inside a pseudo-class is an alias's own.
+        if (depthAt(prelude, match.index) === 0)
+          expect(elements).toContain(match[1]);
+      }
+    }
   });
 
   test('reads only the states UniAria writes, data-variant and its aliases', () => {
-    for (const key of stateKeys(styles)) {
-      const terms = key
+    const objects = [styles, ...Object.values(outside)];
+    for (const key of objects.flatMap(stateKeys)) {
+      const terms = withoutStructure(key)
         .replaceAll('@own(', '(')
         .split(/[\s&|!^()]+/)
         .filter(Boolean);
@@ -217,11 +299,7 @@ describe('the built CSS', () => {
 
   test('reads only the custom properties tokens.css, UniAria or a component defines', () => {
     const defined = new Set([
-      ...[
-        ...`${baseCss()}${paletteCss(createPalette())}${componentsCss(COMPONENT_NAMES)}`.matchAll(
-          /(--[\w-]+):/g,
-        ),
-      ].map((match) => match[1]),
+      ...[...css.matchAll(/(--[\w-]+):/g)].map((match) => match[1]),
       // A popover's room, which UniAria measures (Popover spec).
       '--anchor-width',
       '--available-width',
@@ -247,8 +325,9 @@ describe('the built CSS', () => {
             /\[data-element="[^"]+"\](?!:where\(:not\(\[data-uni=)/g,
           ),
         ]
-          // A part a state tests inside `:has()` is left as it is.
-          .filter((match) => !prelude.slice(0, match.index).includes(':has('));
+          // A part a state tests inside a pseudo-class, such as `:has()`,
+          // is left as it is.
+          .filter((match) => depthAt(prelude, match.index) === 0);
         expect(bare, prelude).toEqual([]);
         if (parts) expect(prelude).toContain(exclusion);
       }

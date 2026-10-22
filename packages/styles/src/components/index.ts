@@ -6,21 +6,39 @@
 
 import type { Styles } from '@tenphi/tasty';
 
-import { buttonStyles } from './button';
+import { buttonExtrasStyles, buttonFrameStyles, buttonStyles } from './button';
 import { checkboxStyles } from './checkbox';
 import { checkboxGroupStyles } from './checkbox-group';
 import { comboboxStyles } from './combobox';
-import { dialogStyles, dialogTriggerStyles } from './dialog';
+import {
+  dialogStyles,
+  dialogTriggerDescriptionStyles,
+  dialogTriggerExtrasStyles,
+  dialogTriggerFrameStyles,
+  dialogTriggerLabelStyles,
+  dialogTriggerStyles,
+} from './dialog';
 import { fieldStyles } from './field';
 import { listboxStyles } from './listbox';
 import { numberFieldStyles } from './number-field';
-import { popoverStyles, popoverTriggerStyles } from './popover';
+import {
+  popoverStyles,
+  popoverTriggerDescriptionStyles,
+  popoverTriggerExtrasStyles,
+  popoverTriggerFrameStyles,
+  popoverTriggerLabelStyles,
+  popoverTriggerStyles,
+} from './popover';
 import { radioStyles } from './radio';
 import { radioGroupStyles } from './radio-group';
 import { selectStyles } from './select';
 import { switchStyles } from './switch';
 import { textFieldStyles } from './text-field';
-import { toggleButtonStyles } from './toggle-button';
+import {
+  toggleButtonExtrasStyles,
+  toggleButtonFrameStyles,
+  toggleButtonStyles,
+} from './toggle-button';
 import { tooltipStyles } from './tooltip';
 
 export interface ComponentStyles {
@@ -29,8 +47,17 @@ export interface ComponentStyles {
 }
 
 export const COMPONENTS = {
-  button: { styles: buttonStyles },
-  'toggle-button': { styles: toggleButtonStyles },
+  button: {
+    styles: buttonStyles,
+    outside: { frame: buttonFrameStyles, extras: buttonExtrasStyles },
+  },
+  'toggle-button': {
+    styles: toggleButtonStyles,
+    outside: {
+      frame: toggleButtonFrameStyles,
+      extras: toggleButtonExtrasStyles,
+    },
+  },
   checkbox: { styles: checkboxStyles },
   switch: { styles: switchStyles },
   radio: { styles: radioStyles },
@@ -42,10 +69,25 @@ export const COMPONENTS = {
   listbox: { styles: listboxStyles },
   select: { styles: selectStyles },
   combobox: { styles: comboboxStyles },
-  dialog: { styles: dialogStyles, outside: { trigger: dialogTriggerStyles } },
+  dialog: {
+    styles: dialogStyles,
+    outside: {
+      trigger: dialogTriggerStyles,
+      'trigger-label': dialogTriggerLabelStyles,
+      'trigger-description': dialogTriggerDescriptionStyles,
+      'trigger-frame': dialogTriggerFrameStyles,
+      'trigger-extras': dialogTriggerExtrasStyles,
+    },
+  },
   popover: {
     styles: popoverStyles,
-    outside: { trigger: popoverTriggerStyles },
+    outside: {
+      trigger: popoverTriggerStyles,
+      'trigger-label': popoverTriggerLabelStyles,
+      'trigger-description': popoverTriggerDescriptionStyles,
+      'trigger-frame': popoverTriggerFrameStyles,
+      'trigger-extras': popoverTriggerExtrasStyles,
+    },
   },
   tooltip: { styles: tooltipStyles },
 } as const satisfies Record<string, ComponentStyles>;
