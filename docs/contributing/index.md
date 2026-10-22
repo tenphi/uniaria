@@ -88,25 +88,26 @@ export condition, so tests and type checks never need a build first.
 
 ## Commands
 
-| Command                                          | What it does                                                                                                             |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm install`                                   | Installs the workspace. Versions younger than 14 days are refused on purpose.                                            |
-| `pnpm test:setup`                                | Installs the Playwright browsers.                                                                                        |
-| `pnpm test`                                      | The `node` project, then the `browser` project (Chromium, Firefox, WebKit).                                              |
-| `pnpm test:node`                                 | Only the DOM-free tests.                                                                                                 |
-| `pnpm test:browser`                              | Only the browser tests, in all three engines.                                                                            |
-| `pnpm vitest run --project "browser (chromium)"` | One browser engine.                                                                                                      |
-| `pnpm test:watch`                                | Vitest in watch mode.                                                                                                    |
-| `pnpm test:screen-readers`                       | The real screen-reader project. It exists only in the nightly workflow; see [Testing](./testing.md#real-screen-readers). |
-| `pnpm build`                                     | Builds every published package with tsdown: ESM, `.d.ts` files and sourcemaps.                                           |
-| `pnpm typecheck`                                 | Type-checks every workspace package, including the DOM-free core configuration.                                          |
-| `pnpm lint` / `pnpm lint:fix`                    | ESLint, including the architecture boundaries and the Tasty rules for the site.                                          |
-| `pnpm format` / `pnpm format:check`              | Prettier: single quotes, semicolons, trailing commas, 80 columns.                                                        |
-| `pnpm hygiene` / `pnpm hygiene:fix`              | Lint, format check and type check in one go; the `:fix` variant fixes lint and formats first.                            |
-| `pnpm check:conformance`                         | Fails when an unpushed commit changes both conformance scenarios and implementation.                                     |
-| `pnpm bench`                                     | Times UniAria's Button, React Aria's and a plain one in a production build; rewrites `packages/react/bench/results.md`.  |
-| `pnpm references [name …]`                       | Clones or updates the reference repos.                                                                                   |
-| `pnpm changeset`                                 | Creates a changeset for a user-visible package change (see [How changes land](#how-changes-land)).                       |
+| Command                                          | What it does                                                                                                                                       |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`                                   | Installs the workspace. Versions younger than 14 days are refused on purpose.                                                                      |
+| `pnpm test:setup`                                | Installs the Playwright browsers.                                                                                                                  |
+| `pnpm test`                                      | The `node` project, then the `browser` project (Chromium, Firefox, WebKit).                                                                        |
+| `pnpm test:node`                                 | Only the DOM-free tests.                                                                                                                           |
+| `pnpm test:browser`                              | Only the browser tests, in all three engines.                                                                                                      |
+| `pnpm vitest run --project "browser (chromium)"` | One browser engine.                                                                                                                                |
+| `pnpm test:watch`                                | Vitest in watch mode.                                                                                                                              |
+| `pnpm test:screen-readers`                       | The real screen-reader project. It exists only in the nightly workflow; see [Testing](./testing.md#real-screen-readers).                           |
+| `pnpm build`                                     | Builds every published package with tsdown: ESM, `.d.ts` files and sourcemaps.                                                                     |
+| `pnpm typecheck`                                 | Type-checks every workspace package, including the DOM-free core configuration.                                                                    |
+| `pnpm lint` / `pnpm lint:fix`                    | ESLint, including the architecture boundaries and the Tasty rules for the site.                                                                    |
+| `pnpm format` / `pnpm format:check`              | Prettier: single quotes, semicolons, trailing commas, 80 columns.                                                                                  |
+| `pnpm hygiene` / `pnpm hygiene:fix`              | Lint, format check and type check in one go; the `:fix` variant fixes lint and formats first.                                                      |
+| `pnpm check:conformance`                         | Fails when an unpushed commit changes both conformance scenarios and implementation.                                                               |
+| `pnpm bench`                                     | Times UniAria's Button, React Aria's and a plain one in a production build; rewrites `packages/react/bench/results.md`.                            |
+| `pnpm size`                                      | Builds, then reports the brotlied size of each entry point with each adapter, and of the prebuilt CSS (`.size-limit.js`). There are no limits yet. |
+| `pnpm references [name …]`                       | Clones or updates the reference repos.                                                                                                             |
+| `pnpm changeset`                                 | Creates a changeset for a user-visible package change (see [How changes land](#how-changes-land)).                                                 |
 
 The site has its own commands; see [Documentation](./documentation.md#commands).
 
