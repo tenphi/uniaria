@@ -80,6 +80,7 @@ uniaria/
 ├── references/                     Read-only clones of related repos (gitignored)
 ├── eslint.config.js                Includes the architecture boundary rules
 ├── vitest.config.ts                `node` and `browser` projects
+├── .size-limit.js                  Bundle sizes per entry point (`pnpm size`)
 ├── tsconfig.base.json
 └── pnpm-workspace.yaml             Workspace + 14-day minimum release age
 ```
@@ -100,6 +101,7 @@ uniaria/
 | `pnpm format` / `pnpm format:check`              | Prettier.                                                                                  |
 | `pnpm hygiene`                                   | Lint, format check and typecheck in one go.                                                |
 | `pnpm check:conformance`                         | Check that no unpushed commit changes both conformance and implementation. CI runs it too. |
+| `pnpm size`                                      | Build, then report each entry point's bundle size (size-limit, `.size-limit.js`).          |
 | `pnpm references [name ...]`                     | Clone or update the reference repos (see Reference repos).                                 |
 | `pnpm changeset`                                 | Create a changeset for a user-visible package change (Before pushing changes).             |
 | `pnpm -C apps/docs dev`                          | The documentation site with live reload (see Documentation).                               |
@@ -822,8 +824,8 @@ readable overview of this file for people; this file stays the binding one.
 ## Not set up yet
 
 Planned by the design, added when the owner asks: public API reports (API
-Extractor), size budgets per subpath (size-limit) and Custom Elements
-Manifest generation.
+Extractor), size limits that fail a check (`pnpm size` reports the sizes
+per entry point, without limits) and Custom Elements Manifest generation.
 
 ## Releasing
 
