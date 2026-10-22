@@ -1,6 +1,8 @@
 /**
  * Tooltip's props and public state, as the approved spec
- * (`packages/core/src/components/tooltip/spec.md`) defines them.
+ * (`packages/core/src/components/tooltip/spec.md`) defines them, with the
+ * items spec's overflow tooltip
+ * (`packages/core/src/components/button/items.md`).
  */
 
 import type { PopoverPositionArea } from '../popover/types';
@@ -12,7 +14,8 @@ export interface TooltipProps {
   delay: number;
   closeDelay: number;
   trigger: 'hover' | 'focus';
-  relation: 'description' | 'label';
+  shouldOpenOnlyWhenTruncated: boolean;
+  relation: 'description' | 'label' | 'none';
   positionArea: PopoverPositionArea;
   positionTryFallbacks: string;
 }

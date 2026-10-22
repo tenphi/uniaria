@@ -10,39 +10,55 @@
  */
 
 import { buttonConformance } from './button/button.conformance';
+import { buttonItemsConformance } from './button/items.conformance';
 import { checkboxConformance } from './checkbox/checkbox.conformance';
 import { checkboxGroupConformance } from './checkbox-group/checkbox-group.conformance';
 import { dialogConformance } from './dialog/dialog.conformance';
+import { dialogItemsConformance } from './dialog/items.conformance';
 import { fieldConformance } from './field/field.conformance';
 import { listboxConformance } from './listbox/listbox.conformance';
+import { listboxItemsConformance } from './listbox/items.conformance';
 import { listboxVirtualizationConformance } from './listbox/virtualization.conformance';
 import { numberFieldConformance } from './number-field/number-field.conformance';
 import { popoverConformance } from './popover/popover.conformance';
+import { popoverItemsConformance } from './popover/items.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { selectConformance } from './select/select.conformance';
+import { selectItemsConformance } from './select/items.conformance';
 import { comboboxConformance } from './combobox/combobox.conformance';
+import { comboboxItemsConformance } from './combobox/items.conformance';
 import { switchConformance } from './switch/switch.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
+import { toggleButtonItemsConformance } from './toggle-button/items.conformance';
 import { tooltipConformance } from './tooltip/tooltip.conformance';
+import { tooltipItemsConformance } from './tooltip/items.conformance';
 
 export {
   buttonConformance,
+  buttonItemsConformance,
   checkboxConformance,
   checkboxGroupConformance,
   dialogConformance,
+  dialogItemsConformance,
   fieldConformance,
   listboxConformance,
+  listboxItemsConformance,
   listboxVirtualizationConformance,
   numberFieldConformance,
   popoverConformance,
+  popoverItemsConformance,
   radioGroupConformance,
   selectConformance,
+  selectItemsConformance,
   comboboxConformance,
+  comboboxItemsConformance,
   switchConformance,
   textFieldConformance,
   toggleButtonConformance,
+  toggleButtonItemsConformance,
   tooltipConformance,
+  tooltipItemsConformance,
 };
 export type { ButtonProps, ButtonState, PressEvent } from './button/types';
 export type { CheckboxProps, CheckboxState } from './checkbox/types';
@@ -103,4 +119,13 @@ export const suites = [
   listboxVirtualizationConformance,
   selectConformance,
   comboboxConformance,
+  // The items spec (phase 5), across the components it touches.
+  buttonItemsConformance,
+  toggleButtonItemsConformance,
+  dialogItemsConformance,
+  popoverItemsConformance,
+  tooltipItemsConformance,
+  listboxItemsConformance,
+  selectItemsConformance,
+  comboboxItemsConformance,
 ];
