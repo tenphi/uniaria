@@ -1,6 +1,6 @@
 # Items spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-22
 
 ## Summary
 
@@ -205,7 +205,7 @@ the anchor part, else the frame, else the trigger. So a popup sized from
   nothing stops propagation.
 - **Overlays.** A press on an extra is outside the trigger: an open popover
   closes and the extra acts, in one press, as for any control outside it
-  (root AGENTS.md → Overlays; Open questions 4). Focus stays on the extra,
+  (root AGENTS.md → Overlays; Resolved questions 4). Focus stays on the extra,
   since the popover hands focus off instead of restoring it. A modal popover
   keeps Tab inside it, so the extras are reached once it closes. A non-modal
   one closes when focus moves to an extra, as when focus moves anywhere else.
@@ -375,7 +375,7 @@ Changes to the `@uniaria/styles` spec, which land with it:
   and sibling selectors, so the consumer adds no attribute. Paddings, gaps
   and sizes stay each component's (UI Kit's).
 - **One line.** The label and the description take one line each and end in
-  an ellipsis (Open questions 8). They are blocks with no inline padding:
+  an ellipsis (Resolved questions 8). They are blocks with no inline padding:
   an ellipsis needs a block container (a flex label shows none), and
   padding puts the cut where the measuring least expects it. Clamping to
   more lines isn't Baseline (`line-clamp`), so it stays the consumer's CSS.
@@ -397,7 +397,7 @@ Changes to the `@uniaria/styles` spec, which land with it:
   comes after its actions.
 - **Quiet buttons** mix their hover and press fills from `currentcolor`, as
   UI Kit's `current` theme does, so a quiet extra reads on any fill,
-  including a selected row's accent (Open questions 9).
+  including a selected row's accent (Resolved questions 9).
 - **Option extras** come after the suffix and before the selected check.
 - **Tooltip text** keeps its line breaks (`white-space: pre-line`).
 - **No new attribute.** The only attribute the styles ask of the consumer
@@ -578,7 +578,7 @@ and custom-element contracts, `conformance/`):
    and extras become a second exception: Button's and ToggleButton's `frame`
    and `extras`, and Popover's and Dialog's trigger parts, which already sit
    outside, are `outsideParts`, marked `data-uni-part` and styled on their
-   own (Open questions 2). The runtime already supports outside parts.
+   own (Resolved questions 2). The runtime already supports outside parts.
 2. **A third element-owned part,** Tooltip's `text`, beside Select's value
    and hidden `<select>` (root AGENTS.md → DOM, lifecycle and SSR; Open
    questions 5).
@@ -587,7 +587,7 @@ and custom-element contracts, `conformance/`):
    sits in directly. `optionTooltip` comes only from its attribute, so a
    component with two tooltip keys inside one `<uni-tooltip>` takes it for
    the trigger only. A field on `LinkKey` that the elements adapter reads
-   (Open questions 7).
+   (Resolved questions 7).
 4. **Tooltip's link contract** (`tooltip/link.ts`, internal): the target a
    component hands over gains its text elements, and a list gets a driven
    mode, in which it reports hover and focus as they start and end, each
@@ -621,7 +621,8 @@ and custom-element contracts, `conformance/`):
 
 ### Changes to approved specs
 
-Made on approval, each marked "Changed on <date> (owner)" in place:
+Made with the implementation, each marked "Changed on <date> (owner)" in
+place, as the virtualization spec's corrections were:
 
 - **Tooltip:** "Detecting truncated text" leaves Not part of Tooltip; the
   prop, the relation, the `text` part, Measuring and option tooltips are
@@ -693,12 +694,14 @@ interactive. An overflow tooltip with `relation: 'none'` is outside the
 Tooltip pattern, which assumes the tooltip is the trigger's description;
 here the description is already the trigger's own text.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-22, each as recommended.
 
 1. **The prop's name.** (a) `shouldOpenOnlyWhenTruncated`, attribute
    `open-only-when-truncated`: a `should…` predicate for behavior, as the
    conventions ask, and plain about what it does. (b) `requiresTruncation`.
-   (c) Fluent's `overflowMode`, a string. Recommended: (a).
+   (c) Fluent's `overflowMode`, a string. Decided: (a).
 2. **A frame outside the root.** (a) `frame` and `extras` parts outside
    Button's root, a second exception to "the root is the outermost element"
    after overlays (Runtime and harness changes 1): every button keeps one
@@ -708,38 +711,42 @@ here the description is already the trigger's own text.
    trigger variants that compose it. (c) Nothing in UniAria: the consumer's
    own wrapper. Then hover over an extra can't count as the button's, and
    every design system projects states onto its wrapper, as UI Kit does.
-   Recommended: (a).
+   Decided: (a).
 3. **The triggers' frame.** (a) A `triggerFrame` part on Popover, Dialog and
    Select, with the popup placed against it when there is no anchor. (b)
    Popover's and Select's existing `anchor` part as the frame: one part
    fewer, but an anchor placed elsewhere would take its trigger's hover and
-   states. Recommended: (a).
+   states. Decided: (a).
 4. **A press on an extra while its trigger's popup is open.** (a) Outside:
    the popup closes and the extra acts, as with any control outside it, and
    no press is lost. (b) UI Kit's: the frame counts as the trigger, so the
    popup stays open and the extra acts. That needs a frame exception in
    Popover's and Select's outside, blur and focus-restore rules.
-   Recommended: (a).
+   Decided: (a).
 5. **The tooltip's `text` part.** (a) A third element-owned part, which
    UniAria fills with the cut-off text. (b) None: the consumer writes the
    tooltip's content. Then one tooltip for many options needs the hovered
    option's key in public state, and a render on every hover in React and
-   Vue. Recommended: (a).
+   Vue. Decided: (a).
 6. **Option tooltips in this spec.** (a) Here: the `optionTooltip` link and
    the driven mode. Options are where Cube Cloud's text is cut off most.
-   (b) A later spec, with Menu. Recommended: (a).
+   (b) A later spec, with Menu. Decided: (a).
 7. **`optionTooltip` on custom elements.** (a) Linked only by its attribute,
    with a field on `LinkKey` (Runtime and harness changes 3). (b) Through the
    host as well. Then a `<uni-select>` inside a `<uni-tooltip>` links both
    keys to one tooltip, which refuses the second with a warning, and which
-   key wins depends on order. Recommended: (a).
+   key wins depends on order. Decided: (a).
 8. **Cut-off labels in the default styles.** (a) Labels and descriptions in
    the item look take one line and end in an ellipsis, as in UI Kit. Options
    change from wrapping to cut off, and the docs pair them with an option
    tooltip. (b) They keep wrapping, and cutting them is the consumer's CSS.
-   Recommended: (a).
+   Decided: (a).
 9. **Quiet buttons from `currentcolor`.** (a) Every quiet Button mixes its
    hover and press fills from `currentcolor`, with UI Kit's steps per scheme,
    so it reads on any surface. That changes today's quiet look slightly. (b)
    Only quiet buttons inside extras, which needs a context selector the flat
-   specificity rules make awkward. Recommended: (a).
+   specificity rules make awkward. Decided: (a).
+
+## Open questions
+
+None.
