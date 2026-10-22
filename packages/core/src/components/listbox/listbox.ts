@@ -21,6 +21,10 @@
  * target of a move), which `./virtual-list.ts` lays out. A move to an
  * option outside the view pins it, scrolls to its position, and focuses it
  * once its element attaches.
+ *
+ * From the items spec: an option's `optionExtras` (badges, counts, icons)
+ * describe it after its description, and one tooltip for every option
+ * comes through `optionTooltip`, driven by hover and visible focus.
  */
 
 import {
@@ -32,6 +36,7 @@ import type { ListCollection } from '../../collections';
 import {
   createFocusWithin,
   createItemPress,
+  holdsFocusable,
   isComposing,
   isDevelopment,
   isMac,
@@ -45,6 +50,8 @@ import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
 import { field } from '../field/field';
+import type { OptionTooltipSource } from '../tooltip/link';
+import { linkOptionTooltip, optionTooltipLink } from '../tooltip/link';
 import {
   createVirtualList,
   renderedKeysChange,
@@ -52,6 +59,56 @@ import {
 } from './virtual-list';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
+
+/** Ids joined for an `aria-*` reference; `undefined` when there are none. */
+const references = (...ids: (string | undefined)[]): string | undefined =>
+  ids.filter(Boolean).join(' ') || undefined;
+
+/** What the option tooltip reads from a list (items spec, Option tooltips). */
+interface OptionTooltipList {
+  /** The option with focus, or the highlighted one with virtual focus. */
+  focusedKey(): string | null;
+  hoveredKey(): string | null;
+  isFocusVisible(): boolean;
+  isHighlightVisible(): boolean;
+}
+
+/**
+ * The option tooltip's source for Listbox, Select and Combobox: hover,
+ * visible focus or the visible highlight, and each option's `optionLabel`
+ * and `optionDescription` while rendered, else the option.
+ */
+export function optionTooltipSource(
+  ctx: { itemElement(part: string, key: string): unknown },
+  list: OptionTooltipList,
+  options: {
+    readonly isVirtual: () => boolean;
+    readonly keyParts: readonly string[];
+  },
+): OptionTooltipSource {
+  const element = (part: string, key: string) =>
+    (ctx.itemElement(part, key) as HTMLElement | null) ?? null;
+  return {
+    hoveredKey: list.hoveredKey,
+    focusedKey: () => {
+      const isVisible = options.isVirtual()
+        ? list.isHighlightVisible()
+        : list.isFocusVisible();
+      return isVisible ? list.focusedKey() : null;
+    },
+    option: (key) => element('option', key),
+    text: (key) => {
+      const parts = ['optionLabel', 'optionDescription']
+        .map((part) => element(part, key))
+        .filter((part): part is HTMLElement => part !== null);
+      if (parts.length > 0) return parts;
+      const option = element('option', key);
+      return option ? [option] : [];
+    },
+    keyParts: options.keyParts,
+    pressPart: 'list',
+  };
+}
 
 type Orientation = 'vertical' | 'horizontal';
 type SelectionMode = 'single' | 'multiple';
@@ -119,9 +176,11 @@ export const listbox = defineComponent({
     'option',
     'optionLabel',
     'optionDescription',
+    'optionExtras',
     'group',
     'groupLabel',
   ],
+  links: [optionTooltipLink],
   props: {
     // The element reads them from its option and group parts while the
     // consumer sets none (Resolved questions 3).
@@ -438,6 +497,21 @@ export const listbox = defineComponent({
       };
     });
 
+    if (isDevelopment()) {
+      // Extras act on nothing: an option can't hold controls (items spec,
+      // Option extras). Once per list, for a list of a thousand rows.
+      let hasWarned = false;
+      ctx.itemEffect('optionExtras', (key, element) => {
+        if (hasWarned || !holdsFocusable(element as Element)) return;
+        hasWarned = true;
+        warn(
+          `listbox: the extras of option "${key}" hold a focusable element, ` +
+            'which an option cannot contain. Keep badges, counts and icons ' +
+            'there, and put actions outside the list.',
+        );
+      });
+    }
+
     /**
      * Virtual focus: highlights `key`, or nothing. Moved by the keyboard, the
      * option is scrolled into view, as browsers don't do it for
@@ -753,19 +827,28 @@ export const listbox = defineComponent({
       });
     }
 
+    const api = {
+      focusedKey: () => (isVirtual() ? highlightedKey.get() : focusedKey.get()),
+      isHighlightVisible: () => isHighlightVisible.get(),
+      hoveredKey: () => hoveredKey.get(),
+      isFocusVisible: focusWithin.isFocusVisible,
+    };
+    // The composed list in Select and Combobox sees no link: they drive it.
+    linkOptionTooltip(
+      ctx,
+      optionTooltipSource(ctx, api, { isVirtual, keyParts: ['list'] }),
+    );
+
     return {
+      ...api,
       field: labelling,
       virtual,
       collection,
       selected,
       tabStop,
       base,
-      focusedKey: () => (isVirtual() ? highlightedKey.get() : focusedKey.get()),
-      isHighlightVisible: () => isHighlightVisible.get(),
-      hoveredKey: () => hoveredKey.get(),
       pressedKey: press.pressedKey,
       isFocusWithin: focusWithin.isFocusWithin,
-      isFocusVisible: focusWithin.isFocusVisible,
       hasEmpty: () => hasEmpty.get(),
       /** Where focus goes when the list next takes it (Select's open). */
       setTabStop: (key: string | null) => lastFocused.set(key),
@@ -781,6 +864,15 @@ export const listbox = defineComponent({
       listHandlers: { keydown: onListKeyDown, focusin: onListFocusIn },
       isRendered: (part: string, key: string) =>
         ctx.itemElement(part, key) !== null,
+      /**
+       * Option extras describe their option while rendered, unless the
+       * consumer hid them: a reference reads hidden content (accname,
+       * step 2A).
+       */
+      isDescribedByExtras(key: string) {
+        const extras = ctx.itemElement('optionExtras', key) as Element | null;
+        return extras !== null && extras.getAttribute('aria-hidden') !== 'true';
+      },
     };
   },
   expose({ props, api }) {
@@ -893,6 +985,7 @@ export const listbox = defineComponent({
     switch (part) {
       case 'optionLabel':
       case 'optionDescription':
+      case 'optionExtras':
       case 'groupLabel':
         return {
           attrs: {
@@ -938,9 +1031,14 @@ export const listbox = defineComponent({
       'aria-labelledby': api.isRendered('optionLabel', key)
         ? itemId(base, 'optionLabel', key)
         : undefined,
-      'aria-describedby': api.isRendered('optionDescription', key)
-        ? itemId(base, 'optionDescription', key)
-        : undefined,
+      'aria-describedby': references(
+        api.isRendered('optionDescription', key)
+          ? itemId(base, 'optionDescription', key)
+          : undefined,
+        api.isDescribedByExtras(key)
+          ? itemId(base, 'optionExtras', key)
+          : undefined,
+      ),
       'data-selected': flag(isSelected),
       'data-focused': flag(isFocused),
       'data-focus-visible': flag(isFocused && isFocusVisible),

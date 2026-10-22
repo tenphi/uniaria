@@ -14,7 +14,10 @@
  *
  * The trigger and the close button are Button, composed twice. The trigger
  * takes a tooltip through the popover's `tooltip` link (Tooltip spec,
- * Resolved questions 2).
+ * Resolved questions 2), and Button's label, description, frame and extras
+ * as `triggerLabel`, `triggerDescription`, `triggerFrame` and
+ * `triggerExtras` (items spec). Without an anchor part, the frame is the
+ * anchor.
  */
 
 import {
@@ -38,7 +41,7 @@ import {
 import type { DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
-import { button } from '../button/button';
+import { NO_ITEM_PARTS, TRIGGER_PARTS, button } from '../button/button';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Why the user closed the popover (spec, Events). */
@@ -57,7 +60,14 @@ export interface PopoverDismissEvent {
 }
 
 type PopoverPart =
-  'trigger' | 'anchor' | 'root' | 'arrow' | 'title' | 'description' | 'close';
+  | 'trigger'
+  | 'triggerLabel'
+  | 'anchor'
+  | 'root'
+  | 'arrow'
+  | 'title'
+  | 'description'
+  | 'close';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -90,6 +100,10 @@ export const popover = defineComponent({
   name: 'popover',
   parts: [
     'trigger',
+    'triggerLabel',
+    'triggerDescription',
+    'triggerFrame',
+    'triggerExtras',
     'anchor',
     'root',
     'arrow',
@@ -98,7 +112,14 @@ export const popover = defineComponent({
     'close',
   ],
   // They sit outside the popover (root AGENTS.md → Part markers).
-  outsideParts: ['trigger', 'anchor'],
+  outsideParts: [
+    'trigger',
+    'triggerLabel',
+    'triggerDescription',
+    'triggerFrame',
+    'triggerExtras',
+    'anchor',
+  ],
   links: [tooltipLink],
   // The only members of setup()'s result consumers may call (spec,
   // Actions).
@@ -148,7 +169,9 @@ export const popover = defineComponent({
       props.isDismissable() && !props.isKeyboardDismissDisabled();
     const triggerElement = () => partElement(ctx, 'trigger');
     const anchorElement = () =>
-      partElement(ctx, 'anchor') ?? partElement(ctx, 'trigger');
+      partElement(ctx, 'anchor') ??
+      partElement(ctx, 'triggerFrame') ??
+      partElement(ctx, 'trigger');
     const isModal = () => !props.isNonModal();
 
     const trigger = ctx.use(
@@ -160,20 +183,24 @@ export const popover = defineComponent({
         isDisabled: props.isDisabled(),
         onPress: () => (isOpen.get() ? requestClose('trigger') : open()),
       }),
-      { parts: { root: 'trigger' } },
+      { parts: TRIGGER_PARTS },
     );
     const closeButton = ctx.use(
       button,
       () => ({ onPress: () => requestClose('close') }),
-      { parts: { root: 'close' } },
+      { parts: { root: 'close', ...NO_ITEM_PARTS } },
     );
-    const tooltip = linkTooltip(ctx, { hover: 'trigger', focus: 'trigger' });
+    const tooltip = linkTooltip(ctx, {
+      hover: 'trigger',
+      focus: 'trigger',
+      text: ['triggerLabel', 'triggerDescription'],
+    });
 
     // Rendered parts, and a name the consumer put on the root, as in Dialog.
     // React attaches elements before `start()`; the watch follows changes.
     const present = () => {
       const names: string[] = (
-        ['trigger', 'title', 'description'] as const
+        ['trigger', 'triggerLabel', 'title', 'description'] as const
       ).filter((part) => ctx.element(part) !== null);
       if (partElement(ctx, 'root')?.hasAttribute('aria-label')) {
         names.push('label');
@@ -404,7 +431,8 @@ export const popover = defineComponent({
     const has = api.isRendered;
     const placement = api.placement();
     const hasPopoverApi = api.hasPopoverApi();
-    const triggerRoot = api.trigger.connect().root as DomPartProps;
+    const triggerParts = api.trigger.connect();
+    const triggerRoot = triggerParts.root as DomPartProps;
     const trigger: DomPartProps = {
       ...triggerRoot,
       attrs: {
@@ -412,7 +440,11 @@ export const popover = defineComponent({
         id: ids.trigger,
         'aria-expanded': String(isOpen),
         'aria-controls': isOpen ? ids.root : undefined,
-        ...relationAttributes(api.tooltip),
+        // After Button's label and description.
+        ...relationAttributes(api.tooltip, {
+          labelledBy: triggerRoot.attrs['aria-labelledby'],
+          describedBy: triggerRoot.attrs['aria-describedby'],
+        }),
         ...state,
       },
       on: mergeHandlers(triggerRoot.on ?? {}, {
@@ -426,12 +458,18 @@ export const popover = defineComponent({
         hidden: flag(!hasPopoverApi && !api.isShown()),
         role: 'dialog',
         tabindex: '-1',
-        // The trigger names it when nothing else does (Resolved questions 7).
+        // The trigger names it when nothing else does (Resolved questions
+        // 7): its label part alone, while rendered.
         'aria-labelledby':
           references(
             has('title') ? ids.title : undefined,
             props.labelledBy(),
-          ) ?? (!has('label') && has('trigger') ? ids.trigger : undefined),
+          ) ??
+          (!has('label') && has('trigger')
+            ? has('triggerLabel')
+              ? ids.triggerLabel
+              : ids.trigger
+            : undefined),
         'aria-describedby': references(
           has('description') ? ids.description : undefined,
           props.describedBy(),
@@ -442,6 +480,10 @@ export const popover = defineComponent({
     };
     return {
       trigger,
+      triggerLabel: triggerParts.label,
+      triggerDescription: triggerParts.description,
+      triggerFrame: withState(triggerParts.frame),
+      triggerExtras: withState(triggerParts.extras),
       anchor: { attrs: {} },
       root,
       arrow: {

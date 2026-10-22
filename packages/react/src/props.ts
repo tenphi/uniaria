@@ -126,6 +126,16 @@ export function reactPropValue(name: string, value: string): string | boolean {
   return value === '' && BOOLEANS.has(name) ? true : value;
 }
 
+/**
+ * A style property as React names it: custom properties as they are,
+ * others in camelCase (`inset-block-start` → `insetBlockStart`,
+ * `-webkit-line-clamp` → `WebkitLineClamp`).
+ */
+export const reactStyleName = (name: string): string =>
+  name.startsWith('--')
+    ? name
+    : name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+
 /** The React handler prop for a DOM event name. */
 export function reactEventName(type: string): string {
   return (

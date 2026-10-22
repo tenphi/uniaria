@@ -6,7 +6,9 @@
  * focus, focus restore and a closing phase for exit animations, and runs
  * every native close through the state so a controlled dialog can refuse it.
  *
- * The trigger and the close button are Button, composed twice.
+ * The trigger and the close button are Button, composed twice. The trigger
+ * takes Button's label, description, frame and extras as `triggerLabel`,
+ * `triggerDescription`, `triggerFrame` and `triggerExtras` (items spec).
  */
 
 import {
@@ -26,7 +28,7 @@ import {
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
-import { button } from '../button/button';
+import { NO_ITEM_PARTS, TRIGGER_PARTS, button } from '../button/button';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Why the user closed the dialog (Resolved questions 9). */
@@ -64,9 +66,26 @@ function methodOf(form: HTMLFormElement, submitter: HTMLElement | null) {
 
 export const dialog = defineComponent({
   name: 'dialog',
-  parts: ['trigger', 'root', 'title', 'description', 'close'],
-  // The trigger sits outside the dialog (root AGENTS.md → Part markers).
-  outsideParts: ['trigger'],
+  parts: [
+    'trigger',
+    'triggerLabel',
+    'triggerDescription',
+    'triggerFrame',
+    'triggerExtras',
+    'root',
+    'title',
+    'description',
+    'close',
+  ],
+  // The trigger's parts sit outside the dialog (root AGENTS.md → Part
+  // markers).
+  outsideParts: [
+    'trigger',
+    'triggerLabel',
+    'triggerDescription',
+    'triggerFrame',
+    'triggerExtras',
+  ],
   // The trigger takes a tooltip (Tooltip spec, Resolved questions 2).
   links: [tooltipLink],
   // The only members of setup()'s result consumers may call (spec,
@@ -114,14 +133,18 @@ export const dialog = defineComponent({
     const trigger = ctx.use(
       button,
       () => ({ isDisabled: props.isDisabled(), onPress: open }),
-      { parts: { root: 'trigger' } },
+      { parts: TRIGGER_PARTS },
     );
     const closeButton = ctx.use(
       button,
       () => ({ onPress: () => requestClose('close') }),
-      { parts: { root: 'close' } },
+      { parts: { root: 'close', ...NO_ITEM_PARTS } },
     );
-    const tooltip = linkTooltip(ctx, { hover: 'trigger', focus: 'trigger' });
+    const tooltip = linkTooltip(ctx, {
+      hover: 'trigger',
+      focus: 'trigger',
+      text: ['triggerLabel', 'triggerDescription'],
+    });
 
     // Only rendered parts are referenced, as in Field. React attaches
     // elements before `start()`; the watch follows parts added later.
@@ -362,12 +385,24 @@ export const dialog = defineComponent({
         ...state,
       },
     };
-    const trigger = api.trigger.connect().root;
+    const triggerParts = api.trigger.connect();
+    const trigger = triggerParts.root;
     return {
       trigger: withState({
         ...trigger,
-        attrs: { ...trigger.attrs, ...relationAttributes(api.tooltip) },
+        attrs: {
+          ...trigger.attrs,
+          // After Button's label and description.
+          ...relationAttributes(api.tooltip, {
+            labelledBy: trigger.attrs['aria-labelledby'],
+            describedBy: trigger.attrs['aria-describedby'],
+          }),
+        },
       }),
+      triggerLabel: triggerParts.label,
+      triggerDescription: triggerParts.description,
+      triggerFrame: withState(triggerParts.frame),
+      triggerExtras: withState(triggerParts.extras),
       root,
       title: { attrs: { id: ids.title, ...state } },
       description: { attrs: { id: ids.description, ...state } },

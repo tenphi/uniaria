@@ -96,6 +96,8 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const tooltip = linkTooltip(ctx, {
     hover: ['wrapper', 'root'],
     focus: 'input',
+    text: ['label', 'description'],
+    textFallback: null,
   });
 
   const labelling = ctx.use(
