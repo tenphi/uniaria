@@ -1,5 +1,11 @@
 # @uniaria/core
 
+## 0.2.0
+
+### Patch Changes
+
+- [#7](https://github.com/tenphi/uniaria/pull/7) [`54f214f`](https://github.com/tenphi/uniaria/commit/54f214f7be1a71b000311bb63275e50d3e08e353) Thanks [@tenphi](https://github.com/tenphi)! - The package READMEs link to their pages on https://uniaria.tenphi.me.
+
 ## 0.1.0
 
 ### Minor Changes
