@@ -41,14 +41,16 @@ Not part of Tooltip:
 - **Interactive content.** A tooltip with a link or a button in it is a
   non-modal Popover (the APG: "a non-modal dialog"; UI Kit's ContextualHelp
   and InfoBadge popovers).
-- **Detecting truncated text** (UI Kit's automatic tooltips): the design
-  system measures and sets `isDisabled` while the text fits, as UI Kit keeps
-  its provider disabled.
 - **Touch** (Resolved questions 11).
 - **Looks.** UniAria provides tokens (Styling tokens), not styles: UI Kit's
   `isLight`, width, gap and arrow shape are the design system's CSS, which can
   bind to those tokens.
 - **Hover cards and previews** (React Aria's PreviewTrigger).
+
+Changed on 2026-10-22 (owner): detecting truncated text (UI Kit's automatic
+tooltips) left this list. It is Tooltip's now, with
+`shouldOpenOnlyWhenTruncated` (the items spec, `../button/items.md`, The
+overflow tooltip).
 
 ## Anatomy
 
@@ -58,6 +60,13 @@ Not part of Tooltip:
 | anchor  | any                                                                       | none                                                                                                                                 | Optional. The tooltip is placed against it instead of the trigger (UI Kit's `targetRef`).                                                     |
 | root    | any; usually `div`                                                        | `id` (unless it has one), `popover="manual"`, `role="tooltip"`, `data-placement`; state attributes; positioning styles (Positioning) | Hidden while closed. Text only: development warns when it holds a focusable element.                                                          |
 | arrow   | any                                                                       | `aria-hidden="true"`, `data-placement`, state attributes; its offset along the edge (Positioning)                                    | Optional, as Popover's.                                                                                                                       |
+| text    | any, inside the root; usually `span`, empty                               | its text (element-owned), state attributes                                                                                           | Optional. While open, the text of what it describes (the items spec, The trigger's text), one element's per line.                             |
+
+Changed on 2026-10-22 (owner): the `text` part, which UniAria fills as it
+fills Select's value (root AGENTS.md → DOM, lifecycle and SSR), and the
+`optionTooltip` link it offers beside `tooltip`: a list drives one tooltip
+for all its options (the items spec, Option tooltips). A tooltip still
+describes one component or one list.
 
 State attributes on the root and the arrow: `data-open` while open,
 `data-entering` for the first two frames after opening, `data-exiting` while
@@ -80,16 +89,17 @@ part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 ## Props
 
-| Prop                 | Type                       | Default                     | Bindable | Change event | Notes                                                                                                               |
-| -------------------- | -------------------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------- |
-| isOpen               | `boolean`                  | `false`                     | yes      | `openChange` |                                                                                                                     |
-| isDisabled           | `boolean`                  | `false`                     | no       | —            | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say.           |
-| delay                | `number`                   | `250`                       | no       | —            | Milliseconds the pointer rests on the trigger before it opens, while no tooltip is warm (Warm-up).                  |
-| closeDelay           | `number`                   | `500`                       | no       | —            | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                                 |
-| trigger              | `'hover' \| 'focus'`       | `'hover'`                   | no       | —            | `'focus'`: keyboard focus only, as UI Kit and React Aria.                                                           |
-| relation             | `'description' \| 'label'` | `'description'`             | no       | —            | `'label'`: the tooltip names the trigger through `aria-labelledby`, for an icon-only button (Resolved questions 4). |
-| positionArea         | `PositionArea`             | `'top'`                     | no       | —            | CSS `position-area`: a side, optionally an alignment span (Positioning).                                            |
-| positionTryFallbacks | `string`                   | `'flip-block, flip-inline'` | no       | —            | CSS `position-try-fallbacks` (Positioning).                                                                         |
+| Prop                        | Type                                 | Default                     | Bindable | Change event | Notes                                                                                                                                                                                                                                         |
+| --------------------------- | ------------------------------------ | --------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| isOpen                      | `boolean`                            | `false`                     | yes      | `openChange` |                                                                                                                                                                                                                                               |
+| isDisabled                  | `boolean`                            | `false`                     | no       | —            | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say.                                                                                                                                     |
+| delay                       | `number`                             | `250`                       | no       | —            | Milliseconds the pointer rests on the trigger before it opens, while no tooltip is warm (Warm-up).                                                                                                                                            |
+| closeDelay                  | `number`                             | `500`                       | no       | —            | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                                                                                                                                                           |
+| trigger                     | `'hover' \| 'focus'`                 | `'hover'`                   | no       | —            | `'focus'`: keyboard focus only, as UI Kit and React Aria.                                                                                                                                                                                     |
+| relation                    | `'description' \| 'label' \| 'none'` | `'description'`             | no       | —            | `'label'`: the tooltip names the trigger through `aria-labelledby`, for an icon-only button (Resolved questions 4). `'none'`: no relation, and the root is `aria-hidden`, for text the trigger already holds (changed on 2026-10-22 (owner)). |
+| shouldOpenOnlyWhenTruncated | `boolean`                            | `false`                     | no       | —            | Opens only while the text it describes is cut off; attribute `open-only-when-truncated` (changed on 2026-10-22 (owner), the items spec, Measuring).                                                                                           |
+| positionArea                | `PositionArea`                       | `'top'`                     | no       | —            | CSS `position-area`: a side, optionally an alignment span (Positioning).                                                                                                                                                                      |
+| positionTryFallbacks        | `string`                             | `'flip-block, flip-inline'` | no       | —            | CSS `position-try-fallbacks` (Positioning).                                                                                                                                                                                                   |
 
 ## Events
 
@@ -205,6 +215,8 @@ UI Kit:
 | first two frames   | root    | + `data-entering`                                                                      |
 | closing            | root    | − `data-open`, + `data-exiting`                                                        |
 | disabled (tooltip) | trigger | no relation                                                                            |
+| `relation: 'none'` | trigger | no relation (changed on 2026-10-22 (owner))                                            |
+| `relation: 'none'` | root    | `aria-hidden="true"`; `role="tooltip"` kept                                            |
 
 The trigger gets no `aria-expanded`, `aria-haspopup` or `aria-controls`: a
 tooltip isn't a popup the user opens (the APG, React Aria, UI Kit). The root
@@ -301,12 +313,15 @@ percentage sizes against the area work only in CSS mode.
 Probed with `@guidepup/virtual-screen-reader` for a button "Save"
 with the tooltip "Saves the file"; the scenarios confirm it in both engines.
 
-| State                                                      | Spoken phrase                                |
-| ---------------------------------------------------------- | -------------------------------------------- |
-| focus on the trigger, tooltip closed or open               | `button, Save, Saves the file`               |
-| browsing past the open tooltip                             | `tooltip, Saves the file`                    |
-| `relation="label"`, an icon-only button, tooltip "Edit"    | `button, Edit`                               |
-| a focusable disabled trigger, tooltip "No changes to save" | `button, Save, No changes to save, disabled` |
+| State                                                                                       | Spoken phrase                                                    |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| focus on the trigger, tooltip closed or open                                                | `button, Save, Saves the file`                                   |
+| browsing past the open tooltip                                                              | `tooltip, Saves the file`                                        |
+| `relation="label"`, an icon-only button, tooltip "Edit"                                     | `button, Edit`                                                   |
+| a focusable disabled trigger, tooltip "No changes to save"                                  | `button, Save, No changes to save, disabled`                     |
+| a cut-off label "Save the quarterly report", its overflow tooltip open (`relation: 'none'`) | `button, Save the quarterly report`, and nothing for the tooltip |
+
+Changed on 2026-10-22 (owner): the last row, from the items spec.
 
 A closed tooltip still describes its trigger: a hidden element that
 `aria-describedby` references is still read (probed; Resolved questions 3).
@@ -358,32 +373,32 @@ its id, as a checkbox names its group.
 
 ## Mapping from Cube UI Kit
 
-| UI Kit                                                                 | UniAria                                                                           |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `TooltipTrigger` + `Tooltip`; `TooltipProvider title`                  | One `tooltip`: a linked component or a trigger part, and a root with the text.    |
-| Button, Checkbox and Radio `tooltip` props                             | The component's link to a tooltip (Resolved questions 2).                         |
-| `FocusableProvider`, function children, deprecated `activeWrap`        | The link, or the trigger part.                                                    |
-| split trigger props (Checkbox: hover on the label, focus on the input) | The linked component routes hover from its visible part and focus from its input. |
-| `targetRef`                                                            | The anchor part.                                                                  |
-| `delay` 250, `closeDelay` 500                                          | The same.                                                                         |
-| `trigger="focus"`                                                      | `trigger: 'focus'`.                                                               |
-| `isDisabled`                                                           | The same; it also takes the relation off the trigger.                             |
-| `isOpen`, `defaultOpen`, `onOpenChange`                                | The same.                                                                         |
-| `placement` (`'top'`), `offset` 8, `crossOffset` 0                     | `positionArea` (`'top'`) and the root's `margin` (Positioning).                   |
-| `shouldFlip` (declared, never passed)                                  | `positionTryFallbacks`.                                                           |
-| `shouldCloseOnPress` (documented, always on)                           | Always on.                                                                        |
-| the arrow, always rendered; `tipStyles`                                | The arrow part.                                                                   |
-| `isMaterial` (hoverable); `pointer-events: none` by default            | Always hoverable (Resolved questions 10).                                         |
-| `isLight`, width                                                       | Styles.                                                                           |
-| disabled with an active tooltip turns `aria-disabled` (`keepEvents`)   | `isFocusableWhenDisabled` on the component (Resolved questions 12).               |
-| automatic tooltips for truncated text                                  | The design system measures and sets `isDisabled`.                                 |
-| no tooltip on focus restoration (CUB-4839)                             | The same, for focus a UniAria overlay restores.                                   |
-| `aria-describedby` only while open                                     | While enabled (Resolved questions 3).                                             |
-| Escape swallowed with `stopPropagation`                                | Prevented, not stopped (Resolved questions 5).                                    |
-| no close on scroll                                                     | Closes when the trigger leaves view (Resolved questions 9).                       |
-| `DisplayTransition` and the `open` mod                                 | `data-open`, `data-entering`, `data-exiting`, `data-instant`.                     |
-| a portal into `Root`, `z-index: 100000`                                | The top layer.                                                                    |
-| `qa`                                                                   | The consumer's attributes on the root.                                            |
+| UI Kit                                                                 | UniAria                                                                               |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `TooltipTrigger` + `Tooltip`; `TooltipProvider title`                  | One `tooltip`: a linked component or a trigger part, and a root with the text.        |
+| Button, Checkbox and Radio `tooltip` props                             | The component's link to a tooltip (Resolved questions 2).                             |
+| `FocusableProvider`, function children, deprecated `activeWrap`        | The link, or the trigger part.                                                        |
+| split trigger props (Checkbox: hover on the label, focus on the input) | The linked component routes hover from its visible part and focus from its input.     |
+| `targetRef`                                                            | The anchor part.                                                                      |
+| `delay` 250, `closeDelay` 500                                          | The same.                                                                             |
+| `trigger="focus"`                                                      | `trigger: 'focus'`.                                                                   |
+| `isDisabled`                                                           | The same; it also takes the relation off the trigger.                                 |
+| `isOpen`, `defaultOpen`, `onOpenChange`                                | The same.                                                                             |
+| `placement` (`'top'`), `offset` 8, `crossOffset` 0                     | `positionArea` (`'top'`) and the root's `margin` (Positioning).                       |
+| `shouldFlip` (declared, never passed)                                  | `positionTryFallbacks`.                                                               |
+| `shouldCloseOnPress` (documented, always on)                           | Always on.                                                                            |
+| the arrow, always rendered; `tipStyles`                                | The arrow part.                                                                       |
+| `isMaterial` (hoverable); `pointer-events: none` by default            | Always hoverable (Resolved questions 10).                                             |
+| `isLight`, width                                                       | Styles.                                                                               |
+| disabled with an active tooltip turns `aria-disabled` (`keepEvents`)   | `isFocusableWhenDisabled` on the component (Resolved questions 12).                   |
+| automatic tooltips for truncated text                                  | `shouldOpenOnlyWhenTruncated` with `relation: 'none'` (changed on 2026-10-22 (owner)) |
+| no tooltip on focus restoration (CUB-4839)                             | The same, for focus a UniAria overlay restores.                                       |
+| `aria-describedby` only while open                                     | While enabled (Resolved questions 3).                                                 |
+| Escape swallowed with `stopPropagation`                                | Prevented, not stopped (Resolved questions 5).                                        |
+| no close on scroll                                                     | Closes when the trigger leaves view (Resolved questions 9).                           |
+| `DisplayTransition` and the `open` mod                                 | `data-open`, `data-entering`, `data-exiting`, `data-instant`.                         |
+| a portal into `Root`, `z-index: 100000`                                | The top layer.                                                                        |
+| `qa`                                                                   | The consumer's attributes on the root.                                                |
 
 ## Differences from React Aria, Zag and native behavior
 

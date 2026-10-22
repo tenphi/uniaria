@@ -236,6 +236,10 @@ extras' id, each while rendered. Hide decorative extras from assistive
 technology with `aria-hidden`. Interactive extras need a grid (Not part of
 this spec).
 
+Changed on 2026-10-22 (owner, with the conformance scenarios): extras with
+`aria-hidden="true"` stay out of `aria-describedby`, since a reference reads
+hidden content all the same (accname step 2A).
+
 ## The overflow tooltip
 
 ### Props and parts
@@ -286,6 +290,13 @@ An element's text is cut off when the element clips what overflows it (its
   for this; Element Plus allows 0.03 px, and antd's exact comparison misfires
   at 90% zoom (antd#59488). The tolerance is set during implementation, from
   probes at fractional zoom.
+
+  Changed on 2026-10-22 (owner), from the probes: the Range decides, beyond
+  0.05 px over the content box; the integers count only more than a pixel
+  over, since WebKit at 125% zoom reads `scrollWidth` 155 against
+  `clientWidth` 154 for text that fits. Tested at 67% to 150% zoom in
+  Chromium and WebKit.
+
 - **or it wraps and its content is taller than its box by more than a
   pixel:** a line clamp. Text that doesn't wrap (`white-space: nowrap`)
   can't be clamped, and Chromium reads a single line at `line-height: 1` a
@@ -410,6 +421,26 @@ Changes to the `@uniaria/styles` spec, which land with it:
   an overflow tooltip. Quiet buttons and cut-off option labels change their
   look, which is a minor release (styles spec, Resolved questions 13).
 
+Changed on 2026-10-22 (owner), from the implementation:
+
+- **The acting elements** in the extras take pointer events at any depth,
+  not only as direct children: a custom element's host sits between the
+  extras and its button.
+- **A Button in the extras** is 24 pixels high, the least target, as far
+  from its item's edge as from the top and bottom, its corners concentric:
+  UI Kit's item actions are smaller than the row too. A state alias on the
+  button itself (`@uni-extra`), so the rule stays flat.
+- **Rows are explicit,** one, or two with a description: browsers grow an
+  empty second row by half of what spans it.
+- **The quiet steps** are tokens per scheme, `$uni-quiet-hover` and
+  `$uni-quiet-pressed`, UI Kit's .04 and .06 in light schemes, .031 and .046
+  in dark ones, written with the palette (on `:root` without one).
+- **A selected ToggleButton's frame** sets every color for forced colors, as
+  its root does, so text in its extras gets no backplate.
+- **The label and description align to the start** of their column, as
+  Select's value does: centered, as a button's text is, a framed row wider
+  than its text read as a button floating between its icon and its extras.
+
 ## New API
 
 | Component                 | Prop or link                | Type                                                                       | Default | Notes                         |
@@ -486,19 +517,24 @@ Probed with `@guidepup/virtual-screen-reader` in Chromium and WebKit, on the
 markup this spec describes (written by hand, since nothing is built yet).
 The conformance scenarios confirm it on the components.
 
-| Markup and state                                                                    | Spoken phrase                                                                   |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| a button with a label "Save", a description "Saves the file" and a hint "⌘S" inside | `button, Save, Saves the file`                                                  |
-| the same without the label and description parts                                    | `button, SaveSaves the file⌘S`                                                  |
-| a label and a hint, no description                                                  | `button, Save`                                                                  |
-| a label, a description and a tooltip "Ctrl+S"                                       | `button, Save, Saves the file Ctrl+S`; browsing past it open: `tooltip, Ctrl+S` |
-| a cut-off label with its overflow tooltip open (`relation: 'none'`)                 | `button, Save the quarterly report`, and nothing for the tooltip                |
-| a popover trigger with a `triggerLabel` "Fruit" and a `triggerDescription` "Apple"  | `button, Fruit, Apple, not expanded`                                            |
-| a frame: a button "Fruit", an extra button "Clear Fruit" and a count "3"            | `button, Fruit`, then `button, Clear Fruit`, then `3`                           |
-| Select's cut-off value with its overflow tooltip open                               | `combobox, Fruit A very long apple name, has popup listbox, not expanded`       |
-| an option with `optionExtras` "New"                                                 | `option, Apple, New, not selected, position 1, set size 1`                      |
-| an option with a description "Red and sweet" and extras "New"                       | `option, Apple, Red and sweet New, not selected, position 1, set size 1`        |
-| an option whose extras are `aria-hidden`                                            | `option, Apple, not selected, position 1, set size 1`                           |
+| Markup and state                                                                    | Spoken phrase                                                                     |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| a button with a label "Save", a description "Saves the file" and a hint "⌘S" inside | `button, Save, Saves the file`                                                    |
+| the same without the label and description parts                                    | `button, SaveSaves the file⌘S`                                                    |
+| a label and a hint, no description                                                  | `button, Save`                                                                    |
+| a label, a description and a tooltip "Ctrl+S"                                       | `button, Save, Saves the file Ctrl+S`; browsing past it open: `tooltip, Ctrl+S`   |
+| a cut-off label with its overflow tooltip open (`relation: 'none'`)                 | `button, Save the quarterly report`, and nothing for the tooltip                  |
+| a popover trigger with a `triggerLabel` "Fruit" and a `triggerDescription` "Apple"  | `button, Fruit, Apple, not expanded`                                              |
+| a frame: a button "Fruit", an extra button "Clear Fruit" and a count "3"            | `button, Fruit`, then `button, Clear Fruit`, then `3`                             |
+| Select's cut-off value with its overflow tooltip open                               | `combobox, Fruit, has popup listbox, not expanded`, then `A very long apple name` |
+| an option with `optionExtras` "New"                                                 | `option, Apple, New, not selected, position 1, set size 1`                        |
+| an option with a description "Red and sweet" and extras "New"                       | `option, Apple, Red and sweet New, not selected, position 1, set size 1`          |
+| an option whose extras are `aria-hidden`                                            | `option, Apple, not selected, position 1, set size 1`                             |
+
+Changed on 2026-10-22 (owner), from the implementation: Select's trigger is
+named by its label alone and its value is read after it (Select spec,
+Expected spoken output); the hand-written markup had put the value in the
+name.
 
 ## Adapter surface
 

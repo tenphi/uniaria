@@ -294,7 +294,11 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   in `provides`, and `ctx.link(key)` reads it as `ctx.owner()` does. It comes
   from the prop of the key's name in React and Vue (`tooltip`), else on elements from
   the attribute of that name (an id) or the UniAria host the element sits in
-  directly, never through another host.
+  directly, never through another host. A key may name another attribute
+  (`attribute: 'option-tooltip'`) and come only from it (`isAttributeOnly`),
+  so a component with two keys for one kind (a Select's `tooltip` and
+  `optionTooltip`) inside one host takes the host for the first only (owner,
+  2026-10-22, the items spec).
 - Tests cover each path: nested, consumer portal (React) or `<Teleport>`
   (Vue), another branch, a React or Vue child inside a custom-element owner,
   and an owner that connects late.
@@ -380,7 +384,11 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
   NumberField's box and the `label` area of Checkbox, Switch and Radio (the
   hovered area; without a wrapper, the root is). Groups keep their label,
   description and error inside the root. Overlays are the exception: the
-  panel is the root, and the trigger and the anchor sit outside it.
+  panel is the root, and the trigger and the anchor sit outside it. A
+  button's `frame` and `extras` are the second (owner, 2026-10-22, the items
+  spec): the frame goes around the root and the extras, which sit beside it,
+  so Button's and ToggleButton's, and the triggers' of Popover and Dialog,
+  are outside parts, marked `data-uni-part` and styled on their own.
 - **Styles need the root** (owner, 2026-10-19). Most roots are optional, but
   nothing else ties a part to its component in CSS, so a root-less
   component gets no component styles. The testing helpers count a part no
@@ -499,8 +507,9 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
   writes an id only on a part that has none.
   A part can be declared element-owned: the consumer leaves it empty and
   UniAria writes its content, in every adapter. Select's displayed value
-  (its text) and its hidden `<select>` (its `<option>`s) are the two (Select
-  spec, Resolved questions 10 and 11).
+  (its text), its hidden `<select>` (its `<option>`s) and Tooltip's `text`
+  (the text it shows) are the three (Select spec, Resolved questions 10 and
+  11; the items spec, Resolved questions 5).
 - Parts are found by a query that stops at nested UniAria elements of any
   kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the

@@ -31,7 +31,11 @@ The root is the component's outermost element, so a style on it reaches
 every part, a field's label and messages included. A box inside it, such as
 a text field's around its input or a checkbox's `label`, is the `wrapper`
 part. Overlays are the exception: their root is the panel, and the trigger
-and the anchor sit outside it, which is why they carry `data-uni-part`.
+and the anchor sit outside it, which is why they carry `data-uni-part`. A
+button's `frame` and `extras` are the other: the frame goes around the
+button and the extras beside it, so they carry `data-uni-part` too
+(`data-uni-part="button-frame"`), with the button's state attributes, so CSS
+can paint extras for any state of their button.
 
 Many components work without their root, but then nothing ties their parts
 to them: a root-less checkbox's input is a `[data-element='Input']` like any

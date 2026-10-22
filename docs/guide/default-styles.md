@@ -64,6 +64,34 @@ with one exception: `data-variant` on a Button or a ToggleButton, set to
 parts expect an element of yours, such as Switch's `Thumb`; each component
 page's "Default styles" note says what it styles and expects.
 
+## Labels, frames and extras
+
+A Button or ToggleButton with a `label` part, a Popover's or Dialog's trigger
+with a `triggerLabel`, and an option with an `optionLabel` are laid out as
+items:
+
+- **Around the label.** The element before the label, such as an icon, sits
+  at its start, and the one after it, such as a shortcut hint or a count, at
+  its end, half a gap away. One element each: wrap several in one.
+- **One line.** The label and its description below take one line each,
+  aligned to the start, and end in an ellipsis, as do options without a
+  label part. Pair cut-off text with an
+  [overflow tooltip](../components/tooltip.mdx). For more lines, set
+  `-webkit-line-clamp` on the part yourself.
+- **Frames.** In a `frame`, the button spans it and the `extras` sit over its
+  end: the label ends before them, and the button's fill, border and focus
+  ring stay under them in every state. Only what acts in the extras takes
+  the pointer (buttons, links, UniAria components and tooltip triggers), so
+  a count or a gap between extras presses the button. A framed button needs
+  a label part, which keeps its content clear of the extras. A Button in the
+  extras is 24 pixels high.
+- **Colors.** The frame takes its button's text color, `data-variant`
+  included, so extras drawn in `currentColor` match it. A quiet button takes
+  the text color around it and mixes its hover and press fills from it, so
+  it reads on any fill, a primary trigger's or a selected option's.
+- **Pickers.** Select's chevron comes after its trigger's extras, and an
+  option's extras come before its check.
+
 ## Overriding a part
 
 Every rule's specificity is flat, whatever the state: a root's is (0,1,0) and

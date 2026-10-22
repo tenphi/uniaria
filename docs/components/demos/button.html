@@ -20,4 +20,32 @@
     <a data-uni="button" href="#guide">Read the guide</a>
   </uni-button>
 </div>
+<div class="row">
+  <uni-button>
+    <button data-uni="button">
+      <span data-element="Label">Export</span>
+      <span data-element="Description">As a PDF file</span>
+      <kbd>Ctrl+E</kbd>
+    </button>
+  </uni-button>
+  <uni-button>
+    <div data-uni-part="button-frame" class="filter">
+      <button data-uni="button">
+        <span data-element="Label">Fruit</span>
+        <span data-element="Description">Apple</span>
+      </button>
+      <span data-uni-part="button-extras">
+        <uni-button>
+          <button
+            data-uni="button"
+            data-variant="quiet"
+            aria-label="Clear Fruit"
+          >
+            ×
+          </button>
+        </uni-button>
+      </span>
+    </div>
+  </uni-button>
+</div>
 <output id="log">Press a button with the mouse, a key or a tap.</output>

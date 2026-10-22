@@ -147,8 +147,8 @@ const fruit = useComponent(combobox, { items: fruits });
 
 Render every option, matching or not: UniAria hides the ones the typed text
 leaves out. The options are Listbox's item parts, so keys, groups, option
-labels and descriptions, and items read from the markup work as on
-[Listbox](./listbox.mdx#items-and-keys).
+labels, descriptions and [extras](./listbox.mdx#extras-in-options), and items
+read from the markup work as on [Listbox](./listbox.mdx#items-and-keys).
 
 Render the `root` part around everything, the popover included. Combobox
 tracks focus within it: when focus leaves the root, the typed text settles and
@@ -340,61 +340,156 @@ user filters, `renderedKeys` holds only matching options. Give the popover a
 width, such as `width: var(--anchor-width)`, since the rows have none of their
 own.
 
+### Option tooltips
+
+Combobox takes Listbox's [option tooltip](./listbox.mdx#option-tooltips): one
+[Tooltip](./tooltip.mdx#option-tooltips) with `shouldOpenOnlyWhenTruncated`
+and `relation: 'none'`, which shows the whole text of a cut-off option. Pass
+its `instance` as `optionTooltip`, or on the element name it by id with the
+`option-tooltip` attribute, and render it inside the popover, after the list.
+
+<Tabs label="Option tooltips">
+<Tab label="React">
+
+```tsx
+const full = useComponent(tooltip, {
+  shouldOpenOnlyWhenTruncated: true,
+  relation: 'none',
+  positionArea: 'right',
+});
+const fruit = useComponent(combobox, {
+  items: fruits,
+  optionTooltip: full.instance,
+});
+return (
+  <div {...fruit.parts.root}>
+    …
+    <div {...fruit.parts.popover}>
+      <div {...fruit.parts.list}>…</div>
+      <div {...full.parts.root}>
+        <span {...full.parts.text} />
+      </div>
+    </div>
+  </div>
+);
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const full = useComponent(tooltip, {
+  shouldOpenOnlyWhenTruncated: true,
+  relation: 'none',
+  positionArea: 'right',
+});
+const fruit = useComponent(combobox, {
+  items: fruits,
+  optionTooltip: full.instance,
+});
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    …
+    <div v-bind="fruit.parts.popover">
+      <div v-bind="fruit.parts.list">…</div>
+      <div v-bind="full.parts.root">
+        <span v-bind="full.parts.text" />
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-combobox option-tooltip="fruit-full">
+  <div data-uni="combobox">
+    …
+    <div data-element="Popover">
+      <div data-element="List">…</div>
+      <uni-tooltip
+        id="fruit-full"
+        open-only-when-truncated
+        relation="none"
+        position-area="right"
+      >
+        <div data-uni="tooltip"><span data-element="Text"></span></div>
+      </uni-tooltip>
+    </div>
+  </div>
+</uni-combobox>
+```
+
+</Tab>
+</Tabs>
+
+It follows the visible highlight, which the keys move, and the pointer. Typing
+or editing the text closes it until a key moves the highlight again.
+
+Combobox takes no tooltip for its input: an input scrolls its text instead of
+cutting it.
+
 ## Anatomy
 
-| Part          | Element                    | Notes                                                                                                                                         |
-| ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `root`        | any, usually `div`         | Around every other part. Focus leaving it settles the text and closes the list.                                                               |
-| `label`       | `label` by default         | Names the input and the list. UniAria writes its `for`, so a click focuses the input.                                                         |
-| `anchor`      | any, usually `div`         | Optional. The box around the input and the button: the popover is placed against it and `--anchor-width` is its width. Without it, the input. |
-| `input`       | `input`                    | The text. `type` is yours (`text` or `search`); UniAria writes the `value` property.                                                          |
-| `button`      | `button`                   | Optional. Opens and closes the list without taking focus. Its icon is yours, hidden with `aria-hidden`.                                       |
-| `popover`     | any, usually `div`         | Always rendered, after the input. Hidden while closed.                                                                                        |
-| `arrow`       | any, inside the popover    | Optional. Points at the anchor.                                                                                                               |
-| `scroller`    | any, usually `div`         | Only when virtualized: the box that scrolls, around the list.                                                                                 |
-| `list`        | any, usually `div` or `ul` | Inside the popover. Holds the options and groups.                                                                                             |
-| `empty`       | any                        | Optional, inside the popover and outside the list. Shown while no option matches, and keeps the list open then.                               |
-| `description` | any                        | Optional. Describes the input.                                                                                                                |
-| `error`       | any                        | Optional. Shown and announced while `isInvalid`.                                                                                              |
-| `hiddenInput` | `input`                    | Optional. Submits the value; UniAria makes it `type="hidden"` and writes its value.                                                           |
+| Part          | Element                    | Notes                                                                                                                                                                                                                                                                           |
+| ------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any, usually `div`         | Around every other part. Focus leaving it settles the text and closes the list.                                                                                                                                                                                                 |
+| `label`       | `label` by default         | Names the input and the list. UniAria writes its `for`, so a click focuses the input.                                                                                                                                                                                           |
+| `anchor`      | any, usually `div`         | Optional. The box around the input and the button: the popover is placed against it and `--anchor-width` is its width. Without it, the input. Extras beside the input, such as a count or a button of yours, go in it too, as a prefix or a suffix goes in TextField's wrapper. |
+| `input`       | `input`                    | The text. `type` is yours (`text` or `search`); UniAria writes the `value` property.                                                                                                                                                                                            |
+| `button`      | `button`                   | Optional. Opens and closes the list without taking focus. Its icon is yours, hidden with `aria-hidden`.                                                                                                                                                                         |
+| `popover`     | any, usually `div`         | Always rendered, after the input. Hidden while closed.                                                                                                                                                                                                                          |
+| `arrow`       | any, inside the popover    | Optional. Points at the anchor.                                                                                                                                                                                                                                                 |
+| `scroller`    | any, usually `div`         | Only when virtualized: the box that scrolls, around the list.                                                                                                                                                                                                                   |
+| `list`        | any, usually `div` or `ul` | Inside the popover. Holds the options and groups.                                                                                                                                                                                                                               |
+| `empty`       | any                        | Optional, inside the popover and outside the list. Shown while no option matches, and keeps the list open then.                                                                                                                                                                 |
+| `description` | any                        | Optional. Describes the input.                                                                                                                                                                                                                                                  |
+| `error`       | any                        | Optional. Shown and announced while `isInvalid`.                                                                                                                                                                                                                                |
+| `hiddenInput` | `input`                    | Optional. Submits the value; UniAria makes it `type="hidden"` and writes its value.                                                                                                                                                                                             |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
 [Ids](../guide/accessibility.md#ids)).
 
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
-`group` and `groupLabel`, inside the list and keyed by the item's key (see
-[Listbox](./listbox.mdx#anatomy)). They carry no
-`tabindex`, since they never take focus.
+`optionExtras`, `group` and `groupLabel`, inside the list and keyed by the
+item's key (see [Listbox](./listbox.mdx#anatomy)). They carry no `tabindex`,
+since they never take focus.
 
 ## Props
 
-| Prop                                                                            | Attribute                 | Type                                                            | Default                       | Description                                                                                                                                     |
-| ------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `items`, `getKey`, `getTextValue`, `isItemDisabled`, `getChildren`              | — (properties, or markup) |                                                                 |                               | Listbox's: every option, unfiltered, and how to read them. `getTextValue` is also what the filter matches and what the input shows once chosen. |
-| `disabledKeys`                                                                  | `disabled-keys` (JSON)    | `readonly string[]`                                             | `[]`                          | Disabled options, by key. They're filtered like the others.                                                                                     |
-| `value` / `defaultValue`                                                        | — (properties)            | `readonly string[]`                                             | `[]`                          | The selected key, or the custom text: at most one. Changes only when the text settles, never per keystroke.                                     |
-| `inputValue` / `defaultInputValue`                                              | — (properties)            | `string`                                                        | the selected option's text    | The input's text. Changes are reported by `inputchange`.                                                                                        |
-| `isOpen` / `defaultOpen`                                                        | — / `default-open`        | `boolean`                                                       | `false`                       | Whether the list is open.                                                                                                                       |
-| `popoverTrigger`                                                                | `popover-trigger`         | `'input' \| 'focus' \| 'manual'`                                | `'input'`                     | What opens the list besides the button and the arrows.                                                                                          |
-| `filter`                                                                        | — (property)              | `((textValue: string, inputValue: string) => boolean) \| false` | contains                      | Which options match the typed text. `false` shows every item.                                                                                   |
-| `allowsCustomValue`                                                             | `allows-custom-value`     | `boolean`                                                       | `false`                       | Text that matches no option becomes the value when it settles.                                                                                  |
-| `isDisabled`                                                                    | `disabled`                | `boolean`                                                       | `false`                       | The input and the button are natively disabled.                                                                                                 |
-| `isReadOnly`                                                                    | `readonly`                | `boolean`                                                       | `false`                       | The input is natively read-only. The list opens from the button and the arrows and the highlight moves, but nothing is selected.                |
-| `isRequired`                                                                    | `required`                | `boolean`                                                       | `false`                       | `aria-required` and the native `required` on the input.                                                                                         |
-| `isInvalid`                                                                     | `invalid`                 | `boolean`                                                       | `false`                       | `aria-invalid` on the input, and shows the `error` part.                                                                                        |
-| `shouldFocusWrap`                                                               | `focus-wrap`              | `boolean`                                                       | `false`                       | The arrows wrap from the last option to the first.                                                                                              |
-| `positionArea`                                                                  | `position-area`           | `PositionArea`                                                  | `'block-end span-inline-end'` | Where the popover goes: below the field, aligned to its start edge. See [Popover](./popover.mdx).                                               |
-| `positionTryFallbacks`                                                          | `position-try-fallbacks`  | `string`                                                        | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                                            |
-| `locale`                                                                        | `locale`                  | `string`                                                        | the nearest `lang`            | The default filter's language. Without a `lang`, the browser's.                                                                                 |
-| `buttonLabel`                                                                   | `button-label`            | `string`                                                        | `'Show suggestions'`          | The button's own name, read before the label: "Show suggestions Fruit".                                                                         |
-| `optionCountAnnouncement`                                                       | — (property)              | `(count: number) => string`                                     | `'N options available'`       | The announcement of the option count; `'1 option available'` for one.                                                                           |
-| `inputId`                                                                       | —                         | `string`                                                        | generated                     | The input's id while it has none of its own.                                                                                                    |
-| `listId`                                                                        | —                         | `string`                                                        | generated                     | The list's id while it has none of its own. Option ids are made from the list's id.                                                             |
-| `labelElementType`                                                              | — (the label's tag)       | `string`                                                        | `'label'`                     | The tag you render as the label. Only a `label` gets `for`.                                                                                     |
-| `labelledBy`                                                                    | `labelled-by`             | `string`                                                        | —                             | Ids of more elements that name the input and the list.                                                                                          |
-| `describedBy`                                                                   | `described-by`            | `string`                                                        | —                             | Ids of more elements that describe the input.                                                                                                   |
-| `virtualizer`, `itemSize`, `shouldMeasureItems`, `overscan`, `initialItemCount` | as on Listbox             |                                                                 |                               | Listbox's virtualization, passed to the list.                                                                                                   |
+| Prop                                                                            | Attribute                           | Type                                                            | Default                       | Description                                                                                                                                                    |
+| ------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items`, `getKey`, `getTextValue`, `isItemDisabled`, `getChildren`              | — (properties, or markup)           |                                                                 |                               | Listbox's: every option, unfiltered, and how to read them. `getTextValue` is also what the filter matches and what the input shows once chosen.                |
+| `disabledKeys`                                                                  | `disabled-keys` (JSON)              | `readonly string[]`                                             | `[]`                          | Disabled options, by key. They're filtered like the others.                                                                                                    |
+| `value` / `defaultValue`                                                        | — (properties)                      | `readonly string[]`                                             | `[]`                          | The selected key, or the custom text: at most one. Changes only when the text settles, never per keystroke.                                                    |
+| `inputValue` / `defaultInputValue`                                              | — (properties)                      | `string`                                                        | the selected option's text    | The input's text. Changes are reported by `inputchange`.                                                                                                       |
+| `isOpen` / `defaultOpen`                                                        | — / `default-open`                  | `boolean`                                                       | `false`                       | Whether the list is open.                                                                                                                                      |
+| `popoverTrigger`                                                                | `popover-trigger`                   | `'input' \| 'focus' \| 'manual'`                                | `'input'`                     | What opens the list besides the button and the arrows.                                                                                                         |
+| `filter`                                                                        | — (property)                        | `((textValue: string, inputValue: string) => boolean) \| false` | contains                      | Which options match the typed text. `false` shows every item.                                                                                                  |
+| `allowsCustomValue`                                                             | `allows-custom-value`               | `boolean`                                                       | `false`                       | Text that matches no option becomes the value when it settles.                                                                                                 |
+| `isDisabled`                                                                    | `disabled`                          | `boolean`                                                       | `false`                       | The input and the button are natively disabled.                                                                                                                |
+| `isReadOnly`                                                                    | `readonly`                          | `boolean`                                                       | `false`                       | The input is natively read-only. The list opens from the button and the arrows and the highlight moves, but nothing is selected.                               |
+| `isRequired`                                                                    | `required`                          | `boolean`                                                       | `false`                       | `aria-required` and the native `required` on the input.                                                                                                        |
+| `isInvalid`                                                                     | `invalid`                           | `boolean`                                                       | `false`                       | `aria-invalid` on the input, and shows the `error` part.                                                                                                       |
+| `shouldFocusWrap`                                                               | `focus-wrap`                        | `boolean`                                                       | `false`                       | The arrows wrap from the last option to the first.                                                                                                             |
+| `positionArea`                                                                  | `position-area`                     | `PositionArea`                                                  | `'block-end span-inline-end'` | Where the popover goes: below the field, aligned to its start edge. See [Popover](./popover.mdx).                                                              |
+| `positionTryFallbacks`                                                          | `position-try-fallbacks`            | `string`                                                        | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                                                           |
+| `locale`                                                                        | `locale`                            | `string`                                                        | the nearest `lang`            | The default filter's language. Without a `lang`, the browser's.                                                                                                |
+| `buttonLabel`                                                                   | `button-label`                      | `string`                                                        | `'Show suggestions'`          | The button's own name, read before the label: "Show suggestions Fruit".                                                                                        |
+| `optionCountAnnouncement`                                                       | — (property)                        | `(count: number) => string`                                     | `'N options available'`       | The announcement of the option count; `'1 option available'` for one.                                                                                          |
+| `inputId`                                                                       | —                                   | `string`                                                        | generated                     | The input's id while it has none of its own.                                                                                                                   |
+| `listId`                                                                        | —                                   | `string`                                                        | generated                     | The list's id while it has none of its own. Option ids are made from the list's id.                                                                            |
+| `labelElementType`                                                              | — (the label's tag)                 | `string`                                                        | `'label'`                     | The tag you render as the label. Only a `label` gets `for`.                                                                                                    |
+| `labelledBy`                                                                    | `labelled-by`                       | `string`                                                        | —                             | Ids of more elements that name the input and the list.                                                                                                         |
+| `describedBy`                                                                   | `described-by`                      | `string`                                                        | —                             | Ids of more elements that describe the input.                                                                                                                  |
+| `virtualizer`, `itemSize`, `shouldMeasureItems`, `overscan`, `initialItemCount` | as on Listbox                       |                                                                 |                               | Listbox's virtualization, passed to the list.                                                                                                                  |
+| `optionTooltip`                                                                 | `option-tooltip` (the tooltip's id) | a Tooltip's instance                                            | —                             | One [Tooltip](./tooltip.mdx) for every option, following the highlight (see [Option tooltips](#option-tooltips)). On the element, only the attribute links it. |
 
 The list always highlights options on hover and is vertical; the popover is
 always non-modal, dismissable, and leaves focus in the input when it opens.
@@ -493,7 +588,9 @@ The anchor is the field's box, as [TextField](./text-field.mdx)'s wrapper,
 around the input and the button, a quiet 24-pixel button that draws a chevron,
 so leave your icon out. The box keeps its ring while the keys move the
 highlight, since focus stays in the input. The popover, its motion and the
-options are [Select](./select.mdx#default-styles)'s.
+options are [Select](./select.mdx#default-styles)'s: an option's text takes one
+line and ends in an ellipsis, so pair the list with an
+[option tooltip](#option-tooltips), and its extras sit before the check.
 
 ## Keyboard
 
@@ -529,6 +626,9 @@ composing, stay with the browser.
 - **Spoken output.** The input reads "combobox, Fruit, has popup listbox, not
   expanded, autocomplete in list", and while an option is highlighted, "active
   descendant Banana". Filtered-out options aren't read.
+- **Option tooltips add nothing.** With `relation: 'none'` the tooltip is
+  hidden from assistive technology, and the option's whole text is read from
+  the option already, cut off or not.
 - **The button** isn't a tab stop and never takes focus; a press on it
   focuses the input, which brings up the on-screen keyboard on touch screens.
   It reads "button, Show suggestions Fruit".

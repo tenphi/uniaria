@@ -151,15 +151,125 @@ either way.
 </Tab>
 </Tabs>
 
+### Label, description and extras
+
+A toggle button takes Button's `label` and `description` parts: the label
+alone names it and the description describes it, while `aria-pressed` still
+gives its state. A `frame` around it holds its `extras`, the controls beside
+it that can't be inside it, such as a button that opens its settings. See
+[Button](./button.mdx#label-description-and-extras) for how they behave.
+
+<Tabs label="Label, description and extras">
+<Tab label="React">
+
+```tsx
+const subtitles = useComponent(toggleButton, { defaultSelected: true });
+const language = useComponent(button, { onPress: openLanguages });
+return (
+  <div {...subtitles.parts.frame}>
+    <button {...subtitles.parts.root}>
+      <span {...subtitles.parts.label}>Subtitles</span>
+      <span {...subtitles.parts.description}>English</span>
+    </button>
+    <span {...subtitles.parts.extras}>
+      <button
+        {...language.parts.root}
+        data-variant="quiet"
+        aria-label="Subtitle language"
+      >
+        ▾
+      </button>
+    </span>
+  </div>
+);
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+const subtitles = useComponent(toggleButton, { defaultSelected: true });
+const language = useComponent(button, { onPress: openLanguages });
+</script>
+
+<template>
+  <div v-bind="subtitles.parts.frame">
+    <button v-bind="subtitles.parts.root">
+      <span v-bind="subtitles.parts.label">Subtitles</span>
+      <span v-bind="subtitles.parts.description">English</span>
+    </button>
+    <span v-bind="subtitles.parts.extras">
+      <button
+        v-bind="language.parts.root"
+        data-variant="quiet"
+        aria-label="Subtitle language"
+      >
+        ▾
+      </button>
+    </span>
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-toggle-button default-selected>
+  <div data-uni-part="toggle-button-frame">
+    <button data-uni="toggle-button" aria-pressed="true">
+      <span data-element="Label">Subtitles</span>
+      <span data-element="Description">English</span>
+    </button>
+    <span data-uni-part="toggle-button-extras">
+      <uni-button>
+        <button
+          data-uni="button"
+          data-variant="quiet"
+          aria-label="Subtitle language"
+        >
+          ▾
+        </button>
+      </uni-button>
+    </span>
+  </div>
+</uni-toggle-button>
+
+<script type="module">
+  import '@uniaria/elements/button';
+  import '@uniaria/elements/toggle-button';
+</script>
+```
+
+The extra's `press` events bubble through the `<uni-toggle-button>`, so a
+`press` listener there checks `event.target`. `selectedchange` comes from the
+toggle button alone.
+
+</Tab>
+</Tabs>
+
+Hover over the frame is the toggle button's hover, and a press on an extra
+never toggles it.
+
 ## Anatomy
 
-| Part   | Element                                                | Notes                                                                                                                                            |
-| ------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `root` | `button` by default, any element through `elementType` | You own the content, `id`, your classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). The root is always `type="button"`. |
+| Part          | Element                                                | Notes                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | `button` by default, any element through `elementType` | You own the content, `id`, your classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`) unless a label or description part takes it over. The root is always `type="button"`. |
+| `label`       | any, inside the root; usually `span`                   | Optional. While rendered, it alone names the toggle button: the root's `aria-labelledby` is its id.                                                                                               |
+| `description` | any, inside the root; usually `span`                   | Optional. While rendered, it describes the toggle button: the root's `aria-describedby` starts with its id, before a tooltip's.                                                                   |
+| `frame`       | any, outside the root; usually `div`                   | Optional. Around the root and the extras. It carries the root's state attributes, `data-selected` included, and hover over it is the toggle button's. No role.                                    |
+| `extras`      | any, inside the frame; usually `span`                  | Optional. Beside the root, never inside it: your own Buttons, badges and counts, in reading order. It carries the root's state attributes. No role.                                               |
 
 A root that isn't a `button` or `input` gets `role="button"`, a `tabindex`
 and keyboard handling, as in Button. The custom element has no role of its
 own and never takes focus.
+
+The label and the description work as in [Button](./button.mdx#anatomy):
+UniAria writes their `id` unless they have one, and the root's references
+only while they are rendered. The frame and the extras sit outside the root,
+so they are marked with `data-uni-part` instead of `data-element`.
 
 ## Props
 
@@ -198,14 +308,14 @@ itself, bubbling, with the detail in `detail`.
 
 ## State
 
-| Field            | Type      | Meaning                                                                      |
-| ---------------- | --------- | ---------------------------------------------------------------------------- |
-| `isSelected`     | `boolean` | The toggle is on: the controlled value, or the uncontrolled one.             |
-| `isPressed`      | `boolean` | A pointer or key is down on the root. Unrelated to selection.                |
-| `isHovered`      | `boolean` | A mouse or pen is over the root. Never from touch, never while disabled.     |
-| `isFocused`      | `boolean` | The root has focus.                                                          |
-| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or screen reader. |
-| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                       |
+| Field            | Type      | Meaning                                                                                                                    |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `isSelected`     | `boolean` | The toggle is on: the controlled value, or the uncontrolled one.                                                           |
+| `isPressed`      | `boolean` | A pointer or key is down on the root. Unrelated to selection.                                                              |
+| `isHovered`      | `boolean` | A mouse or pen is over the root, or anywhere over the frame while one is rendered. Never from touch, never while disabled. |
+| `isFocused`      | `boolean` | The root has focus.                                                                                                        |
+| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or screen reader.                                               |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                                                                     |
 
 To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (Vue gives a ref):
@@ -220,20 +330,24 @@ property holds only the value you set, not the current state. See
 
 ## Styling
 
-| Attribute                  | When                                                   |
-| -------------------------- | ------------------------------------------------------ |
-| `data-uni="toggle-button"` | Always.                                                |
-| `data-selected`            | The toggle is on.                                      |
-| `data-hovered`             | A mouse or pen is over the root.                       |
-| `data-pressed`             | A pointer or key is down on the root.                  |
-| `data-focused`             | The root has focus.                                    |
-| `data-focus-visible`       | The root has focus from a keyboard or a screen reader. |
-| `data-disabled`            | The toggle button is disabled.                         |
+| Attribute                                                                     | On                  | When                                                                               |
+| ----------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| `data-uni="toggle-button"`                                                    | root                | Always.                                                                            |
+| `data-element="Label"`, `data-element="Description"`                          | label, description  | Always.                                                                            |
+| `data-uni-part="toggle-button-frame"`, `data-uni-part="toggle-button-extras"` | frame, extras       | Always.                                                                            |
+| `data-selected`                                                               | root, frame, extras | The toggle is on.                                                                  |
+| `data-hovered`                                                                | root, frame, extras | A mouse or pen is over the root, or anywhere over the frame while one is rendered. |
+| `data-pressed`                                                                | root, frame, extras | A pointer or key is down on the root.                                              |
+| `data-focused`                                                                | root, frame, extras | The root has focus.                                                                |
+| `data-focus-visible`                                                          | root, frame, extras | The root has focus from a keyboard or a screen reader.                             |
+| `data-disabled`                                                               | root, frame, extras | The toggle button is disabled.                                                     |
 
 Style the on state with `data-selected`, not `data-pressed`, which only means
 a press is in progress. State attributes are present or absent, never
-`"false"`. As in Button, UniAria sets `touch-action: pan-x pan-y pinch-zoom`
-on the root, and `user-select: none` while a touch press lasts.
+`"false"`. The frame and the extras carry the root's, so your CSS can paint
+the extras for any state of their toggle button, a selected one included. As
+in Button, UniAria sets `touch-action: pan-x pan-y pinch-zoom` on the root,
+and `user-select: none` while a touch press lasts.
 
 ### Default styles
 
@@ -242,6 +356,15 @@ root, as in the demo above, whose CSS tab holds only the page's layout. It looks
 like a [Button](./button.mdx) and takes `data-variant` the same way. Selected,
 it takes the accent fill whatever the variant, so the on state shows by more
 than a change of hue.
+
+A label part, a frame and extras get Button's
+[layout](./button.mdx#default-styles): an icon before the label and a hint
+after it, one line each for the label and the description, and the extras
+over the end of a framed toggle button, which needs a label part. The frame
+takes the toggle button's text color, the selected one included, and a quiet
+Button in the extras mixes its fills from it, so it reads on the accent fill.
+Cut-off text can get an
+[overflow tooltip](./tooltip.mdx#overflow-tooltips), as on a Button.
 
 ## Keyboard
 
@@ -253,6 +376,9 @@ than a change of hue.
 
 Holding a key down never toggles again.
 
+In a frame, Tab moves from the toggle button to each control in its extras,
+in DOM order, as in [Button](./button.mdx#keyboard).
+
 ## Accessibility
 
 - **Spoken output.** "button, Bold, not pressed", then "button, Bold,
@@ -260,6 +386,11 @@ Holding a key down never toggles again.
   readers announce the new state when it changes.
 - **`aria-pressed` is always present**, as `"true"` or `"false"`: without it
   the root would be read as a plain button.
+- **Label, description and extras.** The label part alone names the toggle
+  button, so an icon or a hint inside stays out of its name, and the
+  description part describes it. Each extra is read on its own after it,
+  named in its context: "Subtitle language", not a bare "Settings". See
+  [Button](./button.mdx#accessibility).
 - **Keep the label fixed.** The state is announced, so a label that changes
   with it ("Mute" and "Unmute") would be read twice and confuse. If the
   label must change, use a plain [Button](./button.mdx) instead.

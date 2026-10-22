@@ -24,6 +24,10 @@ underneath by default. Every press toggles the state and reports
   and on elements the `<uni-tooltip>` it sits in directly or a `tooltip`
   attribute naming one's id. As Button's, on the root. The Button
   it composes doesn't link: a link belongs to the component itself.
+- **Label, description, frame and extras** (changed on 2026-10-22 (owner),
+  the items spec, `../button/items.md`): Button's four parts, mapped to its
+  own; the frame and extras are `toggle-button-frame` and
+  `toggle-button-extras`, and carry `data-selected` as well.
 - **Custom element:** yes. `<uni-toggle-button>` hosts one native
   `<button data-uni="toggle-button">` written by the consumer, as
   `<uni-button>` does. The host has no role and never takes focus.
@@ -45,9 +49,13 @@ Not part of ToggleButton:
 
 ## Anatomy
 
-| Part | Element                                                | Attributes UniAria owns                                                                                                                                                                                                     | Notes                                                                                                         |
-| ---- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| root | `button` by default; any element through `elementType` | Button's (`type`, `disabled`, `aria-disabled`, `role`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`), plus `aria-pressed`, `data-selected`, `data-uni="toggle-button"` | The consumer owns content, `id`, classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). |
+| Part               | Element                                                | Attributes UniAria owns                                                                                                                                                                                                     | Notes                                                                                                         |
+| ------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| root               | `button` by default; any element through `elementType` | Button's (`type`, `disabled`, `aria-disabled`, `role`, `tabindex`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`), plus `aria-pressed`, `data-selected`, `data-uni="toggle-button"` | The consumer owns content, `id`, classes and labelling (`aria-label`, `aria-labelledby`, `aria-describedby`). |
+| label, description | as Button's                                            | as Button's                                                                                                                                                                                                                 | Optional; as Button's.                                                                                        |
+| frame, extras      | as Button's                                            | `data-uni-part="toggle-button-frame"`, `"toggle-button-extras"`, the root's state attributes                                                                                                                                | Optional, outside the root; as Button's.                                                                      |
+
+Changed on 2026-10-22 (owner): the four parts of the items spec.
 
 No element-owned parts. `data-pressed` keeps Button's meaning: a pointer or
 key is down on the root. The selected state is `data-selected`, as in React

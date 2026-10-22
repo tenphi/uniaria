@@ -133,7 +133,7 @@ runs it against a plain-DOM fixture adapter in every browser.
 
 A scenario declares the roadmap phase whose features it needs
 (`{ phase: 2 }`; 1 by default). An adapter's run declares the phase it has
-reached, `runConformance(adapter, suites, { phase: 4 })`, and later scenarios
+reached, `runConformance(adapter, suites, { phase: 5 })`, and later scenarios
 are reported as skipped, not failed. Raise the phase in the adapter's
 `conformance.browser.test.ts` as the roadmap advances.
 

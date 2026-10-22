@@ -402,7 +402,10 @@ in `provides`. `ctx.link(tooltipLink)` returns `{ instance, api }`, or
 `undefined`. The key's name is the prop that takes the instance in React
 (`useComponent(button, { tooltip: hint.instance })`) and the element
 attribute that names the host by id (`<uni-button tooltip="hint">`); without
-the attribute, an element links to the UniAria host it sits in directly.
+the attribute, an element links to the UniAria host it sits in directly. A
+key can name another attribute (`attribute: 'option-tooltip'`) and come only
+from it (`isAttributeOnly: true`): a Select inside a `<uni-tooltip>` takes
+that tooltip for its trigger, and its options' tooltip only by id.
 `ctx.link()` is always `undefined` in a composed definition: links belong to
 the instance.
 
