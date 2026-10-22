@@ -1,6 +1,6 @@
 {
   "name": "@uniaria/testing",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Testing tools for UniAria: test instances without a framework, the conformance suite runner and screen-reader helpers",
   "type": "module",
   "sideEffects": false,
