@@ -22,7 +22,8 @@ permissions:
 jobs:
   release:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    # CI's Ubuntu, where the screenshot references are made (ci.yml).
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: release
 
