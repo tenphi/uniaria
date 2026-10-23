@@ -2396,6 +2396,9 @@ describe('<uni-tooltip>', () => {
   });
 
   it("takes a select's option tooltip by id, and the select in it for its trigger only", async () => {
+    // The tooltip's width fits it beside the options in the 414-pixel page:
+    // wider, it shifts over them, and a hover lands on it. It opens on
+    // focus as well when an earlier test leaves the keyboard modality.
     const CUT =
       'display: block; width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis';
     const container = mount(`
@@ -2409,7 +2412,7 @@ describe('<uni-tooltip>', () => {
               <div data-element="Option" data-key="date" style="${CUT}">Date</div>
             </div>
             <uni-tooltip id="option-tip" delay="0" open-only-when-truncated relation="none" position-area="right">
-              <div data-uni="tooltip"><span data-element="Text"></span></div>
+              <div data-uni="tooltip" style="width: 120px"><span data-element="Text"></span></div>
             </uni-tooltip>
           </div>
           <select data-element="HiddenSelect" name="fruit"></select>
