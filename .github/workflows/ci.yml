@@ -11,7 +11,10 @@ jobs:
   ci:
     # Label changes only matter to the conformance check below.
     if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
-    runs-on: ubuntu-latest
+    # The Ubuntu of Playwright's Docker image, where the screenshot references
+    # are made (packages/styles/scripts/screenshots.sh): not `ubuntu-latest`,
+    # which moves on its own.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
@@ -32,13 +35,19 @@ jobs:
 
       # The `browser` Vitest project runs in Chromium, Firefox and WebKit. The
       # binaries are cached and keyed on the lockfile, so a Playwright bump
-      # pulls matching browsers.
+      # pulls matching browsers, and on the runner image (`ImageOS`, such as
+      # `ubuntu24`): Playwright builds them per Ubuntu release, and a WebKit
+      # built for one doesn't start on another.
+      - name: Runner image
+        id: image
+        run: echo "os=$ImageOS" >> "$GITHUB_OUTPUT"
+
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ steps.image.outputs.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
