@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createPalette } from './palette/create';
 import { BASE_TOKENS } from './palette/css';
 import { uniaria } from './plugin';
-import { STATES } from './tokens';
+import { SCHEME_STEPS, STATES } from './tokens';
 
 const SELECTORS = [
   ':root',
@@ -71,7 +71,7 @@ describe('uniaria()', () => {
     const styles = uniaria({ palette: false }).globalStyles ?? {};
     expect(Object.keys(styles)).toEqual([':root']);
     expect(Object.keys(styles[':root'] ?? {})).toEqual(
-      Object.keys(BASE_TOKENS),
+      Object.keys({ ...BASE_TOKENS, ...SCHEME_STEPS.light }),
     );
   });
 

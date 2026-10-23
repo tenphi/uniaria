@@ -2,7 +2,12 @@ import type { Styles } from '@tenphi/tasty';
 
 import { closeStyles } from '../shared/close';
 import { dialogMotionStyles } from '../shared/motion';
-import { buttonStyles } from './button';
+import {
+  itemDescriptionStyles,
+  itemExtrasStyles,
+  itemLabelStyles,
+} from '../shared/item';
+import { buttonFrameStyles, buttonItemStyles } from './button';
 
 /**
  * Dialog, as UI Kit's modal: a surface panel centered by the native
@@ -71,5 +76,15 @@ export const dialogStyles: Styles = {
   },
 };
 
-/** The trigger, outside the dialog: a Button. */
-export const dialogTriggerStyles = buttonStyles;
+/**
+ * The trigger and its parts, outside the dialog: a Button, with the item
+ * look while it has a `triggerLabel` (`../shared/item.ts`).
+ */
+export const dialogTriggerStyles = buttonItemStyles({
+  label: '[data-uni-part="dialog-trigger-label"]',
+  description: '[data-uni-part="dialog-trigger-description"]',
+});
+export const dialogTriggerLabelStyles = itemLabelStyles;
+export const dialogTriggerDescriptionStyles = itemDescriptionStyles;
+export const dialogTriggerFrameStyles = buttonFrameStyles;
+export const dialogTriggerExtrasStyles = itemExtrasStyles;

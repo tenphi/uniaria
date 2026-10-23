@@ -408,6 +408,133 @@ settings.addEventListener('openchange', (event) => {
 The live demo above is controlled this way, so its Delete button can close the
 dialog by setting `isOpen`.
 
+### The trigger's label and extras
+
+The trigger is a [Button](./button.mdx), and it takes Button's label,
+description, frame and extras as four parts of its own. All four sit outside
+the dialog, as the trigger does:
+
+- **`triggerLabel` and `triggerDescription`** go inside the trigger. While
+  rendered, the label alone names the trigger and the description describes
+  it, so an icon or a hint inside stays out of the name.
+- **`triggerFrame`** goes around the trigger and its extras, and
+  **`triggerExtras`** beside the trigger, never inside it: your buttons,
+  badges and counts. Both carry the trigger's state attributes, and the
+  pointer anywhere over the frame hovers the trigger.
+
+<Tabs label="The trigger's label and extras">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { dialog } from '@uniaria/core/dialog';
+import { useComponent } from '@uniaria/react';
+
+export function FruitPicker(props: { fruit: string; onClear(): void }) {
+  const picker = useComponent(dialog, {});
+  const clear = useComponent(button, { onPress: props.onClear });
+  return (
+    <>
+      <div {...picker.parts.triggerFrame}>
+        <button {...picker.parts.trigger}>
+          <span {...picker.parts.triggerLabel}>Fruit</span>
+          <span {...picker.parts.triggerDescription}>{props.fruit}</span>
+        </button>
+        <span {...picker.parts.triggerExtras}>
+          <button
+            {...clear.parts.root}
+            data-variant="quiet"
+            aria-label="Clear Fruit"
+          >
+            <ClearIcon aria-hidden />
+          </button>
+        </span>
+      </div>
+      <dialog {...picker.parts.root}>
+        <h2 {...picker.parts.title}>Choose fruit</h2>…
+      </dialog>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { dialog } from '@uniaria/core/dialog';
+import { useComponent } from '@uniaria/vue';
+
+defineProps<{ fruit: string }>();
+const emit = defineEmits<{ clear: [] }>();
+
+const picker = useComponent(dialog);
+const clear = useComponent(button, { onPress: () => emit('clear') });
+</script>
+
+<template>
+  <div v-bind="picker.parts.triggerFrame">
+    <button v-bind="picker.parts.trigger">
+      <span v-bind="picker.parts.triggerLabel">Fruit</span>
+      <span v-bind="picker.parts.triggerDescription">{{ fruit }}</span>
+    </button>
+    <span v-bind="picker.parts.triggerExtras">
+      <button
+        v-bind="clear.parts.root"
+        data-variant="quiet"
+        aria-label="Clear Fruit"
+      >
+        <ClearIcon aria-hidden="true" />
+      </button>
+    </span>
+  </div>
+  <dialog v-bind="picker.parts.root">
+    <h2 v-bind="picker.parts.title">Choose fruit</h2>
+    …
+  </dialog>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-dialog>
+  <div data-uni-part="dialog-trigger-frame">
+    <button data-uni-part="dialog-trigger">
+      <span data-uni-part="dialog-trigger-label">Fruit</span>
+      <span data-uni-part="dialog-trigger-description">Apple</span>
+    </button>
+    <span data-uni-part="dialog-trigger-extras">
+      <uni-button>
+        <button data-uni="button" data-variant="quiet" aria-label="Clear Fruit">
+          <svg aria-hidden="true">…</svg>
+        </button>
+      </uni-button>
+    </span>
+  </div>
+  <dialog data-uni="dialog">
+    <h2 data-element="Title">Choose fruit</h2>
+    …
+  </dialog>
+</uni-dialog>
+
+<script type="module">
+  import '@uniaria/elements/button';
+  import '@uniaria/elements/dialog';
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Each extra is a control of its own: name it in its context ("Clear Fruit",
+not "Clear"), and it is a Tab stop after the trigger. While the dialog is
+open the page is inert, so the extras act only while it is closed. The
+dialog's name still comes from its title, never from the trigger.
+
 ### Nested dialogs
 
 A dialog opened from inside another stacks above it. Escape and the backdrop
@@ -418,13 +545,17 @@ outside the top dialog is inert.
 
 ## Anatomy
 
-| Part          | Element                | Notes                                                                                                                                                                                                                |
-| ------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trigger`     | `button`               | Optional. A press opens the dialog. It is a [Button](./button.mdx), with Button's states.                                                                                                                            |
-| `root`        | `dialog`               | Required. Opened with `showModal()`, hidden while closed. UniAria writes its `id` (unless it has one), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, and `role` for an alert dialog. Its content is yours. |
-| `title`       | any; usually a heading | Names the dialog through `aria-labelledby`. UniAria writes its `id` (unless it has one).                                                                                                                             |
-| `description` | any                    | Optional. Linked through `aria-describedby` while rendered. Leave it out for long or structured content, which screen readers would read in one go.                                                                  |
-| `close`       | `button`               | Optional. A press closes the dialog, even when it isn't dismissable. A Button too.                                                                                                                                   |
+| Part                 | Element                                 | Notes                                                                                                                                                                                                                |
+| -------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger`            | `button`                                | Optional. A press opens the dialog. It is a [Button](./button.mdx), with Button's states.                                                                                                                            |
+| `triggerLabel`       | any, inside the trigger; usually `span` | Optional. While rendered, it alone names the trigger. UniAria writes its `id` (unless it has one).                                                                                                                   |
+| `triggerDescription` | any, inside the trigger; usually `span` | Optional. Describes the trigger while rendered. UniAria writes its `id` (unless it has one).                                                                                                                         |
+| `triggerFrame`       | any; usually `div`                      | Optional. Around the trigger and its extras. It carries the trigger's state attributes, and the pointer over it hovers the trigger.                                                                                  |
+| `triggerExtras`      | any, inside the frame; usually `span`   | Optional. Beside the trigger, never inside it: your buttons, badges and counts. It carries the trigger's state attributes.                                                                                           |
+| `root`               | `dialog`                                | Required. Opened with `showModal()`, hidden while closed. UniAria writes its `id` (unless it has one), `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, and `role` for an alert dialog. Its content is yours. |
+| `title`              | any; usually a heading                  | Names the dialog through `aria-labelledby`. UniAria writes its `id` (unless it has one).                                                                                                                             |
+| `description`        | any                                     | Optional. Linked through `aria-describedby` while rendered. Leave it out for long or structured content, which screen readers would read in one go.                                                                  |
+| `close`              | `button`                                | Optional. A press closes the dialog, even when it isn't dismissable. A Button too.                                                                                                                                   |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
@@ -438,18 +569,18 @@ element has no role of its own and never takes focus.
 
 ## Props
 
-| Prop                        | Attribute                                    | Type                        | Default    | Description                                                                                                                                    |
-| --------------------------- | -------------------------------------------- | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isOpen`                    | — (property: setting it makes it controlled) | `boolean`                   | —          | The open state, controlled. Pair it with `onOpenChange`.                                                                                       |
-| `defaultOpen`               | `default-open`                               | `boolean`                   | `false`    | The starting state, uncontrolled. With server rendering, it opens after hydration: `showModal()` needs a browser.                              |
-| `isDismissable`             | `dismissable`                                | `boolean`                   | `true`     | Escape and a press on the backdrop close it. `dismissable="false"` turns both off; the close part, a dialog form and your code still close it. |
-| `isKeyboardDismissDisabled` | `keyboard-dismiss-disabled`                  | `boolean`                   | `false`    | Escape alone doesn't close it; the backdrop still does.                                                                                        |
-| `role`                      | — (read from the `<dialog>`'s `role`)        | `'dialog' \| 'alertdialog'` | `'dialog'` | `'alertdialog'` for a message that needs an answer.                                                                                            |
-| `isDisabled`                | `disabled`                                   | `boolean`                   | `false`    | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                               |
-| `shouldRestoreFocus`        | `restore-focus`                              | `boolean`                   | `true`     | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                      |
-| `labelledBy`                | `labelled-by`                                | `string`                    | —          | More ids for `aria-labelledby`.                                                                                                                |
-| `describedBy`               | `described-by`                               | `string`                    | —          | More ids for `aria-describedby`.                                                                                                               |
-| `tooltip`                   | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`      | —          | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-dialog>` sits in directly links too.                  |
+| Prop                        | Attribute                                    | Type                        | Default    | Description                                                                                                                                                                                                                              |
+| --------------------------- | -------------------------------------------- | --------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                    | — (property: setting it makes it controlled) | `boolean`                   | —          | The open state, controlled. Pair it with `onOpenChange`.                                                                                                                                                                                 |
+| `defaultOpen`               | `default-open`                               | `boolean`                   | `false`    | The starting state, uncontrolled. With server rendering, it opens after hydration: `showModal()` needs a browser.                                                                                                                        |
+| `isDismissable`             | `dismissable`                                | `boolean`                   | `true`     | Escape and a press on the backdrop close it. `dismissable="false"` turns both off; the close part, a dialog form and your code still close it.                                                                                           |
+| `isKeyboardDismissDisabled` | `keyboard-dismiss-disabled`                  | `boolean`                   | `false`    | Escape alone doesn't close it; the backdrop still does.                                                                                                                                                                                  |
+| `role`                      | — (read from the `<dialog>`'s `role`)        | `'dialog' \| 'alertdialog'` | `'dialog'` | `'alertdialog'` for a message that needs an answer.                                                                                                                                                                                      |
+| `isDisabled`                | `disabled`                                   | `boolean`                   | `false`    | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                                                                                                                         |
+| `shouldRestoreFocus`        | `restore-focus`                              | `boolean`                   | `true`     | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                                                                                                                |
+| `labelledBy`                | `labelled-by`                                | `string`                    | —          | More ids for `aria-labelledby`.                                                                                                                                                                                                          |
+| `describedBy`               | `described-by`                               | `string`                    | —          | More ids for `aria-describedby`.                                                                                                                                                                                                         |
+| `tooltip`                   | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`      | —          | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-dialog>` sits in directly links too. With `shouldOpenOnlyWhenTruncated`, it measures `triggerLabel` and `triggerDescription`, else the trigger. |
 
 ## Events
 
@@ -512,15 +643,16 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                                                                             | On               | When                                          |
-| ------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------- |
-| `data-uni="dialog"`                                                                   | root             | Always.                                       |
-| `data-uni-part="dialog-trigger"`                                                      | trigger          | Always.                                       |
-| `data-element`                                                                        | every other part | Always.                                       |
-| `data-open`                                                                           | every part       | The dialog is open.                           |
-| `data-entering`                                                                       | every part       | The first frames after opening.               |
-| `data-exiting`                                                                        | every part       | It is closing, until its exit animations end. |
-| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close   | As on a [Button](./button.mdx).               |
+| Attribute                                                                                              | On                                                 | When                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-uni="dialog"`                                                                                    | root                                               | Always.                                                                                                                                               |
+| `data-uni-part="dialog-trigger"`                                                                       | trigger                                            | Always.                                                                                                                                               |
+| `data-uni-part="dialog-trigger-label"`, `…-trigger-description`, `…-trigger-frame`, `…-trigger-extras` | the trigger's label, description, frame and extras | Always.                                                                                                                                               |
+| `data-element`                                                                                         | every other part                                   | Always.                                                                                                                                               |
+| `data-open`                                                                                            | every part but the trigger's label and description | The dialog is open.                                                                                                                                   |
+| `data-entering`                                                                                        | every part but the trigger's label and description | The first frames after opening.                                                                                                                       |
+| `data-exiting`                                                                                         | every part but the trigger's label and description | It is closing, until its exit animations end.                                                                                                         |
+| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled`                  | trigger, its frame and extras, close               | As on a [Button](./button.mdx). The frame and the extras carry the trigger's, and `data-hovered` is set while the pointer is anywhere over the frame. |
 
 The root matches `:modal` the whole time it is shown, closing phase included,
 and its `::backdrop` is the underlay.
@@ -568,9 +700,14 @@ viewport and never taller than it, with its parts in a column 12 pixels apart
 and 12 pixels in from its edge, and scrolling inside when its content is taller.
 The title is an 18/24 heading, the description soft text, and the `::backdrop`
 dims the page. The trigger and the close part look like
-[Button](./button.mdx#default-styles), `data-variant` included. Opening, the
-dialog fades in as it drops 24 pixels into place, with the backdrop fading in,
-in 250 milliseconds; under reduced motion it shows and hides at once.
+[Button](./button.mdx#default-styles), `data-variant` included. A trigger
+with a `triggerLabel` is laid out as an item: its label and description take
+one line each and end in an ellipsis, and in a frame the extras sit over the
+trigger's end (see
+[Labels, frames and extras](../guide/default-styles.md#labels-frames-and-extras)).
+Opening, the dialog fades in as it drops 24 pixels into place, with the
+backdrop fading in, in 250 milliseconds; under reduced motion it shows and
+hides at once.
 
 ## Keyboard
 
@@ -580,6 +717,10 @@ in 250 milliseconds; under reduced motion it shows and hides at once.
 | Escape         | Closes the top dialog when it is dismissable and keyboard dismissal isn't disabled. Otherwise nothing happens, and the browser doesn't close it either. A widget inside that handles Escape and prevents its default keeps the dialog open. |
 | Tab, Shift+Tab | Move through the dialog's tabbable elements and wrap at both ends. Focus never reaches the page or the browser's own controls.                                                                                                              |
 | Enter          | In a field of a `method="dialog"` form, submits it, which closes the dialog.                                                                                                                                                                |
+
+Each of the trigger's extras is a Tab stop of its own after the trigger, in
+DOM order. The open dialog keeps Tab inside it, so the extras are reached once
+it closes.
 
 ## Accessibility
 
@@ -597,7 +738,11 @@ in 250 milliseconds; under reduced motion it shows and hides at once.
   modal for screen readers already.
 - **Spoken output.** "button, Delete file…" on the trigger, then "dialog,
   Delete “report.pdf”?, It stays in the trash for 30 days." when it opens;
-  "alertdialog, …" for an alert dialog.
+  "alertdialog, …" for an alert dialog. With a `triggerLabel` "Fruit" and a
+  `triggerDescription` "Apple", the trigger reads "button, Fruit, Apple".
+- **Extras** aren't part of the trigger's name or description: each reads on
+  its own, such as "button, Clear Fruit". Text that should describe the
+  trigger, such as a badge, goes in `triggerDescription`.
 - **No popup ARIA on the trigger.** UniAria sets no `aria-haspopup`,
   `aria-expanded` or `aria-controls`: the open dialog makes the trigger inert,
   so "expanded" would never be heard.

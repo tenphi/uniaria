@@ -17,9 +17,13 @@
   [data-uni="select"] [data-element="Error"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
 }
 
-[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *))::after { content: ""; flex-shrink: 0; box-sizing: border-box; inline-size: .375rem; min-inline-size: .375rem; max-inline-size: .375rem; block-size: .375rem; min-block-size: .375rem; max-block-size: .375rem; border-top: 0 solid currentcolor; border-right: calc(1.5 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(1.5 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; translate: 0 -.125rem; margin-inline: .25rem; }
+[data-uni="select"] [data-element="TriggerFrame"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { display: grid; grid-template-columns: [icon] auto [label] minmax(0, 1fr) [suffix] auto [extras] auto [chevron] auto; }
 
-[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; border-radius: var(--uni-radius); display: flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; margin: 0px; padding: 0 calc(var(--uni-gap) - var(--uni-border-width)); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; text-align: start; }
+[data-uni="select"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="TriggerFrame"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled])) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+
+[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *))::after { content: ""; flex-shrink: 0; box-sizing: border-box; inline-size: .375rem; min-inline-size: .375rem; max-inline-size: .375rem; block-size: .375rem; min-block-size: .375rem; max-block-size: .375rem; border-top: 0 solid currentcolor; border-right: calc(1.5 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(1.5 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; translate: 0 -.125rem; grid-column: chevron; grid-row: 1; margin-inline: calc(calc(0.5 * var(--uni-gap)) + .25rem) .25rem; }
+
+[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; border-radius: var(--uni-radius); display: grid; align-items: center; margin: 0px; padding: 0 calc(var(--uni-gap) - var(--uni-border-width)); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; text-align: start; }
 
 [data-uni="select"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled]):not([data-hovered]):not([data-pressed])), [data-uni="select"]:where([data-readonly]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled]):not([data-hovered])[data-pressed]), [data-uni="select"]:where([data-readonly]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled])[data-hovered]:not([data-pressed])), [data-uni="select"]:where([data-readonly]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled])[data-hovered][data-pressed]) { background-color: var(--uni-surface-color); }
 
@@ -33,7 +37,11 @@
   [data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition), border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
 }
 
-[data-uni="select"] [data-element="Value"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { flex-grow: 1; inline-size: auto; min-inline-size: 0px; max-inline-size: initial; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:is([data-element="TriggerFrame"] > *))) { grid-template-columns: [icon] auto [label] minmax(0, 1fr) [suffix] auto [extras] auto [chevron] auto; }
+
+[data-uni="select"] [data-element="TriggerExtras"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { display: flex; gap: var(--uni-border-width); align-items: center; grid-column: extras; grid-row: 1; box-sizing: border-box; padding-inline: calc(0.5 * var(--uni-gap)) 0; pointer-events: none; }
+
+[data-uni="select"] [data-element="Value"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; grid-column: label; grid-row: 1; }
 
 [data-uni="select"]:where(:is(:not([data-placeholder]), [data-disabled])) [data-element="Value"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: inherit; --current-color: inherit; }
 
@@ -63,7 +71,7 @@
 
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *))::after { content: var(--uni-option-mark); position: absolute; inset-inline: auto calc(var(--uni-gap) + .125rem); inset-block: calc(50% - .3125rem) auto; box-sizing: border-box; inline-size: .25rem; min-inline-size: .25rem; max-inline-size: .25rem; block-size: .5rem; min-block-size: .5rem; max-block-size: .5rem; border-top: 0 solid currentcolor; border-right: calc(2 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(2 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; }
 
-[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { position: relative; inset-inline: auto 0; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; margin: 0px; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); padding-inline: var(--uni-gap) calc(2.5 * var(--uni-gap)); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; overflow-wrap: anywhere; }
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { position: relative; inset-inline: auto 0; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; margin: 0px; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); padding-inline: var(--uni-gap) calc(2.5 * var(--uni-gap)); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; grid-template-columns: [icon] auto [label] minmax(0, 1fr) [suffix] auto [extras] auto; align-items: center; }
 
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([data-disabled]), [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered]):not([data-pressed])), [data-uni="select"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered])[data-pressed]), [data-uni="select"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered]:not([data-pressed])), [data-uni="select"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered][data-pressed]) { background-color: transparent; }
 
@@ -73,6 +81,10 @@
 
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
 
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:has(> [data-element="OptionLabel"]))), [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([hidden]:has(> [data-element="OptionLabel"])) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:has(> [data-element="OptionDescription"]))) { grid-template-rows: auto; }
+
 [data-uni="select"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled])) { cursor: pointer; }
 
 @media (not (prefers-reduced-motion: reduce)) {
@@ -81,9 +93,11 @@
 
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-selected])) { --uni-option-mark: none; }
 
-[data-uni="select"] [data-element="OptionLabel"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { display: block; }
+[data-uni="select"] [data-element="OptionLabel"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; grid-column: label; grid-row: 1; margin: 0px; padding: 0px; text-align: start; }
 
-[data-uni="select"] [data-element="OptionDescription"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { margin: 0px; color: inherit; --current-color: inherit; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; display: block; }
+[data-uni="select"] [data-element="OptionDescription"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { margin: 0px; color: inherit; --current-color: inherit; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; grid-column: label; grid-row: 2; padding: 0px; text-align: start; }
+
+[data-uni="select"] [data-element="OptionExtras"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { display: flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; grid-column: extras; grid-row: 1 / -1; margin-inline: calc(0.5 * var(--uni-gap)) 0; }
 
 [data-uni="select"] [data-element="GroupLabel"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); letter-spacing: .01em; font-weight: 600; text-transform: uppercase; display: block; padding: var(--uni-gap) var(--uni-gap) calc(0.5 * var(--uni-gap)) var(--uni-gap); }
 
@@ -119,6 +133,8 @@
   [data-uni="select"] [data-element="Error"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: CanvasText; --current-color: CanvasText; }
 }
 
+[data-uni="select"]:where(:is(:not([data-disabled]):has([data-element="Input"]:disabled), [data-disabled])) [data-element="TriggerFrame"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)), [data-uni="select"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="TriggerFrame"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:is(:disabled, [data-disabled])) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+
 [data-uni="select"]:where(:not([data-disabled]):not([data-readonly]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-pressed]):not(:disabled, [data-disabled])[data-hovered]) { background-color: var(--uni-surface-hover-color); }
 
 [data-uni="select"]:where([data-invalid]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
@@ -128,6 +144,10 @@
 @media (not (forced-colors: active)) {
   [data-uni="select"]:where([data-focus-visible]:not([data-invalid])) [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
 }
+
+[data-uni="select"] [data-element="Trigger"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:is([data-element="TriggerFrame"] > *)) { grid-template-columns: subgrid; grid-column: 1 / -1; grid-row: 1; }
+
+[data-uni="select"] [data-element="TriggerExtras"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) *:where(:is(button, a[href], [data-uni], [data-uni-part="tooltip-trigger"])) { pointer-events: auto; }
 
 [data-uni="select"]:where([data-placeholder]:not([data-disabled])) [data-element="Value"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
 
@@ -157,9 +177,17 @@
   [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
 }
 
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([hidden]):has(> [data-element="OptionLabel"])) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: grid; }
+
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:has(> [data-element="OptionDescription"])) { grid-template-rows: auto auto; }
+
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([data-disabled]), [data-uni="select"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where(:not([data-disabled])) { cursor: default; }
 
 [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([data-selected]) { --uni-option-mark: ""; }
+
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) > *:where(:not(:is([data-element="OptionLabel"] ~ *)):has(~ [data-element="OptionLabel"])), [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) > *:where(:is([data-element="OptionDescription"], [data-element="OptionExtras"]):is([data-element="OptionLabel"] ~ *):has(~ [data-element="OptionLabel"])) { grid-column: icon; margin-inline: 0 calc(0.5 * var(--uni-gap)); }
+
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) > *:where(:has(~ [data-element="OptionLabel"])), [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) > *:where(:not(:has(~ [data-element="OptionLabel"])):not(:is([data-element="OptionDescription"], [data-element="OptionExtras"])):is([data-element="OptionLabel"] ~ *)) { grid-row: 1 / -1; }
 
 @media (not (forced-colors: active)) {
   [data-uni="select"]:where([data-disabled]) [data-element="GroupLabel"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
@@ -210,6 +238,8 @@
 @media (forced-colors: active) {
   [data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid highlight; outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
 }
+
+[data-uni="select"] [data-element="Option"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) > *:where(:not(:is([data-element="OptionDescription"], [data-element="OptionExtras"])):is([data-element="OptionLabel"] ~ *)) { grid-column: suffix; margin-inline: calc(0.5 * var(--uni-gap)) 0; }
 
 @media (forced-colors: active) {
   [data-uni="select"]:where(:not([data-disabled])) [data-element="GroupLabel"]:where(:not([data-uni="select"] [data-uni]:not([data-uni="select"]) *)) { color: CanvasText; --current-color: CanvasText; }

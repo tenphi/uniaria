@@ -140,15 +140,158 @@ Set the `href` property to change it later.
 </Tab>
 </Tabs>
 
+### Label, description and extras
+
+A `label` part names the button by itself, and a `description` part describes
+it. An icon, a badge or a shortcut hint elsewhere in the button stays out of
+its name: "button, Save, Saves the file" rather than "button, SaveSaves the
+file⌘S".
+
+A button can't hold other buttons. For controls that belong with it, such as
+a Clear button or a count, put the button in a `frame` and the controls in its
+`extras`, beside the button. Each control there is a component of its own,
+with its own name.
+
+<Tabs label="Label, description and extras">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/react';
+
+export function FruitFilter(props: {
+  fruit: string;
+  onPick(): void;
+  onClear(): void;
+}) {
+  const filter = useComponent(button, { onPress: props.onPick });
+  const clear = useComponent(button, { onPress: props.onClear });
+  return (
+    <div {...filter.parts.frame}>
+      <button {...filter.parts.root}>
+        <span {...filter.parts.label}>Fruit</span>
+        <span {...filter.parts.description}>{props.fruit}</span>
+      </button>
+      <span {...filter.parts.extras}>
+        <button
+          {...clear.parts.root}
+          data-variant="quiet"
+          aria-label="Clear Fruit"
+        >
+          ×
+        </button>
+      </span>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { useComponent } from '@uniaria/vue';
+
+defineProps<{ fruit: string }>();
+const emit = defineEmits<{ pick: []; clear: [] }>();
+
+const filter = useComponent(button, { onPress: () => emit('pick') });
+const clear = useComponent(button, { onPress: () => emit('clear') });
+</script>
+
+<template>
+  <div v-bind="filter.parts.frame">
+    <button v-bind="filter.parts.root">
+      <span v-bind="filter.parts.label">Fruit</span>
+      <span v-bind="filter.parts.description">{{ fruit }}</span>
+    </button>
+    <span v-bind="filter.parts.extras">
+      <button
+        v-bind="clear.parts.root"
+        data-variant="quiet"
+        aria-label="Clear Fruit"
+      >
+        ×
+      </button>
+    </span>
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-button id="fruit">
+  <div data-uni-part="button-frame">
+    <button data-uni="button">
+      <span data-element="Label">Fruit</span>
+      <span data-element="Description">Apple</span>
+    </button>
+    <span data-uni-part="button-extras">
+      <uni-button id="clear-fruit">
+        <button data-uni="button" data-variant="quiet" aria-label="Clear Fruit">
+          ×
+        </button>
+      </uni-button>
+    </span>
+  </div>
+</uni-button>
+
+<script type="module">
+  import '@uniaria/elements/button';
+
+  document.querySelector('#fruit').addEventListener('press', (event) => {
+    if (event.target.id === 'clear-fruit') clearFruit();
+    else pickFruit();
+  });
+</script>
+```
+
+The frame goes inside the `<uni-button>` it belongs to, and each extra's own
+element inside the extras. Press events bubble, so a listener on the outer
+element hears its extras' presses too: `event.target` tells them apart.
+
+</Tab>
+</Tabs>
+
+Hover anywhere over the frame, over the button, an extra or a gap between
+them, is the button's hover. The frame and the extras carry the button's state
+attributes, so the row looks like one control in every state. A press on an
+extra is the extra's alone and never presses the button. Give each extra a
+name that says what it acts on, such as "Clear Fruit", and disable it with the
+button when it acts on what the button does: the extras show the button's
+disabled state, but they are components of their own.
+
 ## Anatomy
 
-| Part   | Element                                                                  | Notes                                                                                                                                                          |
-| ------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `root` | `button` by default, `a` in link mode, any element through `elementType` | You own the content, `id`, your classes, labelling, popup attributes (`aria-haspopup`, `aria-expanded`), form attributes and link attributes such as `target`. |
+| Part          | Element                                                                  | Notes                                                                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | `button` by default, `a` in link mode, any element through `elementType` | You own the content, `id`, your classes, labelling (unless a label or description part takes it over), popup attributes (`aria-haspopup`, `aria-expanded`), form attributes and link attributes such as `target`.   |
+| `label`       | any, inside the root; usually `span`                                     | Optional. While rendered, it alone names the button: the root's `aria-labelledby` is its id.                                                                                                                        |
+| `description` | any, inside the root; usually `span`                                     | Optional. While rendered, it describes the button: the root's `aria-describedby` starts with its id, before a tooltip's.                                                                                            |
+| `frame`       | any, outside the root; usually `div`                                     | Optional. Around the root and the extras. It carries the root's state attributes, and hover over it is the button's. No role.                                                                                       |
+| `extras`      | any, inside the frame; usually `span`                                    | Optional. Beside the root, never inside it: your own Buttons, badges and counts, in reading order. It carries the root's state attributes. No role: each control in it is a component of its own, named on its own. |
 
 A root that isn't a `button`, `input` or `a` gets `role="button"`, a
 `tabindex` and keyboard handling. The custom element has no role of its own and
 never takes focus.
+
+UniAria writes the label's and the description's `id`, unless they have one,
+and everything that refers to them follows it (see
+[Ids](../guide/accessibility.md#ids)). While the label is rendered, UniAria
+writes the root's whole `aria-labelledby`, and an `aria-label` on the root is
+ignored. While the description is rendered, it writes the whole
+`aria-describedby`, with a linked tooltip's id after the description's.
+Otherwise your own attributes stay. An id goes into a reference only once its
+part is rendered: in React right after the first commit, in Vue right after
+mount, and on the custom element when it upgrades. Until then, such as in
+server HTML, the button is named by its whole content.
+
+The frame and the extras sit outside the root, so they are marked with
+`data-uni-part` instead of `data-element` (see [Styling](#styling)).
 
 ## Props
 
@@ -196,13 +339,13 @@ with the press event in `detail`.
 
 ## State
 
-| Field            | Type      | Meaning                                                                        |
-| ---------------- | --------- | ------------------------------------------------------------------------------ |
-| `isPressed`      | `boolean` | A pointer or key is down on the root, and releasing it now would activate.     |
-| `isHovered`      | `boolean` | A mouse or pen is over the root. Never from touch, never while disabled.       |
-| `isFocused`      | `boolean` | The root has focus.                                                            |
-| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or a screen reader. |
-| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                         |
+| Field            | Type      | Meaning                                                                                                                    |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `isPressed`      | `boolean` | A pointer or key is down on the root, and releasing it now would activate.                                                 |
+| `isHovered`      | `boolean` | A mouse or pen is over the root, or anywhere over the frame while one is rendered. Never from touch, never while disabled. |
+| `isFocused`      | `boolean` | The root has focus.                                                                                                        |
+| `isFocusVisible` | `boolean` | The root has focus and the last interaction was a keyboard or a screen reader.                                             |
+| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                                                                     |
 
 Most of the time the state attributes below are all you need. To render
 something from state in React or Vue, select it, and the component renders
@@ -217,25 +360,54 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute            | When                                                   |
-| -------------------- | ------------------------------------------------------ |
-| `data-uni="button"`  | Always.                                                |
-| `data-hovered`       | A mouse or pen is over the root.                       |
-| `data-pressed`       | The button is pressed.                                 |
-| `data-focused`       | The root has focus.                                    |
-| `data-focus-visible` | The root has focus from a keyboard or a screen reader. |
-| `data-disabled`      | The button is disabled.                                |
+| Attribute                                                       | On                  | When                                                                               |
+| --------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| `data-uni="button"`                                             | root                | Always.                                                                            |
+| `data-element="Label"`, `data-element="Description"`            | label, description  | Always.                                                                            |
+| `data-uni-part="button-frame"`, `data-uni-part="button-extras"` | frame, extras       | Always.                                                                            |
+| `data-hovered`                                                  | root, frame, extras | A mouse or pen is over the root, or anywhere over the frame while one is rendered. |
+| `data-pressed`                                                  | root, frame, extras | The button is pressed.                                                             |
+| `data-focused`                                                  | root, frame, extras | The root has focus.                                                                |
+| `data-focus-visible`                                            | root, frame, extras | The root has focus from a keyboard or a screen reader.                             |
+| `data-disabled`                                                 | root, frame, extras | The button is disabled.                                                            |
 
-State attributes are present or absent, never `"false"`. UniAria also sets
+State attributes are present or absent, never `"false"`. The frame and the
+extras carry the button's, so your CSS can paint the extras for any state of
+their button, or show them only while it is hovered or focused. They describe
+the button: `data-focused` on the extras means the button has focus, and
+`:focus-within` that one of the extras has. UniAria also sets
 `touch-action: pan-x pan-y pinch-zoom` on the root: it removes the double-tap
 delay on touch screens and lets a scroll cancel a press.
 
 ### Default styles
 
 The optional [`@uniaria/styles`](../guide/default-styles.md) package styles the
-root, as in the demo above, whose CSS tab holds only the page's layout. Set
-`data-variant` on the root to `primary`, `quiet` or `danger` (for a destructive
-action); without it, the button is secondary.
+root and the other parts, as in the demo above, whose CSS tab holds only the
+page's layout. Set `data-variant` on the root to `primary`, `quiet` or
+`danger` (for a destructive action); without it, the button is secondary. A
+quiet button takes the text color around it and mixes its hover and press
+fills from it, so it reads on any fill.
+
+With a label part, the button is laid out in a grid: the element before the
+label, such as an icon, sits at its start, and the one after it, such as a
+shortcut hint, at its end. One element each: wrap several in one. The label
+and the description take one line each and end in an ellipsis.
+
+In a frame, the button spans the frame and the extras sit over its end, so its
+fill, border and focus ring stay under them in every state. A framed button
+needs a label part, which keeps its content clear of the extras. A Button in
+the extras is 24 pixels high. Only what acts in the extras takes the pointer,
+such as buttons and links, so a count or a gap between extras presses the
+button. The frame takes its button's text color, so extras drawn in
+`currentColor` match it. See
+[Labels, frames and extras](../guide/default-styles.md#labels-frames-and-extras).
+
+To show cut-off text in full, link a
+[Tooltip](./tooltip.mdx#overflow-tooltips) with `shouldOpenOnlyWhenTruncated`
+(attribute `open-only-when-truncated`) and `relation: 'none'`. It opens only
+while the label or the description is cut off, shows their whole text in its
+`text` part, and stays out of what screen readers read, since the whole text
+is in the button already.
 
 ## Keyboard
 
@@ -247,6 +419,11 @@ action); without it, the button is secondary.
 
 Holding a key down never presses again, and a keyup that lands elsewhere
 because focus moved ends the press without activating.
+
+In a frame, Tab moves from the button to each control in its extras, in DOM
+order: each is a tab stop of its own. To take one out of the Tab order, set
+`shouldExcludeFromTabOrder` on it, and give keyboard users another way to do
+what it does.
 
 ## Accessibility
 
@@ -264,8 +441,20 @@ because focus moved ends the press without activating.
   focusable or not; "link, Docs" in link mode. UniAria never writes
   `aria-disabled="false"`, so a re-enabled button isn't announced as "not
   disabled".
+- **Label and description.** With a label "Save", a description "Saves the
+  file" and a hint "⌘S" inside, the button reads "button, Save, Saves the
+  file": the hint stays out. Without the parts, the whole content is its name,
+  "button, SaveSaves the file⌘S".
+- **Extras.** Each extra is read on its own after the button, never as part
+  of its name. A frame with a button "Fruit" and, in its extras, a "Clear
+  Fruit" button and a count "3" reads "button, Fruit", then "button, Clear
+  Fruit", then "3". Name each extra in its context, "Clear Fruit" rather than
+  a bare "Close" repeated on every row. Text that should describe the button,
+  such as a badge, goes in its description part instead.
 - **Tooltips.** Give the button a [Tooltip](./tooltip.mdx) through its link,
-  and the tooltip's text becomes its description.
+  and the tooltip's text becomes its description, after the description
+  part's. It opens on hover over the button itself, not over its extras, so an
+  extra's own tooltip doesn't open it as well.
 
 ## Compared with other libraries
 
@@ -277,3 +466,8 @@ because focus moved ends the press without activating.
   so a button's role never changes under the user.
 - **No pending state.** `isDisabled` with `isFocusableWhenDisabled` covers it
   without dropping focus; a spinner stays with your design system.
+- **Label and description parts.** React Aria names a Button by its whole
+  content, and has `label` and `description` slots only in options and menu
+  items.
+- **Extras** sit beside the button, in a frame it spans. React Aria has no
+  controls beside a button; its GridList rows hold them as cells.

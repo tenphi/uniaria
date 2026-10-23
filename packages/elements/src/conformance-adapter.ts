@@ -114,6 +114,9 @@ function resolveProps(
   return result;
 }
 
+/** Ids for hosts a nested component names by attribute. */
+let hostIds = 0;
+
 export const elementsAdapter: ConformanceAdapter = {
   name: 'elements',
   async mount({ component, props, template, events, record, container }) {
@@ -122,13 +125,13 @@ export const elementsAdapter: ConformanceAdapter = {
       throw new Error(`<${name}> is not registered.`);
     }
     // Nested components get their own hosts, props set as properties.
-    const nestedHosts = new Set<Element>();
+    const nestedHosts = new Map<Element, Readonly<Record<string, unknown>>>();
     const nestedHost = (node: TemplateComponent) => {
       const element = document.createElement(`uni-${node.component}`);
       for (const [key, value] of Object.entries(node.props)) {
         (element as unknown as Record<string, unknown>)[key] = value;
       }
-      nestedHosts.add(element);
+      nestedHosts.set(element, node.props);
       return element;
     };
     // Rows render once the host has its props, and again on each
@@ -169,12 +172,23 @@ export const elementsAdapter: ConformanceAdapter = {
     const host = document.createElement(name) as UniElement<never>;
     // A nested component that links to this one goes inside its host, as a
     // consumer writes `<uni-tooltip><uni-button>…</uni-button>…</uni-tooltip>`.
-    for (const nestedHost of nestedHosts) {
+    // A key found only by its attribute names the host by id, as a consumer
+    // writes `option-tooltip="…"`, unless the nested props leave it unset.
+    for (const [nestedHost, nestedProps] of nestedHosts) {
+      if (!isOwn(nestedHost)) continue;
       const { definition } = (nestedHost as UniElement<AnyDefinition>).instance;
-      const isLinking = (definition.links ?? []).some((key) =>
+      const keys = (definition.links ?? []).filter((key) =>
         answers(host.instance.definition, key),
       );
-      if (isLinking && isOwn(nestedHost)) parts.push(nestedHost);
+      if (keys.length > 0) parts.push(nestedHost);
+      for (const key of keys) {
+        if (!key.isAttributeOnly) continue;
+        if (key.name in nestedProps && nestedProps[key.name] === undefined) {
+          continue;
+        }
+        host.id ||= `${component}-${(hostIds += 1)}`;
+        nestedHost.setAttribute(key.attribute ?? key.name, host.id);
+      }
     }
     const apply = (next: Readonly<Record<string, unknown>>) => {
       for (const [key, value] of Object.entries(resolveProps(next))) {

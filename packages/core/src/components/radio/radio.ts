@@ -70,6 +70,8 @@ export const radio = defineComponent({
     const tooltip = linkTooltip(ctx, {
       hover: ['wrapper', 'root'],
       focus: 'input',
+      text: ['label', 'description'],
+      textFallback: null,
     });
 
     const labelling = ctx.use(

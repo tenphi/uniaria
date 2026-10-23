@@ -1,13 +1,14 @@
 import type { Styles } from '@tenphi/tasty';
 
-import { buttonStyles } from '../components/button';
+import { buttonLookStyles } from '../components/button';
 
 /** States of the page, not of any element: they stay as they are. */
 const MEDIA = new Set(['@uni-forced-colors', '@uni-reduced-motion']);
 
 /**
  * A root's styles for a part that is a component of its own: every state
- * a key tests becomes the part's own (`@own()`), media aside.
+ * a key tests becomes the part's own (`@own()`), media aside. A part is
+ * never in an item's extras, so that state's keys go.
  */
 function asOwnPart(styles: Styles): Styles {
   return Object.fromEntries(
@@ -16,12 +17,14 @@ function asOwnPart(styles: Styles): Styles {
       return [
         name,
         Object.fromEntries(
-          Object.entries(value).map(([key, at]) => [
-            key.replace(/@?[a-z][\w-]*(?:=[\w-]+)?/g, (term) =>
-              MEDIA.has(term) ? term : `@own(${term})`,
-            ),
-            at,
-          ]),
+          Object.entries(value)
+            .filter(([key]) => !key.includes('@uni-extra'))
+            .map(([key, at]) => [
+              key.replace(/@?[a-z][\w-]*(?:=[\w-]+)?/g, (term) =>
+                MEDIA.has(term) ? term : `@own(${term})`,
+              ),
+              at,
+            ]),
         ),
       ];
     }),
@@ -36,6 +39,6 @@ function asOwnPart(styles: Styles): Styles {
  */
 export const closeStyles: Styles = {
   // eslint-disable-next-line tasty/no-style-spread -- Button's look, on the part's own state
-  ...asOwnPart(buttonStyles),
+  ...asOwnPart(buttonLookStyles),
   alignSelf: 'end',
 };

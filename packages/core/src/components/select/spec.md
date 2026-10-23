@@ -85,9 +85,18 @@ Not part of Select:
 | error        | any                        | `id` (unless it has one), `hidden` while not shown; state attributes                                                                                                                                                                                                 | Field's.                                                                                                                                                                                                                                           |
 | hiddenSelect | `select`, empty            | its `<option>`s (element-owned), the `value` and `selected` properties, `multiple`, `required`, `disabled`, `aria-hidden="true"`, `tabindex="-1"`, visually hidden styles                                                                                            | Optional; the consumer puts `name`, `form` and `autocomplete` here, as on NumberField's `hiddenInput`. Submits the value and takes browser autofill (Resolved questions 11).                                                                       |
 
+Changed on 2026-10-22 (owner), the items spec (`../button/items.md`): two
+parts inside the root, `triggerFrame` around the trigger and its
+`triggerExtras` beside it (Button's `frame` and `extras`, with the
+trigger's state attributes). The popup is placed against the anchor part,
+else the frame, else the trigger. Two links: `tooltip`, the trigger's
+tooltip, as Button's, its overflow tooltip measuring the `value` part; and
+`optionTooltip`, one tooltip for every option (Listbox's). The item part
+`optionExtras` is Listbox's.
+
 Item parts, as Listbox's and inside its list: `option`, `optionLabel`,
-`optionDescription`, `group` and `groupLabel`, keyed by the consumer's
-`data-key`, with Listbox's attributes. Options are rendered while the list is
+`optionDescription`, `optionExtras`, `group` and `groupLabel`, keyed by the
+consumer's `data-key`, with Listbox's attributes. Options are rendered while the list is
 closed, inside the hidden popover: the element reads its items from them, the
 value text needs them, and the trigger's `aria-controls` points at a list
 that has its selected option.
@@ -412,23 +421,25 @@ markup in the trigger, read from `value` in React; the element shows text.
 
 ## Mapping from Cube UI Kit
 
-| UI Kit Select                                                                                                      | UniAria                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `selectedKey` / `defaultSelectedKey` / `onSelectionChange(key \| null)`                                            | `value` / `defaultValue` / `valueChange` with a `string[]` (Resolved questions 8)                                                                         |
-| single only; Picker for multiple                                                                                   | `selectionMode` (Resolved questions 9)                                                                                                                    |
-| `isOpen`, `defaultOpen`, `onOpenChange` (fires twice, and on mount)                                                | Popover's bindable `isOpen`, reported once per user change                                                                                                |
-| `placeholder`                                                                                                      | `placeholder`, written into the value part                                                                                                                |
-| `items`, `Select.Item`, `Select.Section`, `disabledKeys`                                                           | Listbox's `items`, accessors and `disabledKeys`; groups                                                                                                   |
-| the selected item's rendered children in the trigger                                                               | the value part's text, or the consumer's markup from `value` (Resolved questions 10)                                                                      |
-| `direction`, `placement` (`bottom end`), `shouldFlip`, `overlayOffset`                                             | `positionArea` (`block-end span-inline-end`), `positionTryFallbacks`; the gap is the consumer's margin (Popover)                                          |
-| `targetRef`                                                                                                        | the `anchor` part                                                                                                                                         |
-| min width = the trigger's width, read in render                                                                    | `--anchor-width`, kept current, for the consumer's CSS                                                                                                    |
-| `50vh − 5x` max height; the computed max height lost on the wrapper                                                | `--available-height` on the popover                                                                                                                       |
-| non-modal popup: closes on blur, on any ancestor scroll, on another popover                                        | Popover's modal mode: page hidden from assistive technology, closes when the trigger scrolls out of view, and a press outside acts (Resolved questions 7) |
-| `HiddenSelect` (`<select>` up to 300 items), `name`; no `form`, no `autoComplete`                                  | the `hiddenSelect` part, with the consumer's `name`, `form` and `autocomplete` (Resolved questions 11)                                                    |
-| `isRequired`, `isInvalid` through UI Kit's Form; not on the trigger                                                | `aria-required`, `aria-invalid` on the trigger; `required` on the hidden `<select>`                                                                       |
-| `isReadOnly` (only the clear button honors it)                                                                     | `isReadOnly`: opens, selects nothing (Resolved questions 12)                                                                                              |
-| `isLoading`, `loadingIndicator`, `isClearable`, `actions`, `icon`, `prefix`, `suffix`, `tooltip`, sizes and styles | the consumer's markup and CSS                                                                                                                             |
+| UI Kit Select                                                                     | UniAria                                                                                                                                                   |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectedKey` / `defaultSelectedKey` / `onSelectionChange(key \| null)`           | `value` / `defaultValue` / `valueChange` with a `string[]` (Resolved questions 8)                                                                         |
+| single only; Picker for multiple                                                  | `selectionMode` (Resolved questions 9)                                                                                                                    |
+| `isOpen`, `defaultOpen`, `onOpenChange` (fires twice, and on mount)               | Popover's bindable `isOpen`, reported once per user change                                                                                                |
+| `placeholder`                                                                     | `placeholder`, written into the value part                                                                                                                |
+| `items`, `Select.Item`, `Select.Section`, `disabledKeys`                          | Listbox's `items`, accessors and `disabledKeys`; groups                                                                                                   |
+| the selected item's rendered children in the trigger                              | the value part's text, or the consumer's markup from `value` (Resolved questions 10)                                                                      |
+| `direction`, `placement` (`bottom end`), `shouldFlip`, `overlayOffset`            | `positionArea` (`block-end span-inline-end`), `positionTryFallbacks`; the gap is the consumer's margin (Popover)                                          |
+| `targetRef`                                                                       | the `anchor` part                                                                                                                                         |
+| min width = the trigger's width, read in render                                   | `--anchor-width`, kept current, for the consumer's CSS                                                                                                    |
+| `50vh − 5x` max height; the computed max height lost on the wrapper               | `--available-height` on the popover                                                                                                                       |
+| non-modal popup: closes on blur, on any ancestor scroll, on another popover       | Popover's modal mode: page hidden from assistive technology, closes when the trigger scrolls out of view, and a press outside acts (Resolved questions 7) |
+| `HiddenSelect` (`<select>` up to 300 items), `name`; no `form`, no `autoComplete` | the `hiddenSelect` part, with the consumer's `name`, `form` and `autocomplete` (Resolved questions 11)                                                    |
+| `isRequired`, `isInvalid` through UI Kit's Form; not on the trigger               | `aria-required`, `aria-invalid` on the trigger; `required` on the hidden `<select>`                                                                       |
+| `isReadOnly` (only the clear button honors it)                                    | `isReadOnly`: opens, selects nothing (Resolved questions 12)                                                                                              |
+| `isClearable`, `actions`                                                          | the consumer's buttons in `triggerExtras` (changed on 2026-10-22 (owner))                                                                                 |
+| `tooltip`                                                                         | the `tooltip` link (changed on 2026-10-22 (owner))                                                                                                        |
+| `isLoading`, `loadingIndicator`, `icon`, `prefix`, `suffix`, sizes and styles     | the consumer's markup and CSS                                                                                                                             |
 
 UI Kit bugs found on the way, to file at cube-js/cube-ui-kit (all read from
 code, none reproduced yet): `onOpenChange` fires twice per change and once on

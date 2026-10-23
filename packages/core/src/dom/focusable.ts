@@ -76,6 +76,18 @@ export function isFocusable(element: Element): boolean {
   );
 }
 
+/**
+ * Whether `element` is or holds something that could take focus, shown or
+ * not: for development checks on content that may be hidden, such as the
+ * options of a closed Select.
+ */
+export function holdsFocusable(element: Element): boolean {
+  return (
+    element.matches(FOCUSABLE_SELECTOR) ||
+    element.querySelector(FOCUSABLE_SELECTOR) !== null
+  );
+}
+
 export function isTabbable(element: Element): boolean {
   return (
     element.matches(TABBABLE_SELECTOR) &&

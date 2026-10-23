@@ -9,7 +9,7 @@
  * dismissable layer stack, hiding everything outside a modal, scroll lock,
  * focus restoration, presence (enter and exit phases), positioning (one
  * wrapper, by script or by the consumer's CSS anchor positioning), in-view
- * checks, page-wide settings (`configure`), owner and link lookup, platform
+ * and truncation checks, page-wide settings (`configure`), owner and link lookup, platform
  * checks, and feature detection with the development switch for fallbacks.
  *
  * Nothing here may touch `document` or `window` at module scope.
@@ -39,6 +39,7 @@ export type { FocusWithin, FocusWithinOptions } from './focus-within';
 export {
   firstFocusable,
   focusableWalker,
+  holdsFocusable,
   isFocusable,
   isTabbable,
   lastFocusable,
@@ -86,6 +87,7 @@ export type {
   PressOptions,
 } from './press';
 export { supportsAnchorPositioning, supportsPopover } from './support';
+export { isTruncated } from './truncation';
 export { elementEffect, mergeHandlers, partEffect, partElement } from './types';
 export type { DomHandlers, DomPartProps, InteractionContext } from './types';
 export type {

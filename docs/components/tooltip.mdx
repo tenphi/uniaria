@@ -13,7 +13,8 @@ rests on the control and when the control takes keyboard focus. UniAria shows
 it in the top layer as a manual popover (`popover="manual"`) and places it next
 to its trigger as [Popover](./popover.mdx) does. The tooltip never takes focus
 and holds no interactive content. One tooltip shows at a time, and once one
-has shown, the next opens without waiting.
+has shown, the next opens without waiting. A tooltip can also show the whole
+of a label cut off with an ellipsis, only while it is cut off.
 
 It follows the WAI-ARIA [Tooltip pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/),
 which the APG still marks as a work in progress: `role="tooltip"`, a reference
@@ -147,8 +148,10 @@ name with its own for itself, such as a Popover's `trigger`.
 | Checkbox, Switch, Radio | `wrapper`, else `root` | `input`                            |
 | TextField, NumberField  | `input`                | `input`                            |
 | Dialog, Popover         | `trigger`              | `trigger`                          |
+| Select                  | `trigger`              | `trigger`                          |
 
-A tooltip describes one component. A second component that links to it is
+A tooltip describes one component, or the options of one list (see
+[Option tooltips](#option-tooltips)). A second component that links to it is
 refused, with a development warning.
 
 ### On any other element
@@ -199,8 +202,9 @@ const hint = useComponent(tooltip);
 </Tabs>
 
 Keyboard users need the trigger focusable; one that can't take focus, such as
-a truncated label, gets the tooltip on hover only. Don't make another
-component's part the trigger part: link that component instead.
+a cut-off label (see [Overflow tooltips](#overflow-tooltips)), gets the
+tooltip on hover only. Don't make another component's part the trigger part:
+link that component instead.
 
 ### Label or description
 
@@ -212,6 +216,11 @@ component's part the trigger part: link that component instead.
 - `'label'`: the trigger's `aria-labelledby` references it, and the tooltip
   becomes the name. Use it for an icon-only button, whose name would otherwise
   be repeated as its description: "button, Bold".
+- `'none'`: nothing references the tooltip, and its root gets
+  `aria-hidden="true"` (it keeps `role="tooltip"`). Use it for text the
+  trigger already holds, as an [overflow tooltip](#overflow-tooltips) shows:
+  screen readers read the whole text on the trigger, and the tooltip would
+  only repeat it.
 
 The relation is there while the tooltip is closed, too: screen readers read a
 hidden element that `aria-describedby` or `aria-labelledby` references, so
@@ -266,6 +275,178 @@ const bold = useComponent(toggleButton, { tooltip: hint.instance });
 </Tab>
 </Tabs>
 
+### Overflow tooltips
+
+A label cut off with an ellipsis can show its whole text in a tooltip. With
+`shouldOpenOnlyWhenTruncated` (`open-only-when-truncated`), the tooltip opens
+only while the text it describes is cut off, and UniAria writes that text into
+its `text` part. Give it `relation: 'none'` as well: the whole text is in the
+trigger already.
+
+<Tabs label="Overflow tooltip">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/react';
+
+export function ReportButton(props: { name: string; onOpen(): void }) {
+  const full = useComponent(tooltip, {
+    shouldOpenOnlyWhenTruncated: true,
+    relation: 'none',
+  });
+  const report = useComponent(button, {
+    onPress: props.onOpen,
+    tooltip: full.instance,
+  });
+  return (
+    <>
+      <button {...report.parts.root} className="report">
+        <span {...report.parts.label}>{props.name}</span>
+      </button>
+      <div {...full.parts.root}>
+        <span {...full.parts.text} />
+      </div>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/vue';
+
+defineProps<{ name: string }>();
+const emit = defineEmits<{ open: [] }>();
+
+const full = useComponent(tooltip, {
+  shouldOpenOnlyWhenTruncated: true,
+  relation: 'none',
+});
+const report = useComponent(button, {
+  onPress: () => emit('open'),
+  tooltip: full.instance,
+});
+</script>
+
+<template>
+  <button v-bind="report.parts.root" class="report">
+    <span v-bind="report.parts.label">{{ name }}</span>
+  </button>
+  <div v-bind="full.parts.root">
+    <span v-bind="full.parts.text" />
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip open-only-when-truncated relation="none">
+  <uni-button>
+    <button data-uni="button" class="report">
+      <span data-element="Label">Save the quarterly report</span>
+    </button>
+  </uni-button>
+  <div data-uni="tooltip"><span data-element="Text"></span></div>
+</uni-tooltip>
+```
+
+</Tab>
+</Tabs>
+
+Your CSS cuts the text; UniAria only measures it. An inline element never
+clips, so make the cut element a block:
+
+```css
+.report {
+  inline-size: 10rem;
+}
+.report [data-element='Label'] {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+[data-uni='tooltip'] [data-element='Text'] {
+  white-space: pre-line;
+}
+```
+
+- **When it measures.** When hover starts, before the delay: text that fits
+  starts no delay and doesn't warm the page up. Then again as it opens, after
+  the delay, on focus or from `open()`, since the layout may have changed
+  meanwhile. Nothing measures on mount and nothing watches for resizes, so a
+  page with thousands of these costs nothing until the pointer or focus
+  arrives. An open tooltip doesn't close when its text grows to fit; it
+  closes as any tooltip does.
+- **What counts as cut off.** An element that clips what overflows it (its
+  `overflow` isn't `visible`) and whose content is wider than its box, even
+  by a fraction of a pixel (tested at 67% to 150% zoom). Or one whose text
+  wraps and is taller than its box by more than a pixel, as with a line
+  clamp.
+- **What it shows.** While open, the `text` part holds the whole text of each
+  element that is cut off, not what the ellipsis left, without what CSS
+  hides. Each element's text is a line of its own, separated by `\n`, which
+  `white-space: pre-line` shows. Without `shouldOpenOnlyWhenTruncated`, it
+  holds the text of all of them, cut off or not. Leave the part out to write
+  the content yourself.
+- **`open()`** does nothing while the text fits.
+- **Controlled,** it asks to open (`openchange`) only while the text is cut
+  off. An `isOpen` you set shows it anyway, as `defaultOpen` does, with the
+  cut-off text, or all of it when nothing is cut off. A tooltip open from the
+  start fills its `text` part once the component it describes has linked to
+  it.
+- **Disabled controls.** An overflow tooltip never makes a disabled control
+  focusable: `isFocusableWhenDisabled` stays yours to set.
+
+What it measures and shows depends on what it describes:
+
+| It describes                                 | The text it measures and shows                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| the `trigger` part                           | The trigger.                                                                               |
+| Button, ToggleButton                         | The `label` and `description` parts while rendered, else the root.                         |
+| Popover's or Dialog's trigger                | `triggerLabel` and `triggerDescription` while rendered, else the trigger.                  |
+| Select                                       | The `value` part while rendered, else the trigger.                                         |
+| Checkbox, Switch, Radio                      | The `label` and `description` parts while rendered.                                        |
+| TextField, NumberField                       | None: an input scrolls its text instead of cutting it, so an overflow tooltip never opens. |
+| an option, through its list's option tooltip | `optionLabel` and `optionDescription` while rendered, else the option.                     |
+
+### Option tooltips
+
+[Listbox](./listbox.mdx#option-tooltips), [Select](./select.mdx) and
+[Combobox](./combobox.mdx#option-tooltips) take one tooltip for all their
+options, through their `optionTooltip` link: in React and Vue the tooltip's
+`instance`, on the element an `option-tooltip` attribute naming the
+`<uni-tooltip>` by id. On the element, only the attribute links it: a list
+inside a `<uni-tooltip>` doesn't take that tooltip for its options.
+
+The list drives the tooltip. The option under the pointer counts as a hovered
+trigger, and the option with visible focus, or Combobox's visible highlight,
+as a focused one. The tooltip is placed against that option and shows its
+text.
+
+- **Moving on.** While it is open, moving to another option moves it there at
+  once if that option's text is cut off, and closes it otherwise.
+- **Presses and typing.** A press on an option closes it until the pointer
+  leaves that option. Typing, for typeahead or in Combobox's input, closes it
+  until a navigation key (the arrows, Home, End, PageUp or PageDown) moves
+  focus or the highlight.
+- **No relation.** The list references the tooltip from no option, since an
+  option's name comes from its own text. Give the tooltip `relation: 'none'`;
+  development builds warn otherwise. Without `shouldOpenOnlyWhenTruncated`,
+  it opens on every option.
+- **Where to render it.** Beside the list, never inside an option. For
+  Select and Combobox, inside their popover, after the list.
+- **Virtualized lists.** An option that leaves the rendered set closes it.
+
 ### Disabled controls
 
 A tooltip that says why a control is disabled is the common case, so the
@@ -275,8 +456,9 @@ controls in every engine, but the keyboard can't focus them: give the control
 have it), as the Publish button in the demo does. Screen readers then read
 "button, Publish, Nothing to publish yet, disabled".
 
-The tooltip's own `isDisabled` is different: the tooltip has nothing to say,
-for example while a label fits and isn't truncated.
+The tooltip's own `isDisabled` is different: the tooltip has nothing to say.
+For a label that may or may not be cut off, use an
+[overflow tooltip](#overflow-tooltips) instead.
 
 ### Focus only
 
@@ -342,12 +524,13 @@ shows.
 
 ## Anatomy
 
-| Part      | Element                               | Notes                                                                                                                                                                                                                                     |
-| --------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trigger` | a focusable element; usually `button` | Optional. For an element that isn't a UniAria component's part; a linked component takes its place. UniAria writes `aria-describedby` (`aria-labelledby` with `relation: 'label'`) while the tooltip is enabled, and no state attributes. |
-| `anchor`  | any                                   | Optional. The tooltip is placed against it instead of the trigger.                                                                                                                                                                        |
-| `root`    | any; usually `div`                    | The text. Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="tooltip"`, `data-placement` and its position. Text only: development builds warn when it holds a focusable element.                |
-| `arrow`   | any                                   | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                                         |
+| Part      | Element                               | Notes                                                                                                                                                                                                                                                                        |
+| --------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger` | a focusable element; usually `button` | Optional. For an element that isn't a UniAria component's part; a linked component takes its place. UniAria writes `aria-describedby` (`aria-labelledby` with `relation: 'label'`, nothing with `'none'`) while the tooltip is enabled, and no state attributes.             |
+| `anchor`  | any                                   | Optional. The tooltip is placed against it instead of the trigger.                                                                                                                                                                                                           |
+| `root`    | any; usually `div`                    | The text. Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="tooltip"`, `data-placement` and its position, and `aria-hidden="true"` with `relation: 'none'`. Text only: development builds warn when it holds a focusable element. |
+| `arrow`   | any                                   | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                                                                            |
+| `text`    | any, inside the root; usually `span`  | Optional. Render it empty: while open, UniAria writes into it the text of what the tooltip describes, one element's text per line (see [Overflow tooltips](#overflow-tooltips)). Leave it out to write the content yourself.                                                 |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
@@ -358,17 +541,18 @@ The root gets no `tabindex`, and the trigger no `aria-expanded`,
 
 ## Props
 
-| Prop                   | Attribute                                    | Type                       | Default                     | Description                                                                                               |
-| ---------------------- | -------------------------------------------- | -------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `isOpen`               | — (property: setting it makes it controlled) | `boolean`                  | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                  |
-| `defaultOpen`          | `default-open`                               | `boolean`                  | `false`                     | The starting state, uncontrolled.                                                                         |
-| `isDisabled`           | `disabled`                                   | `boolean`                  | `false`                     | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say. |
-| `delay`                | `delay`                                      | `number`                   | `250`                       | Milliseconds the pointer rests on the trigger before it opens, while the page isn't warm.                 |
-| `closeDelay`           | `close-delay`                                | `number`                   | `500`                       | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                       |
-| `trigger`              | `trigger`                                    | `'hover' \| 'focus'`       | `'hover'`                   | `'focus'` opens it on keyboard focus only.                                                                |
-| `relation`             | `relation`                                   | `'description' \| 'label'` | `'description'`             | `'label'` makes the tooltip its trigger's name, for an icon-only button.                                  |
-| `positionArea`         | `position-area`                              | `PositionArea`             | `'top'`                     | A CSS `position-area` on one side of the anchor. Script mode only.                                        |
-| `positionTryFallbacks` | `position-try-fallbacks`                     | `string`                   | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                         |
+| Prop                          | Attribute                                    | Type                                 | Default                     | Description                                                                                                                                              |
+| ----------------------------- | -------------------------------------------- | ------------------------------------ | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                      | — (property: setting it makes it controlled) | `boolean`                            | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                                                                 |
+| `defaultOpen`                 | `default-open`                               | `boolean`                            | `false`                     | The starting state, uncontrolled.                                                                                                                        |
+| `isDisabled`                  | `disabled`                                   | `boolean`                            | `false`                     | Never opens, closes when open, and takes the relation off the trigger. For a tooltip with nothing to say.                                                |
+| `delay`                       | `delay`                                      | `number`                             | `250`                       | Milliseconds the pointer rests on the trigger before it opens, while the page isn't warm.                                                                |
+| `closeDelay`                  | `close-delay`                                | `number`                             | `500`                       | Milliseconds after the pointer leaves the trigger and the tooltip before it closes.                                                                      |
+| `trigger`                     | `trigger`                                    | `'hover' \| 'focus'`                 | `'hover'`                   | `'focus'` opens it on keyboard focus only.                                                                                                               |
+| `relation`                    | `relation`                                   | `'description' \| 'label' \| 'none'` | `'description'`             | `'label'` makes the tooltip its trigger's name, for an icon-only button. `'none'` references it from nothing and hides it from assistive technology.     |
+| `shouldOpenOnlyWhenTruncated` | `open-only-when-truncated`                   | `boolean`                            | `false`                     | Opens only while the text it describes is cut off, for a tooltip that shows text the trigger already holds. See [Overflow tooltips](#overflow-tooltips). |
+| `positionArea`                | `position-area`                              | `PositionArea`                       | `'top'`                     | A CSS `position-area` on one side of the anchor. Script mode only.                                                                                       |
+| `positionTryFallbacks`        | `position-try-fallbacks`                     | `string`                             | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                                                                        |
 
 On the element, the `trigger` property is this prop; the trigger part is the
 element marked `data-uni-part="tooltip-trigger"`.
@@ -384,10 +568,10 @@ like the pointer moving on, for a reason to help.
 
 ## Actions
 
-| Action    | What it does                                                                                                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `open()`  | Shows the tooltip at once, without its delay. Does nothing while disabled. It stays open until `close()` or one of its usual closes: Escape, a press on the trigger, or hover or focus on the trigger ending. |
-| `close()` | Closes it. Unlike Escape, it doesn't keep the tooltip closed: the next hover opens it as usual.                                                                                                               |
+| Action    | What it does                                                                                                                                                                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `open()`  | Shows the tooltip at once, without its delay. Does nothing while disabled, or with `shouldOpenOnlyWhenTruncated` while the text fits. It stays open until `close()` or one of its usual closes: Escape, a press on the trigger, or hover or focus on the trigger ending. |
+| `close()` | Closes it. Unlike Escape, it doesn't keep the tooltip closed: the next hover opens it as usual.                                                                                                                                                                          |
 
 In React and Vue they are on the handle (`hint.actions.open()`); on the
 custom element they are methods
@@ -414,16 +598,17 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                                                           | On               | When                                                                                    |
-| ------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `data-uni="tooltip"`                                                | root             | Always.                                                                                 |
-| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor  | Always.                                                                                 |
-| `data-element`                                                      | every other part | Always.                                                                                 |
-| `data-open`                                                         | root, arrow      | The tooltip is open.                                                                    |
-| `data-entering`                                                     | root, arrow      | The first frames after opening.                                                         |
-| `data-exiting`                                                      | root, arrow      | It is closing, until its exit animations end. Skipped when another tooltip replaces it. |
-| `data-instant`                                                      | root, arrow      | It opened without its delay: skip the entrance.                                         |
-| `data-placement`                                                    | root, arrow      | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.             |
+| Attribute                                                           | On                | When                                                                                    |
+| ------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------- |
+| `data-uni="tooltip"`                                                | root              | Always.                                                                                 |
+| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor   | Always.                                                                                 |
+| `data-element`                                                      | every other part  | Always.                                                                                 |
+| `data-open`                                                         | root, arrow, text | The tooltip is open.                                                                    |
+| `data-entering`                                                     | root, arrow, text | The first frames after opening.                                                         |
+| `data-exiting`                                                      | root, arrow, text | It is closing, until its exit animations end. Skipped when another tooltip replaces it. |
+| `data-instant`                                                      | root, arrow, text | It opened without its delay: skip the entrance.                                         |
+| `data-placement`                                                    | root, arrow       | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.             |
+| `aria-hidden="true"`                                                | root              | `relation: 'none'`.                                                                     |
 
 The root also gets `--anchor-width`, `--available-width` and
 `--available-height`, as a [Popover](./popover.mdx#styling)'s does, and the
@@ -464,7 +649,8 @@ The tooltip is the default fill, dark in every scheme, with 12/18 text, at most
 20rem wide, 8 pixels from its trigger, with an arrow in the fill. Opening, it
 fades in and moves 8 pixels away from the trigger as it grows from 80%, in 80
 milliseconds, and it appears at once when it opens without its delay. The
-trigger is the control it describes, so it keeps its own look.
+`text` part keeps its line breaks, so a label and its description each take a
+line. The trigger is the control it describes, so it keeps its own look.
 
 ## Keyboard
 
@@ -495,7 +681,9 @@ trigger and the tooltip and comes back, or focus leaves and comes back.
   description that matters on touch belongs in the page or in a Popover.
 - **Spoken output.** "button, Save, Saves the file" on the trigger, whether
   the tooltip is open or not; "tooltip, Saves the file" when browsing past the
-  open tooltip; "button, Bold" with `relation: 'label'`.
+  open tooltip; "button, Bold" with `relation: 'label'`. A cut-off label with
+  its overflow tooltip open and `relation: 'none'` reads "button, Save the
+  quarterly report", the whole text, and nothing is read for the tooltip.
 - **Scrolling.** The tooltip follows its trigger and closes once the trigger
   is scrolled out of view.
 
@@ -516,3 +704,6 @@ trigger and the tooltip and comes back, or focus leaves and comes back.
   Aria closes it when either ends; Cube UI Kit's tooltips ignore the pointer
   unless `isMaterial`.
 - **Disabled triggers keep their tooltips.** React Aria shows none.
+- **Overflow tooltips measure only when they would open**, and stay out of
+  the accessibility tree. Cube UI Kit measures every item as it mounts, and
+  reads the text again as a description; React Aria has no overflow tooltip.

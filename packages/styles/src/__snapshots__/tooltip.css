@@ -1,4 +1,6 @@
 /* tooltip */
+[data-uni="tooltip"] [data-element="Text"]:where(:not([data-uni="tooltip"] [data-uni]:not([data-uni="tooltip"]) *)) { white-space: pre-line; }
+
 [data-uni="tooltip"] [data-element="Arrow"]:where(:not([data-uni="tooltip"] [data-uni]:not([data-uni="tooltip"]) *))::before { content: ""; position: absolute; inset: 0px; box-sizing: border-box; background-color: var(--uni-fill-color); border-top: var(--uni-border-width) solid transparent; border-right: 0 solid transparent; border-bottom: 0 solid transparent; border-left: var(--uni-border-width) solid transparent; rotate: 45deg; }
 
 [data-uni="tooltip"] [data-element="Arrow"]:where(:not([data-uni="tooltip"] [data-uni]:not([data-uni="tooltip"]) *)) { position: absolute; box-sizing: border-box; inline-size: var(--uni-gap); min-inline-size: var(--uni-gap); max-inline-size: var(--uni-gap); block-size: var(--uni-gap); min-block-size: var(--uni-gap); max-block-size: var(--uni-gap); pointer-events: none; }

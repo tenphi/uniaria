@@ -1001,6 +1001,51 @@ describe('links', () => {
     host.remove();
     expect(host.instance.linked(hintLink)).toBeUndefined();
   });
+
+  it('links a key found only by its attribute by id, never from the host around it', () => {
+    const asideLink: LinkKey<'asideHint'> = {
+      name: 'asideHint',
+      attribute: 'aside-hint',
+      isAttributeOnly: true,
+    };
+    const both = defineComponent({
+      name: 'test-both-hints',
+      parts: ['root'],
+      props: {},
+      provides: [hintLink, asideLink],
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    const pair = defineComponent({
+      name: 'test-hint-pair',
+      parts: ['root'],
+      props: {},
+      links: [hintLink, asideLink],
+      setup: () => ({}),
+      expose: () => ({}),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+    defineElement(both);
+    defineElement(pair);
+    const container = mount(`
+      <uni-test-both-hints id="around">
+        <uni-test-hint-pair><span data-uni="test-hint-pair"></span></uni-test-hint-pair>
+      </uni-test-both-hints>
+      <uni-test-both-hints id="aside"></uni-test-both-hints>`);
+    const around = container.querySelector<UniElement<typeof both>>('#around')!;
+    const aside = container.querySelector<UniElement<typeof both>>('#aside')!;
+    const host =
+      container.querySelector<UniElement<typeof pair>>('uni-test-hint-pair')!;
+    expect(host.instance.linked(hintLink)).toBe(around.instance);
+    expect(host.instance.linked(asideLink)).toBeUndefined();
+
+    host.setAttribute('aside-hint', 'aside');
+    expect(host.instance.linked(asideLink)).toBe(aside.instance);
+    host.removeAttribute('aside-hint');
+    expect(host.instance.linked(asideLink)).toBeUndefined();
+    expect(host.instance.linked(hintLink)).toBe(around.instance);
+  });
 });
 
 describe('<uni-button>', () => {
@@ -2350,6 +2395,84 @@ describe('<uni-tooltip>', () => {
     expect(all.some((message) => message.includes('modal dialog'))).toBe(true);
   });
 
+  it("takes a select's option tooltip by id, and the select in it for its trigger only", async () => {
+    // The tooltip's width fits it beside the options in the 414-pixel page:
+    // wider, it shifts over them, and a hover lands on it. It opens on
+    // focus as well when an earlier test leaves the keyboard modality.
+    const CUT =
+      'display: block; width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis';
+    const container = mount(`
+      <uni-tooltip id="trigger-tip">
+        <uni-select option-tooltip="option-tip">
+          <span data-element="Label">Fruit</span>
+          <button data-element="Trigger"><span data-element="Value"></span></button>
+          <div data-element="Popover">
+            <div data-element="List">
+              <div data-element="Option" data-key="apple" style="${CUT}">Apple, the long red one from the orchard</div>
+              <div data-element="Option" data-key="date" style="${CUT}">Date</div>
+            </div>
+            <uni-tooltip id="option-tip" delay="0" open-only-when-truncated relation="none" position-area="right">
+              <div data-uni="tooltip" style="width: 120px"><span data-element="Text"></span></div>
+            </uni-tooltip>
+          </div>
+          <select data-element="HiddenSelect" name="fruit"></select>
+        </uni-select>
+        <div data-uni="tooltip">Pick a fruit</div>
+      </uni-tooltip>`);
+    const outer = tooltipIn(container, '#trigger-tip');
+    const inner = tooltipIn(container, '#option-tip');
+    const picker =
+      container.querySelector<UniElement<typeof select>>('uni-select')!;
+    const trigger = picker.querySelector<HTMLElement>(byElement('trigger'))!;
+    const option = (key: string) =>
+      picker.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
+    expect(trigger.getAttribute('aria-describedby')).toBe(outer.root.id);
+    expect(inner.root.getAttribute('aria-hidden')).toBe('true');
+
+    picker.isOpen = true;
+    await vi.waitFor(() =>
+      expect(
+        picker.querySelector(byElement('popover'))!.matches(':popover-open'),
+      ).toBe(true),
+    );
+    await userEvent.hover(option('apple'));
+    await vi.waitFor(() => expect(isOpen(inner.root)).toBe(true));
+    expect(inner.root.querySelector(byElement('text'))!.textContent).toBe(
+      'Apple, the long red one from the orchard',
+    );
+    expect(isOpen(outer.root)).toBe(false);
+    expect(option('apple').hasAttribute('aria-describedby')).toBe(false);
+
+    await userEvent.hover(option('date'));
+    await vi.waitFor(() => expect(isOpen(inner.root)).toBe(false));
+
+    picker.removeAttribute('option-tooltip');
+    await userEvent.hover(option('apple'));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(isOpen(inner.root)).toBe(false);
+    expect(isOpen(outer.root)).toBe(false);
+  });
+
+  it('fills its text part, open from the start, from the button it describes', async () => {
+    const container = mount(`
+      <uni-tooltip default-open open-only-when-truncated relation="none">
+        <uni-button>
+          <button data-uni="button" style="display: grid; width: 120px">
+            <span data-element="Label" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">Save the quarterly report</span>
+            <span data-element="Description">To the drive</span>
+          </button>
+        </uni-button>
+        <div data-uni="tooltip"><span data-element="Text"></span></div>
+      </uni-tooltip>`);
+    const tip = tooltipIn(container, 'uni-tooltip');
+    await vi.waitFor(() =>
+      expect(tip.root.querySelector(byElement('text'))!.textContent).toBe(
+        'Save the quarterly report',
+      ),
+    );
+    expect(isOpen(tip.root)).toBe(true);
+  });
+
   it('does not warn about a tooltip that opens with its text', async () => {
     const warn = vi.spyOn(console, 'warn');
     const host = document.createElement('uni-tooltip');
@@ -2410,6 +2533,34 @@ describe('<uni-listbox>', () => {
     option('cherry').click();
     option('apple').click();
     expect(host.instance.getState().value).toEqual(['lemon', 'apple']);
+  });
+
+  it('warns once about focusable elements in option extras, but not about badges', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const extras = (key: string, content: string) => `
+      <div data-element="Option" data-key="${key}">
+        <span data-element="OptionLabel" data-key="${key}">${key}</span>
+        <span data-element="OptionExtras" data-key="${key}">${content}</span>
+      </div>`;
+    const messages = () =>
+      warn.mock.calls
+        .map(([message]) => String(message))
+        .filter((message) => message.includes('extras of option'));
+    mount(`
+      <uni-listbox>
+        <span data-element="Label">Fruit</span>
+        <div data-element="List">
+          ${extras('apple', '<b>New</b>')}
+          ${extras('banana', '<button>Delete</button>')}
+          ${extras('cherry', '<a href="#cherry">Open</a>')}
+        </div>
+      </uni-listbox>`);
+    await vi.waitFor(() => expect(messages()).toHaveLength(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const all = messages();
+    warn.mockRestore();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toContain('"banana"');
   });
 
   it('finds an option by typing its data-text-value', async () => {

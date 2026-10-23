@@ -32,11 +32,14 @@
 
 import { modalityTrackerFor } from './modality';
 import type { DomHandlers, InteractionContext } from './types';
-import { partEffect, partElement } from './types';
+import { elementEffect, partElement } from './types';
 
 export interface HoverOptions {
-  /** The hoverable part. */
-  readonly part: string;
+  /**
+   * The hoverable part, or a function naming it now: Button's frame while
+   * one is rendered, else its root (items spec, Extras).
+   */
+  readonly part: string | (() => string);
   isDisabled(): boolean;
 }
 
@@ -44,6 +47,12 @@ export interface Hover {
   isHovered(): boolean;
   /** Handlers for the hoverable part. */
   readonly handlers: DomHandlers;
+  /**
+   * Handlers for one of the parts `part` may name, which act only while it
+   * names that one. A part gets its handlers on every render: React binds
+   * only the events of its first.
+   */
+  handlersFor(part: string): DomHandlers;
 }
 
 /** The node the pointer entered (see the module notes on React). */
@@ -59,6 +68,9 @@ export function createHover(
 ): Hover {
   const isHovered = ctx.state(false);
   let stopTracking: (() => void) | undefined;
+  const currentPart = () =>
+    typeof options.part === 'string' ? options.part : options.part();
+  const hoverable = () => partElement(ctx, currentPart());
 
   const end = () => {
     stopTracking?.();
@@ -67,7 +79,7 @@ export function createHover(
   };
 
   const start = (event: PointerEvent) => {
-    const element = partElement(ctx, options.part);
+    const element = hoverable();
     if (
       !element?.contains(enteredNode(event)) ||
       event.pointerType === 'touch' ||
@@ -97,20 +109,30 @@ export function createHover(
   });
   ctx.effect(() => end);
   // Started early, so it has seen the tap before iOS's emulated mouse enter.
-  partEffect(ctx, options.part, (element) => {
+  elementEffect(ctx, hoverable, (element) => {
     modalityTrackerFor(element);
   });
+  // Another hoverable part, such as a frame rendered later: hover starts
+  // over again there.
+  ctx.watch(hoverable, () => end());
+
+  // React passes the native pointerover and pointerout behind its enter
+  // and leave events, so the target may be a descendant.
+  const leave = (event: PointerEvent) => {
+    const element = hoverable();
+    if (element?.contains(event.target as Node | null)) end();
+  };
 
   return {
     isHovered: () => isHovered.get(),
-    handlers: {
-      pointerenter: start,
-      // React passes the native pointerover and pointerout behind its enter
-      // and leave events, so the target may be a descendant.
-      pointerleave(event) {
-        const element = partElement(ctx, options.part);
-        if (element?.contains(event.target as Node | null)) end();
+    handlers: { pointerenter: start, pointerleave: leave },
+    handlersFor: (part) => ({
+      pointerenter(event) {
+        if (currentPart() === part) start(event);
       },
-    },
+      pointerleave(event) {
+        if (currentPart() === part) leave(event);
+      },
+    }),
   };
 }

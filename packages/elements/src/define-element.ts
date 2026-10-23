@@ -36,7 +36,8 @@
  *   owner attribute names by id (`group="plan"`), else to the nearest
  *   owner around it; the `owner` property (an instance) wins over both. A
  *   link (`tooltip`) comes from its attribute or the host the element sits
- *   in directly, and has no property.
+ *   in directly, and has no property; a key found only by its attribute
+ *   (`option-tooltip`) never comes from the host.
  */
 
 import type {
@@ -221,7 +222,8 @@ export function defineElement<D extends AnyDefinition>(
   // Each link's attribute names its host by id (Tooltip spec, Resolved
   // questions 2).
   const links: readonly LinkKey[] = definition.links ?? [];
-  const linkAttributes = new Map(links.map((key) => [key.name, key]));
+  const linkAttribute = (key: LinkKey) => key.attribute ?? key.name;
+  const linkAttributes = new Map(links.map((key) => [linkAttribute(key), key]));
   const builtIn = Object.getOwnPropertyNames(HTMLElement.prototype);
   for (const property of properties.keys()) {
     if (builtIn.includes(property) || property === 'instance') {
@@ -390,19 +392,24 @@ export function defineElement<D extends AnyDefinition>(
     /** Asks for a link again: on connect and when its attribute changes. */
     #relinkKey(key: LinkKey): void {
       this.#unlinks.get(key)?.();
+      this.#unlinks.delete(key);
       this.instance.link(undefined, key);
-      this.#unlinks.set(
-        key,
-        requestOwner(
-          this,
+      const id = this.getAttribute(linkAttribute(key)) ?? undefined;
+      // A key found only by its attribute never takes the host around.
+      if (id !== undefined || !key.isAttributeOnly) {
+        this.#unlinks.set(
           key,
-          (target) => {
-            this.instance.link(target, key);
-            this.instance.sync();
-          },
-          this.getAttribute(key.name) ?? undefined,
-        ),
-      );
+          requestOwner(
+            this,
+            key,
+            (target) => {
+              this.instance.link(target, key);
+              this.instance.sync();
+            },
+            id,
+          ),
+        );
+      }
       this.instance.sync();
     }
 

@@ -171,21 +171,24 @@ buildCss({
 
 The sizes and durations:
 
-| Token                                              | Default               | Use                                                              |
-| -------------------------------------------------- | --------------------- | ---------------------------------------------------------------- |
-| `--uni-gap`                                        | `0.5rem`              | The gap unit: padding and spacing.                               |
-| `--uni-radius`                                     | `0.375rem`            | Corners.                                                         |
-| `--uni-border-width`, `--uni-outline-width`        | `1px`, `2px`          | Borders, and the focus ring.                                     |
-| `--uni-control-height`                             | `2rem`                | The least height of buttons, inputs and triggers.                |
-| `--uni-font-size`, `--uni-line-height`             | `0.875rem`, `1.25rem` | Text.                                                            |
-| `--uni-font-size-small`, `--uni-line-height-small` | `0.75rem`, `1.125rem` | Descriptions, errors and tooltips.                               |
-| `--uni-transition`                                 | `80ms`                | Hover and press, and the popups of Select, Combobox and Tooltip. |
-| `--uni-overlay-transition`                         | `120ms`               | A popover opening and closing.                                   |
-| `--uni-dialog-transition`                          | `250ms`               | A dialog and its backdrop opening and closing.                   |
-| `--uni-z-overlay`                                  | `1000`                | Popovers in browsers without the Popover API.                    |
+| Token                                              | Default                                     | Use                                                                                 |
+| -------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `--uni-gap`                                        | `0.5rem`                                    | The gap unit: padding and spacing.                                                  |
+| `--uni-radius`                                     | `0.375rem`                                  | Corners.                                                                            |
+| `--uni-border-width`, `--uni-outline-width`        | `1px`, `2px`                                | Borders, and the focus ring.                                                        |
+| `--uni-control-height`                             | `2rem`                                      | The least height of buttons, inputs and triggers.                                   |
+| `--uni-font-size`, `--uni-line-height`             | `0.875rem`, `1.25rem`                       | Text.                                                                               |
+| `--uni-font-size-small`, `--uni-line-height-small` | `0.75rem`, `1.125rem`                       | Descriptions, errors and tooltips.                                                  |
+| `--uni-transition`                                 | `80ms`                                      | Hover and press, and the popups of Select, Combobox and Tooltip.                    |
+| `--uni-overlay-transition`                         | `120ms`                                     | A popover opening and closing.                                                      |
+| `--uni-dialog-transition`                          | `250ms`                                     | A dialog and its backdrop opening and closing.                                      |
+| `--uni-z-overlay`                                  | `1000`                                      | Popovers in browsers without the Popover API.                                       |
+| `--uni-quiet-hover`, `--uni-quiet-pressed`         | `.04`, `.06` (light); `.031`, `.046` (dark) | How much of its text color a quiet button mixes into its fill, hovered and pressed. |
 
 Controls grow with the text: the sizes are in `rem`, and the control height is
-a minimum. Under `prefers-reduced-motion: reduce`, nothing transitions.
+a minimum. Under `prefers-reduced-motion: reduce`, nothing transitions. The
+quiet steps differ by scheme, so they are written with the palette, in each
+scheme's block; give them one value or one per scheme, as a color.
 
 ## While the page runs
 

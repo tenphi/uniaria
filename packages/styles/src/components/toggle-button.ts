@@ -1,15 +1,22 @@
 import type { Styles } from '@tenphi/tasty';
 
 import { buttonBoxStyles } from '../shared/button';
+import {
+  itemDescriptionStyles,
+  itemExtrasStyles,
+  itemFrameStyles,
+  itemLabelStyles,
+  itemRootStyles,
+} from '../shared/item';
 
 /**
- * ToggleButton: Button's look and `data-variant`, and the accent fill
- * while selected, whatever the variant (spec: Components). UI Kit tints a
- * selected button lightly instead; on a tint, selection would show mostly
- * by hue (WCAG 1.4.1). Disabled takes the disabled theme whole, its fill
- * while selected.
+ * ToggleButton's box and colors: Button's look and `data-variant`, and
+ * the accent fill while selected, whatever the variant (spec: Components).
+ * UI Kit tints a selected button lightly instead; on a tint, selection
+ * would show mostly by hue (WCAG 1.4.1). Disabled takes the disabled theme
+ * whole, its fill while selected.
  */
-export const toggleButtonStyles = {
+const toggleButtonLookStyles = {
   // eslint-disable-next-line tasty/no-style-spread -- the shared box; the colors are ToggleButton's
   ...buttonBoxStyles,
   fill: {
@@ -17,8 +24,8 @@ export const toggleButtonStyles = {
     hovered: '#uni-surface-hover',
     pressed: '#uni-surface-pressed',
     'variant=quiet': '#clear',
-    'variant=quiet & hovered': '#uni-surface-hover',
-    'variant=quiet & pressed': '#uni-surface-pressed',
+    'variant=quiet & hovered': '#current.$uni-quiet-hover',
+    'variant=quiet & pressed': '#current.$uni-quiet-pressed',
     'variant=primary': '#uni-accent-fill',
     'variant=primary & hovered': '#uni-accent-fill-hover',
     'variant=primary & pressed': '#uni-accent-fill-pressed',
@@ -56,6 +63,7 @@ export const toggleButtonStyles = {
   },
   color: {
     '': '#uni-text',
+    'variant=quiet': '#current',
     'variant=primary': '#uni-accent-fill-text',
     'variant=danger': '#uni-danger-fill-text',
     selected: '#uni-accent-fill-text',
@@ -69,3 +77,36 @@ export const toggleButtonStyles = {
   // Every color is set for forced colors, the selected fill's included.
   forcedColorAdjust: { '': 'auto', '@uni-forced-colors': 'none' },
 } satisfies Styles;
+
+/**
+ * ToggleButton, with the item look (`../shared/item.ts`) while it has a
+ * label part, as Button. Typed `Styles`, not inferred: the item grid's
+ * states are built.
+ */
+export const toggleButtonStyles: Styles = {
+  // eslint-disable-next-line tasty/no-style-spread -- its box and colors; the item grid sets other keys
+  ...toggleButtonLookStyles,
+  ...itemRootStyles({ label: 'Label', description: 'Description' }),
+  Label: {
+    // eslint-disable-next-line tasty/no-style-spread -- the shared item label
+    ...itemLabelStyles,
+  },
+  Description: {
+    // eslint-disable-next-line tasty/no-style-spread -- the shared item description
+    ...itemDescriptionStyles,
+  },
+};
+
+/**
+ * ToggleButton's frame, outside its root: the grid, in its text color.
+ * As the root, it sets every color for forced colors, so text in its
+ * extras gets no backplate over the selected fill.
+ */
+export const toggleButtonFrameStyles: Styles = {
+  // eslint-disable-next-line tasty/no-style-spread -- the shared frame
+  ...itemFrameStyles(toggleButtonLookStyles.color),
+  forcedColorAdjust: { '': 'auto', '@uni-forced-colors': 'none' },
+};
+
+/** ToggleButton's extras, outside its root. */
+export const toggleButtonExtrasStyles = itemExtrasStyles;

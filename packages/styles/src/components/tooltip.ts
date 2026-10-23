@@ -11,7 +11,8 @@ import { tooltipMotionStyles } from '../shared/motion';
  * It moves in from its trigger's side as it fades in, from .8, and skips
  * that when it opens without its delay (`../shared/motion.ts`). A
  * transparent border keeps its edge in forced colors, where the fill goes;
- * the arrow is the shared one, in the fill.
+ * the arrow is the shared one, in the fill. The text part keeps the line
+ * break between a label and its description (items spec, The item look).
  */
 export const tooltipStyles = {
   // eslint-disable-next-line tasty/no-style-spread -- the shared tooltip motion
@@ -36,6 +37,10 @@ export const tooltipStyles = {
   overflowWrap: 'anywhere',
   // Above the page without the Popover API; the top layer ignores it.
   zIndex: '$uni-z-overlay',
+
+  Text: {
+    whiteSpace: 'pre-line',
+  },
 
   Arrow: {
     // eslint-disable-next-line tasty/no-style-spread -- the shared arrow

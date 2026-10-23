@@ -85,11 +85,17 @@ Not part of Combobox:
 | hiddenInput | `input`                    | `type="hidden"`, `disabled`; the `value` property                                                                                                                                                                                                                                                           | Optional, as NumberField's: the consumer puts `name` and `form` here. Its value is the selected key, or the custom text (Resolved questions 13).                                       |
 
 Item parts, as Listbox's and inside its list: `option`, `optionLabel`,
-`optionDescription`, `group` and `groupLabel`, keyed by the consumer's
-`data-key`, with Listbox's attributes and no `tabindex` (virtual focus). An
-option the filter leaves out gets `hidden`, and so does a group with none
-left. Options are rendered while the list is closed, inside the hidden
-popover: the element reads its items from them.
+`optionDescription`, `optionExtras`, `group` and `groupLabel`, keyed by the
+consumer's `data-key`, with Listbox's attributes and no `tabindex` (virtual
+focus). An option the filter leaves out gets `hidden`, and so does a group
+with none left. Options are rendered while the list is closed, inside the
+hidden popover: the element reads its items from them.
+
+Changed on 2026-10-22 (owner), the items spec (`../button/items.md`): the
+`optionExtras` item part, and the `optionTooltip` link, as Listbox's. Its
+option tooltip follows the highlight, and typing or editing the text closes
+it until a key moves the highlight. Extras beside the input go in the
+`anchor`, as a prefix or suffix goes in TextField's wrapper: no frame.
 
 State attributes on every named part: Popover's `data-open`,
 `data-entering` and `data-exiting`; Field's `data-disabled`,

@@ -86,6 +86,7 @@ custom elements, the consumer's `data-key` on the element):
 | option            | any; usually `li` or `div` | `role="option"`, `id`, `tabindex`, `aria-selected`, `aria-disabled`, `aria-labelledby`, `aria-describedby`, state attributes | One per item that isn't a group. Its name is its text, or its `optionLabel` part.                                                                           |
 | optionLabel       | any, inside the option     | `id`                                                                                                                         | Optional. When rendered, the option is named by it alone, so a description or a badge stays out of the name.                                                |
 | optionDescription | any, inside the option     | `id`                                                                                                                         | Optional. When rendered, it describes the option: `option, Apple, Red and sweet, not selected`.                                                             |
+| optionExtras      | any, inside the option     | `id`                                                                                                                         | Optional. Badges, counts, icons: nothing focusable. When rendered and not `aria-hidden="true"`, it describes the option after its description.              |
 | group             | any; usually `div`         | `role="group"`, `aria-labelledby`, state attributes                                                                          | One per item with children (a section). Holds its label and its options. In a `ul`, the group's own list needs `role="presentation"`, so `div`s are easier. |
 | groupLabel        | any, first in the group    | `role="presentation"`, `id`                                                                                                  | Names the group. `presentation` because a listbox may not contain headings (React Aria, the APG's grouped example).                                         |
 
@@ -98,6 +99,16 @@ A part keeps an `id` the consumer gives its element, in both adapters, and
 every reference to the part follows it; UniAria writes an `id` only on a
 part that has none (root AGENTS.md → DOM, lifecycle and SSR). Item parts
 always take the ids made from the list's id and the key.
+
+Changed on 2026-10-22 (owner), the items spec (`../button/items.md`, Option
+extras, Option tooltips): the `optionExtras` item part, which development
+warns about when it holds a focusable element; extras hidden with
+`aria-hidden="true"` stay out of the description, since a reference would
+read them all the same (accname step 2A). And the `optionTooltip` link: one
+Tooltip for every option, the instance in React and Vue, and on elements
+only an `option-tooltip` attribute naming its id. The list reports the
+option under the pointer and the one with visible focus or the highlight,
+and a press or typing closes it.
 
 ## Props
 

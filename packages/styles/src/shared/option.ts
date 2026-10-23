@@ -1,18 +1,27 @@
 import type { Styles } from '@tenphi/tasty';
 
+import {
+  itemDescriptionStyles,
+  itemLabelStyles,
+  smallTextStyles,
+} from './item';
+
 /**
  * An option, as UI Kit's items: one control-height row of soft text, 8
  * pixels inside its edge, lighter under the pointer or the focus, darker
  * pressed, and the accent theme once selected, with a check at its end
  * (the text or the mark on a fill identifies it, spec: Tokens → Colors).
  * The ring is drawn inside it, so neighbors and the scrolling list don't
- * cover or clip it. Read-only lists take no hover or press feedback.
+ * cover or clip it. Read-only lists take no hover or press feedback. Its
+ * text takes one line and ends in an ellipsis; with an `optionLabel`, it
+ * is the item grid (`./item.ts`), its extras before the check.
  *
  * No margins: a virtualized list positions options absolutely, so the
  * spacing is inside each, and `inset-inline-end` gives a positioned option
- * the list's width. No `display` either: Combobox hides filtered options
- * with `hidden`. In forced colors the system paints every fill as the
- * canvas, so the check alone shows the selection.
+ * the list's width. Its grid's `display` is set only while it isn't
+ * `hidden`, which Combobox hides filtered options with. In forced colors
+ * the system paints every fill as the canvas, so the check alone shows
+ * the selection.
  *
  * The check is `::after`, drawn as Checkbox's (`./marks.ts`), and the
  * option switches it with `--uni-option-mark`: Tasty writes an own state
@@ -59,7 +68,15 @@ export const optionStyles = {
   fontSize: '$uni-font-size',
   // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
   lineHeight: '$uni-line-height',
-  overflowWrap: 'anywhere',
+  textOverflow: 'ellipsis',
+  display: {
+    '': false,
+    '@own(:has(> OptionLabel)) & !@own([hidden])': 'grid',
+  },
+  gridColumns: '[icon] auto [label] minmax(0, 1fr) [suffix] auto [extras] auto',
+  // Explicit, or what spans an empty second row grows it.
+  gridRows: { '': 'auto', '@own(:has(> OptionDescription))': 'auto auto' },
+  alignItems: 'center',
   cursor: { '': 'pointer', '@own(disabled) | readonly': 'default' },
   transition: {
     '': 'fill $uni-transition, color $uni-transition',
@@ -83,23 +100,6 @@ export const optionStyles = {
 } satisfies Styles;
 /* eslint-enable tasty/no-own-at-root */
 
-/** Small soft text: a group's label, an option's description. */
-const smallTextStyles = {
-  margin: 0,
-  color: {
-    '': '#uni-text-soft',
-    disabled: '#uni-disabled-text',
-    '@uni-forced-colors': 'CanvasText',
-    '(@uni-forced-colors & disabled)': 'GrayText',
-  },
-  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
-  fontSize: '$uni-font-size-small',
-  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
-  fontWeight: '500',
-  // eslint-disable-next-line tasty/prefer-shorthand-property -- no presets
-  lineHeight: '$uni-line-height-small',
-} satisfies Styles;
-
 /**
  * The option and the parts around it, as Listbox, Select and Combobox
  * share them: an option's label over its description, a group's label 8
@@ -113,14 +113,42 @@ export const optionPartStyles = {
     ...optionStyles,
   },
   OptionLabel: {
-    display: 'block',
+    // eslint-disable-next-line tasty/no-style-spread -- the shared item label
+    ...itemLabelStyles,
   },
+  // The option's color: soft, the accent's once selected, or disabled.
   OptionDescription: {
-    // eslint-disable-next-line tasty/no-style-spread -- the shared small text
-    ...smallTextStyles,
-    display: 'block',
-    // The option's color: soft, the accent's once selected, or disabled.
-    color: 'inherit',
+    // eslint-disable-next-line tasty/no-style-spread -- the shared item description
+    ...itemDescriptionStyles,
+  },
+  OptionExtras: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.5x',
+    gridColumn: 'extras',
+    gridRow: '1 / -1',
+    inlineMargin: '.5x start',
+  },
+  // The element before the label and the one after it (`./item.ts`).
+  OptionItem: {
+    $: 'Option>*',
+    gridColumn: {
+      '': false,
+      '@own(:has(~ OptionLabel))': 'icon',
+      '@own(:is(OptionLabel ~ *)) & !@own(:is(OptionDescription, OptionExtras))':
+        'suffix',
+    },
+    gridRow: {
+      '': false,
+      '@own(:has(~ OptionLabel)) | (@own(:is(OptionLabel ~ *)) & !@own(:is(OptionDescription, OptionExtras)))':
+        '1 / -1',
+    },
+    inlineMargin: {
+      '': false,
+      '@own(:has(~ OptionLabel))': '.5x end',
+      '@own(:is(OptionLabel ~ *)) & !@own(:is(OptionDescription, OptionExtras))':
+        '.5x start',
+    },
   },
   // UI Kit's section heading: small capitals in weight 600.
   GroupLabel: {

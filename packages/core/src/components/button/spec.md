@@ -25,6 +25,14 @@ suite in both adapters.
   the tooltip's id in `aria-describedby` (`aria-labelledby` with
   `relation: 'label'`) while the tooltip is enabled. Without a tooltip,
   the consumer's own `aria-describedby` on the root stays.
+- **Label, description, frame and extras** (changed on 2026-10-22 (owner),
+  the items spec, `./items.md`): an optional `label` part names the button
+  and a `description` part describes it, each while rendered, so an icon or
+  a shortcut hint stays out of the name. An optional `frame` around the root
+  holds its `extras` beside it, the consumer's buttons, badges and counts:
+  both sit outside the root, carry its states, and hover over the frame is
+  the button's. A tooltip's id follows the description's in
+  `aria-describedby`.
 - **Custom element:** yes. `<uni-button>` hosts one native
   `<button data-uni="button">` (or `<a data-uni="button" href>`) written by
   the consumer. The inner element provides native semantics, form submission
@@ -39,9 +47,18 @@ state. See Resolved questions.
 
 ## Anatomy
 
-| Part | Element                                                                  | Attributes UniAria owns                                                                                                                                                                    | Notes                                                                                                                                                                                                                                                                                        |
-| ---- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| root | `button` by default; `a` in link mode; any element through `elementType` | `type`, `href` (link mode), `disabled`, `aria-disabled`, `role` and `tabindex`, `data-uni="button"`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | The consumer owns content, `id`, classes, labelling (`aria-label`, `aria-labelledby`, `aria-describedby`), popup attributes (`aria-haspopup`, `aria-expanded`, `aria-controls`) form attributes (`name`, `value`, `form`, `formaction`, …) and link attributes (`target`, `rel`, `download`) |
+| Part        | Element                                                                  | Attributes UniAria owns                                                                                                                                                                    | Notes                                                                                                                                                                                                                                                                                        |
+| ----------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| root        | `button` by default; `a` in link mode; any element through `elementType` | `type`, `href` (link mode), `disabled`, `aria-disabled`, `role` and `tabindex`, `data-uni="button"`, `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | The consumer owns content, `id`, classes, labelling (`aria-label`, `aria-labelledby`, `aria-describedby`), popup attributes (`aria-haspopup`, `aria-expanded`, `aria-controls`) form attributes (`name`, `value`, `form`, `formaction`, …) and link attributes (`target`, `rel`, `download`) |
+| label       | any, inside the root; usually `span`                                     | `id` (unless it has one)                                                                                                                                                                   | Optional. While rendered, the root's `aria-labelledby` is its id.                                                                                                                                                                                                                            |
+| description | any, inside the root; usually `span`                                     | `id` (unless it has one)                                                                                                                                                                   | Optional. While rendered, the root's `aria-describedby` starts with its id, before a tooltip's.                                                                                                                                                                                              |
+| frame       | any; usually `div`                                                       | `data-uni-part="button-frame"`, the root's state attributes                                                                                                                                | Optional, outside the root and around it and the extras. Its hover is the button's. No role.                                                                                                                                                                                                 |
+| extras      | any, inside the frame; usually `span`                                    | `data-uni-part="button-extras"`, the root's state attributes                                                                                                                               | Optional, outside the root, beside it. Each control in it is a component of its own, named on its own.                                                                                                                                                                                       |
+
+Changed on 2026-10-22 (owner): the four parts of the items spec
+(`./items.md`, Label and description, Extras). While the label or the
+description is rendered, UniAria writes the root's `aria-labelledby` or
+`aria-describedby` whole; otherwise the consumer's stay.
 
 No element-owned parts.
 
@@ -96,13 +113,13 @@ on the host, with the press event in `detail`.
 What `expose()` returns. Selectors (`useComponentState`) read it, so it is
 public API: adding a field is a feature, changing one is a breaking change.
 
-| Field          | Type      | Meaning                                                                           |
-| -------------- | --------- | --------------------------------------------------------------------------------- |
-| isPressed      | `boolean` | A pointer or key is down on the root, and releasing it now would activate.        |
-| isHovered      | `boolean` | A mouse or pen is over the root. Never set by touch, never while disabled.        |
-| isFocused      | `boolean` | The root has focus.                                                               |
-| isFocusVisible | `boolean` | The root has focus and the last interaction was keyboard or virtual, not pointer. |
-| isDisabled     | `boolean` | The `isDisabled` prop is true.                                                    |
+| Field          | Type      | Meaning                                                                                                             |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| isPressed      | `boolean` | A pointer or key is down on the root, and releasing it now would activate.                                          |
+| isHovered      | `boolean` | A mouse or pen is over the root, or over the frame while one is rendered. Never set by touch, never while disabled. |
+| isFocused      | `boolean` | The root has focus.                                                                                                 |
+| isFocusVisible | `boolean` | The root has focus and the last interaction was keyboard or virtual, not pointer.                                   |
+| isDisabled     | `boolean` | The `isDisabled` prop is true.                                                                                      |
 
 ## Keyboard
 
@@ -186,7 +203,11 @@ button on click only when it has one. React Aria does the same.
 - Hover starts on pointer enter for mouse and pen only. A mouse enter within
   500 ms of a touch pointer up is ignored, because iOS emulates one. Hover
   never starts while disabled, and it ends when the button becomes disabled
-  or leaves the DOM.
+  or leaves the DOM. With a frame, it counts over the frame: the button, an
+  extra or a gap between them (changed on 2026-10-22 (owner), the items
+  spec). A linked tooltip still counts hover over the root alone.
+- A press on an extra is the extra's, never the button's: the extras are
+  the root's siblings (the items spec, Extras).
 - Virtual clicks press the button too. Screen readers (VoiceOver, TalkBack,
   NVDA and JAWS) click without a real pointer sequence. UniAria detects them the
   way React Aria does (`references/react-spectrum/packages/react-aria/src/utils/isVirtualEvent.ts`)
@@ -210,16 +231,20 @@ button on click only when it has one. React Aria does the same.
 Phrases follow `@guidepup/virtual-screen-reader`'s format
 (`references/virtual-screen-reader/test/int/disabled.int.test.ts`).
 
-| Markup and state                               | Spoken phrase                         |
-| ---------------------------------------------- | ------------------------------------- |
-| native root, text "Save"                       | `button, Save`                        |
-| non-native root (`role="button"`), text "Save" | `button, Save`                        |
-| native, disabled                               | `button, Save, disabled`              |
-| non-native, disabled                           | `button, Save, disabled`              |
-| `isFocusableWhenDisabled`, disabled            | `button, Save, disabled`              |
-| re-enabled after being disabled                | `button, Save` (never "not disabled") |
-| link mode, text "Docs"                         | `link, Docs`                          |
-| link mode, disabled                            | `link, Docs, disabled`                |
+| Markup and state                                                         | Spoken phrase                                         |
+| ------------------------------------------------------------------------ | ----------------------------------------------------- |
+| native root, text "Save"                                                 | `button, Save`                                        |
+| non-native root (`role="button"`), text "Save"                           | `button, Save`                                        |
+| native, disabled                                                         | `button, Save, disabled`                              |
+| non-native, disabled                                                     | `button, Save, disabled`                              |
+| `isFocusableWhenDisabled`, disabled                                      | `button, Save, disabled`                              |
+| re-enabled after being disabled                                          | `button, Save` (never "not disabled")                 |
+| link mode, text "Docs"                                                   | `link, Docs`                                          |
+| link mode, disabled                                                      | `link, Docs, disabled`                                |
+| a label "Save", a description "Saves the file" and a hint "⌘S" inside    | `button, Save, Saves the file`                        |
+| a frame: a button "Fruit", an extra button "Clear Fruit" and a count "3" | `button, Fruit`, then `button, Clear Fruit`, then `3` |
+
+Changed on 2026-10-22 (owner): the last two rows, from the items spec.
 
 ## Adapter surface
 
@@ -238,10 +263,34 @@ const docs = useComponent(button, { href: '/docs' });
 return <a {...docs.parts.root}>Docs</a>; // or the router's link component
 ```
 
+```tsx
+// A label part, and a frame with extras (the items spec)
+const fruit = useComponent(button, {});
+const clear = useComponent(button, { onPress: clearFruit });
+return (
+  <div {...fruit.parts.frame}>
+    <button {...fruit.parts.root}>
+      <span {...fruit.parts.label}>Fruit</span>
+    </button>
+    <span {...fruit.parts.extras}>
+      <button {...clear.parts.root} aria-label="Clear Fruit">
+        ×
+      </button>
+    </span>
+  </div>
+);
+```
+
 ```html
 <!-- Custom element -->
 <uni-button focusable-when-disabled>
   <button data-uni="button">Save</button>
+</uni-button>
+<uni-button>
+  <div data-uni-part="button-frame">
+    <button data-uni="button"><span data-element="Label">Fruit</span></button>
+    <span data-uni-part="button-extras">…</span>
+  </div>
 </uni-button>
 <uni-button>
   <a data-uni="button" href="/docs">Docs</a>

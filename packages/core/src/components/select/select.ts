@@ -10,6 +10,11 @@
  *
  * Two parts hold content UniAria writes (root AGENTS.md's element-owned
  * parts): the value part's text and the hidden `<select>`'s options.
+ *
+ * From the items spec: the trigger's `triggerFrame` and `triggerExtras`
+ * inside the root, the frame the popup's anchor; option extras; a tooltip
+ * for the trigger through `tooltip`, whose text is the value, and one for
+ * every option through `optionTooltip`, which Select drives.
  */
 
 import { createTypeahead, findByText } from '../../collections';
@@ -28,11 +33,18 @@ import {
 import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
-import { button } from '../button/button';
+import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
-import { listbox } from '../listbox/listbox';
+import { listbox, optionTooltipSource } from '../listbox/listbox';
 import { renderedKeysChange, virtualProps } from '../listbox/virtual-list';
 import { popover } from '../popover/popover';
+import {
+  linkOptionTooltip,
+  linkTooltip,
+  optionTooltipLink,
+  relationAttributes,
+  tooltipLink,
+} from '../tooltip/link';
 
 type SelectionMode = 'single' | 'multiple';
 
@@ -71,7 +83,9 @@ export const select = defineComponent({
   parts: [
     'root',
     'label',
+    'triggerFrame',
     'trigger',
+    'triggerExtras',
     'value',
     'anchor',
     'popover',
@@ -88,9 +102,11 @@ export const select = defineComponent({
     'option',
     'optionLabel',
     'optionDescription',
+    'optionExtras',
     'group',
     'groupLabel',
   ],
+  links: [tooltipLink, optionTooltipLink],
   props: {
     // Listbox's. The element reads them from its option and group parts
     // while the consumer sets none.
@@ -259,7 +275,15 @@ export const select = defineComponent({
         positionArea: props.positionArea(),
         positionTryFallbacks: props.positionTryFallbacks(),
       }),
-      { parts: { root: 'popover', title: null, description: null } },
+      {
+        parts: {
+          root: 'popover',
+          title: null,
+          description: null,
+          triggerLabel: null,
+          triggerDescription: null,
+        },
+      },
     );
 
     // On the trigger or in the popup, which the root holds when it is
@@ -299,7 +323,27 @@ export const select = defineComponent({
           else open('first');
         },
       }),
-      { parts: { root: 'trigger' } },
+      {
+        parts: {
+          ...NO_ITEM_PARTS,
+          root: 'trigger',
+          frame: 'triggerFrame',
+          extras: 'triggerExtras',
+        },
+      },
+    );
+    // Its text is the value (items spec, Select's trigger tooltip).
+    const tooltip = linkTooltip(ctx, {
+      hover: 'trigger',
+      focus: 'trigger',
+      text: ['value'],
+    });
+    linkOptionTooltip(
+      ctx,
+      optionTooltipSource(ctx, list.api, {
+        isVirtual: () => false,
+        keyParts: ['list'],
+      }),
     );
 
     // The value text (Selection): each selected key's text, in the order of
@@ -638,6 +682,7 @@ export const select = defineComponent({
       list,
       layer,
       trigger,
+      tooltip,
       valueText,
       isPlaceholder,
       isFocusWithin: focusWithin.isFocusWithin,
@@ -678,7 +723,8 @@ export const select = defineComponent({
     const fieldParts = api.field.connect();
     const listParts = api.list.connect();
     const layerParts = api.layer.connect();
-    const buttonRoot = api.trigger.connect().root as DomPartProps;
+    const buttonParts = api.trigger.connect();
+    const buttonRoot = buttonParts.root as DomPartProps;
     const isOpen = props.isOpen.get();
     const isMultiple = props.selectionMode() === 'multiple';
     const isDisabled = props.isDisabled();
@@ -712,6 +758,11 @@ export const select = defineComponent({
       attrs: {
         ...buttonRoot.attrs,
         ...control.attrs,
+        // After Field's references (items spec, Select's trigger tooltip).
+        ...relationAttributes(api.tooltip, {
+          labelledBy: control.attrs['aria-labelledby'],
+          describedBy: control.attrs['aria-describedby'],
+        }),
         role: 'combobox',
         'aria-haspopup': 'listbox',
         'aria-expanded': String(isOpen),
@@ -737,7 +788,9 @@ export const select = defineComponent({
         attrs: { ...fieldParts.label.attrs, for: undefined, ...state },
         on: { click: api.onLabelClick },
       },
+      triggerFrame: withState(buttonParts.frame),
       trigger,
+      triggerExtras: withState(buttonParts.extras),
       value: {
         attrs: state,
         properties: {

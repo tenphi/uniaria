@@ -30,11 +30,12 @@ import {
 import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
-import { button } from '../button/button';
+import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
-import { listbox } from '../listbox/listbox';
+import { listbox, optionTooltipSource } from '../listbox/listbox';
 import { renderedKeysChange, virtualProps } from '../listbox/virtual-list';
 import { popover } from '../popover/popover';
+import { linkOptionTooltip, optionTooltipLink } from '../tooltip/link';
 
 /** What opens the list besides the button and the arrows (Props). */
 export type ComboboxPopoverTrigger = 'input' | 'focus' | 'manual';
@@ -118,9 +119,13 @@ export const combobox = defineComponent({
     'option',
     'optionLabel',
     'optionDescription',
+    'optionExtras',
     'group',
     'groupLabel',
   ],
+  // One tooltip for every option (items spec); the input scrolls its text,
+  // so it takes no tooltip of its own.
+  links: [optionTooltipLink],
   props: {
     // Listbox's. The element reads them from its option and group parts
     // while the consumer sets none.
@@ -426,8 +431,20 @@ export const combobox = defineComponent({
           title: null,
           description: null,
           close: null,
+          triggerLabel: null,
+          triggerDescription: null,
+          triggerFrame: null,
+          triggerExtras: null,
         },
       },
+    );
+    // Driven by the visible highlight; typing in the input closes it.
+    linkOptionTooltip(
+      ctx,
+      optionTooltipSource(ctx, list.api, {
+        isVirtual: () => true,
+        keyParts: ['input', 'list'],
+      }),
     );
 
     let opening: Opening = 'typing';
@@ -691,7 +708,7 @@ export const combobox = defineComponent({
           else if (pressEvent.pointerType === 'virtual') toggle('virtual');
         },
       }),
-      { parts: { root: 'button' } },
+      { parts: { root: 'button', ...NO_ITEM_PARTS } },
     );
     const onButtonPointerDown = (pointerEvent: PointerEvent) => {
       if (pointerEvent.button !== 0 || pointerEvent.pointerType === 'touch') {

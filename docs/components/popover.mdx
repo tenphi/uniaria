@@ -108,7 +108,9 @@ The trigger and the root must both be inside `<uni-popover>`.
 </Tabs>
 
 Render the root always: it stays hidden while closed, and opening it renders
-nothing. Keep it right after the trigger in the DOM when you can. UniAria
+nothing. Keep it right after the trigger in the DOM when you can, or after
+the trigger's frame when it has one (see
+[The trigger's label and extras](#the-triggers-label-and-extras)). UniAria
 passes the trigger to `showPopover()` as its `source`, which puts the popover
 next to it in the Tab order, but browsers that ignore `source` follow the DOM.
 Give the root a margin: it is the gap to the trigger (see
@@ -204,10 +206,133 @@ const [isOpen, setOpen] = useState(false);
 const filters = useComponent(popover, { isOpen, onOpenChange: setOpen });
 ```
 
+### The trigger's label and extras
+
+The trigger is a [Button](./button.mdx), and it takes Button's label,
+description, frame and extras as four parts of its own. All four sit outside
+the popover, as the trigger does:
+
+- **`triggerLabel` and `triggerDescription`** go inside the trigger. While
+  rendered, the label alone names the trigger and the description describes
+  it, so an icon or a hint inside stays out of the name. The label also names
+  the popover in the trigger's place.
+- **`triggerFrame`** goes around the trigger and its extras, and
+  **`triggerExtras`** beside the trigger, never inside it: your buttons,
+  badges and counts. Both carry the trigger's state attributes, and the
+  pointer anywhere over the frame hovers the trigger.
+
+<Tabs label="The trigger's label and extras">
+<Tab label="React">
+
+```tsx
+import { button } from '@uniaria/core/button';
+import { popover } from '@uniaria/core/popover';
+import { useComponent } from '@uniaria/react';
+
+export function FruitPicker(props: { fruit: string; onClear(): void }) {
+  const picker = useComponent(popover, {});
+  const clear = useComponent(button, { onPress: props.onClear });
+  return (
+    <>
+      <div {...picker.parts.triggerFrame}>
+        <button {...picker.parts.trigger}>
+          <span {...picker.parts.triggerLabel}>Fruit</span>
+          <span {...picker.parts.triggerDescription}>{props.fruit}</span>
+        </button>
+        <span {...picker.parts.triggerExtras}>
+          <button
+            {...clear.parts.root}
+            data-variant="quiet"
+            aria-label="Clear Fruit"
+          >
+            <ClearIcon aria-hidden />
+          </button>
+        </span>
+      </div>
+      <div {...picker.parts.root}>…</div>
+    </>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { button } from '@uniaria/core/button';
+import { popover } from '@uniaria/core/popover';
+import { useComponent } from '@uniaria/vue';
+
+defineProps<{ fruit: string }>();
+const emit = defineEmits<{ clear: [] }>();
+
+const picker = useComponent(popover);
+const clear = useComponent(button, { onPress: () => emit('clear') });
+</script>
+
+<template>
+  <div v-bind="picker.parts.triggerFrame">
+    <button v-bind="picker.parts.trigger">
+      <span v-bind="picker.parts.triggerLabel">Fruit</span>
+      <span v-bind="picker.parts.triggerDescription">{{ fruit }}</span>
+    </button>
+    <span v-bind="picker.parts.triggerExtras">
+      <button
+        v-bind="clear.parts.root"
+        data-variant="quiet"
+        aria-label="Clear Fruit"
+      >
+        <ClearIcon aria-hidden="true" />
+      </button>
+    </span>
+  </div>
+  <div v-bind="picker.parts.root">…</div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-popover>
+  <div data-uni-part="popover-trigger-frame">
+    <button data-uni-part="popover-trigger">
+      <span data-uni-part="popover-trigger-label">Fruit</span>
+      <span data-uni-part="popover-trigger-description">Apple</span>
+    </button>
+    <span data-uni-part="popover-trigger-extras">
+      <uni-button>
+        <button data-uni="button" data-variant="quiet" aria-label="Clear Fruit">
+          <svg aria-hidden="true">…</svg>
+        </button>
+      </uni-button>
+    </span>
+  </div>
+  <div data-uni="popover">…</div>
+</uni-popover>
+
+<script type="module">
+  import '@uniaria/elements/button';
+  import '@uniaria/elements/popover';
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Without an anchor part, the popover is placed against the frame, so
+`--anchor-width` includes the extras. Each extra is a control of its own:
+name it in its context ("Clear Fruit", not "Clear"), and it is a Tab stop
+after the trigger. A press on an extra while the popover is open is a press
+outside it: the popover closes with reason `'outside'` and the extra acts, in
+one press, and focus stays on the extra.
+
 ### Positioning
 
-UniAria places the root against the `anchor` part, else the trigger. Its
-options are CSS Anchor Positioning's own, and the page picks one of two modes.
+UniAria places the root against the `anchor` part, else the `triggerFrame`,
+else the trigger. Its options are CSS Anchor Positioning's own, and the page
+picks one of two modes.
 
 **Script mode**, the default, places the popover in every browser from two
 props:
@@ -304,43 +429,48 @@ browsers until UniAria starts.
 
 ## Anatomy
 
-| Part          | Element                | Notes                                                                                                                                                                                                                   |
-| ------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trigger`     | `button`               | Optional. A press toggles the popover. A [Button](./button.mdx): another element gets Button's role and keys. UniAria writes its `id` (unless it has one), `aria-expanded`, and `aria-controls` while open.             |
-| `anchor`      | any                    | Optional. The popover is placed against it instead of the trigger.                                                                                                                                                      |
-| `root`        | any; usually `div`     | Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="dialog"`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, `data-placement` and its position. Its content is yours. |
-| `arrow`       | any                    | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                       |
-| `title`       | any; usually a heading | Optional. Names the popover through `aria-labelledby`.                                                                                                                                                                  |
-| `description` | any                    | Optional. Linked through `aria-describedby` while rendered.                                                                                                                                                             |
-| `close`       | `button`               | Optional. A press closes the popover, even when it isn't dismissable. A Button too.                                                                                                                                     |
+| Part                 | Element                                 | Notes                                                                                                                                                                                                                   |
+| -------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger`            | `button`                                | Optional. A press toggles the popover. A [Button](./button.mdx): another element gets Button's role and keys. UniAria writes its `id` (unless it has one), `aria-expanded`, and `aria-controls` while open.             |
+| `triggerLabel`       | any, inside the trigger; usually `span` | Optional. While rendered, it alone names the trigger, and the popover in the trigger's place. UniAria writes its `id` (unless it has one).                                                                              |
+| `triggerDescription` | any, inside the trigger; usually `span` | Optional. Describes the trigger while rendered. UniAria writes its `id` (unless it has one).                                                                                                                            |
+| `triggerFrame`       | any; usually `div`                      | Optional. Around the trigger and its extras. It carries the trigger's state attributes, and the pointer over it hovers the trigger. Without an anchor part, the popover is placed against it.                           |
+| `triggerExtras`      | any, inside the frame; usually `span`   | Optional. Beside the trigger, never inside it: your buttons, badges and counts. It carries the trigger's state attributes.                                                                                              |
+| `anchor`             | any                                     | Optional. The popover is placed against it instead of the frame or the trigger.                                                                                                                                         |
+| `root`               | any; usually `div`                      | Hidden while closed. UniAria writes its `id` (unless it has one), `popover="manual"`, `role="dialog"`, `tabindex="-1"`, `aria-labelledby`, `aria-describedby`, `data-placement` and its position. Its content is yours. |
+| `arrow`              | any                                     | Optional. UniAria writes `aria-hidden="true"` and its offset along the edge; your CSS puts it on the side `data-placement` names.                                                                                       |
+| `title`              | any; usually a heading                  | Optional. Names the popover through `aria-labelledby`.                                                                                                                                                                  |
+| `description`        | any                                     | Optional. Linked through `aria-describedby` while rendered.                                                                                                                                                             |
+| `close`              | `button`                                | Optional. A press closes the popover, even when it isn't dismissable. A Button too.                                                                                                                                     |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
 [Ids](../guide/accessibility.md#ids)).
 
 The popover's name comes from `labelledBy` and a rendered title, else an
-`aria-label` on the root, else the trigger: a popover opened by "Size" is read
-as "dialog, Size". Development builds warn when it has none of these. The
-custom element has no role of its own and never takes focus.
+`aria-label` on the root, else the trigger, or its `triggerLabel` while
+rendered: a popover opened by "Size" is read as "dialog, Size". Development
+builds warn when it has none of these. The custom element has no role of its
+own and never takes focus.
 
 ## Props
 
-| Prop                           | Attribute                                    | Type                           | Default                     | Description                                                                                                                                                               |
-| ------------------------------ | -------------------------------------------- | ------------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isOpen`                       | — (property: setting it makes it controlled) | `boolean`                      | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                                                                                  |
-| `defaultOpen`                  | `default-open`                               | `boolean`                      | `false`                     | The starting state, uncontrolled. With server rendering, it opens after hydration.                                                                                        |
-| `isNonModal`                   | `non-modal`                                  | `boolean`                      | `false`                     | Tab continues past it, the page stays exposed to assistive technology, and focus leaving closes it.                                                                       |
-| `isDismissable`                | `dismissable`                                | `boolean`                      | `true`                      | Escape, a press outside and, when non-modal, focus leaving close it. `dismissable="false"` turns all three off; the trigger, the close part and your code still close it. |
-| `isKeyboardDismissDisabled`    | `keyboard-dismiss-disabled`                  | `boolean`                      | `false`                     | Escape alone doesn't close it.                                                                                                                                            |
-| `shouldCloseOnInteractOutside` | — (property only)                            | `(target: Element) => boolean` | —                           | Return `false` to keep it open for a press on `target`.                                                                                                                   |
-| `isDisabled`                   | `disabled`                                   | `boolean`                      | `false`                     | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                                                          |
-| `shouldRestoreFocus`           | `restore-focus`                              | `boolean`                      | `true`                      | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                                                 |
-| `shouldFocusOnOpen`            | `focus-on-open`                              | `boolean`                      | `true`                      | Focus moves into the popover when it opens. Off, focus stays where it is. `focus-on-open="false"` turns it off.                                                           |
-| `positionArea`                 | `position-area`                              | `PositionArea`                 | `'bottom'`                  | A CSS `position-area` on one side of the anchor. Script mode only.                                                                                                        |
-| `positionTryFallbacks`         | `position-try-fallbacks`                     | `string`                       | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                                                                                         |
-| `labelledBy`                   | `labelled-by`                                | `string`                       | —                           | More ids for `aria-labelledby`.                                                                                                                                           |
-| `describedBy`                  | `described-by`                               | `string`                       | —                           | More ids for `aria-describedby`.                                                                                                                                          |
-| `tooltip`                      | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`         | —                           | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-popover>` sits in directly links too.                                            |
+| Prop                           | Attribute                                    | Type                           | Default                     | Description                                                                                                                                                                                                                               |
+| ------------------------------ | -------------------------------------------- | ------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`                       | — (property: setting it makes it controlled) | `boolean`                      | —                           | The open state, controlled. Pair it with `onOpenChange`.                                                                                                                                                                                  |
+| `defaultOpen`                  | `default-open`                               | `boolean`                      | `false`                     | The starting state, uncontrolled. With server rendering, it opens after hydration.                                                                                                                                                        |
+| `isNonModal`                   | `non-modal`                                  | `boolean`                      | `false`                     | Tab continues past it, the page stays exposed to assistive technology, and focus leaving closes it.                                                                                                                                       |
+| `isDismissable`                | `dismissable`                                | `boolean`                      | `true`                      | Escape, a press outside and, when non-modal, focus leaving close it. `dismissable="false"` turns all three off; the trigger, the close part and your code still close it.                                                                 |
+| `isKeyboardDismissDisabled`    | `keyboard-dismiss-disabled`                  | `boolean`                      | `false`                     | Escape alone doesn't close it.                                                                                                                                                                                                            |
+| `shouldCloseOnInteractOutside` | — (property only)                            | `(target: Element) => boolean` | —                           | Return `false` to keep it open for a press on `target`.                                                                                                                                                                                   |
+| `isDisabled`                   | `disabled`                                   | `boolean`                      | `false`                     | The trigger can't open it: Button's `isDisabled` on the trigger.                                                                                                                                                                          |
+| `shouldRestoreFocus`           | `restore-focus`                              | `boolean`                      | `true`                      | Focus goes back when it closes (see Accessibility). `restore-focus="false"` turns it off.                                                                                                                                                 |
+| `shouldFocusOnOpen`            | `focus-on-open`                              | `boolean`                      | `true`                      | Focus moves into the popover when it opens. Off, focus stays where it is. `focus-on-open="false"` turns it off.                                                                                                                           |
+| `positionArea`                 | `position-area`                              | `PositionArea`                 | `'bottom'`                  | A CSS `position-area` on one side of the anchor. Script mode only.                                                                                                                                                                        |
+| `positionTryFallbacks`         | `position-try-fallbacks`                     | `string`                       | `'flip-block, flip-inline'` | A CSS `position-try-fallbacks`. Script mode only.                                                                                                                                                                                         |
+| `labelledBy`                   | `labelled-by`                                | `string`                       | —                           | More ids for `aria-labelledby`.                                                                                                                                                                                                           |
+| `describedBy`                  | `described-by`                               | `string`                       | —                           | More ids for `aria-describedby`.                                                                                                                                                                                                          |
+| `tooltip`                      | `tooltip` (the `<uni-tooltip>`'s id)         | a tooltip's `instance`         | —                           | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-popover>` sits in directly links too. With `shouldOpenOnlyWhenTruncated`, it measures `triggerLabel` and `triggerDescription`, else the trigger. |
 
 `PositionArea` is exported from `@uniaria/core/popover` as a type.
 
@@ -400,21 +530,22 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                                                                             | On                        | When                                                                        |
-| ------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------- |
-| `data-uni="popover"`                                                                  | root                      | Always.                                                                     |
-| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                   | trigger, anchor           | Always.                                                                     |
-| `data-element`                                                                        | every other part          | Always.                                                                     |
-| `data-open`                                                                           | every part but the anchor | The popover is open.                                                        |
-| `data-entering`                                                                       | every part but the anchor | The first frames after opening.                                             |
-| `data-exiting`                                                                        | every part but the anchor | It is closing, until its exit animations end.                               |
-| `data-placement`                                                                      | root, arrow               | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`. |
-| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close            | As on a [Button](./button.mdx).                                             |
+| Attribute                                                                                               | On                                                                | When                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-uni="popover"`                                                                                    | root                                                              | Always.                                                                                                                                               |
+| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                                     | trigger, anchor                                                   | Always.                                                                                                                                               |
+| `data-uni-part="popover-trigger-label"`, `…-trigger-description`, `…-trigger-frame`, `…-trigger-extras` | the trigger's label, description, frame and extras                | Always.                                                                                                                                               |
+| `data-element`                                                                                          | every other part                                                  | Always.                                                                                                                                               |
+| `data-open`                                                                                             | every part but the anchor and the trigger's label and description | The popover is open.                                                                                                                                  |
+| `data-entering`                                                                                         | every part but the anchor and the trigger's label and description | The first frames after opening.                                                                                                                       |
+| `data-exiting`                                                                                          | every part but the anchor and the trigger's label and description | It is closing, until its exit animations end.                                                                                                         |
+| `data-placement`                                                                                        | root, arrow                                                       | While shown: the side it was placed on, `top`, `bottom`, `left` or `right`.                                                                           |
+| `data-hovered`, `data-pressed`, `data-focused`, `data-focus-visible`, `data-disabled`                   | trigger, its frame and extras, close                              | As on a [Button](./button.mdx). The frame and the extras carry the trigger's, and `data-hovered` is set while the pointer is anywhere over the frame. |
 
-| CSS variable                              | On   | Value                                                                                                                                     |
-| ----------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `--anchor-width`                          | root | The anchor's width, in pixels: `min-width: var(--anchor-width)` makes the popover at least as wide as its trigger.                        |
-| `--available-width`, `--available-height` | root | The most room the popover could take in any of its options, in pixels, for `max-width` and `max-height`, so a cap never stops a fallback. |
+| CSS variable                              | On   | Value                                                                                                                                            |
+| ----------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--anchor-width`                          | root | The anchor's width, in pixels: `min-width: var(--anchor-width)` makes the popover at least as wide as its trigger, or its frame with the extras. |
+| `--available-width`, `--available-height` | root | The most room the popover could take in any of its options, in pixels, for `max-width` and `max-height`, so a cap never stops a fallback.        |
 
 Nothing caps the popover's size unless you use them. A popover's default
 `overflow: auto` clips an arrow outside its box: give the root
@@ -473,8 +604,13 @@ edges, and it is no larger than the room UniAria measures. Without an arrow it
 scrolls inside; with one it keeps its overflow for the arrow, so scroll an
 element inside it. The arrow points at the trigger from whichever side the
 popover opened on. The trigger and the close part look like
-[Button](./button.mdx#default-styles), `data-variant` included. Opening, it
-fades in and grows from 90% from the trigger's side, in 120 milliseconds.
+[Button](./button.mdx#default-styles), `data-variant` included. A trigger
+with a `triggerLabel` is laid out as an item: its label and description take
+one line each and end in an ellipsis, and in a frame the extras sit over the
+trigger's end (see
+[Labels, frames and extras](../guide/default-styles.md#labels-frames-and-extras)).
+Opening, the popover fades in and grows from 90% from the trigger's side, in
+120 milliseconds.
 
 ## Keyboard
 
@@ -485,6 +621,11 @@ fades in and grows from 90% from the trigger's side, in 120 milliseconds.
 | Tab, Shift+Tab | In a modal popover, move through its tabbable elements and wrap at both ends.                                                                                                                                      |
 | Tab            | In a non-modal popover, continues as if the popover sat right after its trigger: from its last element, focus goes to what follows the trigger, and the popover closes.                                            |
 | Shift+Tab      | In a non-modal popover, from its first element, focus goes to the element before the trigger, and the popover closes.                                                                                              |
+
+Each of the trigger's extras is a Tab stop of its own after the trigger, in
+DOM order. A modal popover keeps Tab inside it, so the extras are reached once
+it closes. From a non-modal one, Tab from its last element goes on to the
+first extra, which follows the trigger, and the popover closes.
 
 ## Accessibility
 
@@ -502,7 +643,12 @@ fades in and grows from 90% from the trigger's side, in 120 milliseconds.
   `inert`, so the pointer still works. Live regions stay exposed.
 - **Spoken output.** "button, Size, not expanded" on the closed trigger;
   "dialog, Size" when it opens, named by the trigger, or "dialog, Image size"
-  with a title.
+  with a title. With a `triggerLabel` "Fruit" and a `triggerDescription`
+  "Apple", the trigger reads "button, Fruit, Apple, not expanded" and the
+  popover "dialog, Fruit".
+- **Extras** aren't part of the trigger's name or description: each reads on
+  its own, such as "button, Clear Fruit". Text that should describe the
+  trigger, such as a badge, goes in `triggerDescription`.
 - **Trigger ARIA.** `aria-expanded` always and `aria-controls` while open, but
   no `aria-haspopup`: screen readers read most of its values as "menu".
   UniAria doesn't use `popovertarget`, which would toggle the popover behind
@@ -530,3 +676,6 @@ fades in and grows from 90% from the trigger's side, in 120 milliseconds.
   leaves view. React Aria closes a non-modal popover on any scroll.
 - **A press outside nested popovers** closes every popover it is outside of,
   as the native popover does. React Aria closes only the top one.
+- **Extras beside the trigger** are outside it: a press on one closes the
+  popover and acts. Cube UI Kit keeps its popup open for its trigger's
+  actions.

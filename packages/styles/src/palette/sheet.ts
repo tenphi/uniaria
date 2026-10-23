@@ -4,7 +4,7 @@
  * writes them as CSS, the Tasty plugin as global styles.
  */
 
-import { tokenProperty } from '../tokens';
+import { SCHEME_STEPS, tokenProperty } from '../tokens';
 import type { Palette } from './create';
 import { BASE_TOKENS } from './css';
 import { SCHEMES } from './themes';
@@ -44,25 +44,32 @@ export interface TokenSheet {
  * Lays tokens out by scheme. A size, given one value, stays on `:root`; a
  * color, given one value, goes into every scheme's block, or else a forced
  * scheme would keep the palette's; a value per scheme goes into those
- * schemes' blocks.
+ * schemes' blocks. The quiet button's steps go with the palette, and on
+ * `:root` without one.
  */
 export function tokenSheet(options: TokenSheetOptions): TokenSheet {
   const { palette, tokens = {}, extraThemes = EXTRA_THEMES } = options;
   const dropped = EXTRA_THEMES.filter((theme) => !extraThemes.includes(theme));
   const isKept = (token: string) =>
     !dropped.some((theme) => token.startsWith(`#uni-${theme}-`));
-  const base: Record<string, string> = { ...BASE_TOKENS };
+  const base: Record<string, string> = palette
+    ? { ...BASE_TOKENS }
+    : { ...BASE_TOKENS, ...SCHEME_STEPS.light };
   let schemes: Record<Scheme, Record<string, string>> | undefined = palette
-    ? mapSchemes((scheme) =>
-        Object.fromEntries(
+    ? mapSchemes((scheme) => ({
+        ...Object.fromEntries(
           Object.entries(palette[scheme]).filter(([token]) => isKept(token)),
         ),
-      )
+        ...SCHEME_STEPS[scheme],
+      }))
     : undefined;
   for (const [token, value] of Object.entries(tokens)) {
     // Throws on a name that is no token.
     tokenProperty(token);
-    const isBase = token.startsWith('$') || schemes === undefined;
+    // The quiet steps are per scheme, so one value goes into every block.
+    const isBase =
+      (token.startsWith('$') && !(token in SCHEME_STEPS.light)) ||
+      schemes === undefined;
     if (typeof value === 'string' && isBase) {
       base[token] = value;
       continue;

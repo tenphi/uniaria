@@ -84,6 +84,8 @@
   --uni-disabled-fill-hover-color: oklch(0.8662 0.0185 262);
   --uni-disabled-fill-pressed-color: oklch(0.8662 0.0185 262);
   --uni-disabled-outline-color: oklch(0.7495 0.0317 262);
+  --uni-quiet-hover: .04;
+  --uni-quiet-pressed: .06;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -157,6 +159,8 @@
     --uni-disabled-fill-hover-color: oklch(0.3473 0.0272 262);
     --uni-disabled-fill-pressed-color: oklch(0.3473 0.0272 262);
     --uni-disabled-outline-color: oklch(0.4308 0.0328 262);
+    --uni-quiet-hover: .031;
+    --uni-quiet-pressed: .046;
   }
 }
 
@@ -230,6 +234,8 @@
   --uni-disabled-fill-hover-color: oklch(0.8662 0.0185 262);
   --uni-disabled-fill-pressed-color: oklch(0.8662 0.0185 262);
   --uni-disabled-outline-color: oklch(0.7495 0.0317 262);
+  --uni-quiet-hover: .04;
+  --uni-quiet-pressed: .06;
 }
 
 [data-uni-scheme="dark"] {
@@ -302,6 +308,8 @@
   --uni-disabled-fill-hover-color: oklch(0.3473 0.0272 262);
   --uni-disabled-fill-pressed-color: oklch(0.3473 0.0272 262);
   --uni-disabled-outline-color: oklch(0.4308 0.0328 262);
+  --uni-quiet-hover: .031;
+  --uni-quiet-pressed: .046;
 }
 
 @media (prefers-contrast: more) {
@@ -375,6 +383,8 @@
     --uni-disabled-fill-hover-color: oklch(0.8645 0.0187 262);
     --uni-disabled-fill-pressed-color: oklch(0.8645 0.0187 262);
     --uni-disabled-outline-color: oklch(0.7481 0.0319 262);
+    --uni-quiet-hover: .04;
+    --uni-quiet-pressed: .06;
   }
 
   [data-uni-scheme="light"] {
@@ -447,6 +457,8 @@
     --uni-disabled-fill-hover-color: oklch(0.8645 0.0187 262);
     --uni-disabled-fill-pressed-color: oklch(0.8645 0.0187 262);
     --uni-disabled-outline-color: oklch(0.7481 0.0319 262);
+    --uni-quiet-hover: .04;
+    --uni-quiet-pressed: .06;
   }
 
   [data-uni-scheme="dark"] {
@@ -519,6 +531,8 @@
     --uni-disabled-fill-hover-color: oklch(0.294 0.0232 262);
     --uni-disabled-fill-pressed-color: oklch(0.294 0.0232 262);
     --uni-disabled-outline-color: oklch(0.3959 0.0305 262);
+    --uni-quiet-hover: .031;
+    --uni-quiet-pressed: .046;
   }
 }
 
@@ -593,5 +607,7 @@
     --uni-disabled-fill-hover-color: oklch(0.294 0.0232 262);
     --uni-disabled-fill-pressed-color: oklch(0.294 0.0232 262);
     --uni-disabled-outline-color: oklch(0.3959 0.0305 262);
+    --uni-quiet-hover: .031;
+    --uni-quiet-pressed: .046;
   }
 }

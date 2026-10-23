@@ -17,3 +17,9 @@ body {
   gap: 0.75rem;
   align-items: center;
 }
+.filter {
+  inline-size: 12rem;
+}
+kbd {
+  font: inherit;
+}

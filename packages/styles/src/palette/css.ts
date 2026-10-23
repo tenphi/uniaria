@@ -1,4 +1,4 @@
-import { SIZES, tokenProperty } from '../tokens';
+import { SCHEME_STEPS, SIZES, tokenProperty } from '../tokens';
 import type { Palette } from './create';
 import type { Scheme } from './themes';
 
@@ -51,8 +51,9 @@ export function baseCss(
  * A palette's colors, one flat block per scheme selector (spec: Tokens →
  * Schemes): the OS's scheme by default, `data-uni-scheme` on `<html>` or
  * any element to force one, and the high-contrast colors under
- * `prefers-contrast: more`. Each block brings its `color-scheme`. Without
- * the dark or the high-contrast scheme, their blocks are left out.
+ * `prefers-contrast: more`. Each block brings its `color-scheme`, and the
+ * scheme's quiet button steps unless the palette has its own. Without the
+ * dark or the high-contrast scheme, their blocks are left out.
  */
 export function paletteCss(
   palette: Palette,
@@ -62,7 +63,7 @@ export function paletteCss(
   const scheme = (selector: string, name: Scheme) =>
     block(
       selector,
-      palette[name],
+      { ...palette[name], ...SCHEME_STEPS[name], ...palette[name] },
       name === 'dark' || name === 'darkContrast' ? 'dark' : 'light',
     );
   const blocks = [scheme(':root', 'light')];

@@ -42,7 +42,7 @@ import {
 import type { DomPartProps, PressEvent } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineComponent, event, prop } from '../../runtime';
-import { button } from '../button/button';
+import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 import { addDecimal, clamp, roundToStepPrecision, snapToStep } from './number';
@@ -588,7 +588,7 @@ export const numberField = defineComponent({
             }
           },
         }),
-        { parts: { root: part } },
+        { parts: { root: part, ...NO_ITEM_PARTS } },
       );
     const increment = stepper(1, 'increment');
     const decrement = stepper(-1, 'decrement');
@@ -599,7 +599,13 @@ export const numberField = defineComponent({
 
     // Hover, focus and typing on the input (Tooltip spec, Resolved
     // questions 2): a key closes the tooltip.
-    const tooltip = linkTooltip(ctx, { hover: 'input', focus: 'input' });
+    // An input scrolls its text, so an overflow tooltip never opens (items
+    // spec, The trigger's text).
+    const tooltip = linkTooltip(ctx, {
+      hover: 'input',
+      focus: 'input',
+      textFallback: null,
+    });
     const labelling = ctx.use(
       field,
       () => ({

@@ -153,8 +153,8 @@ const fruit = useComponent(select, {
 </Tab>
 </Tabs>
 
-The options are Listbox's item parts, so keys, groups, option labels and
-descriptions, and items read from the markup work as on
+The options are Listbox's item parts, so keys, groups, option labels,
+descriptions and extras, and items read from the markup work as on
 [Listbox](./listbox.mdx#items-and-keys). Render the options while the list is
 closed, inside the hidden popover: the element reads its items from them, and
 the trigger's `aria-controls` points at a list that holds the selected option.
@@ -214,6 +214,293 @@ fruit.addEventListener('valuechange', () => {
   badge.textContent = isPlaceholder ? 'Pick a fruit' : valueText;
 });
 ```
+
+</Tab>
+</Tabs>
+
+### Trigger extras
+
+For buttons, badges and counts that go with the trigger, such as a quiet
+Button that clears the value, render a `triggerFrame` inside the root, around
+the trigger, and a `triggerExtras` part in it, beside the trigger. The extras
+are never inside the trigger, so each is a control of its own and a Tab stop
+after the trigger. The frame and the extras carry the trigger's state
+attributes, `data-open` and `data-invalid` included, and the pointer anywhere
+over the frame hovers the trigger.
+
+<Tabs label="Trigger extras">
+<Tab label="React">
+
+```tsx
+import { useState } from 'react';
+import { button } from '@uniaria/core/button';
+import { select } from '@uniaria/core/select';
+import { useComponent } from '@uniaria/react';
+
+export function FruitSelect() {
+  const [value, setValue] = useState<readonly string[]>([]);
+  const fruit = useComponent(select, {
+    items: fruits,
+    placeholder: 'Pick a fruit',
+    value,
+    onValueChange: setValue,
+  });
+  const clear = useComponent(button, { onPress: () => setValue([]) });
+  return (
+    <div {...fruit.parts.root}>
+      <span {...fruit.parts.label}>Fruit</span>
+      <div {...fruit.parts.triggerFrame}>
+        <button {...fruit.parts.trigger}>
+          <span {...fruit.parts.value} />
+        </button>
+        <span {...fruit.parts.triggerExtras}>
+          <button
+            {...clear.parts.root}
+            data-variant="quiet"
+            aria-label="Clear Fruit"
+          >
+            <ClearIcon aria-hidden />
+          </button>
+        </span>
+      </div>
+      <div {...fruit.parts.popover}>…</div>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { button } from '@uniaria/core/button';
+import { select } from '@uniaria/core/select';
+import { useComponent } from '@uniaria/vue';
+
+const value = ref<readonly string[]>([]);
+const fruit = useComponent(select, () => ({
+  items: fruits,
+  placeholder: 'Pick a fruit',
+  value: value.value,
+  onValueChange: (keys) => (value.value = keys),
+}));
+const clear = useComponent(button, { onPress: () => (value.value = []) });
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    <span v-bind="fruit.parts.label">Fruit</span>
+    <div v-bind="fruit.parts.triggerFrame">
+      <button v-bind="fruit.parts.trigger">
+        <span v-bind="fruit.parts.value" />
+      </button>
+      <span v-bind="fruit.parts.triggerExtras">
+        <button
+          v-bind="clear.parts.root"
+          data-variant="quiet"
+          aria-label="Clear Fruit"
+        >
+          <ClearIcon aria-hidden="true" />
+        </button>
+      </span>
+    </div>
+    <div v-bind="fruit.parts.popover">…</div>
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-select id="fruit" placeholder="Pick a fruit">
+  <div data-uni="select">
+    <span data-element="Label">Fruit</span>
+    <div data-element="TriggerFrame">
+      <button data-element="Trigger"><span data-element="Value"></span></button>
+      <span data-element="TriggerExtras">
+        <uni-button id="clear-fruit">
+          <button
+            data-uni="button"
+            data-variant="quiet"
+            aria-label="Clear Fruit"
+          >
+            <svg aria-hidden="true">…</svg>
+          </button>
+        </uni-button>
+      </span>
+    </div>
+    <div data-element="Popover">…</div>
+  </div>
+</uni-select>
+
+<script type="module">
+  import '@uniaria/elements/button';
+  import '@uniaria/elements/select';
+
+  const fruit = document.querySelector('#fruit');
+  fruit.addEventListener('valuechange', (event) => {
+    fruit.value = event.detail;
+  });
+  document.querySelector('#clear-fruit').addEventListener('press', () => {
+    fruit.value = [];
+  });
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Without an anchor part, the popover is placed against the frame, so
+`min-width: var(--anchor-width)` makes it as wide as the trigger with its
+extras. A press on an extra while the list is open closes the list without
+selecting, and the extra acts, in one press; focus stays on the extra. Name
+each extra in its context: "Clear Fruit", not "Clear".
+
+### Tooltips
+
+Select takes two [Tooltip](./tooltip.mdx) links:
+
+- **`tooltip`** is the trigger's, as on a Button. It describes the trigger
+  after its description and error, unless it has `relation: 'none'`.
+- **`optionTooltip`** is one tooltip for every option. It opens on the option
+  under the pointer or with keyboard focus, moves with them, and closes on a
+  press or while you type. It never describes an option: give it
+  `relation: 'none'`, or development builds warn. Render it inside the
+  popover, beside the list, never inside an option, whose name comes from its
+  content.
+
+With `shouldOpenOnlyWhenTruncated`, a tooltip opens only while the text is cut
+off, and writes the whole text into its `text` part (see
+[Overflow tooltips](./tooltip.mdx#overflow-tooltips)). The trigger's measures
+the `value` part, so a cut-off value gets an overflow tooltip; the option
+tooltip measures each option's `optionLabel` and `optionDescription`, else
+the option.
+
+<Tabs label="Tooltips">
+<Tab label="React">
+
+```tsx
+import { select } from '@uniaria/core/select';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/react';
+
+export function FruitSelect() {
+  const valueTip = useComponent(tooltip, {
+    shouldOpenOnlyWhenTruncated: true,
+    relation: 'none',
+  });
+  const optionTip = useComponent(tooltip, {
+    shouldOpenOnlyWhenTruncated: true,
+    relation: 'none',
+    positionArea: 'right',
+  });
+  const fruit = useComponent(select, {
+    items: fruits,
+    tooltip: valueTip.instance,
+    optionTooltip: optionTip.instance,
+  });
+  return (
+    <div {...fruit.parts.root}>
+      <span {...fruit.parts.label}>Fruit</span>
+      <button {...fruit.parts.trigger}>
+        <span {...fruit.parts.value} />
+      </button>
+      <div {...valueTip.parts.root}>
+        <span {...valueTip.parts.text} />
+      </div>
+      <div {...fruit.parts.popover}>
+        <div {...fruit.parts.list}>…</div>
+        <div {...optionTip.parts.root}>
+          <span {...optionTip.parts.text} />
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { select } from '@uniaria/core/select';
+import { tooltip } from '@uniaria/core/tooltip';
+import { useComponent } from '@uniaria/vue';
+
+const valueTip = useComponent(tooltip, {
+  shouldOpenOnlyWhenTruncated: true,
+  relation: 'none',
+});
+const optionTip = useComponent(tooltip, {
+  shouldOpenOnlyWhenTruncated: true,
+  relation: 'none',
+  positionArea: 'right',
+});
+const fruit = useComponent(select, {
+  items: fruits,
+  tooltip: valueTip.instance,
+  optionTooltip: optionTip.instance,
+});
+</script>
+
+<template>
+  <div v-bind="fruit.parts.root">
+    <span v-bind="fruit.parts.label">Fruit</span>
+    <button v-bind="fruit.parts.trigger">
+      <span v-bind="fruit.parts.value" />
+    </button>
+    <div v-bind="valueTip.parts.root">
+      <span v-bind="valueTip.parts.text" />
+    </div>
+    <div v-bind="fruit.parts.popover">
+      <div v-bind="fruit.parts.list">…</div>
+      <div v-bind="optionTip.parts.root">
+        <span v-bind="optionTip.parts.text" />
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<uni-tooltip open-only-when-truncated relation="none">
+  <uni-select option-tooltip="fruit-option-tip">
+    <div data-uni="select">
+      <span data-element="Label">Fruit</span>
+      <button data-element="Trigger"><span data-element="Value"></span></button>
+      <div data-element="Popover">
+        <div data-element="List">…</div>
+        <uni-tooltip
+          id="fruit-option-tip"
+          open-only-when-truncated
+          relation="none"
+          position-area="right"
+        >
+          <div data-uni="tooltip"><span data-element="Text"></span></div>
+        </uni-tooltip>
+      </div>
+    </div>
+  </uni-select>
+  <div data-uni="tooltip"><span data-element="Text"></span></div>
+</uni-tooltip>
+
+<script type="module">
+  import '@uniaria/elements/select';
+  import '@uniaria/elements/tooltip';
+</script>
+```
+
+The `<uni-tooltip>` around the select is the trigger's tooltip. The option
+tooltip is linked only by its id, with `option-tooltip`, never through a
+`<uni-tooltip>` around the select. Import the select's entry before the
+tooltip's.
 
 </Tab>
 </Tabs>
@@ -310,54 +597,61 @@ positioned absolutely, so give the popover a width, such as
 
 ## Anatomy
 
-| Part           | Element                    | Notes                                                                                                                                     |
-| -------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `root`         | any, usually `div`         | Around every other part. Select tracks focus within it.                                                                                   |
-| `label`        | any, `span` by default     | Names the trigger and the list. A press on it focuses the trigger without opening the list. UniAria writes no `for`, even on a `<label>`. |
-| `trigger`      | `button`                   | Opens and closes the list. Gets `role="combobox"`; its text is the value. Add an icon hidden with `aria-hidden`.                          |
-| `value`        | any, usually `span`        | Optional, inside the trigger, left empty: UniAria writes the value text or the placeholder.                                               |
-| `anchor`       | any                        | Optional. The popover is placed against it instead of the trigger.                                                                        |
-| `popover`      | any, usually `div`         | Always rendered, after the trigger. Hidden while closed; shown in the top layer while open.                                               |
-| `arrow`        | any, inside the popover    | Optional. Points at the trigger, or the anchor.                                                                                           |
-| `scroller`     | any, usually `div`         | Only when virtualized: the box that scrolls, around the list.                                                                             |
-| `list`         | any, usually `div` or `ul` | Inside the popover. Holds the options and groups.                                                                                         |
-| `empty`        | any                        | Optional, inside the popover and outside the list: your "No items" text, hidden while there are options.                                  |
-| `close`        | `button`                   | Optional, inside the popover. A visually hidden one lets touch screen-reader users close the list.                                        |
-| `description`  | any                        | Optional. Describes the trigger.                                                                                                          |
-| `error`        | any                        | Optional. Shown and announced while `isInvalid`.                                                                                          |
-| `hiddenSelect` | `select`, left empty       | Optional. Submits the value and takes autofill; UniAria writes its options.                                                               |
+| Part            | Element                    | Notes                                                                                                                                                                                                          |
+| --------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`          | any, usually `div`         | Around every other part. Select tracks focus within it.                                                                                                                                                        |
+| `label`         | any, `span` by default     | Names the trigger and the list. A press on it focuses the trigger without opening the list. UniAria writes no `for`, even on a `<label>`.                                                                      |
+| `triggerFrame`  | any, usually `div`         | Optional, inside the root, around the trigger and its extras. It carries the trigger's state attributes, and the pointer over it hovers the trigger. Without an anchor part, the popover is placed against it. |
+| `trigger`       | `button`                   | Opens and closes the list. Gets `role="combobox"`; its text is the value. Add an icon hidden with `aria-hidden`.                                                                                               |
+| `value`         | any, usually `span`        | Optional, inside the trigger, left empty: UniAria writes the value text or the placeholder.                                                                                                                    |
+| `triggerExtras` | any, usually `span`        | Optional, inside the frame, beside the trigger and never inside it: your buttons, badges and counts. It carries the trigger's state attributes.                                                                |
+| `anchor`        | any                        | Optional. The popover is placed against it instead of the frame or the trigger.                                                                                                                                |
+| `popover`       | any, usually `div`         | Always rendered, after the trigger. Hidden while closed; shown in the top layer while open.                                                                                                                    |
+| `arrow`         | any, inside the popover    | Optional. Points at the trigger, or the anchor.                                                                                                                                                                |
+| `scroller`      | any, usually `div`         | Only when virtualized: the box that scrolls, around the list.                                                                                                                                                  |
+| `list`          | any, usually `div` or `ul` | Inside the popover. Holds the options and groups.                                                                                                                                                              |
+| `empty`         | any                        | Optional, inside the popover and outside the list: your "No items" text, hidden while there are options.                                                                                                       |
+| `close`         | `button`                   | Optional, inside the popover. A visually hidden one lets touch screen-reader users close the list.                                                                                                             |
+| `description`   | any                        | Optional. Describes the trigger.                                                                                                                                                                               |
+| `error`         | any                        | Optional. Shown and announced while `isInvalid`.                                                                                                                                                               |
+| `hiddenSelect`  | `select`, left empty       | Optional. Submits the value and takes autofill; UniAria writes its options.                                                                                                                                    |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
 [Ids](../guide/accessibility.md#ids)).
 
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
-`group` and `groupLabel`, inside the list and keyed by the item's key (see
-[Listbox](./listbox.mdx#anatomy)).
+`optionExtras`, `group` and `groupLabel`, inside the list and keyed by the
+item's key (see [Listbox](./listbox.mdx#anatomy)). `optionExtras` holds
+badges, counts or icons inside an option, nothing focusable, and describes the
+option after its description; extras with `aria-hidden="true"` stay out of
+the description (see [Extras in options](./listbox.mdx#extras-in-options)).
 
 ## Props
 
-| Prop                                                                            | Attribute                 | Type                     | Default                       | Description                                                                                                                   |
-| ------------------------------------------------------------------------------- | ------------------------- | ------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `items`, `getKey`, `getTextValue`, `isItemDisabled`, `getChildren`              | — (properties, or markup) |                          |                               | Listbox's: the options and how to read them. `getTextValue` is also the displayed value and the hidden `<option>`s' text.     |
-| `disabledKeys`                                                                  | `disabled-keys` (JSON)    | `readonly string[]`      | `[]`                          | Disabled options, by key.                                                                                                     |
-| `value` / `defaultValue`                                                        | — (properties)            | `readonly string[]`      | `[]`                          | The selected keys; at most one in single mode. Keys with no item stay in it and show nothing.                                 |
-| `selectionMode`                                                                 | `selection-mode`          | `'single' \| 'multiple'` | `'single'`                    | Multiple mode keeps the list open while options toggle.                                                                       |
-| `isOpen` / `defaultOpen`                                                        | — / `default-open`        | `boolean`                | `false`                       | Whether the list is open. Changes are reported by `openchange`.                                                               |
-| `placeholder`                                                                   | `placeholder`             | `string`                 | —                             | The `value` part's text while nothing is selected. There is no default text.                                                  |
-| `isDisabled`                                                                    | `disabled`                | `boolean`                | `false`                       | The trigger is natively disabled and nothing opens.                                                                           |
-| `isReadOnly`                                                                    | `readonly`                | `boolean`                | `false`                       | `aria-readonly` on the trigger. The list opens and focus moves, but nothing is selected, from the list or the closed trigger. |
-| `isRequired`                                                                    | `required`                | `boolean`                | `false`                       | `aria-required` on the trigger and `required` on the hidden `<select>`.                                                       |
-| `isInvalid`                                                                     | `invalid`                 | `boolean`                | `false`                       | `aria-invalid` on the trigger, and shows the `error` part.                                                                    |
-| `shouldFocusWrap`                                                               | `focus-wrap`              | `boolean`                | `false`                       | The arrows in the list wrap from the last option to the first.                                                                |
-| `positionArea`                                                                  | `position-area`           | `PositionArea`           | `'block-end span-inline-end'` | Where the popover goes: below the trigger, aligned to its start edge. See [Popover](./popover.mdx).                           |
-| `positionTryFallbacks`                                                          | `position-try-fallbacks`  | `string`                 | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                          |
-| `triggerId`                                                                     | —                         | `string`                 | generated                     | The trigger's id while it has none of its own.                                                                                |
-| `listId`                                                                        | —                         | `string`                 | generated                     | The list's id while it has none of its own. Option ids are made from the list's id.                                           |
-| `labelElementType`                                                              | — (the label's tag)       | `string`                 | `'span'`                      | The tag you render as the label.                                                                                              |
-| `labelledBy`                                                                    | `labelled-by`             | `string`                 | —                             | Ids of more elements that name the trigger and the list.                                                                      |
-| `describedBy`                                                                   | `described-by`            | `string`                 | —                             | Ids of more elements that describe the trigger.                                                                               |
-| `virtualizer`, `itemSize`, `shouldMeasureItems`, `overscan`, `initialItemCount` | as on Listbox             |                          |                               | Listbox's virtualization, passed to the list.                                                                                 |
+| Prop                                                                            | Attribute                                   | Type                     | Default                       | Description                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items`, `getKey`, `getTextValue`, `isItemDisabled`, `getChildren`              | — (properties, or markup)                   |                          |                               | Listbox's: the options and how to read them. `getTextValue` is also the displayed value and the hidden `<option>`s' text.                                                                                         |
+| `disabledKeys`                                                                  | `disabled-keys` (JSON)                      | `readonly string[]`      | `[]`                          | Disabled options, by key.                                                                                                                                                                                         |
+| `value` / `defaultValue`                                                        | — (properties)                              | `readonly string[]`      | `[]`                          | The selected keys; at most one in single mode. Keys with no item stay in it and show nothing.                                                                                                                     |
+| `selectionMode`                                                                 | `selection-mode`                            | `'single' \| 'multiple'` | `'single'`                    | Multiple mode keeps the list open while options toggle.                                                                                                                                                           |
+| `isOpen` / `defaultOpen`                                                        | — / `default-open`                          | `boolean`                | `false`                       | Whether the list is open. Changes are reported by `openchange`.                                                                                                                                                   |
+| `placeholder`                                                                   | `placeholder`                               | `string`                 | —                             | The `value` part's text while nothing is selected. There is no default text.                                                                                                                                      |
+| `isDisabled`                                                                    | `disabled`                                  | `boolean`                | `false`                       | The trigger is natively disabled and nothing opens.                                                                                                                                                               |
+| `isReadOnly`                                                                    | `readonly`                                  | `boolean`                | `false`                       | `aria-readonly` on the trigger. The list opens and focus moves, but nothing is selected, from the list or the closed trigger.                                                                                     |
+| `isRequired`                                                                    | `required`                                  | `boolean`                | `false`                       | `aria-required` on the trigger and `required` on the hidden `<select>`.                                                                                                                                           |
+| `isInvalid`                                                                     | `invalid`                                   | `boolean`                | `false`                       | `aria-invalid` on the trigger, and shows the `error` part.                                                                                                                                                        |
+| `shouldFocusWrap`                                                               | `focus-wrap`                                | `boolean`                | `false`                       | The arrows in the list wrap from the last option to the first.                                                                                                                                                    |
+| `positionArea`                                                                  | `position-area`                             | `PositionArea`           | `'block-end span-inline-end'` | Where the popover goes: below the trigger, aligned to its start edge. See [Popover](./popover.mdx).                                                                                                               |
+| `positionTryFallbacks`                                                          | `position-try-fallbacks`                    | `string`                 | `'flip-block, flip-inline'`   | Where it goes when that doesn't fit.                                                                                                                                                                              |
+| `triggerId`                                                                     | —                                           | `string`                 | generated                     | The trigger's id while it has none of its own.                                                                                                                                                                    |
+| `listId`                                                                        | —                                           | `string`                 | generated                     | The list's id while it has none of its own. Option ids are made from the list's id.                                                                                                                               |
+| `labelElementType`                                                              | — (the label's tag)                         | `string`                 | `'span'`                      | The tag you render as the label.                                                                                                                                                                                  |
+| `labelledBy`                                                                    | `labelled-by`                               | `string`                 | —                             | Ids of more elements that name the trigger and the list.                                                                                                                                                          |
+| `describedBy`                                                                   | `described-by`                              | `string`                 | —                             | Ids of more elements that describe the trigger.                                                                                                                                                                   |
+| `tooltip`                                                                       | `tooltip` (the `<uni-tooltip>`'s id)        | a tooltip's `instance`   | —                             | A [Tooltip](./tooltip.mdx) for the trigger. On the element, a `<uni-tooltip>` that `<uni-select>` sits in directly links too. With `shouldOpenOnlyWhenTruncated`, it measures the `value` part, else the trigger. |
+| `optionTooltip`                                                                 | `option-tooltip` (the `<uni-tooltip>`'s id) | a tooltip's `instance`   | —                             | One Tooltip for every option (see [Tooltips](#tooltips)). On the element, only the attribute links it.                                                                                                            |
+| `virtualizer`, `itemSize`, `shouldMeasureItems`, `overscan`, `initialItemCount` | as on Listbox                               |                          |                               | Listbox's virtualization, passed to the list.                                                                                                                                                                     |
 
 The list always focuses options on hover and is vertical; the popover is
 always modal and dismissable. Development builds warn when the select has no
@@ -413,29 +707,29 @@ On the custom element, read `element.instance.getState()`. See
 
 ## Styling
 
-| Attribute                                                                                              | On               | When                                                                                    |
-| ------------------------------------------------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `data-uni="select"`                                                                                    | root             | Always.                                                                                 |
-| `data-element`                                                                                         | every other part | Always.                                                                                 |
-| `data-open`                                                                                            | named parts      | The list is open.                                                                       |
-| `data-entering`, `data-exiting`                                                                        | named parts      | The first frames after opening; closing, until your exit animations on the popover end. |
-| `data-placeholder`                                                                                     | named parts      | Nothing is selected.                                                                    |
-| `data-multiple`                                                                                        | named parts      | Multiple mode.                                                                          |
-| `data-disabled`, `data-readonly`, `data-required`, `data-invalid`                                      | named parts      | The select is disabled, read-only, required or invalid.                                 |
-| `data-focus-within`, `data-focus-visible`                                                              | named parts      | Focus is on the trigger or in the popup, and from the keyboard.                         |
-| `data-pressed`, `data-hovered`, `data-focused`                                                         | trigger          | As on [Button](./button.mdx).                                                           |
-| `data-placement`                                                                                       | popover, arrow   | The side the popover opened on: `top`, `bottom`, `left` or `right`.                     |
-| `data-empty`, `data-orientation`                                                                       | list, empty      | Listbox's: no options, and `vertical`.                                                  |
-| `data-selected`, `data-focused`, `data-focus-visible`, `data-hovered`, `data-pressed`, `data-disabled` | option           | Listbox's. Hovering focuses an option, so `data-focused` follows the mouse too.         |
+| Attribute                                                                                              | On                                   | When                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-uni="select"`                                                                                    | root                                 | Always.                                                                                                                                             |
+| `data-element`                                                                                         | every other part                     | Always.                                                                                                                                             |
+| `data-open`                                                                                            | named parts                          | The list is open.                                                                                                                                   |
+| `data-entering`, `data-exiting`                                                                        | named parts                          | The first frames after opening; closing, until your exit animations on the popover end.                                                             |
+| `data-placeholder`                                                                                     | named parts                          | Nothing is selected.                                                                                                                                |
+| `data-multiple`                                                                                        | named parts                          | Multiple mode.                                                                                                                                      |
+| `data-disabled`, `data-readonly`, `data-required`, `data-invalid`                                      | named parts                          | The select is disabled, read-only, required or invalid.                                                                                             |
+| `data-focus-within`, `data-focus-visible`                                                              | named parts                          | Focus is on the trigger or in the popup, and from the keyboard.                                                                                     |
+| `data-pressed`, `data-hovered`, `data-focused`                                                         | trigger, triggerFrame, triggerExtras | As on [Button](./button.mdx). The frame and the extras carry the trigger's, and `data-hovered` is set while the pointer is anywhere over the frame. |
+| `data-placement`                                                                                       | popover, arrow                       | The side the popover opened on: `top`, `bottom`, `left` or `right`.                                                                                 |
+| `data-empty`, `data-orientation`                                                                       | list, empty                          | Listbox's: no options, and `vertical`.                                                                                                              |
+| `data-selected`, `data-focused`, `data-focus-visible`, `data-hovered`, `data-pressed`, `data-disabled` | option                               | Listbox's. Hovering focuses an option, so `data-focused` follows the mouse too.                                                                     |
 
 "Named parts" are every part except `anchor`, `scroller` and `hiddenSelect`.
 State attributes are present or absent, never `"false"`.
 
-| Custom property      | On      | Value                                                              |
-| -------------------- | ------- | ------------------------------------------------------------------ |
-| `--anchor-width`     | popover | The trigger's (or the anchor's) width, for `min-width`.            |
-| `--available-width`  | popover | The most room the popover has across its positions, in pixels.     |
-| `--available-height` | popover | The same, vertically, for a `max-height` that leaves room to flip. |
+| Custom property      | On      | Value                                                                                    |
+| -------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `--anchor-width`     | popover | The width of the anchor part, else the trigger frame, else the trigger, for `min-width`. |
+| `--available-width`  | popover | The most room the popover has across its positions, in pixels.                           |
+| `--available-height` | popover | The same, vertically, for a `max-height` that leaves room to flip.                       |
 
 They resolve on the popover, so use them there:
 
@@ -459,12 +753,18 @@ The optional [`@uniaria/styles`](../guide/default-styles.md) package styles
 every part, as in the demo above, whose CSS tab holds only the page's layout.
 The trigger is a field's box holding the value, on one line that ends in an
 ellipsis, with a soft placeholder and a chevron the styles draw, so leave your
-icon out. The popover is a surface a gap away from the trigger, at least as wide
-as it and no larger than the room UniAria measures, and the list scrolls inside
-it; options are [Listbox](./listbox.mdx#default-styles)'s. Opening, the popover
-fades in and grows from 90% as it moves 8 pixels away from the trigger, in 80
-milliseconds, and closing reverses it; under reduced motion it shows and hides
-at once. The close button stays visually hidden until it has focus.
+icon out. In a `triggerFrame`, the extras sit over the trigger's end, the value
+ends before them, and the chevron comes after them (see
+[Labels, frames and extras](../guide/default-styles.md#labels-frames-and-extras)).
+The popover is a surface a gap away from the trigger, at least as wide as it
+and no larger than the room UniAria measures, and the list scrolls inside it;
+options are [Listbox](./listbox.mdx#default-styles)'s. They cut their text to
+one line with an ellipsis, so pair them with an option tooltip (see
+[Tooltips](#tooltips)), and their extras come before the check. Opening, the
+popover fades in and grows from 90% as it moves 8 pixels away from the
+trigger, in 80 milliseconds, and closing reverses it; under reduced motion it
+shows and hides at once. The close button stays visually hidden until it has
+focus.
 
 ## Keyboard
 
@@ -489,6 +789,10 @@ the range keys. Besides them:
 | Enter, Space   | Single mode: selects the option and closes the list. Multiple mode: toggles it.                                                    |
 | Escape         | Closes the list without changing the value. Focus returns to the trigger.                                                          |
 | Tab, Shift+Tab | Closes the list without selecting, and moves focus on from the trigger: to what follows it, or with Shift to what comes before it. |
+
+Each of the trigger's extras is a Tab stop of its own after the trigger, in
+DOM order, so Tab in the open list closes it and moves focus to the first
+extra.
 
 ## Accessibility
 
@@ -515,6 +819,14 @@ the range keys. Besides them:
 - **The hidden `<select>`** has `aria-hidden="true"` and `tabindex="-1"`, so
   screen readers and Tab skip it.
 - **The root part** is needed for `focuschange` and the focus attributes.
+- **Extras** beside the trigger aren't part of its name or value: each reads
+  on its own, such as "button, Clear Fruit".
+- **Option extras** describe their option after its description: "option,
+  Apple, New, not selected". Extras with `aria-hidden="true"` stay out of it.
+- **Tooltips.** An overflow tooltip with `relation: 'none'` adds nothing: a
+  cut-off value still reads "combobox, Fruit, has popup listbox, not
+  expanded", then the whole value, which is in the trigger already. The option
+  tooltip never describes an option.
 
 ## Compared with other libraries
 
@@ -532,6 +844,9 @@ the range keys. Besides them:
   moving 10 px selects it, as native `<select>`, React Aria and Radix do. The
   APG opens on click. Touch opens on release.
 - **The value is an array of keys** in both modes, as Listbox's.
+- **Clearing and other actions** are your own controls in `triggerExtras`,
+  instead of Cube UI Kit's `isClearable` and `actions`. A press on one while
+  the list is open closes it and acts; Cube UI Kit keeps it open.
 - **Compared with a native `<select>`**, options can hold markup and groups
   can have headings, multiple mode opens a popup, and the hidden `<select>`
   keeps form submission, validation and autofill.

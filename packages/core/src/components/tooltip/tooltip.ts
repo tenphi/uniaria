@@ -9,10 +9,16 @@
  * What it describes is the component that took it through its `tooltip`
  * link (Resolved questions 2; `./link.ts`), else the trigger part. The
  * tooltip listens on that component's elements itself: hover on its visible
- * part, focus and presses on its focusable part. One tooltip is open at a
- * time per window, and once one has shown, the next opens at once
- * (`./registry.ts`, Warm-up). It stays off the layer stack and handles
- * Escape itself (Resolved questions 5 and 6).
+ * part, focus and presses on its focusable part. A list takes it through
+ * `optionTooltip` and drives it instead, reporting the option under the
+ * pointer and the one with visible focus (items spec, Option tooltips). One
+ * tooltip is open at a time per window, and once one has shown, the next
+ * opens at once (`./registry.ts`, Warm-up). It stays off the layer stack
+ * and handles Escape itself (Resolved questions 5 and 6).
+ *
+ * With `shouldOpenOnlyWhenTruncated` it opens only while the trigger's text
+ * is cut off, measured as hover starts and again as it opens (items spec,
+ * Measuring). The `text` part, which UniAria writes, holds that text.
  */
 
 import {
@@ -23,6 +29,7 @@ import {
   isDevelopment,
   isFocusable,
   isRestoringFocus,
+  isTruncated,
   modalityTrackerFor,
   partEffect,
   partElement,
@@ -32,8 +39,14 @@ import {
 } from '../../dom';
 import type { DomPartProps, PositionArea } from '../../dom';
 import { bindable, defineComponent, prop } from '../../runtime';
-import type { TooltipLinkApi, TooltipRelation, TooltipTarget } from './link';
-import { tooltipLink } from './link';
+import type {
+  TooltipDriver,
+  TooltipItem,
+  TooltipLinkApi,
+  TooltipRelation,
+  TooltipTarget,
+} from './link';
+import { optionTooltipLink, tooltipLink } from './link';
 import type { ShownTooltip, WaitingTooltip } from './registry';
 import {
   hideTooltip,
@@ -82,10 +95,10 @@ function isHoverPointer(event: PointerEvent): boolean {
 
 export const tooltip = defineComponent({
   name: 'tooltip',
-  parts: ['trigger', 'anchor', 'root', 'arrow'],
+  parts: ['trigger', 'anchor', 'root', 'arrow', 'text'],
   // They sit outside the tooltip (root AGENTS.md → Part markers).
   outsideParts: ['trigger', 'anchor'],
-  provides: [tooltipLink],
+  provides: [tooltipLink, optionTooltipLink],
   // The only members of setup()'s result consumers may call (spec,
   // Actions).
   actions: ['open', 'close'],
@@ -95,7 +108,8 @@ export const tooltip = defineComponent({
     delay: prop(250),
     closeDelay: prop(500),
     trigger: prop<'hover' | 'focus'>('hover'),
-    relation: prop<'description' | 'label'>('description'),
+    shouldOpenOnlyWhenTruncated: prop(false),
+    relation: prop<'description' | 'label' | 'none'>('description'),
     positionArea: prop<PositionArea>('top'),
     positionTryFallbacks: prop('flip-block, flip-inline'),
   },
@@ -106,33 +120,76 @@ export const tooltip = defineComponent({
     const hasPopoverApi = ctx.state(true);
     const isInstant = ctx.state(false);
 
-    // The component that took the tooltip, else the trigger part.
+    // The component that took the tooltip, else the list driving it, else
+    // the trigger part.
     const taken = ctx.state<{ readonly target: TooltipTarget } | null>(null);
+    const driven = ctx.state<object | null>(null);
+    // The option a driving list put it at.
+    const item = ctx.state<TooltipItem | null>(null);
+    // The `text` part's content (items spec, Props and parts).
+    const text = ctx.state('');
     const take: TooltipLinkApi['take'] = (target) => {
-      if (taken.get()) return null;
+      if (taken.get() || driven.get()) return null;
       const entry = { target };
       taken.set(entry);
       return () => {
         if (taken.get() === entry) taken.set(null);
       };
     };
-    const hoverElement = () =>
-      taken.get()?.target.hover ?? partElement(ctx, 'trigger');
-    const focusElement = () =>
-      taken.get()?.target.focus ?? partElement(ctx, 'trigger');
+    const trigger = () => (driven.get() ? null : partElement(ctx, 'trigger'));
+    const hoverElement = () => taken.get()?.target.hover ?? trigger();
+    const focusElement = () => taken.get()?.target.focus ?? trigger();
     const anchorElement = () =>
       partElement(ctx, 'anchor') ??
+      item.get()?.anchor ??
       taken.get()?.target.anchor ??
-      partElement(ctx, 'trigger');
+      trigger();
+    /** What it measures and copies (items spec, The trigger's text). */
+    const textElements = (): readonly HTMLElement[] => {
+      const target = item.get()?.text ?? taken.get()?.target.text;
+      if (target) return target;
+      const element = trigger();
+      return element ? [element] : [];
+    };
     const relation = (): TooltipRelation | undefined => {
       if (props.isDisabled()) return undefined;
-      return props.relation() === 'label'
-        ? { labelledBy: ids.root }
-        : { describedBy: ids.root };
+      switch (props.relation()) {
+        case 'none':
+          return undefined;
+        case 'label':
+          return { labelledBy: ids.root };
+        default:
+          return { describedBy: ids.root };
+      }
     };
     const windowOf = (): Window | null =>
-      (hoverElement() ?? focusElement() ?? partElement(ctx, 'root'))
-        ?.ownerDocument.defaultView ?? null;
+      (
+        hoverElement() ??
+        focusElement() ??
+        item.get()?.anchor ??
+        partElement(ctx, 'root')
+      )?.ownerDocument.defaultView ?? null;
+
+    /**
+     * The text elements it shows: those cut off when it opens only for cut
+     * text (none means it stays closed), else all of them.
+     */
+    const shownText = (): readonly HTMLElement[] => {
+      const elements = textElements();
+      return props.shouldOpenOnlyWhenTruncated()
+        ? elements.filter(isTruncated)
+        : elements;
+    };
+    const isFitting = () =>
+      props.shouldOpenOnlyWhenTruncated() && !textElements().some(isTruncated);
+    const fillText = (elements: readonly HTMLElement[]) => {
+      text.set(
+        elements
+          .map((element) => element.innerText.trim())
+          .filter(Boolean)
+          .join('\n'),
+      );
+    };
 
     // What holds it open (Resolved questions 9).
     let isHoveringTrigger = false;
@@ -166,8 +223,12 @@ export const tooltip = defineComponent({
     const open = () => {
       clearTimers();
       if (props.isDisabled() || isOpen.get()) return;
+      // Measured again: the layout may have changed while it waited.
+      const shown = shownText();
+      if (props.shouldOpenOnlyWhenTruncated() && shown.length === 0) return;
       const view = windowOf();
       ctx.batch(() => {
+        fillText(shown);
         isInstant.set(view !== null && isWarm(view));
         shouldSkipExit = false;
         isOpen.set(true);
@@ -186,6 +247,8 @@ export const tooltip = defineComponent({
     const onHoverStart = () => {
       clearTimeout(closeTimer);
       if (isSuppressed || props.isDisabled() || isOpen.get()) return;
+      // Text that fits starts no delay and doesn't warm the page up.
+      if (isFitting()) return;
       const view = windowOf();
       if (!view || isWarm(view)) return open();
       clearTimeout(openTimer);
@@ -298,6 +361,94 @@ export const tooltip = defineComponent({
       };
     });
 
+    /**
+     * Puts it at a list's option: there at once while it is open and the
+     * option's text is cut off, else closed (items spec, Option tooltips).
+     */
+    const moveTo = (next: TooltipItem) => {
+      if (item.get()?.key === next.key && item.get()?.anchor === next.anchor) {
+        return;
+      }
+      ctx.batch(() => {
+        item.set(next);
+        if (!isOpen.get()) return;
+        const shown = shownText();
+        if (props.shouldOpenOnlyWhenTruncated() && shown.length === 0) {
+          requestClose();
+        } else fillText(shown);
+      });
+    };
+
+    // The driven mode: a list reports where the pointer and visible focus
+    // are, and the presses and typing that close it.
+    const drive: TooltipLinkApi['drive'] = () => {
+      if (taken.get() || driven.get()) return null;
+      if (isDevelopment() && props.relation() !== 'none') {
+        warn(
+          "tooltip: a list's option tooltip describes no option. Give it " +
+            'relation: \'none\' (relation="none").',
+        );
+      }
+      const entry = {};
+      let hovered: TooltipItem | null = null;
+      let focused: TooltipItem | null = null;
+      const isSame = (a: TooltipItem | null, b: TooltipItem | null) =>
+        a?.key === b?.key && a?.anchor === b?.anchor;
+      const isCurrent = () => driven.get() === entry;
+      const driver: TooltipDriver = {
+        hover(next) {
+          if (!isCurrent() || isSame(next, hovered)) return;
+          hovered = next;
+          // The pointer left the option a press closed it on.
+          isSuppressed = false;
+          if (!next) {
+            if (!isHoveringTrigger) return;
+            isHoveringTrigger = false;
+            onHoverEnd();
+            return;
+          }
+          isHoveringTrigger = true;
+          if (isOpen.get()) moveTo(next);
+          else {
+            item.set(next);
+            onHoverStart();
+          }
+        },
+        focus(next) {
+          if (!isCurrent() || isSame(next, focused)) return;
+          focused = next;
+          isSuppressed = false;
+          if (!next) {
+            isFocusHeld = false;
+            if (!isHoveringTrigger && !isHoveringTooltip) requestClose();
+            return;
+          }
+          isFocusHeld = true;
+          if (isOpen.get()) moveTo(next);
+          else {
+            item.set(next);
+            open();
+          }
+        },
+        dismiss() {
+          if (isCurrent()) dismiss();
+        },
+        release() {
+          if (!isCurrent()) return;
+          ctx.batch(() => {
+            isHoveringTrigger = false;
+            isFocusHeld = false;
+            isSuppressed = false;
+            driven.set(null);
+            item.set(null);
+            requestClose();
+          });
+        },
+      };
+      driven.set(entry);
+      return driver;
+    };
+
     // Escape from anywhere while open, prevented but not stopped, so a
     // Popover or Dialog around it stays open (Resolved questions 5).
     partEffect(
@@ -331,11 +482,24 @@ export const tooltip = defineComponent({
     );
     ctx.effect(() => clearTimers);
 
-    // Disabled, or nothing left to describe: closed.
+    // Disabled, or nothing left to describe: closed. A driving list
+    // reports an option that went away as none.
     ctx.watch(
-      () => props.isDisabled() || (!hoverElement() && !focusElement()),
+      () =>
+        props.isDisabled() ||
+        (!driven.get() && !hoverElement() && !focusElement()),
       (isGone) => {
         if (isGone) requestClose();
+      },
+    );
+    // Opened by a controlled `isOpen`, or open from the start until the
+    // component it describes takes it, it shows the text all the same.
+    ctx.watch(
+      () => (isOpen.get() ? (item.get() ?? taken.get() ?? trigger()) : null),
+      (source) => {
+        if (source === null) return;
+        const shown = shownText();
+        fillText(shown.length > 0 ? shown : textElements());
       },
     );
 
@@ -422,12 +586,14 @@ export const tooltip = defineComponent({
 
     return {
       take,
+      drive,
       relation,
       hasPopoverApi: () => hasPopoverApi.get(),
       isShown,
       isEntering: presence.isEntering,
       isExiting: presence.isExiting,
       isInstant: () => isOpen.get() && isInstant.get(),
+      text: () => text.get(),
       placement: position.side,
       open,
       close: requestClose,
@@ -459,6 +625,9 @@ export const tooltip = defineComponent({
         popover: hasPopoverApi ? 'manual' : undefined,
         hidden: flag(!hasPopoverApi && !api.isShown()),
         role: 'tooltip',
+        // Visual only: its text is the trigger's (items spec, Props and
+        // parts).
+        'aria-hidden': props.relation() === 'none' ? 'true' : undefined,
         'data-placement': placement,
         ...state,
       },
@@ -475,6 +644,8 @@ export const tooltip = defineComponent({
       arrow: {
         attrs: { 'aria-hidden': 'true', 'data-placement': placement, ...state },
       },
+      // Element-owned: UniAria writes its content, as Select's value.
+      text: { attrs: state, properties: { textContent: api.text() } },
     };
   },
 });

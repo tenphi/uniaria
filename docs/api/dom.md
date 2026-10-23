@@ -231,7 +231,12 @@ press: a collection handles its own keys.
 createHover(ctx, { part, isDisabled() }): Hover
 ```
 
-Returns `{ isHovered(), handlers }`. Hover starts for mouse and pen only
+Returns `{ isHovered(), handlers, handlersFor(part) }`. `part` is a part's
+name, or a function naming the hoverable part now, as Button's frame while
+one is rendered and its root otherwise; `handlersFor(part)` gives each part
+it may name handlers that act only while it names that one, to bind on
+every render (React binds only the events present at the first). Hover
+starts for mouse and pen only
 (touch has no hover), ignores the mouse events iOS emulates after a tap and
 never starts while disabled. It ends on `pointerleave`, when the part
 becomes disabled or the instance stops, and when the pointer is over
@@ -484,12 +489,13 @@ together, in order, because Safari ignores a region that new.
 
 ## Platform and support checks
 
-| Export                                                            | Description                                                                                        |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `isMac(view)`, `isIOS(view)`, `isIPhone(view)`, `isAndroid(view)` | Platform checks, from `navigator.platform` (and the user agent for Android). iPadOS counts as iOS. |
-| `supportsPopover(view)`                                           | The Popover API.                                                                                   |
-| `supportsAnchorPositioning(view)`                                 | CSS anchor positioning on a popover.                                                               |
-| `isComposing(event)`                                              | An IME composition owns the key, including Safari's commit keydown after `compositionend`.         |
+| Export                                                            | Description                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isMac(view)`, `isIOS(view)`, `isIPhone(view)`, `isAndroid(view)` | Platform checks, from `navigator.platform` (and the user agent for Android). iPadOS counts as iOS.                                                                                                                                                                     |
+| `supportsPopover(view)`                                           | The Popover API.                                                                                                                                                                                                                                                       |
+| `supportsAnchorPositioning(view)`                                 | CSS anchor positioning on a popover.                                                                                                                                                                                                                                   |
+| `isComposing(event)`                                              | An IME composition owns the key, including Safari's commit keydown after `compositionend`.                                                                                                                                                                             |
+| `isTruncated(element)`                                            | The element cuts its text off: it clips what overflows it, and its content is wider than its box, measured to a fraction of a pixel, or it wraps and is taller by more than a pixel (a line clamp). Never an element that isn't rendered. An overflow tooltip asks it. |
 
 For tests, a window property under `Symbol.for('@uniaria/fallbacks/v1')`
 forces a fallback in a browser that has the feature:

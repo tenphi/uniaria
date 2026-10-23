@@ -39,7 +39,12 @@ import {
 } from 'react';
 
 import { OwnerContext, findOwner } from './owner';
-import { reactEventName, reactPropName, reactPropValue } from './props';
+import {
+  reactEventName,
+  reactPropName,
+  reactPropValue,
+  reactStyleName,
+} from './props';
 
 /** Props to spread onto a part element: attributes, stable handlers, a ref. */
 export type ReactPartProps = Readonly<Record<string, unknown>> & {
@@ -151,15 +156,6 @@ function checkOwnership<D extends AnyDefinition>(
     );
   }
 }
-
-/**
- * A style property as React names it: custom properties as they are,
- * others in camelCase (`inset-block-start` → `insetBlockStart`).
- */
-const reactStyleName = (name: string): string =>
-  name.startsWith('--')
-    ? name
-    : name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 
 /** Attributes and style as React props. */
 function toReactAttrs(

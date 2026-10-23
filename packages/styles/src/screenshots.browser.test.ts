@@ -317,6 +317,115 @@ const combobox = (props: PickerProps = {}) => `
     </div>
   </uni-combobox>`;
 
+/** A ring, drawn in the text color: the icon before a label. */
+const ICON =
+  '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>';
+
+interface ItemProps {
+  readonly variant?: string;
+  readonly description?: string;
+  readonly hint?: string;
+  readonly hasIcon?: boolean;
+  readonly isDisabled?: boolean;
+  readonly isSelected?: boolean;
+  readonly width?: number;
+}
+
+const variantAttribute = (variant?: string) =>
+  variant ? ` data-variant="${variant}"` : '';
+
+const widthStyle = (width?: number) =>
+  width ? ` style="inline-size: ${width}px"` : '';
+
+/** A label, and what goes around it. */
+const itemContent = (
+  label: string,
+  props: ItemProps,
+  parts = ['Label', 'Description'],
+) =>
+  `${props.hasIcon ? ICON : ''}<span data-element="${parts[0]}">${label}</span>${
+    props.description
+      ? `<span data-element="${parts[1]}">${props.description}</span>`
+      : ''
+  }${props.hint ? `<span>${props.hint}</span>` : ''}`;
+
+const itemButton = (label: string, props: ItemProps = {}) =>
+  `<uni-button${flags({ disabled: props.isDisabled })}><button data-uni="button"${variantAttribute(
+    props.variant,
+  )}${widthStyle(props.width)}>${itemContent(label, props)}</button></uni-button>`;
+
+/** A quiet "×" that clears the item, and a count before it. */
+const EXTRAS = (label: string, isDisabled?: boolean) =>
+  `<span>3</span><uni-button${flags({ disabled: isDisabled })}><button data-uni="button" data-variant="quiet" aria-label="Clear ${label}">×</button></uni-button>`;
+
+const framedButton = (label: string, props: ItemProps = {}) => `
+  <uni-button${flags({ disabled: props.isDisabled })}>
+    <div data-uni-part="button-frame" style="inline-size: 200px">
+      <button data-uni="button"${variantAttribute(props.variant)}>${itemContent(label, props)}</button>
+      <span data-uni-part="button-extras">${EXTRAS(label, props.isDisabled)}</span>
+    </div>
+  </uni-button>`;
+
+const framedToggleButton = (label: string, props: ItemProps = {}) => `
+  <uni-toggle-button${flags({ 'default-selected': props.isSelected })}>
+    <div data-uni-part="toggle-button-frame" style="inline-size: 200px">
+      <button data-uni="toggle-button"${variantAttribute(props.variant)}>${itemContent(label, props)}</button>
+      <span data-uni-part="toggle-button-extras">${EXTRAS(label)}</span>
+    </div>
+  </uni-toggle-button>`;
+
+const framedPopoverTrigger = (label: string, props: ItemProps = {}) => `
+  <uni-popover>
+    <div data-uni-part="popover-trigger-frame" style="inline-size: 200px">
+      <button data-uni-part="popover-trigger">${itemContent(label, props, [
+        'popover-trigger-label',
+        'popover-trigger-description',
+      ]).replaceAll('data-element=', 'data-uni-part=')}</button>
+      <span data-uni-part="popover-trigger-extras">${EXTRAS(label)}</span>
+    </div>
+    <div data-uni="popover"><p data-element="Description">Pick a fruit.</p></div>
+  </uni-popover>`;
+
+const framedSelect = (props: PickerProps = {}) => `
+  <uni-select placeholder="Pick a fruit"${pickerAttributes(props)}>
+    <div data-uni="select" style="inline-size: 200px">
+      <span data-element="Label">Fruit</span>
+      <div data-element="TriggerFrame">
+        <button data-element="Trigger"><span data-element="Value"></span></button>
+        <span data-element="TriggerExtras">${EXTRAS('Fruit')}</span>
+      </div>
+      <div data-element="Popover">
+        <div data-element="List">${OPTIONS}</div>
+      </div>
+    </div>
+  </uni-select>`;
+
+/** Options with labels, descriptions, extras and an icon. */
+const ITEM_OPTIONS = `
+  <div data-element="Option" data-key="apple">
+    <span data-element="OptionLabel" data-key="apple">Apple</span>
+    <span data-element="OptionDescription" data-key="apple">Red and sweet</span>
+    <span data-element="OptionExtras" data-key="apple" aria-hidden="true">New</span>
+  </div>
+  <div data-element="Option" data-key="banana">
+    <span data-element="OptionLabel" data-key="banana">Banana</span>
+    <span data-element="OptionExtras" data-key="banana">12</span>
+  </div>
+  <div data-element="Option" data-key="cherry">Cherry, with a name too long to fit</div>
+  <div data-element="Option" data-key="lemon">
+    ${ICON}
+    <span data-element="OptionLabel" data-key="lemon">Lemon, with a name too long to fit</span>
+    <span data-element="OptionExtras" data-key="lemon">4</span>
+  </div>`;
+
+const itemListbox = (props: PickerProps = {}) => `
+  <uni-listbox${pickerAttributes(props)}>
+    <div data-uni="listbox" style="inline-size: 220px">
+      <span data-element="Label">Fruit</span>
+      <div data-element="List">${ITEM_OPTIONS}</div>
+    </div>
+  </uni-listbox>`;
+
 const GALLERIES: readonly Gallery[] = [
   {
     name: 'button',
@@ -507,6 +616,67 @@ const GALLERIES: readonly Gallery[] = [
         <button data-uni-part="tooltip-trigger">Save</button>
         <div data-uni="tooltip">
           Saves the file
+          <div data-element="Arrow"></div>
+        </div>
+      </uni-tooltip>`,
+    layout: 'centered',
+  },
+  {
+    name: 'item-button',
+    html: [
+      itemButton('Save', { hasIcon: true, hint: 'Ctrl+S' }),
+      itemButton('Save', { description: 'Saves the file' }),
+      itemButton('Publish', {
+        variant: 'primary',
+        hasIcon: true,
+        description: 'To everyone',
+      }),
+      itemButton('Save the quarterly report', { hint: 'Ctrl+S', width: 160 }),
+      itemButton('Edit', { variant: 'quiet', description: 'The draft' }),
+      itemButton('Archive', { description: 'Read-only', isDisabled: true }),
+    ].join(''),
+    columns: 3,
+    isFocused: true,
+  },
+  {
+    name: 'item-frame',
+    html: [
+      framedButton('Fruit', { hasIcon: true }),
+      framedButton('Fruit', { variant: 'primary' }),
+      framedButton('Fruit', { variant: 'quiet' }),
+      framedButton('A fruit with a name too long to fit', {
+        variant: 'danger',
+      }),
+      framedButton('Fruit', { isDisabled: true }),
+      framedToggleButton('Fruit', { isSelected: true }),
+      framedPopoverTrigger('Fruit', { description: 'Apple' }),
+      framedSelect({ value: ['banana'] }),
+      `<div dir="rtl">${framedButton('Fruit, right to left', { hasIcon: true })}</div>`,
+    ].join(''),
+    columns: 3,
+    isFocused: true,
+  },
+  {
+    name: 'item-options',
+    html: [
+      itemListbox({ value: ['banana'] }),
+      itemListbox({ value: ['apple', 'lemon'], isMultiple: true }),
+    ].join(''),
+    columns: 2,
+    isFocused: true,
+  },
+  {
+    name: 'tooltip-overflow',
+    html: `
+      <uni-tooltip default-open open-only-when-truncated relation="none">
+        <uni-button>
+          <button data-uni="button" style="inline-size: 160px">
+            <span data-element="Label">Save the quarterly report</span>
+            <span data-element="Description">To the shared drive</span>
+          </button>
+        </uni-button>
+        <div data-uni="tooltip">
+          <span data-element="Text"></span>
           <div data-element="Arrow"></div>
         </div>
       </uni-tooltip>`,

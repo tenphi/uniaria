@@ -2,7 +2,8 @@
  * ToggleButton, from the approved spec (`./spec.md`): Button, composed with
  * `ctx.use()`, plus a bindable `isSelected` announced through
  * `aria-pressed`. Every press toggles it before `press` fires. It takes a
- * tooltip as Button does.
+ * tooltip as Button does, and Button's label, description, frame and
+ * extras (items spec), whose frame and extras carry `data-selected` too.
  */
 
 import type { PressEvent } from '../../dom';
@@ -12,7 +13,9 @@ import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 export const toggleButton = defineComponent({
   name: 'toggle-button',
-  parts: ['root'],
+  parts: ['root', 'label', 'description', 'frame', 'extras'],
+  // Beside the root, as Button's.
+  outsideParts: ['frame', 'extras'],
   links: [tooltipLink],
   props: {
     isSelected: bindable(false),
@@ -51,15 +54,20 @@ export const toggleButton = defineComponent({
       },
     }));
     // The composed Button sees no link: the toggle button takes it.
-    const tooltip = linkTooltip(ctx, { hover: 'root', focus: 'root' });
+    const tooltip = linkTooltip(ctx, {
+      hover: 'root',
+      focus: 'root',
+      text: ['label', 'description'],
+    });
     return { button: inner, tooltip };
   },
   expose({ props, api }) {
     return { ...api.button.state(), isSelected: props.isSelected.get() };
   },
   connect({ props, api }) {
-    const { root } = api.button.connect();
+    const { root, label, description, frame, extras } = api.button.connect();
     const isSelected = props.isSelected.get();
+    const selected = { 'data-selected': isSelected ? '' : undefined };
     return {
       root: {
         ...root,
@@ -67,10 +75,18 @@ export const toggleButton = defineComponent({
           ...root.attrs,
           // Always present: without it the root is a plain button.
           'aria-pressed': String(isSelected),
-          'data-selected': isSelected ? '' : undefined,
-          ...relationAttributes(api.tooltip),
+          ...selected,
+          // After Button's label and description.
+          ...relationAttributes(api.tooltip, {
+            labelledBy: root.attrs['aria-labelledby'],
+            describedBy: root.attrs['aria-describedby'],
+          }),
         },
       },
+      label,
+      description,
+      frame: { ...frame, attrs: { ...frame.attrs, ...selected } },
+      extras: { ...extras, attrs: { ...extras.attrs, ...selected } },
     };
   },
 });

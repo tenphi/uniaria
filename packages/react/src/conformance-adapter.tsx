@@ -38,7 +38,7 @@ import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 import { OwnerContext, OwnerProvider } from './owner';
-import { reactPropName, reactPropValue } from './props';
+import { reactPropName, reactPropValue, reactStyleName } from './props';
 import type { ComponentHandle } from './use-component';
 import { useComponent, useComponentState } from './use-component';
 
@@ -68,10 +68,26 @@ const UNCONTROLLED: Readonly<Record<string, string>> = {
   checked: 'defaultChecked',
 };
 
+/** A `style` attribute as the object React takes. */
+function styleObject(value: string): Record<string, string> {
+  const style: Record<string, string> = {};
+  for (const declaration of value.split(';')) {
+    const colon = declaration.indexOf(':');
+    if (colon === -1) continue;
+    const name = declaration.slice(0, colon).trim();
+    if (name) style[reactStyleName(name)] = declaration.slice(colon + 1).trim();
+  }
+  return style;
+}
+
 function templateProps(node: TemplateElement): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   const isFormControl = ['input', 'textarea', 'select'].includes(node.tag);
   for (const [name, value] of Object.entries(node.attrs)) {
+    if (name === 'style') {
+      props.style = styleObject(value);
+      continue;
+    }
     const prop = (isFormControl && UNCONTROLLED[name]) || reactPropName(name);
     props[prop] = reactPropValue(prop, value);
   }

@@ -458,6 +458,14 @@ export interface Linkable {
 export interface LinkKey<Name extends string = string, Api = unknown> {
   /** `tooltip`: `useComponent(button, { tooltip })`, `<uni-button tooltip="hint">`. */
   readonly name: Name;
+  /** The element attribute, when it isn't the name: `option-tooltip`. */
+  readonly attribute?: string;
+  /**
+   * Found on elements only by its attribute, never through the host the
+   * element sits in: a component with two keys a host answers takes that
+   * host for the other one (items spec, Runtime and harness changes 3).
+   */
+  readonly isAttributeOnly?: boolean;
   /** Types `ctx.link()`; never set. */
   readonly api?: Api;
 }

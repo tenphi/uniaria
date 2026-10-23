@@ -57,7 +57,13 @@ export const textField = defineComponent({
     const { props } = ctx;
     // Hover, focus and typing on the input (Tooltip spec, Resolved
     // questions 2): a key closes the tooltip.
-    const tooltip = linkTooltip(ctx, { hover: 'input', focus: 'input' });
+    // An input scrolls its text, so an overflow tooltip never opens (items
+    // spec, The trigger's text).
+    const tooltip = linkTooltip(ctx, {
+      hover: 'input',
+      focus: 'input',
+      textFallback: null,
+    });
     const labelling = ctx.use(
       field,
       () => ({
