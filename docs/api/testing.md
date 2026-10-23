@@ -113,12 +113,12 @@ A template is the consumer's markup, described without a framework. Each
 adapter renders it its own way: React spreads part props onto the elements,
 custom elements wrap them in the host.
 
-| Helper                                   | Description                                                                                                                                                                                                                             |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `h(tag, attrs?, ...children)`            | An element. `part` in `attrs` names the UniAria part; every other key is an attribute the consumer owns, with its DOM name (`class`, `for`, `aria-label`). Children are nodes or text.                                                  |
-| `nested(component, props?, ...children)` | Another component inside, such as a checkbox in its group. React renders it with its own `useComponent()` inside its owner's `OwnerProvider`; custom elements wrap its children in `<uni-checkbox>`. Parts in its children are its own. |
-| `rows(render)`                           | Rows rendered from the component's `renderedKeys` and `renderedSections`, as a virtualized list's consumer renders them: `rows(({ keys }) => keys.map((key) => h('div', { part: 'option', 'data-key': key }, key)))`.                   |
-| `VIRTUALIZER`                            | Stands for `virtualizer` from `@uniaria/core/virtual` in a scenario's props; each adapter passes the real one.                                                                                                                          |
+| Helper                                   | Description                                                                                                                                                                                                                            |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `h(tag, attrs?, ...children)`            | An element. `part` in `attrs` names the UniAria part; every other key is an attribute the consumer owns, with its DOM name (`class`, `for`, `aria-label`). Children are nodes or text.                                                 |
+| `nested(component, props?, ...children)` | Another component inside, such as a checkbox in its group. React renders it with its own `useBehavior()` inside its owner's `OwnerProvider`; custom elements wrap its children in `<uni-checkbox>`. Parts in its children are its own. |
+| `rows(render)`                           | Rows rendered from the component's `renderedKeys` and `renderedSections`, as a virtualized list's consumer renders them: `rows(({ keys }) => keys.map((key) => h('div', { part: 'option', 'data-key': key }, key)))`.                  |
+| `VIRTUALIZER`                            | Stands for `virtualizer` from `@uniaria/core/virtual` in a scenario's props; each adapter passes the real one.                                                                                                                         |
 
 ### The scenario context
 

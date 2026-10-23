@@ -13,9 +13,9 @@ Documentation: [uniaria.tenphi.me](https://uniaria.tenphi.me).
 
 | Package             | Purpose                                                       |
 | ------------------- | ------------------------------------------------------------- |
-| `@uniaria/core`     | Runtime, interactions, collections and component definitions  |
-| `@uniaria/react`    | React adapter: `useComponent(definition, props)`              |
-| `@uniaria/vue`      | Vue adapter: `useComponent(definition, props)`                |
+| `@uniaria/core`     | Runtime, interactions, collections and behavior definitions   |
+| `@uniaria/react`    | React adapter: `useBehavior(definition, props)`               |
+| `@uniaria/vue`      | Vue adapter: `useBehavior(definition, props)`                 |
 | `@uniaria/elements` | Custom-elements adapter: `defineElement(definition, options)` |
 | `@uniaria/testing`  | Test instances, conformance runner, screen-reader helpers     |
 | `@uniaria/styles`   | Optional default styles: prebuilt CSS and Tasty style objects |

@@ -13,7 +13,7 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { OwnerProvider } from './owner';
-import { useComponent } from './use-component';
+import { useBehavior } from './use-behavior';
 
 let root: Root | undefined;
 
@@ -36,7 +36,7 @@ function Option(props: {
   readonly value: string;
   readonly owner?: Instance<typeof checkboxGroup>;
 }) {
-  const ui = useComponent(checkbox, {
+  const ui = useBehavior(checkbox, {
     value: props.value,
     owner: props.owner,
     labelElementType: 'span',
@@ -55,7 +55,7 @@ function Group(props: {
   readonly onValueChange?: (value: readonly string[]) => void;
   readonly children: ReactNode;
 }) {
-  const ui = useComponent(checkboxGroup, {
+  const ui = useBehavior(checkboxGroup, {
     defaultValue: props.defaultValue,
     onValueChange: props.onValueChange,
   });
@@ -115,7 +115,7 @@ describe('owners in React', () => {
   it('links through the owner prop without a provider', () => {
     let group: Instance<typeof checkboxGroup> | undefined;
     function Apart() {
-      const ui = useComponent(checkboxGroup, { defaultValue: ['email'] });
+      const ui = useBehavior(checkboxGroup, { defaultValue: ['email'] });
       group = ui.instance;
       return <div {...ui.parts.root} />;
     }
@@ -142,7 +142,7 @@ function Radio(props: {
   readonly value: string;
   readonly owner?: Instance<typeof radioGroup>;
 }) {
-  const ui = useComponent(radio, {
+  const ui = useBehavior(radio, {
     value: props.value,
     owner: props.owner,
     labelElementType: 'span',
@@ -160,7 +160,7 @@ describe('radios outside their group’s root', () => {
     const elsewhere = document.createElement('div');
     let group: Instance<typeof radioGroup> | undefined;
     function Plan() {
-      const ui = useComponent(radioGroup, { defaultValue: 'free' });
+      const ui = useBehavior(radioGroup, { defaultValue: 'free' });
       group = ui.instance;
       return (
         <div {...ui.parts.root}>

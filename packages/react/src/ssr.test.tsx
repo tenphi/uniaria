@@ -14,11 +14,11 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { OwnerProvider } from './owner';
-import { useComponent, useComponentState } from './use-component';
+import { useBehavior, useBehaviorState } from './use-behavior';
 
 function Docs({ isDisabled = false }: { readonly isDisabled?: boolean }) {
-  const ui = useComponent(button, { href: '/docs', isDisabled });
-  const isUnavailable = useComponentState(ui, (state) => state.isDisabled);
+  const ui = useBehavior(button, { href: '/docs', isDisabled });
+  const isUnavailable = useBehaviorState(ui, (state) => state.isDisabled);
   return (
     <a {...ui.parts.root} title={isUnavailable ? 'Unavailable' : undefined}>
       Docs
@@ -44,7 +44,7 @@ describe('server rendering without a DOM', () => {
 });
 
 function Email() {
-  const ui = useComponent(field, { isInvalid: true, controlId: 'email' });
+  const ui = useBehavior(field, { isInvalid: true, controlId: 'email' });
   return (
     <div {...ui.parts.root}>
       <label {...ui.parts.label}>Email</label>
@@ -67,7 +67,7 @@ describe('Field on the server', () => {
 });
 
 function Name() {
-  const ui = useComponent(textField, { defaultValue: 'Jane', inputId: 'name' });
+  const ui = useBehavior(textField, { defaultValue: 'Jane', inputId: 'name' });
   return (
     <div {...ui.parts.root}>
       <label {...ui.parts.label}>Name</label>
@@ -86,7 +86,7 @@ describe('TextField on the server', () => {
 });
 
 function Terms() {
-  const ui = useComponent(checkbox, {
+  const ui = useBehavior(checkbox, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -111,7 +111,7 @@ describe('Checkbox on the server', () => {
 });
 
 function Wifi() {
-  const ui = useComponent(toggleSwitch, {
+  const ui = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -142,7 +142,7 @@ function PlanOption({
   readonly value: string;
   readonly children: string;
 }) {
-  const ui = useComponent(radio, { value, labelElementType: 'span' });
+  const ui = useBehavior(radio, { value, labelElementType: 'span' });
   return (
     <label {...ui.parts.root}>
       <input {...ui.parts.input} />
@@ -152,7 +152,7 @@ function PlanOption({
 }
 
 function Plan() {
-  const ui = useComponent(radioGroup, { defaultValue: 'pro', name: 'plan' });
+  const ui = useBehavior(radioGroup, { defaultValue: 'pro', name: 'plan' });
   return (
     <div {...ui.parts.root}>
       <span {...ui.parts.label}>Plan</span>
@@ -182,7 +182,7 @@ describe('RadioGroup on the server', () => {
 });
 
 function Confirm() {
-  const ui = useComponent(dialog, { defaultOpen: true });
+  const ui = useBehavior(dialog, { defaultOpen: true });
   return (
     <>
       <button {...ui.parts.trigger}>Delete file</button>
@@ -208,7 +208,7 @@ describe('Dialog on the server', () => {
 });
 
 function SizePicker() {
-  const ui = useComponent(popover, {});
+  const ui = useBehavior(popover, {});
   return (
     <>
       <button {...ui.parts.trigger}>Size</button>
@@ -241,7 +241,7 @@ const FRUIT = [
 ];
 
 function FruitList() {
-  const ui = useComponent(listbox, {
+  const ui = useBehavior(listbox, {
     items: FRUIT,
     defaultValue: ['banana'],
     listId: 'fruit',
@@ -289,7 +289,7 @@ describe('Listbox on the server', () => {
 });
 
 function FruitSelect() {
-  const ui = useComponent(select, {
+  const ui = useBehavior(select, {
     items: FRUIT,
     defaultValue: ['banana'],
     triggerId: 'pick',
@@ -341,7 +341,7 @@ describe('Select on the server', () => {
 });
 
 function FruitCombobox() {
-  const ui = useComponent(combobox, {
+  const ui = useBehavior(combobox, {
     items: FRUIT,
     defaultValue: ['banana'],
     inputId: 'pick',

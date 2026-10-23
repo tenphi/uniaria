@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent } from '../runtime';
+import { createInstance, defineBehavior } from '../runtime';
 import { mergeHandlers, partEffect } from './types';
 
 function probe() {
   const calls: string[] = [];
-  const definition = defineComponent({
+  const definition = defineBehavior({
     name: 'probe',
     parts: ['root'],
     props: {},

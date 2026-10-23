@@ -37,7 +37,7 @@ and reports `openChange` (DOM `openchange`, React `onOpenChange`).
 
 ## Public state
 
-What `expose()` returns. Selectors (`useComponentState`) read it, so it is
+What `expose()` returns. Selectors (`useBehaviorState`) read it, so it is
 public API: adding a field is a feature, changing one is a breaking change.
 
 | Field      | Type      | Meaning |

@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { Instance, LinkKey } from '../runtime';
-import { createInstance, defineComponent } from '../runtime';
+import { createInstance, defineBehavior } from '../runtime';
 import { provideOwner, requestOwner } from './owner';
 import { UNI_HOST } from './parts';
 
-const group = defineComponent({
+const group = defineBehavior({
   name: 'group',
   parts: ['root'],
   props: {},
@@ -13,7 +13,7 @@ const group = defineComponent({
   expose: () => ({}),
   connect: () => ({ root: { attrs: {} } }),
 });
-const other = defineComponent({
+const other = defineBehavior({
   name: 'other',
   parts: ['root'],
   props: {},
@@ -133,7 +133,7 @@ describe('owner lookup', () => {
 
 describe('link lookup', () => {
   const hintLink: LinkKey<'hint'> = { name: 'hint' };
-  const hint = defineComponent({
+  const hint = defineBehavior({
     name: 'hint',
     parts: ['root'],
     props: {},

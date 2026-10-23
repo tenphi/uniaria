@@ -41,10 +41,10 @@ and the two positioning modes.
 
 ```tsx
 import { popover } from '@uniaria/core/popover';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function ImageSize() {
-  const size = useComponent(popover, { positionArea: 'bottom span-right' });
+  const size = useBehavior(popover, { positionArea: 'bottom span-right' });
   return (
     <>
       <button {...size.parts.trigger}>Size</button>
@@ -67,9 +67,9 @@ export function ImageSize() {
 ```vue
 <script setup lang="ts">
 import { popover } from '@uniaria/core/popover';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const size = useComponent(popover, { positionArea: 'bottom span-right' });
+const size = useBehavior(popover, { positionArea: 'bottom span-right' });
 </script>
 
 <template>
@@ -131,7 +131,7 @@ focus in a field.
 <Tab label="React">
 
 ```tsx
-const share = useComponent(popover, { isNonModal: true });
+const share = useBehavior(popover, { isNonModal: true });
 ```
 
 </Tab>
@@ -139,7 +139,7 @@ const share = useComponent(popover, { isNonModal: true });
 
 ```vue
 <script setup lang="ts">
-const share = useComponent(popover, { isNonModal: true });
+const share = useBehavior(popover, { isNonModal: true });
 </script>
 ```
 
@@ -163,7 +163,7 @@ a toast or a toolbar that edits what the popover shows, return `false` from
 <Tab label="React">
 
 ```tsx
-const size = useComponent(popover, {
+const size = useBehavior(popover, {
   shouldCloseOnInteractOutside: (target) =>
     !target.closest('[data-popover-keep]'),
 });
@@ -174,7 +174,7 @@ const size = useComponent(popover, {
 
 ```vue
 <script setup lang="ts">
-const size = useComponent(popover, {
+const size = useBehavior(popover, {
   shouldCloseOnInteractOutside: (target) =>
     !target.closest('[data-popover-keep]'),
 });
@@ -203,7 +203,7 @@ update it from `openchange`.
 
 ```tsx
 const [isOpen, setOpen] = useState(false);
-const filters = useComponent(popover, { isOpen, onOpenChange: setOpen });
+const filters = useBehavior(popover, { isOpen, onOpenChange: setOpen });
 ```
 
 ### The trigger's label and extras
@@ -227,11 +227,11 @@ the popover, as the trigger does:
 ```tsx
 import { button } from '@uniaria/core/button';
 import { popover } from '@uniaria/core/popover';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitPicker(props: { fruit: string; onClear(): void }) {
-  const picker = useComponent(popover, {});
-  const clear = useComponent(button, { onPress: props.onClear });
+  const picker = useBehavior(popover, {});
+  const clear = useBehavior(button, { onPress: props.onClear });
   return (
     <>
       <div {...picker.parts.triggerFrame}>
@@ -262,13 +262,13 @@ export function FruitPicker(props: { fruit: string; onClear(): void }) {
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
 import { popover } from '@uniaria/core/popover';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 defineProps<{ fruit: string }>();
 const emit = defineEmits<{ clear: [] }>();
 
-const picker = useComponent(popover);
-const clear = useComponent(button, { onPress: () => emit('clear') });
+const picker = useBehavior(popover);
+const clear = useBehavior(button, { onPress: () => emit('clear') });
 </script>
 
 <template>
@@ -522,7 +522,7 @@ change to you.
 | `placement`  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
 ```tsx
-const placement = useComponentState(size, (state) => state.placement);
+const placement = useBehaviorState(size, (state) => state.placement);
 ```
 
 On the custom element, read `element.instance.getState()`. See

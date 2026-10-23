@@ -257,7 +257,7 @@ tree, not through spoken output.
 
 ```tsx
 // React
-const confirm = useComponent(dialog, { onOpenChange, onDismiss });
+const confirm = useBehavior(dialog, { onOpenChange, onDismiss });
 return (
   <>
     <button {...confirm.parts.trigger}>Delete file</button>

@@ -103,7 +103,7 @@ a sub-element's styles is the root's; `@own()` reads the part's own:
 ```tsx
 import { tasty } from '@tenphi/tasty';
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 const CheckboxRoot = tasty({
   as: 'label',
@@ -117,7 +117,7 @@ const CheckboxRoot = tasty({
 });
 
 export function Terms() {
-  const terms = useComponent(checkbox, { labelElementType: 'span' });
+  const terms = useBehavior(checkbox, { labelElementType: 'span' });
   return (
     <CheckboxRoot {...terms.parts.root}>
       <input {...terms.parts.input} name="terms" />
@@ -272,5 +272,5 @@ label.uni-checkbox,
 ## State in your framework
 
 When a style can't come from an attribute, such as a different icon for an
-open popover, read the state in your framework: `useComponentState` in React
+open popover, read the state in your framework: `useBehaviorState` in React
 or Vue, or the element's events and `instance.getState()`. See [State](./state.md).

@@ -21,7 +21,7 @@ export interface TemplateElement {
 
 /**
  * Another UniAria component inside the markup, such as a checkbox in its group.
- * React renders it with its own `useComponent()`; custom elements wrap its
+ * React renders it with its own `useBehavior()`; custom elements wrap its
  * children in its own host.
  */
 export interface TemplateComponent {

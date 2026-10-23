@@ -37,13 +37,13 @@ for a group of checkboxes.
 import type { ReactNode } from 'react';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { OwnerProvider, useComponent } from '@uniaria/react';
+import { OwnerProvider, useBehavior } from '@uniaria/react';
 
 export function Notifications(props: {
   value: readonly string[];
   onValueChange(value: readonly string[]): void;
 }) {
-  const group = useComponent(checkboxGroup, {
+  const group = useBehavior(checkboxGroup, {
     name: 'notify',
     isRequired: true,
     isInvalid: props.value.length === 0,
@@ -63,7 +63,7 @@ export function Notifications(props: {
 }
 
 function Channel(props: { value: string; children: ReactNode }) {
-  const channel = useComponent(checkbox, {
+  const channel = useBehavior(checkbox, {
     value: props.value,
     labelElementType: 'span',
   });
@@ -84,12 +84,12 @@ function Channel(props: { value: string; children: ReactNode }) {
 <!-- Notifications.vue -->
 <script setup lang="ts">
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 import Channel from './Channel.vue';
 
 const value = defineModel<readonly string[]>({ required: true });
 
-const group = useComponent(checkboxGroup, () => ({
+const group = useBehavior(checkboxGroup, () => ({
   name: 'notify',
   isRequired: true,
   isInvalid: value.value.length === 0,
@@ -112,11 +112,11 @@ const group = useComponent(checkboxGroup, () => ({
 <!-- Channel.vue -->
 <script setup lang="ts">
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ value: string }>();
 
-const channel = useComponent(checkbox, () => ({
+const channel = useBehavior(checkbox, () => ({
   value: props.value,
   labelElementType: 'span',
 }));
@@ -197,7 +197,7 @@ A checkbox finds its group in one of three ways:
   shadow root.
 - **Elsewhere, in React or Vue.** Pass the group's instance as the
   checkbox's `owner` prop:
-  `useComponent(checkbox, { value: 'sms', owner: group.instance })`.
+  `useBehavior(checkbox, { value: 'sms', owner: group.instance })`.
 
 A checkbox can move in or out of a group at any time. See
 [Composition](../guide/composition.md).
@@ -208,7 +208,7 @@ A "select all" checkbox stays outside the group, with no `value`, and you
 compute its state from the group's value:
 
 ```tsx
-const all = useComponent(checkbox, {
+const all = useBehavior(checkbox, {
   labelElementType: 'span',
   isSelected: value.length === channels.length,
   isIndeterminate: value.length > 0 && value.length < channels.length,
@@ -310,7 +310,7 @@ To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
-const count = useComponentState(group, (state) => state.value.length);
+const count = useBehaviorState(group, (state) => state.value.length);
 ```
 
 On the custom element, read `element.instance.getState()`. The `value`

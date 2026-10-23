@@ -37,10 +37,10 @@ There is no WAI-ARIA pattern for a field. Field follows the APG practice on
 
 ```tsx
 import { field } from '@uniaria/core/field';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function EmailField(props: { error?: string }) {
-  const email = useComponent(field, {
+  const email = useBehavior(field, {
     isInvalid: props.error !== undefined,
     isRequired: true,
   });
@@ -63,11 +63,11 @@ export function EmailField(props: { error?: string }) {
 ```vue
 <script setup lang="ts">
 import { field } from '@uniaria/core/field';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ error?: string }>();
 
-const email = useComponent(field, () => ({
+const email = useBehavior(field, () => ({
   isInvalid: props.error !== undefined,
   isRequired: true,
 }));
@@ -137,7 +137,7 @@ doesn't focus the control.
 <Tab label="React">
 
 ```tsx
-const plan = useComponent(field, {
+const plan = useBehavior(field, {
   labelElementType: 'span',
   isRequired: true,
 });
@@ -156,7 +156,7 @@ return (
 
 ```vue
 <script setup lang="ts">
-const plan = useComponent(field, {
+const plan = useBehavior(field, {
   labelElementType: 'span',
   isRequired: true,
 });
@@ -290,11 +290,11 @@ Field has no events and handles no keys: the control keeps its own.
 | `isErrorShown` | `boolean` | The error is shown: invalid and not disabled. |
 
 You rarely need it: the state attributes below cover styling. In React or
-Vue, select a value with `useComponentState` (Vue gives a ref), and the
+Vue, select a value with `useBehaviorState` (Vue gives a ref), and the
 component renders again only when it changes:
 
 ```ts
-const isErrorShown = useComponentState(email, (state) => state.isErrorShown);
+const isErrorShown = useBehaviorState(email, (state) => state.isErrorShown);
 ```
 
 On the custom element, read `element.instance.getState()`. See

@@ -32,7 +32,7 @@ import {
 } from '../../dom';
 import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
 import { listbox, optionTooltipSource } from '../listbox/listbox';
@@ -78,7 +78,7 @@ const VISUALLY_HIDDEN: Readonly<Record<string, string>> = {
 const isSameKeys = (a: readonly string[], b: readonly string[]): boolean =>
   a.length === b.length && a.every((key, index) => key === b[index]);
 
-export const select = defineComponent({
+export const select = defineBehavior({
   name: 'select',
   parts: [
     'root',

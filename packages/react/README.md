@@ -1,7 +1,7 @@
 # @uniaria/react
 
-The React adapter for UniAria: one generic hook, `useComponent`, binds any
-component definition from [`@uniaria/core`](https://www.npmjs.com/package/@uniaria/core)
+The React adapter for UniAria: one generic hook, `useBehavior`, binds any
+behavior definition from [`@uniaria/core`](https://www.npmjs.com/package/@uniaria/core)
 to your elements. React 18 or 19.
 
 > **Pre-release.** The API can change in any 0.x version.
@@ -14,15 +14,15 @@ pnpm add @uniaria/core @uniaria/react
 
 ## Use
 
-Pass a definition and its props to `useComponent`, then spread each part's
+Pass a definition and its props to `useBehavior`, then spread each part's
 props onto your element:
 
 ```tsx
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function WifiSwitch() {
-  const wifi = useComponent(toggleSwitch, {
+  const wifi = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -38,7 +38,7 @@ export function WifiSwitch() {
 
 Hovering, pressing or toggling doesn't render your component again: UniAria
 writes the new state straight to the elements. When your render needs a
-value, select it with `useComponentState`.
+value, select it with `useBehaviorState`.
 
 ## Documentation
 

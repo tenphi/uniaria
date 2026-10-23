@@ -32,10 +32,10 @@ It follows the WAI-ARIA [Button pattern](https://www.w3.org/WAI/ARIA/apg/pattern
 
 ```tsx
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function SaveButton(props: { isSaving: boolean; onSave(): void }) {
-  const save = useComponent(button, {
+  const save = useBehavior(button, {
     onPress: props.onSave,
     isDisabled: props.isSaving,
     isFocusableWhenDisabled: true,
@@ -52,12 +52,12 @@ export function SaveButton(props: { isSaving: boolean; onSave(): void }) {
 ```vue
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ isSaving: boolean }>();
 const emit = defineEmits<{ save: [] }>();
 
-const save = useComponent(button, () => ({
+const save = useBehavior(button, () => ({
   onPress: () => emit('save'),
   isDisabled: props.isSaving,
   isFocusableWhenDisabled: true,
@@ -101,7 +101,7 @@ still list them correctly.
 <Tab label="React">
 
 ```tsx
-const docs = useComponent(button, { href: '/docs' });
+const docs = useBehavior(button, { href: '/docs' });
 return <a {...docs.parts.root}>Docs</a>;
 ```
 
@@ -113,7 +113,7 @@ it for client-side routing.
 
 ```vue
 <script setup lang="ts">
-const docs = useComponent(button, { href: '/docs' });
+const docs = useBehavior(button, { href: '/docs' });
 </script>
 
 <template>
@@ -157,15 +157,15 @@ with its own name.
 
 ```tsx
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitFilter(props: {
   fruit: string;
   onPick(): void;
   onClear(): void;
 }) {
-  const filter = useComponent(button, { onPress: props.onPick });
-  const clear = useComponent(button, { onPress: props.onClear });
+  const filter = useBehavior(button, { onPress: props.onPick });
+  const clear = useBehavior(button, { onPress: props.onClear });
   return (
     <div {...filter.parts.frame}>
       <button {...filter.parts.root}>
@@ -192,13 +192,13 @@ export function FruitFilter(props: {
 ```vue
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 defineProps<{ fruit: string }>();
 const emit = defineEmits<{ pick: []; clear: [] }>();
 
-const filter = useComponent(button, { onPress: () => emit('pick') });
-const clear = useComponent(button, { onPress: () => emit('clear') });
+const filter = useBehavior(button, { onPress: () => emit('pick') });
+const clear = useBehavior(button, { onPress: () => emit('clear') });
 </script>
 
 <template>
@@ -352,7 +352,7 @@ something from state in React or Vue, select it, and the component renders
 again only when that value changes (Vue gives a ref):
 
 ```ts
-const isPressed = useComponentState(save, (state) => state.isPressed);
+const isPressed = useBehaviorState(save, (state) => state.isPressed);
 ```
 
 On the custom element, read `element.instance.getState()`. See

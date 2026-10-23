@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createScrollLock, lockScroll } from './scroll-lock';
 
-const modal = defineComponent({
+const modal = defineBehavior({
   name: 'modal',
   parts: ['root'],
   props: { isOpen: prop(false) },

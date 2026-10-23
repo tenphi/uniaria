@@ -90,7 +90,7 @@ order, skipping any that don't apply:
 7. **Events:** the DOM event name, the callback prop React and Vue take, the
    detail, and when it fires.
 8. **State:** the public state, and how to read it in React and Vue
-   (`useComponentState`) and on the element (`element.instance.getState()`).
+   (`useBehaviorState`) and on the element (`element.instance.getState()`).
 9. **Styling:** every data attribute and when it is present, the CSS custom
    properties UniAria writes, and any style UniAria sets inline for a
    behavior.
@@ -178,7 +178,7 @@ interface: no CSS files, CSS modules, Astro `<style>` blocks or inline
 styles. The site's look comes from the theme in
 `docs.config.ts`, which today sets only the brand color (`theme.brand`).
 Change a built-in surface with a partial Tasty object in `theme.styles`, and
-style a custom component with `defineComponent()` or `tasty()` from
+style a custom component with `defineBehavior()` or `tasty()` from
 `@tenphi/cookbook/styling`. Cookbook's guides ship in the package, under
 `node_modules/@tenphi/cookbook/docs/`; read `customization-rules.md` first.
 The CSS inside a `Preview` frame is the demo's and is separate.

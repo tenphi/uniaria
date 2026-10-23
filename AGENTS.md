@@ -39,7 +39,7 @@ whole file before changing anything; it is the binding summary of the design.
 | Package                | Path                | Contents                                                                                                                                                          | Published |
 | ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), the virtualizer (`./virtual`), one subpath per component (`./button`, …) | Yes       |
-| `@uniaria/react`       | `packages/react`    | Generic `useComponent(definition, props)` and `useComponentState(instance, selector)`; peer `react` ≥ 18                                                          | Yes       |
+| `@uniaria/react`       | `packages/react`    | Generic `useBehavior(definition, props)` and `useBehaviorState(instance, selector)`; peer `react` ≥ 18                                                            | Yes       |
 | `@uniaria/vue`         | `packages/vue`      | The same two composables for Vue, called in `setup()`; peer `vue` ≥ 3.5; its own `spec.md`                                                                        | Yes       |
 | `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
 | `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
@@ -57,7 +57,7 @@ uniaria/
 │   ├── core/
 │   │   ├── src/
 │   │   │   ├── index.ts            Runtime public API (re-exports runtime/)
-│   │   │   ├── runtime/            Store, bindables, defineComponent, instances — DOM-free
+│   │   │   ├── runtime/            Store, bindables, defineBehavior, instances — DOM-free
 │   │   │   ├── collections/        Keys, navigation, selection, typeahead — DOM-free
 │   │   │   ├── dom/                Interaction layer and positioning
 │   │   │   └── components/<name>/  spec.md, definition, tests (created per component)
@@ -152,11 +152,11 @@ reaches the core through `ctx.env`. Framework imports never appear in
   shared by every adapter, subscribes to the store, re-runs `connect()` after
   each flush and writes only the changed attributes to the part elements. No
   framework render happens.
-- State reaches React only on demand: `useComponentState(instance, selector,
+- State reaches React only on demand: `useBehaviorState(instance, selector,
 isEqual?)` reads one selected value through `useSyncExternalStore` and
   re-renders only when it changes (`Object.is` by default). Per-component
   sugar looks like `useButtonState(button, (s) => s.isPressed)`. Never
-  subscribe a component to the whole store. Vue's `useComponentState`
+  subscribe a component to the whole store. Vue's `useBehaviorState`
   returns a ref that triggers only when the selected value changes.
 - Controlled props still arrive through normal renders (`setProps()`, then
   `sync()`).
@@ -182,8 +182,12 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 ### Behavior lives in definitions
 
 - Every component is one
-  `defineComponent({ name, parts, props, events, setup, expose, connect })`
-  definition in `packages/core/src/components/<name>/`.
+  `defineBehavior({ name, parts, props, events, setup, expose, connect })`
+  definition in `packages/core/src/components/<name>/`. Its API says
+  behavior, not component (owner, 2026-10-23): in React and Vue a component
+  is what renders, and a definition renders nothing, so the names for it and
+  for what runs it (`defineBehavior`, `useBehavior`, `BehaviorHandle`) never
+  say component.
 - The schema is the one source for adapter props, element attributes and
   events: `prop(default, options?)` for plain values, `bindable(default,
 { event? })` for stateful ones, and `event<Detail>()` under `events` for
@@ -266,9 +270,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
      the instance's root node; the instance itself in an `owner` prop in
      React and Vue.
   2. **React instance context.** `OwnerProvider` provides an instance (or
-     the handle `useComponent` returned) through a context that holds only
+     the handle `useBehavior` returned) through a context that holds only
      the stable instance, so first render and SSR know the owner. React
-     context crosses portals. In Vue every `useComponent` provides its
+     context crosses portals. In Vue every `useBehavior` provides its
      instance (`provide()`) and a child injects the nearest during setup,
      which crosses `<Teleport>` (Vue adapter spec).
   3. **Nearest DOM ancestor.** The child dispatches a bubbling request event
@@ -660,8 +664,8 @@ group }) => …)` in `conformance/src/<name>/`. They name the component by
   `h('button', { part: 'root', class: 'x' }, 'Save')`. `part` names the UniAria
   part; every other key is a consumer-owned attribute.
   `nested('checkbox', { value: 'email' }, …)` puts another component inside:
-  React renders it with its own `useComponent()` inside its owner's
-  `OwnerProvider`, Vue with its own `useComponent()`, which injects its
+  React renders it with its own `useBehavior()` inside its owner's
+  `OwnerProvider`, Vue with its own `useBehavior()`, which injects its
   owner, custom elements wrap its children in `<uni-checkbox>`.
 - **Adapters** implement `mount(request)`: render the template (React spreads
   part props onto it, Vue binds them as `v-bind` does; custom elements wrap
@@ -744,7 +748,7 @@ Before any of these, stop and ask the owner in the conversation:
 
 - Starting a component without an approved spec.
 - Any change to `conformance/`.
-- Changing the runtime contract (`defineComponent`, bindables, store, part
+- Changing the runtime contract (`defineBehavior`, bindables, store, part
   props) or the custom-element contract.
 - Adding a dependency not in the approved list.
 - Changing `eslint.config.js` boundary rules, `tsconfig.core.json`,

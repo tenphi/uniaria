@@ -10,7 +10,7 @@ import '@uniaria/elements/tooltip';
 import { dialog } from '@uniaria/core/dialog';
 import { popover } from '@uniaria/core/popover';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 import {
   emulateMedia,
   keyboard,
@@ -95,7 +95,7 @@ const elements: Adapter = {
 };
 
 function ReactDialog() {
-  const confirm = useComponent(dialog, {});
+  const confirm = useBehavior(dialog, {});
   return (
     <>
       <button {...confirm.parts.trigger}>Delete file…</button>
@@ -109,7 +109,7 @@ function ReactDialog() {
 }
 
 function ReactPopover(props: PopoverProps) {
-  const share = useComponent(popover, {});
+  const share = useBehavior(popover, {});
   return (
     <>
       <button {...share.parts.trigger}>Share</button>
@@ -123,7 +123,7 @@ function ReactPopover(props: PopoverProps) {
 }
 
 function ReactTooltip() {
-  const hint = useComponent(tooltip, {});
+  const hint = useBehavior(tooltip, {});
   return (
     <>
       <button {...hint.parts.trigger} tabIndex={0}>

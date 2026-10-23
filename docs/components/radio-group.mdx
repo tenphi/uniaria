@@ -43,13 +43,13 @@ with the native inputs' role and state in place of `role="radio"` and
 import type { ReactNode } from 'react';
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
-import { OwnerProvider, useComponent } from '@uniaria/react';
+import { OwnerProvider, useBehavior } from '@uniaria/react';
 
 export function PlanPicker(props: {
   plan: string | null;
   onPlanChange(plan: string | null): void;
 }) {
-  const plan = useComponent(radioGroup, {
+  const plan = useBehavior(radioGroup, {
     name: 'plan',
     value: props.plan,
     onValueChange: props.onPlanChange,
@@ -67,7 +67,7 @@ export function PlanPicker(props: {
 }
 
 function Option(props: { value: string; children: ReactNode }) {
-  const option = useComponent(radio, {
+  const option = useBehavior(radio, {
     value: props.value,
     labelElementType: 'span',
   });
@@ -88,12 +88,12 @@ function Option(props: { value: string; children: ReactNode }) {
 <!-- PlanPicker.vue -->
 <script setup lang="ts">
 import { radioGroup } from '@uniaria/core/radio-group';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 import PlanOption from './PlanOption.vue';
 
 const selected = defineModel<string | null>({ required: true });
 
-const plan = useComponent(radioGroup, () => ({
+const plan = useBehavior(radioGroup, () => ({
   name: 'plan',
   value: selected.value,
   onValueChange: (value) => (selected.value = value),
@@ -114,11 +114,11 @@ const plan = useComponent(radioGroup, () => ({
 <!-- PlanOption.vue -->
 <script setup lang="ts">
 import { radio } from '@uniaria/core/radio';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ value: string }>();
 
-const option = useComponent(radio, () => ({
+const option = useBehavior(radio, () => ({
   value: props.value,
   labelElementType: 'span',
 }));
@@ -217,7 +217,7 @@ A radio finds its group in one of three ways:
 
 - **Elsewhere, in React or Vue.** Pass the group's instance as the radio's
   `owner` prop:
-  `useComponent(radio, { value: 'custom', owner: plan.instance })`.
+  `useBehavior(radio, { value: 'custom', owner: plan.instance })`.
 
 The arrow keys move only between the radios inside the group's root. A radio
 linked from outside it still joins the value, the `name` and the tab stop,
@@ -359,7 +359,7 @@ To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
-const selected = useComponentState(plan, (state) => state.value);
+const selected = useBehaviorState(plan, (state) => state.value);
 ```
 
 On the custom elements, read `element.instance.getState()`. The group's

@@ -1,7 +1,7 @@
 {
   "name": "@uniaria/react",
   "version": "0.2.0",
-  "description": "React adapter for UniAria: one generic useComponent hook over any UniAria component definition",
+  "description": "React adapter for UniAria: one generic useBehavior hook over any UniAria behavior definition",
   "type": "module",
   "sideEffects": false,
   "exports": {

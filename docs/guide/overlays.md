@@ -21,7 +21,7 @@ Vue provides and CSS inheritance intact.
 Overlays stay mounted while closed. Opening one changes attributes, not your
 component tree, so it renders nothing in React or Vue. To mount expensive content
 only while open, select `isOpen` with
-[`useComponentState`](./state.md#reading-state).
+[`useBehaviorState`](./state.md#reading-state).
 
 The Popover API is Baseline only since January 2025. In browsers without it,
 popovers open in place: `hidden` while closed, `position: fixed` while open.

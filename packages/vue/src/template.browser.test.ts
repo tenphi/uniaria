@@ -15,8 +15,8 @@ import type { App, Component } from 'vue';
 import { createApp, defineComponent, nextTick, ref, useModel } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useComponent } from './use-component';
-import { useComponentState } from './use-component-state';
+import { useBehavior } from './use-behavior';
+import { useBehaviorState } from './use-behavior-state';
 
 let app: App | undefined;
 
@@ -39,7 +39,7 @@ describe('templates', () => {
     // Vue's compiler has a notice of its own when it first runs.
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const element = render({
-      setup: () => ({ ui: useComponent(field) }),
+      setup: () => ({ ui: useBehavior(field) }),
       template: `
         <div v-bind="ui.parts.root" class="field">
           <label v-bind="ui.parts.label" id="name-label">Name</label>
@@ -65,7 +65,7 @@ describe('templates', () => {
     const onPress = vi.fn();
     const onClick = vi.fn();
     const element = render({
-      setup: () => ({ ui: useComponent(button, { onPress }), onClick }),
+      setup: () => ({ ui: useBehavior(button, { onPress }), onClick }),
       template: `<button v-bind="ui.parts.root" @click="onClick">Save</button>`,
     });
     await pointer.click(element.querySelector('button')!);
@@ -81,7 +81,7 @@ describe('templates', () => {
     const onRender = vi.fn();
     const element = render({
       setup: () => ({
-        ui: useComponent(listbox, { items }),
+        ui: useBehavior(listbox, { items }),
         items,
         onRender,
       }),
@@ -110,8 +110,8 @@ describe('templates', () => {
     let own: Element | null = null;
     const element = render({
       setup() {
-        const plain = useComponent(button, { onPress });
-        const wrapped = useComponent(button, { onPress });
+        const plain = useBehavior(button, { onPress });
+        const wrapped = useBehavior(button, { onPress });
         const mine = ref<HTMLElement | null>(null);
         const keep = (target: unknown) => {
           wrapped.parts.root.ref(target);
@@ -136,8 +136,8 @@ describe('templates', () => {
   it('read selected state as a ref the template unwraps', async () => {
     const element = render({
       setup() {
-        const ui = useComponent(button);
-        return { ui, isPressed: useComponentState(ui, (s) => s.isPressed) };
+        const ui = useBehavior(button);
+        return { ui, isPressed: useBehaviorState(ui, (s) => s.isPressed) };
       },
       template: `<button v-bind="ui.parts.root">{{ isPressed ? 'Down' : 'Up' }}</button>`,
     });
@@ -159,7 +159,7 @@ const Picker = defineComponent({
   emits: ['update:open'],
   setup(props) {
     const open = useModel(props, 'open');
-    const ui = useComponent(popover, () => ({
+    const ui = useBehavior(popover, () => ({
       isOpen: open.value,
       onOpenChange: (isOpen) => (open.value = isOpen),
     }));

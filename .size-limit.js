@@ -44,7 +44,7 @@ const adapters = Object.entries(ADAPTERS).flatMap(([name, { ignore }]) => {
     {
       name: `@uniaria/${name}`,
       path: adapter,
-      import: { [adapter]: '{ useComponent, useComponentState }' },
+      import: { [adapter]: '{ useBehavior, useBehaviorState }' },
       ignore,
     },
   ];
@@ -53,7 +53,7 @@ const adapters = Object.entries(ADAPTERS).flatMap(([name, { ignore }]) => {
       name: `@uniaria/${name} + ${subpath}`,
       path: [adapter, core(subpath)],
       import: {
-        [adapter]: '{ useComponent }',
+        [adapter]: '{ useBehavior }',
         [core(subpath)]: `{ ${definition} }`,
       },
       ignore,
@@ -63,7 +63,7 @@ const adapters = Object.entries(ADAPTERS).flatMap(([name, { ignore }]) => {
     name: `@uniaria/${name} + every component`,
     path: [adapter, ...Object.keys(COMPONENTS).map(core)],
     import: {
-      [adapter]: '{ useComponent }',
+      [adapter]: '{ useBehavior }',
       ...Object.fromEntries(
         Object.entries(COMPONENTS).map(([subpath, definition]) => [
           core(subpath),

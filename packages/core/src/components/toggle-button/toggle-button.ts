@@ -7,11 +7,11 @@
  */
 
 import type { PressEvent } from '../../dom';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { button } from '../button/button';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
-export const toggleButton = defineComponent({
+export const toggleButton = defineBehavior({
   name: 'toggle-button',
   parts: ['root', 'label', 'description', 'frame', 'extras'],
   // Beside the root, as Button's.

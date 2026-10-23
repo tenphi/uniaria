@@ -30,7 +30,7 @@ The `node` and `browser` projects pick up files under `packages/*/src/` and
 no globals. Workspace packages resolve each other's sources, so no build is
 needed first.
 
-- **Node:** the runtime, collections, component definitions driven through
+- **Node:** the runtime, collections, behavior definitions driven through
   `createInstance` (call actions and part handlers, read `attrs` and
   `getState()`), server rendering with `renderToString`, and the
   `ssr-safety.test.ts` files of `@uniaria/core` and the adapters, which
@@ -145,11 +145,11 @@ are reported as skipped, not failed. Raise the phase in the adapter's
 
 - **React** renders the template inside StrictMode, so every scenario also
   runs through a double mount, spreading `ui.parts.<name>` onto the part
-  elements. A nested component renders with its own `useComponent()` inside
+  elements. A nested component renders with its own `useBehavior()` inside
   its owner's `OwnerProvider`.
 - **Vue** renders the template with `h()` in a harness component, binding
   `ui.parts.<name>` onto the part elements as `v-bind` does. A nested
-  component renders with its own `useComponent()`, which finds the component
+  component renders with its own `useBehavior()`, which finds the component
   around it as its owner.
 - **Custom elements** render the template as plain DOM, wrap the parts in
   the component's host, `<uni-<name>>`, and set props as properties. A nested
@@ -177,10 +177,10 @@ await keyboard.press('Enter');
 expect(mounted.renderCount()).toBe(renders);
 ```
 
-The hook tests in `packages/react/src/use-component.browser.test.tsx` count
+The hook tests in `packages/react/src/use-behavior.browser.test.tsx` count
 renders exactly, outside StrictMode where they need to: a selector
 re-renders only when its selected value changes, and a prop change renders
-once. `packages/vue/src/use-component.browser.test.ts` does the same for
+once. `packages/vue/src/use-behavior.browser.test.ts` does the same for
 Vue.
 
 `packages/react/src/compare/compare.browser.test.tsx` compares Button with

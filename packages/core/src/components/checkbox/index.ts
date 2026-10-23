@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/checkbox` — the Checkbox definition. Render it with
- * `useComponent(checkbox, props)` from `@uniaria/react` or the
+ * `useBehavior(checkbox, props)` from `@uniaria/react` or the
  * `<uni-checkbox>` element from `@uniaria/elements/checkbox`.
  */
 

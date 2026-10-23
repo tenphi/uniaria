@@ -1,7 +1,7 @@
 {
   "name": "@uniaria/vue",
   "version": "0.2.0",
-  "description": "Vue adapter for UniAria: one generic useComponent composable over any UniAria component definition",
+  "description": "Vue adapter for UniAria: one generic useBehavior composable over any UniAria behavior definition",
   "type": "module",
   "sideEffects": false,
   "exports": {

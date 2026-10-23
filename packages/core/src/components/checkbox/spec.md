@@ -248,7 +248,7 @@ above were confirmed with the attribute.
 
 ```tsx
 // React
-const terms = useComponent(checkbox, {
+const terms = useBehavior(checkbox, {
   labelElementType: 'span',
   isRequired: true,
   onSelectedChange,

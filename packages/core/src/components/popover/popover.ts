@@ -40,7 +40,7 @@ import {
 } from '../../dom';
 import type { DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, TRIGGER_PARTS, button } from '../button/button';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
@@ -96,7 +96,7 @@ function isEscape(event: KeyboardEvent): boolean {
   );
 }
 
-export const popover = defineComponent({
+export const popover = defineBehavior({
   name: 'popover',
   parts: [
     'trigger',

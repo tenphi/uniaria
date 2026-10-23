@@ -8,7 +8,7 @@
 
 import { createFocusWithin, partEffect } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { field } from '../field/field';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -16,7 +16,7 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 const isSame = (a: readonly string[], b: readonly string[]): boolean =>
   a.length === b.length && a.every((item, index) => item === b[index]);
 
-export const checkboxGroup = defineComponent({
+export const checkboxGroup = defineBehavior({
   name: 'checkbox-group',
   parts: ['root', 'label', 'description', 'error'],
   props: {

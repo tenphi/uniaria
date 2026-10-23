@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/text-field` — the TextField definition. Render it with
- * `useComponent(textField, props)` from `@uniaria/react` or the
+ * `useBehavior(textField, props)` from `@uniaria/react` or the
  * `<uni-text-field>` element from `@uniaria/elements/text-field`.
  */
 

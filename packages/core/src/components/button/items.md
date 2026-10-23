@@ -540,12 +540,12 @@ name.
 
 ```tsx
 // React: a button with a description, extras and an overflow tooltip
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
 });
-const report = useComponent(button, { onPress: open, tooltip: full.instance });
-const share = useComponent(button, { onPress: shareReport });
+const report = useBehavior(button, { onPress: open, tooltip: full.instance });
+const share = useBehavior(button, { onPress: shareReport });
 return (
   <>
     <div {...report.parts.frame}>
@@ -567,12 +567,12 @@ return (
 );
 
 // One tooltip for every option of a Select, rendered inside its popup
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
   positionArea: 'right',
 });
-const fruit = useComponent(select, { optionTooltip: full.instance });
+const fruit = useBehavior(select, { optionTooltip: full.instance });
 // <div {...fruit.parts.popover}>
 //   <ul {...fruit.parts.list}>…</ul>
 //   <div {...full.parts.root}><span {...full.parts.text} /></div>

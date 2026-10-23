@@ -117,7 +117,7 @@ decision it implements.
   element.
 - **React or Vue sugar** only if it is needed. `@uniaria/react` and
   `@uniaria/vue` hold no component-specific behavior; sugar may only wrap
-  `useComponent` and `useComponentState`.
+  `useBehavior` and `useBehaviorState`.
 - **Docs.** A page in `docs/components/<name>.mdx` with a live demo, listed
   in the site's navigation. See [Documentation](./documentation.md).
 
@@ -153,7 +153,7 @@ Before any of these, stop and ask the owner in the conversation:
 
 - Starting a component without an approved spec.
 - Any change to `conformance/`.
-- Changing the runtime contract (`defineComponent`, bindables, the store,
+- Changing the runtime contract (`defineBehavior`, bindables, the store,
   part props) or the custom-element contract.
 - Adding a dependency that isn't on the approved list.
 - Changing the boundary rules in `eslint.config.js`, `tsconfig.core.json`,

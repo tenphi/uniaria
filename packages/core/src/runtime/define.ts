@@ -1,6 +1,8 @@
 /**
- * `defineComponent` (design decision 9): a component is one definition, and
- * both adapters are generic over it.
+ * `defineBehavior` (design decision 9): a component's behavior is one
+ * definition, and every adapter is generic over it. The name says behavior
+ * because a definition renders nothing; the framework component that uses it
+ * does.
  *
  * - `parts` — the named parts the component exposes; `outsideParts` — those
  *   rendered outside the root, as an overlay's trigger is.
@@ -328,7 +330,7 @@ export type ConnectedParts<Part extends string> = Readonly<
   Record<Part, PartProps>
 >;
 
-export interface ComponentConfig<
+export interface BehaviorConfig<
   Part extends string,
   P extends PropsSchema,
   E extends EventsSchema,
@@ -372,7 +374,7 @@ export interface Definition<
   E extends EventsSchema = EventsSchema,
   Api = unknown,
   State = unknown,
-> extends ComponentConfig<Part, P, E, Api, State> {
+> extends BehaviorConfig<Part, P, E, Api, State> {
   readonly events: E;
   /** The schema resolved for adapters: attributes, types, events. */
   readonly schema: ResolvedSchema;
@@ -456,7 +458,7 @@ export interface Linkable {
  * directly. `Api` is what the linked instance's `setup()` returns.
  */
 export interface LinkKey<Name extends string = string, Api = unknown> {
-  /** `tooltip`: `useComponent(button, { tooltip })`, `<uni-button tooltip="hint">`. */
+  /** `tooltip`: `useBehavior(button, { tooltip })`, `<uni-button tooltip="hint">`. */
   readonly name: Name;
   /** The element attribute, when it isn't the name: `option-tooltip`. */
   readonly attribute?: string;
@@ -519,7 +521,7 @@ export function answers(
 
 const NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
-export function defineComponent<
+export function defineBehavior<
   const Part extends string,
   P extends PropsSchema,
   Api,
@@ -530,7 +532,7 @@ export function defineComponent<
   const ItemPart extends string = never,
   const Action extends keyof Api & string = never,
 >(
-  config: ComponentConfig<Part, P, E, Api, State> & {
+  config: BehaviorConfig<Part, P, E, Api, State> & {
     readonly owner?: O;
     readonly links?: L;
     readonly actions?: readonly Action[];

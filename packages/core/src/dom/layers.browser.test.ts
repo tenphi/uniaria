@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
-import { createInstance, defineComponent, event, prop } from '../runtime';
+import { createInstance, defineBehavior, event, prop } from '../runtime';
 import { interactOutside } from './interact-outside';
 import { createLayer, isTopLayer } from './layers';
 import { createPress } from './press';
 import type { PressEvent } from './press';
 import type { DismissReason } from './layers';
 
-const layer = defineComponent({
+const layer = defineBehavior({
   name: 'layer',
   parts: ['root'],
   props: {
@@ -42,7 +42,7 @@ const layer = defineComponent({
   connect: () => ({ root: { attrs: {} } }),
 });
 
-const pressable = defineComponent({
+const pressable = defineBehavior({
   name: 'pressable',
   parts: ['root'],
   props: {},

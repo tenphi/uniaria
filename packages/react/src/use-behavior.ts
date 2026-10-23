@@ -3,7 +3,7 @@
  * re-renders: each part renders once with its current props and a ref, and
  * the DOM binder from `@uniaria/core/dom` writes later changes straight to the
  * element. A component re-renders for state only through
- * `useComponentState`, and only when the selected value changes.
+ * `useBehaviorState`, and only when the selected value changes.
  */
 
 import type {
@@ -51,8 +51,8 @@ export type ReactPartProps = Readonly<Record<string, unknown>> & {
   readonly ref: (element: Element | null) => void;
 };
 
-export interface ComponentHandle<D extends AnyDefinition> {
-  /** The stable instance: pass it to `useComponentState` or as an `owner`. */
+export interface BehaviorHandle<D extends AnyDefinition> {
+  /** The stable instance: pass it to `useBehaviorState` or as an `owner`. */
   readonly instance: Instance<D>;
   /** The component's public actions, such as a popover's `open()` and `close()`. */
   readonly actions: ActionsOf<D>;
@@ -114,7 +114,7 @@ interface Internal<D extends AnyDefinition> {
 }
 
 /**
- * Instances whose new props `useComponent` is syncing after a commit. React's
+ * Instances whose new props `useBehavior` is syncing after a commit. React's
  * `useSyncExternalStore` records the snapshot it rendered only in a passive
  * effect, so a notification from this layout-effect sync is compared with the
  * previous snapshot, and a component whose render already showed the new
@@ -314,10 +314,10 @@ function toReactParts<D extends AnyDefinition>(
  * for its parts. Props are stored silently during render and synced after
  * commit; internal state changes never re-render this component.
  */
-export function useComponent<D extends AnyDefinition>(
+export function useBehavior<D extends AnyDefinition>(
   definition: D,
   props: NoInfer<PropsOf<D>>,
-): ComponentHandle<D> {
+): BehaviorHandle<D> {
   const id = useId();
   const ref = useRef<Internal<D> | null>(null);
   if (ref.current?.instance.definition !== definition) {
@@ -429,18 +429,18 @@ export function useComponent<D extends AnyDefinition>(
   return {
     instance,
     actions: instance.actions,
-    parts: internal.rendered.parts as ComponentHandle<D>['parts'],
-    getItemProps: internal.getItemProps as ComponentHandle<D>['getItemProps'],
+    parts: internal.rendered.parts as BehaviorHandle<D>['parts'],
+    getItemProps: internal.getItemProps as BehaviorHandle<D>['getItemProps'],
   };
 }
 
 /**
  * Reads one value of an instance's public state and re-renders only when it
  * changes (`Object.is`, or `isEqual`). Takes the instance or the handle
- * `useComponent` returned.
+ * `useBehavior` returned.
  */
-export function useComponentState<D extends AnyDefinition, T>(
-  source: Instance<D> | ComponentHandle<D>,
+export function useBehaviorState<D extends AnyDefinition, T>(
+  source: Instance<D> | BehaviorHandle<D>,
   selector: (state: StateOf<D>) => T,
   isEqual: (a: T, b: T) => boolean = Object.is,
 ): T {
@@ -465,7 +465,7 @@ export function useComponentState<D extends AnyDefinition, T>(
   };
 
   // The committed value and snapshot function. Insertion effects run before
-  // every layout effect, so they are current when `useComponent` syncs.
+  // every layout effect, so they are current when `useBehavior` syncs.
   const committed = useRef<{ value: T; getSnapshot: () => T } | null>(null);
 
   // Skips the notification from the prop sync after a commit when this hook

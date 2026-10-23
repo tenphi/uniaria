@@ -29,8 +29,8 @@ import { Callout, Card } from '@tenphi/cookbook/components';
 
 ## Why UniAria
 
-- **One implementation for every framework.** A component is one definition:
-  its parts, props, events and behavior. Generic adapters bind it to
+- **One implementation for every framework.** A component's behavior is one
+  definition: its parts, props and events, and what it does with them. Generic adapters bind it to
   [React](./api/react.md), to [Vue](./api/vue.md) and to
   [light-DOM custom elements](./api/elements.md), which work in any framework
   or none.
@@ -57,10 +57,10 @@ The same Switch, from React, from Vue and as a custom element:
 
 ```tsx
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 function WifiSwitch() {
-  const wifi = useComponent(toggleSwitch, {
+  const wifi = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -79,9 +79,9 @@ function WifiSwitch() {
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const wifi = useComponent(toggleSwitch, {
+const wifi = useBehavior(toggleSwitch, {
   defaultSelected: true,
   labelElementType: 'span',
 });

@@ -1,7 +1,7 @@
 # @uniaria/vue
 
-The Vue adapter for UniAria: one generic composable, `useComponent`, binds any
-component definition from [`@uniaria/core`](https://www.npmjs.com/package/@uniaria/core)
+The Vue adapter for UniAria: one generic composable, `useBehavior`, binds any
+behavior definition from [`@uniaria/core`](https://www.npmjs.com/package/@uniaria/core)
 to your elements. Vue 3.5 or later.
 
 > **Pre-release.** The API can change in any 0.x version.
@@ -14,15 +14,15 @@ pnpm add @uniaria/core @uniaria/vue
 
 ## Use
 
-Pass a definition and its props to `useComponent`, then bind each part's
+Pass a definition and its props to `useBehavior`, then bind each part's
 props onto your element with `v-bind`:
 
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const wifi = useComponent(toggleSwitch, {
+const wifi = useBehavior(toggleSwitch, {
   defaultSelected: true,
   labelElementType: 'span',
 });
@@ -39,7 +39,7 @@ const wifi = useComponent(toggleSwitch, {
 
 Hovering, pressing or toggling doesn't render your component again: UniAria
 writes the new state straight to the elements. When your render needs a
-value, select it with `useComponentState`.
+value, select it with `useBehaviorState`.
 
 ## Documentation
 

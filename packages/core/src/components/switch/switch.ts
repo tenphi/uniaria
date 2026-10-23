@@ -4,11 +4,11 @@
  * or a group. Exported as `toggleSwitch`, since `switch` is a reserved word.
  */
 
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { connectToggle, createToggle, toggleState } from '../checkbox/toggle';
 import { tooltipLink } from '../tooltip/link';
 
-export const toggleSwitch = defineComponent({
+export const toggleSwitch = defineBehavior({
   name: 'switch',
   parts: [
     'root',

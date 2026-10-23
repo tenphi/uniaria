@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createFocusWithin } from './focus-within';
 
-const group = defineComponent({
+const group = defineBehavior({
   name: 'group',
   parts: ['root'],
   props: { isDisabled: prop(false) },
@@ -123,7 +123,7 @@ describe('createFocusWithin', () => {
   });
 
   it('counts several parts as one, with nothing around them', () => {
-    const pair = defineComponent({
+    const pair = defineBehavior({
       name: 'pair',
       parts: ['input', 'popup'],
       props: {},

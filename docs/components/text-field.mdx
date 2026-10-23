@@ -35,13 +35,13 @@ practice on
 
 ```tsx
 import { textField } from '@uniaria/core/text-field';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function EmailField(props: {
   error?: string;
   onEmailChange(email: string): void;
 }) {
-  const email = useComponent(textField, {
+  const email = useBehavior(textField, {
     isRequired: true,
     isInvalid: props.error !== undefined,
     onValueChange: props.onEmailChange,
@@ -65,12 +65,12 @@ export function EmailField(props: {
 ```vue
 <script setup lang="ts">
 import { textField } from '@uniaria/core/text-field';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ error?: string }>();
 const emit = defineEmits<{ emailChange: [email: string] }>();
 
-const email = useComponent(textField, () => ({
+const email = useBehavior(textField, () => ({
   isRequired: true,
   isInvalid: props.error !== undefined,
   onValueChange: (value) => emit('emailChange', value),
@@ -166,7 +166,7 @@ typed, for example to upper case:
 
 ```tsx
 const [code, setCode] = useState('');
-const coupon = useComponent(textField, {
+const coupon = useBehavior(textField, {
   value: code,
   onValueChange: (next) => setCode(next.toUpperCase()),
 });
@@ -178,7 +178,7 @@ const coupon = useComponent(textField, {
 ```vue
 <script setup lang="ts">
 const code = ref('');
-const coupon = useComponent(textField, () => ({
+const coupon = useBehavior(textField, () => ({
   value: code.value,
   onValueChange: (next) => (code.value = next.toUpperCase()),
 }));
@@ -299,7 +299,7 @@ Typing, hovering and focusing never render your component again. To render
 something from state in React or Vue, select it (Vue gives a ref):
 
 ```ts
-const isFocused = useComponentState(email, (state) => state.isFocused);
+const isFocused = useBehaviorState(email, (state) => state.isFocused);
 ```
 
 On the custom element, read `element.instance.getState()`. See

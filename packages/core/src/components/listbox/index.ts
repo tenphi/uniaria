@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/listbox` — the Listbox definition. Render it with
- * `useComponent(listbox, props)` and `getItemProps(part, key)` from
+ * `useBehavior(listbox, props)` and `getItemProps(part, key)` from
  * `@uniaria/react`, or the `<uni-listbox>` element from
  * `@uniaria/elements/listbox`.
  */

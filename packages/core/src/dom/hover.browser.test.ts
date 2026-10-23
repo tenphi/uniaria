@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createBinder } from './binder';
 import { createHover } from './hover';
 
-const hoverable = defineComponent({
+const hoverable = defineBehavior({
   name: 'hoverable',
   parts: ['root'],
   props: { isDisabled: prop(false) },

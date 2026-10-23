@@ -205,7 +205,7 @@ nothing when the input gets focus.
 
 ```tsx
 // React
-const email = useComponent(textField, { isRequired: true, onValueChange });
+const email = useBehavior(textField, { isRequired: true, onValueChange });
 return (
   <div {...email.parts.root}>
     <label {...email.parts.label}>Email</label>

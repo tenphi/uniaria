@@ -4,7 +4,7 @@
  * DOM binder from `@uniaria/core/dom` writes later changes straight to the
  * elements. The store isn't reactive, so reading part props subscribes a
  * render to nothing; a component renders again for state only through
- * `useComponentState`, and only when the selected value changes.
+ * `useBehaviorState`, and only when the selected value changes.
  */
 
 import type {
@@ -48,8 +48,8 @@ export type VuePartProps = Readonly<Record<string, unknown>> & {
   readonly ref: (target: unknown) => void;
 };
 
-export interface ComponentHandle<D extends AnyDefinition> {
-  /** The stable instance: pass it to `useComponentState` or as an `owner`. */
+export interface BehaviorHandle<D extends AnyDefinition> {
+  /** The stable instance: pass it to `useBehaviorState` or as an `owner`. */
   readonly instance: Instance<D>;
   /** The component's public actions, such as a popover's `open()` and `close()`. */
   readonly actions: ActionsOf<D>;
@@ -65,10 +65,10 @@ export interface ComponentHandle<D extends AnyDefinition> {
 }
 
 /**
- * What `useComponent` takes as props: a getter, a ref, a reactive object
+ * What `useBehavior` takes as props: a getter, a ref, a reactive object
  * such as the component's own `defineProps()`, or a plain object read once.
  */
-export type ComponentProps<D extends AnyDefinition> = MaybeRefOrGetter<
+export type BehaviorProps<D extends AnyDefinition> = MaybeRefOrGetter<
   PropsOf<D>
 >;
 
@@ -315,13 +315,13 @@ function propsReader<P>(source: MaybeRefOrGetter<P> | undefined): () => P {
  * render reads them and synced after the patch; internal state changes
  * never re-render this component.
  */
-export function useComponent<D extends AnyDefinition>(
+export function useBehavior<D extends AnyDefinition>(
   definition: D,
   // Optional when every prop is.
   ...[props]: Partial<PropsOf<D>> extends PropsOf<D>
-    ? [props?: NoInfer<ComponentProps<D>>]
-    : [props: NoInfer<ComponentProps<D>>]
-): ComponentHandle<D> {
+    ? [props?: NoInfer<BehaviorProps<D>>]
+    : [props: NoInfer<BehaviorProps<D>>]
+): BehaviorHandle<D> {
   const read = propsReader(props);
   const instance = createInstance(definition, { props: read(), id: useId() });
   markRaw(instance);
@@ -454,8 +454,8 @@ export function useComponent<D extends AnyDefinition>(
           parts: toVueParts(internal, connected),
         };
       }
-      return internal.rendered.parts as ComponentHandle<D>['parts'];
+      return internal.rendered.parts as BehaviorHandle<D>['parts'];
     },
-    getItemProps: internal.getItemProps as ComponentHandle<D>['getItemProps'],
+    getItemProps: internal.getItemProps as BehaviorHandle<D>['getItemProps'],
   });
 }

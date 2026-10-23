@@ -3,13 +3,13 @@
 Read the root [AGENTS.md](../../AGENTS.md) first, especially "No re-renders
 for internal state", and this package's [spec](./spec.md). Local rules:
 
-- One generic `useComponent(definition, props)` and one generic
-  `useComponentState(source, selector, isEqual?)`, called in `setup()`. No
+- One generic `useBehavior(definition, props)` and one generic
+  `useBehaviorState(source, selector, isEqual?)`, called in `setup()`. No
   component-specific behavior here, and no Vue component per UniAria
   component.
 - Internal state never renders. `parts` and `getItemProps` read the current
   `connect()` when the render reads them; the store isn't reactive, so that
-  subscribes the render to nothing. `useComponentState` is the only way a
+  subscribes the render to nothing. `useBehaviorState` is the only way a
   render follows state: a `customRef` that reads the state when read and
   triggers only when the store's notification changes the value a render
   last read, so a prop change renders once.
@@ -23,7 +23,7 @@ for internal state", and this package's [spec](./spec.md). Local rules:
 - Lifecycle: `onMounted` and `onActivated` start (one batch for
   `instance.start()` and `binder.start()`), `onDeactivated` and
   `onBeforeUnmount` stop, while the elements are still in the document.
-- Every `useComponent` provides its instance (`provide()`, never state) and
+- Every `useBehavior` provides its instance (`provide()`, never state) and
   finds its owner during setup: the `owner` prop, then the nearest provided
   instance, then the DOM after mount. It also answers DOM requests for its
   owner parts.

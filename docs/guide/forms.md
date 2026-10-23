@@ -40,7 +40,7 @@ UniAria shows validation state; it doesn't validate. Decide when a value is
 invalid (on blur, on submit, from the server) and pass `isInvalid`:
 
 ```tsx
-const email = useComponent(textField, {
+const email = useBehavior(textField, {
   isRequired: true,
   isInvalid: Boolean(errors.email),
 });

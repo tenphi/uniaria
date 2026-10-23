@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/switch` — the Switch definition, `toggleSwitch`. Render it
- * with `useComponent(toggleSwitch, props)` from `@uniaria/react` or the
+ * with `useBehavior(toggleSwitch, props)` from `@uniaria/react` or the
  * `<uni-switch>` element from `@uniaria/elements/switch`.
  */
 

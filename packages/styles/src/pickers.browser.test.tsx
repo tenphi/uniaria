@@ -11,8 +11,8 @@ import { combobox } from '@uniaria/core/combobox';
 import { listbox } from '@uniaria/core/listbox';
 import { select } from '@uniaria/core/select';
 import { virtualizer } from '@uniaria/core/virtual';
-import type { ComponentHandle } from '@uniaria/react';
-import { useComponent, useComponentState } from '@uniaria/react';
+import type { BehaviorHandle } from '@uniaria/react';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
 import {
   emulateMedia,
   keyboard,
@@ -179,7 +179,7 @@ function ReactOptions(props: {
 }
 
 function ReactListbox(props: ListboxProps) {
-  const fruit = useComponent(listbox, {
+  const fruit = useBehavior(listbox, {
     items: props.isEmpty ? [] : FRUITS,
     disabledKeys: ['cherry'],
     value: props.value,
@@ -200,7 +200,7 @@ function ReactListbox(props: ListboxProps) {
 }
 
 function ReactSelect(props: SelectProps) {
-  const fruit = useComponent(select, {
+  const fruit = useBehavior(select, {
     items: FRUITS,
     placeholder: 'Pick a fruit',
     value: props.value,
@@ -224,7 +224,7 @@ function ReactSelect(props: SelectProps) {
 }
 
 function ReactCombobox() {
-  const fruit = useComponent(combobox, { items: FRUITS });
+  const fruit = useBehavior(combobox, { items: FRUITS });
   return (
     <div {...fruit.parts.root}>
       <label {...fruit.parts.label}>Fruit</label>
@@ -576,8 +576,8 @@ describe('a virtualized listbox', () => {
     textValue: `Item ${index}`,
   }));
 
-  function Rows(props: { list: ComponentHandle<typeof listbox> }) {
-    const keys = useComponentState(props.list, (state) => state.renderedKeys);
+  function Rows(props: { list: BehaviorHandle<typeof listbox> }) {
+    const keys = useBehaviorState(props.list, (state) => state.renderedKeys);
     return keys.map((key) => (
       <div key={key} {...props.list.getItemProps('option', key)}>
         {key}
@@ -587,7 +587,7 @@ describe('a virtualized listbox', () => {
 
   /** With no label, so the list's box opens the column. */
   function VirtualListbox(props: { items?: readonly Item[] }) {
-    const list = useComponent(listbox, {
+    const list = useBehavior(listbox, {
       items: props.items ?? MANY,
       virtualizer,
       itemSize: 32,

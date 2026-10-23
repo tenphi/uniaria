@@ -358,7 +358,7 @@ For comparison, React Aria's button trigger reads
 
 ```tsx
 // React
-const fruit = useComponent(select, {
+const fruit = useBehavior(select, {
   items, // [{ key: 'apple', textValue: 'Apple' }, …]
   placeholder: 'Pick a fruit',
   defaultValue: ['banana'],

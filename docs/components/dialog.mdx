@@ -39,10 +39,10 @@ covers what every overlay shares: the top layer, the layer stack and dismissal.
 
 ```tsx
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function DeleteFile(props: { onDelete(): void }) {
-  const confirm = useComponent(dialog, {
+  const confirm = useBehavior(dialog, {
     onDismiss: (event) => {
       if (event.returnValue === 'delete') props.onDelete();
     },
@@ -69,11 +69,11 @@ export function DeleteFile(props: { onDelete(): void }) {
 ```vue
 <script setup lang="ts">
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ delete: [] }>();
 
-const confirm = useComponent(dialog, {
+const confirm = useBehavior(dialog, {
   onDismiss: (event) => {
     if (event.returnValue === 'delete') emit('delete');
   },
@@ -149,7 +149,7 @@ export function RenameFile(props: {
   name: string;
   onRename(name: string): void;
 }) {
-  const rename = useComponent(dialog, {});
+  const rename = useBehavior(dialog, {});
   return (
     <>
       <button {...rename.parts.trigger}>Rename…</button>
@@ -190,12 +190,12 @@ mount, while the dialog is still closed), so mark the field with
 ```vue
 <script setup lang="ts">
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 defineProps<{ name: string }>();
 const emit = defineEmits<{ rename: [name: string] }>();
 
-const rename = useComponent(dialog);
+const rename = useBehavior(dialog);
 
 function submit(event: SubmitEvent) {
   const data = new FormData(event.currentTarget as HTMLFormElement);
@@ -268,7 +268,7 @@ destructive action to take focus.
 <Tab label="React">
 
 ```tsx
-const discard = useComponent(dialog, {
+const discard = useBehavior(dialog, {
   role: 'alertdialog',
   isDismissable: false,
   onDismiss: (event) => {
@@ -301,7 +301,7 @@ return (
 <script setup lang="ts">
 const emit = defineEmits<{ discard: [] }>();
 
-const discard = useComponent(dialog, {
+const discard = useBehavior(dialog, {
   role: 'alertdialog',
   isDismissable: false,
   onDismiss: (event) => {
@@ -361,7 +361,7 @@ dialog form only report the change; the dialog stays open until you set
 
 ```tsx
 const [isOpen, setOpen] = useState(false);
-const settings = useComponent(dialog, { isOpen, onOpenChange: setOpen });
+const settings = useBehavior(dialog, { isOpen, onOpenChange: setOpen });
 return (
   <>
     <MenuItem onAction={() => setOpen(true)}>Settings…</MenuItem>
@@ -377,7 +377,7 @@ return (
 <script setup lang="ts">
 const isOpen = ref(false);
 
-const settings = useComponent(dialog, () => ({
+const settings = useBehavior(dialog, () => ({
   isOpen: isOpen.value,
   onOpenChange: (open) => (isOpen.value = open),
 }));
@@ -428,11 +428,11 @@ the dialog, as the trigger does:
 ```tsx
 import { button } from '@uniaria/core/button';
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitPicker(props: { fruit: string; onClear(): void }) {
-  const picker = useComponent(dialog, {});
-  const clear = useComponent(button, { onPress: props.onClear });
+  const picker = useBehavior(dialog, {});
+  const clear = useBehavior(button, { onPress: props.onClear });
   return (
     <>
       <div {...picker.parts.triggerFrame}>
@@ -465,13 +465,13 @@ export function FruitPicker(props: { fruit: string; onClear(): void }) {
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 defineProps<{ fruit: string }>();
 const emit = defineEmits<{ clear: [] }>();
 
-const picker = useComponent(dialog);
-const clear = useComponent(button, { onPress: () => emit('clear') });
+const picker = useBehavior(dialog);
+const clear = useBehavior(button, { onPress: () => emit('clear') });
 </script>
 
 <template>
@@ -631,7 +631,7 @@ To skip rendering heavy content while the dialog is hidden, render the content,
 not the dialog, from state:
 
 ```tsx
-const isShown = useComponentState(
+const isShown = useBehaviorState(
   settings,
   (state) => state.isOpen || state.isExiting,
 );

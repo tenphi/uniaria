@@ -27,7 +27,7 @@ import {
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, TRIGGER_PARTS, button } from '../button/button';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
@@ -64,7 +64,7 @@ function methodOf(form: HTMLFormElement, submitter: HTMLElement | null) {
   return button?.hasAttribute('formmethod') ? button.formMethod : form.method;
 }
 
-export const dialog = defineComponent({
+export const dialog = defineBehavior({
   name: 'dialog',
   parts: [
     'trigger',

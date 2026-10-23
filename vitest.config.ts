@@ -12,7 +12,7 @@ import { stylesCommands } from './packages/styles/src/testing/commands';
  * Two projects, split by file name, and a third for real screen readers:
  *
  * - `node` — `*.test.ts(x)`. Pure logic with no DOM: the runtime, collections,
- *   component definitions driven through test instances, SSR-safety checks.
+ *   behavior definitions driven through test instances, SSR-safety checks.
  *   A DOM access here fails loudly with `document is not defined`.
  * - `browser` — `*.browser.test.ts(x)`. Anything that renders, touches the
  *   DOM, moves focus or listens to a screen reader. Runs in real Chromium,

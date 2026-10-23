@@ -181,7 +181,7 @@ from the `checked` attribute, so scenarios check the property, and
 
 ```tsx
 // React
-const wifi = useComponent(toggleSwitch, {
+const wifi = useBehavior(toggleSwitch, {
   labelElementType: 'span',
   onSelectedChange,
 });

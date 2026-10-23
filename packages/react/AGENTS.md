@@ -3,14 +3,14 @@
 Read the root [AGENTS.md](../../AGENTS.md) first, especially "No re-renders
 for internal state". Local rules:
 
-- One generic `useComponent(definition, props)` and one generic
-  `useComponentState(instance, selector, isEqual?)`. No component-specific
+- One generic `useBehavior(definition, props)` and one generic
+  `useBehaviorState(instance, selector, isEqual?)`. No component-specific
   behavior here; optional sugar (`useButton`, `useButtonState`, JSX-children
   collections) only wraps them.
 - Internal state never re-renders. Render part props from the current
   snapshot with a `ref`, and let the DOM binder from `@uniaria/core/dom` write
   later changes. `useSyncExternalStore` appears only inside
-  `useComponentState`, with the selected value as the snapshot (cached per
+  `useBehaviorState`, with the selected value as the snapshot (cached per
   store version so it stays stable). It ignores the notification from the
   post-commit `sync()` when it already rendered the value that notification
   brings: React records the rendered snapshot only in a passive effect, so

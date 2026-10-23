@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createFocusScope } from './focus-scope';
 
-const scoped = defineComponent({
+const scoped = defineBehavior({
   name: 'scoped',
   parts: ['root'],
   props: {

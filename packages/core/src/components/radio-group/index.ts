@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/radio-group` — the RadioGroup definition. Render it with
- * `useComponent(radioGroup, props)` from `@uniaria/react`, its radios
+ * `useBehavior(radioGroup, props)` from `@uniaria/react`, its radios
  * (`@uniaria/core/radio`) inside `<OwnerProvider owner={group}>`, or the
  * `<uni-radio-group>` element from `@uniaria/elements/radio-group`.
  */

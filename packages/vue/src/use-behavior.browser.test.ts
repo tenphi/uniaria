@@ -1,4 +1,4 @@
-import { createInstance, defineComponent, itemId, prop } from '@uniaria/core';
+import { createInstance, defineBehavior, itemId, prop } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import type { ButtonProps } from '@uniaria/core/button';
@@ -13,7 +13,7 @@ import {
   Teleport,
   createApp,
   createSSRApp,
-  defineComponent as defineVueComponent,
+  defineComponent,
   h,
   mergeProps,
   nextTick,
@@ -23,9 +23,9 @@ import {
 import { renderToString } from 'vue/server-renderer';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import type { ComponentHandle } from './use-component';
-import { useComponent } from './use-component';
-import { useComponentState } from './use-component-state';
+import type { BehaviorHandle } from './use-behavior';
+import { useBehavior } from './use-behavior';
+import { useBehaviorState } from './use-behavior-state';
 
 let app: App | undefined;
 let container: HTMLElement | undefined;
@@ -61,8 +61,8 @@ function saveButton(
   props: () => ButtonProps = () => ({}),
   onRender?: () => void,
 ) {
-  return defineVueComponent(() => {
-    const ui = useComponent(button, props);
+  return defineComponent(() => {
+    const ui = useBehavior(button, props);
     return () => {
       onRender?.();
       return h('button', ui.parts.root, 'Save');
@@ -70,15 +70,15 @@ function saveButton(
   });
 }
 
-const Docs = defineVueComponent(() => {
-  const ui = useComponent(button, { href: '/docs' });
+const Docs = defineComponent(() => {
+  const ui = useBehavior(button, { href: '/docs' });
   return () => h('a', ui.parts.root, 'Docs');
 });
 
 /** Lets the warnings of every element that reached the binder through. */
 const quiet = () => vi.spyOn(console, 'warn');
 
-describe('useComponent', () => {
+describe('useBehavior', () => {
   it('renders part props for the first paint', () => {
     const Save = saveButton(() => ({ isDisabled: true }));
     const element = render(() => h(Save)).querySelector('button')!;
@@ -92,8 +92,8 @@ describe('useComponent', () => {
 
   it('marks the root with data-uni, beside a class the template adds', () => {
     const warn = quiet();
-    const Primary = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Primary = defineComponent(() => {
+      const ui = useBehavior(button);
       return () =>
         h('button', mergeProps(ui.parts.root, { class: 'mine' }), 'Save');
     });
@@ -111,8 +111,8 @@ describe('useComponent', () => {
 
   it('marks other parts with data-element, and no class', () => {
     let label: Record<string, unknown> = {};
-    const Name = defineVueComponent(() => {
-      const ui = useComponent(field);
+    const Name = defineComponent(() => {
+      const ui = useBehavior(field);
       return () => {
         label = ui.parts.label;
         return h('div', ui.parts.root, [
@@ -136,7 +136,7 @@ describe('useComponent', () => {
 
   it('marks a part outside the root with data-uni-part', () => {
     const warn = quiet();
-    const overlay = defineComponent({
+    const overlay = defineBehavior({
       name: 'test-overlay',
       parts: ['trigger', 'root'],
       outsideParts: ['trigger'],
@@ -148,8 +148,8 @@ describe('useComponent', () => {
         root: { attrs: {} },
       }),
     });
-    const Overlay = defineVueComponent(() => {
-      const ui = useComponent(overlay);
+    const Overlay = defineComponent(() => {
+      const ui = useBehavior(overlay);
       return () => [
         h('button', ui.parts.trigger, 'Open'),
         h('div', ui.parts.root),
@@ -164,10 +164,10 @@ describe('useComponent', () => {
   });
 
   it('keeps handler identity across renders', async () => {
-    const seen: ComponentHandle<typeof button>['parts']['root'][] = [];
+    const seen: BehaviorHandle<typeof button>['parts']['root'][] = [];
     const label = ref('a');
-    const Probe = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Probe = defineComponent(() => {
+      const ui = useBehavior(button);
       return () => {
         seen.push(ui.parts.root);
         return h('button', ui.parts.root, label.value);
@@ -186,8 +186,8 @@ describe('useComponent', () => {
 
   it('keeps attributes the binder wrote when the component renders again', async () => {
     const count = ref(0);
-    const Counter = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Counter = defineComponent(() => {
+      const ui = useBehavior(button);
       return () => h('button', ui.parts.root, String(count.value));
     });
     const element = render(() => h(Counter)).querySelector('button')!;
@@ -221,8 +221,8 @@ describe('useComponent', () => {
 
   it('renders nothing for hover, focus, press or an opening popover', async () => {
     const onRender = vi.fn();
-    const Picker = defineVueComponent(() => {
-      const ui = useComponent(popover);
+    const Picker = defineComponent(() => {
+      const ui = useBehavior(popover);
       return () => {
         onRender();
         return [
@@ -243,9 +243,9 @@ describe('useComponent', () => {
 
   it('types inline callbacks from the definition', async () => {
     const seen: boolean[] = [];
-    const Mute = defineVueComponent(() => {
+    const Mute = defineComponent(() => {
       // Only the definition infers the props type, so the parameter is typed.
-      const ui = useComponent(toggleButton, () => ({
+      const ui = useBehavior(toggleButton, () => ({
         onSelectedChange: (isSelected) => {
           expectTypeOf(isSelected).toEqualTypeOf<boolean>();
           seen.push(isSelected);
@@ -262,7 +262,7 @@ describe('useComponent', () => {
   });
 
   it("returns the public actions, never setup()'s internal API", () => {
-    const panel = defineComponent({
+    const panel = defineBehavior({
       name: 'test-panel',
       parts: ['root'],
       props: { label: prop('') },
@@ -274,9 +274,9 @@ describe('useComponent', () => {
       expose: () => ({}),
       connect: () => ({ root: { attrs: {} } }),
     });
-    let handle: ComponentHandle<typeof panel> | undefined;
-    const Panel = defineVueComponent(() => {
-      const ui = useComponent(panel);
+    let handle: BehaviorHandle<typeof panel> | undefined;
+    const Panel = defineComponent(() => {
+      const ui = useBehavior(panel);
       handle = ui;
       return () => h('div', ui.parts.root);
     });
@@ -288,9 +288,9 @@ describe('useComponent', () => {
   });
 
   it('keeps the handle and the instance out of Vue’s reactivity', () => {
-    let handle: ComponentHandle<typeof button> | undefined;
-    const Save = defineVueComponent(() => {
-      handle = useComponent(button);
+    let handle: BehaviorHandle<typeof button> | undefined;
+    const Save = defineComponent(() => {
+      handle = useBehavior(button);
       return () => h('button', handle!.parts.root, 'Save');
     });
     render(() => h(Save));
@@ -313,8 +313,8 @@ describe('props', () => {
 
   it('follows a ref', async () => {
     const props = ref<ButtonProps>({});
-    const Save = defineVueComponent(() => {
-      const ui = useComponent(button, props);
+    const Save = defineComponent(() => {
+      const ui = useBehavior(button, props);
       return () => h('button', ui.parts.root, 'Save');
     });
     const element = render(() => h(Save)).querySelector('button')!;
@@ -324,10 +324,10 @@ describe('props', () => {
   });
 
   it("follows the component's own props, key by key", async () => {
-    const SaveWrapper = defineVueComponent({
+    const SaveWrapper = defineComponent({
       props: { isDisabled: { type: Boolean, default: undefined } },
       setup(props) {
-        const ui = useComponent(button, props);
+        const ui = useBehavior(button, props);
         return () => h('button', ui.parts.root, 'Save');
       },
     });
@@ -344,8 +344,8 @@ describe('props', () => {
   it('reads a plain object once', async () => {
     const props: ButtonProps = { isDisabled: true };
     const count = ref(0);
-    const Save = defineVueComponent(() => {
-      const ui = useComponent(button, props);
+    const Save = defineComponent(() => {
+      const ui = useBehavior(button, props);
       return () => h('button', ui.parts.root, String(count.value));
     });
     const element = render(() => h(Save)).querySelector('button')!;
@@ -358,17 +358,17 @@ describe('props', () => {
 
   it('leaves a Boolean bindable uncontrolled only with an undefined default', async () => {
     const panel = (props: { readonly isOpen?: boolean }) => {
-      const ui = useComponent(popover, props);
+      const ui = useBehavior(popover, props);
       return () => [
         h('button', ui.parts.trigger, 'Size'),
         h('div', ui.parts.root, 'Content'),
       ];
     };
-    const Open = defineVueComponent({
+    const Open = defineComponent({
       props: { isOpen: { type: Boolean, default: undefined } },
       setup: panel,
     });
-    const Closed = defineVueComponent({
+    const Closed = defineComponent({
       props: { isOpen: { type: Boolean } },
       setup: panel,
     });
@@ -389,8 +389,8 @@ describe('controlled values', () => {
   /** A checkbox controlled by a ref, which its callback sets or leaves. */
   function controlledCheckbox(isAccepting: boolean) {
     const isSelected = ref(false);
-    const Terms = defineVueComponent(() => {
-      const ui = useComponent(checkbox, () => ({
+    const Terms = defineComponent(() => {
+      const ui = useBehavior(checkbox, () => ({
         isSelected: isSelected.value,
         labelElementType: 'span',
         onSelectedChange: (value) => {
@@ -427,8 +427,8 @@ describe('controlled values', () => {
 
   it('follow typing the callback accepts', async () => {
     const text = ref('');
-    const Name = defineVueComponent(() => {
-      const ui = useComponent(textField, () => ({
+    const Name = defineComponent(() => {
+      const ui = useBehavior(textField, () => ({
         value: text.value,
         onValueChange: (value) => (text.value = value),
       }));
@@ -450,13 +450,13 @@ describe('controlled values', () => {
 
 describe('a component as a part', () => {
   it('binds the root element of a component, as a router link renders it', async () => {
-    const Link = defineVueComponent((_, { slots }) => {
+    const Link = defineComponent((_, { slots }) => {
       return () => h('a', { href: '/docs' }, slots.default?.());
     });
     const onPress = vi.fn();
-    let handle: ComponentHandle<typeof button> | undefined;
-    const Docs = defineVueComponent(() => {
-      const ui = useComponent(button, { href: '/docs', onPress });
+    let handle: BehaviorHandle<typeof button> | undefined;
+    const Docs = defineComponent(() => {
+      const ui = useBehavior(button, { href: '/docs', onPress });
       handle = ui;
       return () => h(Link, ui.parts.root, () => 'Docs');
     });
@@ -488,8 +488,8 @@ describe('elements reaching the binder', () => {
   it('get only elements in the document, on mount and in later patches', async () => {
     const shows = spyShow();
     const isShown = ref(false);
-    const Deep = defineVueComponent(() => {
-      const ui = useComponent(popover, { defaultOpen: true });
+    const Deep = defineComponent(() => {
+      const ui = useBehavior(popover, { defaultOpen: true });
       return () =>
         h('section', [
           h('div', [
@@ -498,8 +498,8 @@ describe('elements reaching the binder', () => {
           ]),
         ]);
     });
-    const Later = defineVueComponent(() => {
-      const ui = useComponent(popover, { defaultOpen: true });
+    const Later = defineComponent(() => {
+      const ui = useBehavior(popover, { defaultOpen: true });
       return () => [
         h('button', ui.parts.trigger, 'Width'),
         isShown.value
@@ -519,8 +519,8 @@ describe('elements reaching the binder', () => {
   });
 
   it('follow a part through <Teleport>', async () => {
-    const Picker = defineVueComponent(() => {
-      const ui = useComponent(popover);
+    const Picker = defineComponent(() => {
+      const ui = useBehavior(popover);
       return () => [
         h('button', ui.parts.trigger, 'Size'),
         h(Teleport, { to: 'body' }, [h('div', ui.parts.root, 'Content')]),
@@ -537,12 +537,12 @@ describe('elements reaching the binder', () => {
 
   it('stop while <KeepAlive> keeps them aside, and start again', async () => {
     const onPress = vi.fn();
-    let handle: ComponentHandle<typeof button> | undefined;
-    const Save = defineVueComponent(() => {
-      handle = useComponent(button, { onPress });
+    let handle: BehaviorHandle<typeof button> | undefined;
+    const Save = defineComponent(() => {
+      handle = useBehavior(button, { onPress });
       return () => h('button', handle!.parts.root, 'Save');
     });
-    const Other = defineVueComponent(() => () => h('p', 'Other'));
+    const Other = defineComponent(() => () => h('p', 'Other'));
     const isSave = ref(true);
     const element = render(() =>
       h(KeepAlive, null, [isSave.value ? h(Save) : h(Other)]),
@@ -565,8 +565,8 @@ describe('elements reaching the binder', () => {
 describe('development warnings', () => {
   it('warns when the template writes an attribute UniAria owns', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const Override = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Override = defineComponent(() => {
+      const ui = useBehavior(button);
       return () =>
         h(
           'button',
@@ -594,8 +594,8 @@ describe('development warnings', () => {
 
   it('warns when the template replaces the data-uni of the root', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const Replaced = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Replaced = defineComponent(() => {
+      const ui = useBehavior(button);
       return () =>
         h('button', mergeProps(ui.parts.root, { 'data-uni': 'mine' }), 'Save');
     });
@@ -612,8 +612,8 @@ describe('development warnings', () => {
 
   it('warns when the root tag and elementType differ', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const Wrong = defineVueComponent(() => {
-      const ui = useComponent(button);
+    const Wrong = defineComponent(() => {
+      const ui = useBehavior(button);
       return () => h('span', ui.parts.root, 'Save');
     });
     render(() => h(Wrong));
@@ -635,8 +635,8 @@ describe('development warnings', () => {
   // Field links its label only once it has started.
   it('stays quiet when the label is linked after the start', () => {
     const warn = quiet();
-    const Name = defineVueComponent(() => {
-      const ui = useComponent(field);
+    const Name = defineComponent(() => {
+      const ui = useBehavior(field);
       return () => [
         h('label', ui.parts.label, 'Name'),
         h('input', ui.parts.control),
@@ -655,8 +655,8 @@ describe('part ids', () => {
   const labelId = ref<string | undefined>();
   const inputId = ref<string | undefined>();
 
-  const Name = defineVueComponent(() => {
-    const ui = useComponent(field);
+  const Name = defineComponent(() => {
+    const ui = useBehavior(field);
     // An id after `v-bind` wins, as in a template.
     const own = (id: string | undefined) => (id === undefined ? {} : { id });
     return () => [
@@ -729,7 +729,7 @@ describe('part ids', () => {
   });
 
   it('leaves nothing it wrote on an element the part moves away from', async () => {
-    const pressable = defineComponent({
+    const pressable = defineBehavior({
       name: 'pressable',
       parts: ['trigger'],
       props: {},
@@ -742,10 +742,10 @@ describe('part ids', () => {
         trigger: { attrs: { 'aria-pressed': String(api.isOn()) } },
       }),
     });
-    let instance: ComponentHandle<typeof pressable>['instance'] | undefined;
+    let instance: BehaviorHandle<typeof pressable>['instance'] | undefined;
     const isFirst = ref(true);
-    const Two = defineVueComponent(() => {
-      const ui = useComponent(pressable);
+    const Two = defineComponent(() => {
+      const ui = useBehavior(pressable);
       instance = ui.instance;
       return () => [
         h('button', isFirst.value ? ui.parts.trigger : {}, 'A'),
@@ -766,12 +766,12 @@ describe('part ids', () => {
   });
 });
 
-describe('useComponentState', () => {
+describe('useBehaviorState', () => {
   it('renders only when the selected value changes', async () => {
     const renders: boolean[] = [];
-    const Selecting = defineVueComponent(() => {
-      const ui = useComponent(button);
-      const isPressed = useComponentState(ui, (state) => state.isPressed);
+    const Selecting = defineComponent(() => {
+      const ui = useBehavior(button);
+      const isPressed = useBehaviorState(ui, (state) => state.isPressed);
       return () => {
         renders.push(isPressed.value);
         return h('button', ui.parts.root, isPressed.value ? 'Down' : 'Up');
@@ -796,9 +796,9 @@ describe('useComponentState', () => {
   it('renders once for a prop change the selected state shows', async () => {
     const states: boolean[] = [];
     const isDisabled = ref(false);
-    const Selecting = defineVueComponent(() => {
-      const ui = useComponent(button, () => ({ isDisabled: isDisabled.value }));
-      const state = useComponentState(ui, (current) => current.isDisabled);
+    const Selecting = defineComponent(() => {
+      const ui = useBehavior(button, () => ({ isDisabled: isDisabled.value }));
+      const state = useBehaviorState(ui, (current) => current.isDisabled);
       return () => {
         states.push(state.value);
         return h('button', ui.parts.root, 'Save');
@@ -819,9 +819,9 @@ describe('useComponentState', () => {
   function hoverStates(isShowingProp: boolean) {
     const states: { isDisabled: boolean; isHovered: boolean }[] = [];
     const isDisabled = ref(false);
-    const Selecting = defineVueComponent(() => {
-      const ui = useComponent(button, () => ({ isDisabled: isDisabled.value }));
-      const state = useComponentState(ui, (current) => current);
+    const Selecting = defineComponent(() => {
+      const ui = useBehavior(button, () => ({ isDisabled: isDisabled.value }));
+      const state = useBehaviorState(ui, (current) => current);
       return () => {
         states.push({
           isDisabled: state.value.isDisabled,
@@ -867,9 +867,9 @@ describe('useComponentState', () => {
 
   it('accepts an equality function', async () => {
     const renders = vi.fn();
-    const Selecting = defineVueComponent(() => {
-      const ui = useComponent(button);
-      const state = useComponentState(
+    const Selecting = defineComponent(() => {
+      const ui = useBehavior(button);
+      const state = useBehaviorState(
         ui.instance,
         (current) => ({ pressed: current.isPressed }),
         (a, b) => a.pressed === b.pressed,
@@ -899,8 +899,8 @@ describe('useComponentState', () => {
         stop();
       };
     };
-    const Reader = defineVueComponent(() => {
-      const isPressed = useComponentState(instance, (state) => state.isPressed);
+    const Reader = defineComponent(() => {
+      const isPressed = useBehaviorState(instance, (state) => state.isPressed);
       return () => h('p', String(isPressed.value));
     });
     render(() => h(Reader));
@@ -914,8 +914,8 @@ describe('useComponentState', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const instance = createInstance(button, { props: {} });
     let isPressed: { value: boolean } | undefined;
-    const Reader = defineVueComponent(() => {
-      isPressed = useComponentState(instance, (state) => state.isPressed);
+    const Reader = defineComponent(() => {
+      isPressed = useBehaviorState(instance, (state) => state.isPressed);
       return () => h('p', String(isPressed!.value));
     });
     render(() => h(Reader));
@@ -958,7 +958,7 @@ describe('server rendering', () => {
   });
 });
 
-const live = defineComponent({
+const live = defineBehavior({
   name: 'live',
   parts: ['input'],
   props: { text: prop('') },
@@ -971,8 +971,8 @@ const live = defineComponent({
 
 describe('live DOM properties', () => {
   const text = ref('first');
-  const Live = defineVueComponent(() => {
-    const ui = useComponent(live, () => ({ text: text.value }));
+  const Live = defineComponent(() => {
+    const ui = useBehavior(live, () => ({ text: text.value }));
     return () => h('input', ui.parts.input);
   });
 
@@ -996,8 +996,8 @@ describe('live DOM properties', () => {
 
   it('leaves what the user typed when the component renders again', async () => {
     const count = ref(0);
-    const Name = defineVueComponent(() => {
-      const ui = useComponent(textField, { defaultValue: 'Jane' });
+    const Name = defineComponent(() => {
+      const ui = useBehavior(textField, { defaultValue: 'Jane' });
       return () =>
         h('div', ui.parts.root, [
           h('label', ui.parts.label, `Name ${count.value}`),
@@ -1018,7 +1018,7 @@ describe('live DOM properties', () => {
 });
 
 /** Rows keyed by item, one active, as a listbox's options are. */
-const rows = defineComponent({
+const rows = defineBehavior({
   name: 'rows',
   parts: ['list'],
   itemParts: ['row', 'rowLabel'],
@@ -1053,7 +1053,7 @@ const rows = defineComponent({
   },
 });
 
-type RowsHandle = ComponentHandle<typeof rows>;
+type RowsHandle = BehaviorHandle<typeof rows>;
 
 describe('item parts', () => {
   const keys = ref<readonly string[]>(['a', 'b', 'c']);
@@ -1061,8 +1061,8 @@ describe('item parts', () => {
   let handle: RowsHandle | undefined;
   const onRender = vi.fn();
 
-  const Rows = defineVueComponent(() => {
-    const ui = useComponent(rows, () =>
+  const Rows = defineComponent(() => {
+    const ui = useBehavior(rows, () =>
       tone.value === undefined ? {} : { tone: tone.value },
     );
     handle = ui;
@@ -1144,7 +1144,7 @@ describe('item parts', () => {
 
   it('hands the binder the rows a patch of their own attaches, in one flush', async () => {
     const rowKeys = ref<readonly string[]>(['a']);
-    const RowList = defineVueComponent({
+    const RowList = defineComponent({
       props: { ui: { type: Object, required: true } },
       setup(props) {
         const ui = props.ui as RowsHandle;
@@ -1154,8 +1154,8 @@ describe('item parts', () => {
           );
       },
     });
-    const Owner = defineVueComponent(() => {
-      const ui = useComponent(rows);
+    const Owner = defineComponent(() => {
+      const ui = useBehavior(rows);
       handle = ui;
       return () => h('div', ui.parts.list, [h(RowList, { ui })]);
     });
@@ -1192,10 +1192,10 @@ describe('element effects', () => {
         entering.push(this.hasAttribute('data-entering'));
         showPopover.call(this);
       });
-    const Size = defineVueComponent({
+    const Size = defineComponent({
       props: { id: String, defaultOpen: Boolean },
       setup(props) {
-        const ui = useComponent(popover, { defaultOpen: props.defaultOpen });
+        const ui = useBehavior(popover, { defaultOpen: props.defaultOpen });
         return () =>
           h('div', { id: props.id }, [
             h('button', ui.parts.trigger, 'Size'),

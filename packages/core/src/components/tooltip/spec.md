@@ -293,17 +293,17 @@ CSS Anchor Positioning (owner, 2026-10-16; Resolved questions 1):
 UniAria is not a styling library: the consumer's CSS comes separately and binds
 to these tokens, so it can change with state. UniAria sets no look.
 
-| Token                                                               | On                                 | Meaning                                                                      |
-| ------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| `data-uni="tooltip"`                                                | root                               | The root part.                                                               |
-| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor                    | Which part an element is: they sit outside the root.                         |
-| `data-element`                                                      | its other parts                    | Which part an element is.                                                    |
-| `data-open`, `data-entering`, `data-exiting`                        | root, arrow                        | Open; the first two frames after opening; closing until its animations end.  |
-| `data-instant`                                                      | root, arrow                        | Open after opening without its delay (Warm-up): skip the entrance.           |
-| `data-placement`                                                    | root, arrow                        | The side it was placed on, after fallbacks.                                  |
-| `--anchor-width`                                                    | root                               | The anchor's width, in pixels.                                               |
-| `--available-width`, `--available-height`                           | root                               | The most room it could take, in pixels, on the larger side when it may flip. |
-| `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement`       | public state (`useComponentState`) | The same, for a framework's own bindings.                                    |
+| Token                                                               | On                                | Meaning                                                                      |
+| ------------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------- |
+| `data-uni="tooltip"`                                                | root                              | The root part.                                                               |
+| `data-uni-part="tooltip-trigger"`, `data-uni-part="tooltip-anchor"` | trigger, anchor                   | Which part an element is: they sit outside the root.                         |
+| `data-element`                                                      | its other parts                   | Which part an element is.                                                    |
+| `data-open`, `data-entering`, `data-exiting`                        | root, arrow                       | Open; the first two frames after opening; closing until its animations end.  |
+| `data-instant`                                                      | root, arrow                       | Open after opening without its delay (Warm-up): skip the entrance.           |
+| `data-placement`                                                    | root, arrow                       | The side it was placed on, after fallbacks.                                  |
+| `--anchor-width`                                                    | root                              | The anchor's width, in pixels.                                               |
+| `--available-width`, `--available-height`                           | root                              | The most room it could take, in pixels, on the larger side when it may flip. |
+| `isOpen`, `isEntering`, `isExiting`, `isInstant`, `placement`       | public state (`useBehaviorState`) | The same, for a framework's own bindings.                                    |
 
 The variables are written in both modes. CSS's own `anchor-size()` and
 percentage sizes against the area work only in CSS mode.
@@ -332,8 +332,8 @@ A UniAria component links to the tooltip (Resolved questions 2):
 
 ```tsx
 // React
-const hint = useComponent(tooltip, { positionArea: 'top' });
-const save = useComponent(button, { onPress, tooltip: hint.instance });
+const hint = useBehavior(tooltip, { positionArea: 'top' });
+const save = useBehavior(button, { onPress, tooltip: hint.instance });
 return (
   <>
     <button {...save.parts.root}>Save</button>

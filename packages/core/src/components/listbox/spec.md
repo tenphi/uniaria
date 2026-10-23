@@ -174,7 +174,7 @@ Development warns when the list has no name: no label part, no
 | isFocusVisible | `boolean`                | That focus came from the keyboard.                            |
 
 Per option, a selector reads `value` and `focusedKey`
-(`useComponentState(list, (s) => s.value.includes(key))`), or CSS reads the
+(`useBehaviorState(list, (s) => s.value.includes(key))`), or CSS reads the
 option's state attributes.
 
 ## Item parts
@@ -424,7 +424,7 @@ with `aria-posinset="42"` and `aria-setsize="100"` an option reads
 
 ```tsx
 // React
-const fruit = useComponent(listbox, {
+const fruit = useBehavior(listbox, {
   items, // [{ key: 'apple', textValue: 'Apple' }, …]
   selectionMode: 'multiple',
   defaultValue: ['banana'],

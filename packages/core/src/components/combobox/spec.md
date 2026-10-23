@@ -385,7 +385,7 @@ the manual pass.
 
 ```tsx
 // React
-const fruit = useComponent(combobox, {
+const fruit = useBehavior(combobox, {
   items, // [{ key: 'apple', textValue: 'Apple' }, …]
   defaultValue: ['banana'],
   onValueChange,

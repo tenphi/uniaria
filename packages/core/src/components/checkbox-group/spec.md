@@ -48,7 +48,7 @@ Not part of CheckboxGroup:
 Changed on 2026-10-19 (owner): the root is the outermost element, so the label,
 the description and the error go inside it, as in React Aria.
 
-The checkboxes are `<uni-checkbox>` elements or `useComponent(checkbox)`
+The checkboxes are `<uni-checkbox>` elements or `useBehavior(checkbox)`
 components inside the root, or linked from elsewhere (Owner link). State
 attributes go on every part: `data-disabled`, `data-readonly`,
 `data-invalid`, `data-required`, `data-focus-within` and
@@ -219,7 +219,7 @@ described by "Pick at least one", with checkboxes "Email" and "SMS".
 
 ```tsx
 // React
-const group = useComponent(checkboxGroup, {
+const group = useBehavior(checkboxGroup, {
   name: 'notifications',
   defaultValue: ['email'],
   onValueChange,
@@ -237,7 +237,7 @@ return (
 
 function Option({ value, children }) {
   // Linked to the group above through OwnerProvider.
-  const option = useComponent(checkbox, { value, labelElementType: 'span' });
+  const option = useBehavior(checkbox, { value, labelElementType: 'span' });
   return (
     <label {...option.parts.root}>
       <input {...option.parts.input} />
@@ -301,7 +301,7 @@ Decided by @tenphi on 2026-10-15.
    first user:
    - A definition that can be owned names its owner and the element
      attribute for the explicit link:
-     `defineComponent({ …, owner: { definition: checkboxGroup, attribute: 'group' } })`.
+     `defineBehavior({ …, owner: { definition: checkboxGroup, attribute: 'group' } })`.
      Its props gain `owner` (an instance, React's explicit link), and its
      element gains the `group` attribute (the explicit link by id).
    - `ctx.owner(checkboxGroup)` in `setup()` returns `undefined` or the
@@ -309,7 +309,7 @@ Decided by @tenphi on 2026-10-15.
      child to the group's store.
    - `dom/` holds the request event and the late announcement
      (`provideOwner`, `requestOwner`), which both adapters use.
-   - React: the approved shape had `useComponent` provide every instance
+   - React: the approved shape had `useBehavior` provide every instance
      through one context, but a hook can't render a provider. The consumer
      renders `<OwnerProvider owner={group}>` around the checkboxes instead
      (Owner link). Without one, the DOM request links the checkbox after

@@ -1,10 +1,10 @@
 ---
 title: Custom components
-description: Write your own component definition and use it in every adapter.
+description: Write your own behavior definition and use it in every adapter.
 ---
 
-Every UniAria component is a _definition_: a plain object that names the
-component's parts, declares its props and events, and turns state into
+Every UniAria component's behavior is a _definition_: a plain object, made
+with `defineBehavior`, that names the component's parts, declares its props and events, and turns state into
 attributes. The adapters are generic over definitions, so a definition you
 write works in React, in Vue and as a custom element, renders on the server,
 and never re-renders a framework component for its internal state, exactly
@@ -34,13 +34,13 @@ Start from the pattern and decide four things:
 
 ```ts
 // disclosure.ts
-import { bindable, defineComponent, prop } from '@uniaria/core';
+import { bindable, defineBehavior, prop } from '@uniaria/core';
 import { createPress } from '@uniaria/core/dom';
 import type { DomPartProps } from '@uniaria/core/dom';
 
 const flag = (isOn: boolean) => (isOn ? '' : undefined);
 
-export const disclosure = defineComponent({
+export const disclosure = defineBehavior({
   name: 'disclosure',
   parts: ['trigger', 'panel'],
   props: {
@@ -137,13 +137,13 @@ A few rules keep a definition working in both adapters:
 ## Use it in React
 
 ```tsx
-import { useComponent, useComponentState } from '@uniaria/react';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
 
 import { disclosure } from './disclosure';
 
 export function Shipping() {
-  const ui = useComponent(disclosure, { defaultExpanded: true });
-  const isExpanded = useComponentState(ui, (state) => state.isExpanded);
+  const ui = useBehavior(disclosure, { defaultExpanded: true });
+  const isExpanded = useBehaviorState(ui, (state) => state.isExpanded);
   return (
     <section>
       <button {...ui.parts.trigger} type="button" className="disclosure">
@@ -157,19 +157,19 @@ export function Shipping() {
 
 Pressing the button changes the panel's `hidden`, `aria-expanded` and
 `data-state` without rendering `Shipping` again. It renders again here only
-because the label reads `isExpanded` through `useComponentState`; drop that
+because the label reads `isExpanded` through `useBehaviorState`; drop that
 line and the component renders once. See [React](../api/react.md).
 
 ## Use it in Vue
 
 ```vue
 <script setup lang="ts">
-import { useComponent, useComponentState } from '@uniaria/vue';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
 
 import { disclosure } from './disclosure';
 
-const ui = useComponent(disclosure, { defaultExpanded: true });
-const isExpanded = useComponentState(ui, (state) => state.isExpanded);
+const ui = useBehavior(disclosure, { defaultExpanded: true });
+const isExpanded = useBehaviorState(ui, (state) => state.isExpanded);
 </script>
 
 <template>

@@ -36,7 +36,7 @@ as in its [list autocomplete example](https://www.w3.org/WAI/ARIA/apg/patterns/c
 
 ```tsx
 import { combobox } from '@uniaria/core/combobox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -45,7 +45,7 @@ const fruits = [
 ];
 
 export function FruitCombobox() {
-  const fruit = useComponent(combobox, { items: fruits });
+  const fruit = useBehavior(combobox, { items: fruits });
   return (
     <div {...fruit.parts.root}>
       <label {...fruit.parts.label}>Fruit</label>
@@ -77,7 +77,7 @@ export function FruitCombobox() {
 ```vue
 <script setup lang="ts">
 import { combobox } from '@uniaria/core/combobox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -85,7 +85,7 @@ const fruits = [
   { key: 'cherry', textValue: 'Cherry' },
 ];
 
-const fruit = useComponent(combobox, { items: fruits });
+const fruit = useBehavior(combobox, { items: fruits });
 </script>
 
 <template>
@@ -187,7 +187,7 @@ const startsWith = (textValue: string, inputValue: string) =>
 ```tsx
 const [query, setQuery] = useState('');
 const cities = useCitySearch(query); // your data
-const city = useComponent(combobox, {
+const city = useBehavior(combobox, {
   items: cities,
   filter: false,
   onInputChange: setQuery,
@@ -254,7 +254,7 @@ text, else empty.
 ```tsx
 const [value, setValue] = useState<readonly string[]>([]);
 const [inputValue, setInputValue] = useState('');
-const fruit = useComponent(combobox, {
+const fruit = useBehavior(combobox, {
   items: fruits,
   value,
   onValueChange: setValue,
@@ -276,7 +276,7 @@ const clear = () => {
 <script setup lang="ts">
 const value = ref<readonly string[]>([]);
 const inputValue = ref('');
-const fruit = useComponent(combobox, () => ({
+const fruit = useBehavior(combobox, () => ({
   items: fruits,
   value: value.value,
   onValueChange: (keys) => (value.value = keys),
@@ -320,7 +320,7 @@ The button's name and the option count are English by default. Replace them
 whole:
 
 ```tsx
-const fruit = useComponent(combobox, {
+const fruit = useBehavior(combobox, {
   items: fruits,
   buttonLabel: 'Vorschläge anzeigen',
   optionCountAnnouncement: (count) =>
@@ -352,12 +352,12 @@ its `instance` as `optionTooltip`, or on the element name it by id with the
 <Tab label="React">
 
 ```tsx
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
   positionArea: 'right',
 });
-const fruit = useComponent(combobox, {
+const fruit = useBehavior(combobox, {
   items: fruits,
   optionTooltip: full.instance,
 });
@@ -379,12 +379,12 @@ return (
 
 ```vue
 <script setup lang="ts">
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
   positionArea: 'right',
 });
-const fruit = useComponent(combobox, {
+const fruit = useBehavior(combobox, {
   items: fruits,
   optionTooltip: full.instance,
 });
@@ -537,7 +537,7 @@ change to you.
 Select what you render, and the component renders again only when it changes:
 
 ```tsx
-const inputValue = useComponentState(fruit, (state) => state.inputValue);
+const inputValue = useBehaviorState(fruit, (state) => state.inputValue);
 ```
 
 On the custom element, read `element.instance.getState()`. See

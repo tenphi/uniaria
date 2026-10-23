@@ -43,9 +43,9 @@ import {
 } from 'vue';
 
 import { injectScope } from './owner';
-import type { ComponentHandle } from './use-component';
-import { useComponent } from './use-component';
-import { useComponentState } from './use-component-state';
+import type { BehaviorHandle } from './use-behavior';
+import { useBehavior } from './use-behavior';
+import { useBehaviorState } from './use-behavior-state';
 
 /** Definitions by component name, as conformance suites name them. */
 const definitions: Readonly<Record<string, AnyDefinition>> = {
@@ -93,7 +93,7 @@ function resolveProps(
   return result;
 }
 
-type Handle = ComponentHandle<AnyDefinition>;
+type Handle = BehaviorHandle<AnyDefinition>;
 
 /**
  * Binds part props onto part elements, as `v-bind` beside the template's
@@ -145,12 +145,12 @@ const Rows = defineComponent({
     ui: { type: Object as PropType<Handle>, required: true },
   },
   setup(props) {
-    const keys = useComponentState(
+    const keys = useBehaviorState(
       props.ui,
       (state: { renderedKeys?: readonly string[] }) =>
         state.renderedKeys ?? NONE,
     );
-    const sections = useComponentState(
+    const sections = useBehaviorState(
       props.ui,
       (state: { renderedSections?: readonly string[] }) =>
         state.renderedSections ?? NONE,
@@ -174,7 +174,7 @@ function definitionOf(component: string): AnyDefinition {
 
 /**
  * A component nested in the template, rendered as a consumer would: its own
- * `useComponent()`, which finds the component around it as its owner.
+ * `useBehavior()`, which finds the component around it as its owner.
  */
 const Nested = defineComponent({
   props: {
@@ -184,13 +184,13 @@ const Nested = defineComponent({
     const { node } = props;
     const definition = definitionOf(node.component);
     // A link to the component it sits in directly, passed as a consumer
-    // would: `useComponent(button, () => ({ tooltip: hint.instance }))`.
+    // would: `useBehavior(button, () => ({ tooltip: hint.instance }))`.
     const parent = injectScope()?.instance;
     const links: Record<string, unknown> = {};
     for (const key of definition.links ?? []) {
       if (parent && answers(parent.definition, key)) links[key.name] = parent;
     }
-    const ui = useComponent(definition, { ...links, ...node.props } as never);
+    const ui = useBehavior(definition, { ...links, ...node.props } as never);
     return () => renderNodes(node.children, ui);
   },
 });
@@ -210,7 +210,7 @@ export const vueAdapter: ConformanceAdapter = {
 
     const Harness = defineComponent({
       setup() {
-        const ui = useComponent(
+        const ui = useBehavior(
           definition,
           () => ({ ...current.value, ...callbacks }) as never,
         );

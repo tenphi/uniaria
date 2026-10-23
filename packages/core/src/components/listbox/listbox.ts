@@ -48,7 +48,7 @@ import {
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
+import { bindable, defineBehavior, event, itemId, prop } from '../../runtime';
 import { field } from '../field/field';
 import type { OptionTooltipSource } from '../tooltip/link';
 import { linkOptionTooltip, optionTooltipLink } from '../tooltip/link';
@@ -169,7 +169,7 @@ function scrollerOf(
   return scrolls ? page : null;
 }
 
-export const listbox = defineComponent({
+export const listbox = defineBehavior({
   name: 'listbox',
   parts: ['root', 'label', 'scroller', 'list', 'description', 'error', 'empty'],
   itemParts: [

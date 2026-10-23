@@ -182,7 +182,7 @@ root have theirs (`dialogTriggerStyles`, `popoverTriggerStyles`):
 ```tsx
 import { configure, tasty } from '@tenphi/tasty';
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 import { checkboxStyles } from '@uniaria/styles/checkbox';
 import { uniaria } from '@uniaria/styles/tasty';
 
@@ -192,7 +192,7 @@ configure({ plugins: [uniaria()] });
 const CheckboxRoot = tasty({ styles: checkboxStyles });
 
 export function Terms() {
-  const terms = useComponent(checkbox, { labelElementType: 'span' });
+  const terms = useBehavior(checkbox, { labelElementType: 'span' });
   return (
     <CheckboxRoot {...terms.parts.root}>
       <label {...terms.parts.wrapper}>

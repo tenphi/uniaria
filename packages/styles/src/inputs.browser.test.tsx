@@ -8,7 +8,7 @@ import '@uniaria/elements/text-field';
 
 import { numberField } from '@uniaria/core/number-field';
 import { textField } from '@uniaria/core/text-field';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 import { emulateMedia, pointer, releaseInput } from '@uniaria/testing/browser';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -96,7 +96,7 @@ const elements: Adapter = {
 };
 
 function ReactTextField(props: TextFieldProps) {
-  const { parts } = useComponent(textField, props);
+  const { parts } = useBehavior(textField, props);
   return (
     <div {...parts.root}>
       <label {...parts.label}>Username</label>
@@ -111,7 +111,7 @@ function ReactTextField(props: TextFieldProps) {
 }
 
 function ReactNumberField(props: NumberFieldProps) {
-  const { parts } = useComponent(numberField, props);
+  const { parts } = useBehavior(numberField, props);
   return (
     <div {...parts.root}>
       <label {...parts.label}>Quantity</label>

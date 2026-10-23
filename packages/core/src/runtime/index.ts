@@ -1,6 +1,6 @@
 /**
  * The DOM-free runtime: store, props schema (`prop`, `bindable`, `event`),
- * `defineComponent` and the instance both adapters drive. Compiled without
+ * `defineBehavior` and the instance every adapter drives. Compiled without
  * the DOM lib (`tsconfig.core.json`).
  */
 
@@ -32,7 +32,7 @@ export type {
 } from './schema';
 export {
   answers,
-  defineComponent,
+  defineBehavior,
   isOwnerDefinition,
   itemId,
   partElement,
@@ -45,7 +45,7 @@ export type {
   Bindable,
   BindableKeyOf,
   Cell,
-  ComponentConfig,
+  BehaviorConfig,
   ComposeOptions,
   Composed,
   ConnectedParts,

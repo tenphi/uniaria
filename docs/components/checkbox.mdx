@@ -35,13 +35,13 @@ with the native input's role and state in place of `role="checkbox"` and
 
 ```tsx
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function TermsCheckbox(props: {
   isInvalid: boolean;
   onAcceptedChange(isAccepted: boolean): void;
 }) {
-  const terms = useComponent(checkbox, {
+  const terms = useBehavior(checkbox, {
     labelElementType: 'span',
     isRequired: true,
     isInvalid: props.isInvalid,
@@ -66,12 +66,12 @@ export function TermsCheckbox(props: {
 ```vue
 <script setup lang="ts">
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ isInvalid: boolean }>();
 const emit = defineEmits<{ acceptedChange: [isAccepted: boolean] }>();
 
-const terms = useComponent(checkbox, () => ({
+const terms = useBehavior(checkbox, () => ({
   labelElementType: 'span',
   isRequired: true,
   isInvalid: props.isInvalid,
@@ -145,7 +145,7 @@ A click toggles the checkbox natively in both, with no script:
 <Tab label="React">
 
 ```tsx
-const newsletter = useComponent(checkbox, { defaultSelected: true });
+const newsletter = useBehavior(checkbox, { defaultSelected: true });
 return (
   <div {...newsletter.parts.root}>
     <input {...newsletter.parts.input} name="newsletter" />
@@ -160,7 +160,7 @@ return (
 
 ```vue
 <script setup lang="ts">
-const newsletter = useComponent(checkbox, { defaultSelected: true });
+const newsletter = useBehavior(checkbox, { defaultSelected: true });
 </script>
 
 <template>
@@ -205,7 +205,7 @@ true: you clear it. A "select all" checkbox computes both from its rows.
 <Tab label="React">
 
 ```tsx
-const all = useComponent(checkbox, {
+const all = useBehavior(checkbox, {
   labelElementType: 'span',
   isSelected: selected.length === toppings.length,
   isIndeterminate: selected.length > 0 && selected.length < toppings.length,
@@ -221,7 +221,7 @@ const all = useComponent(checkbox, {
 const toppings = ['cheese', 'olives', 'basil'];
 const selected = ref<string[]>([]);
 
-const all = useComponent(checkbox, () => ({
+const all = useBehavior(checkbox, () => ({
   labelElementType: 'span',
   isSelected: selected.value.length === toppings.length,
   isIndeterminate:
@@ -361,7 +361,7 @@ To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (Vue gives a ref):
 
 ```ts
-const isAccepted = useComponentState(terms, (state) => state.isSelected);
+const isAccepted = useBehaviorState(terms, (state) => state.isSelected);
 ```
 
 On the custom element, read `element.instance.getState()`. The `isSelected`

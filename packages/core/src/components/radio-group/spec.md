@@ -237,7 +237,7 @@ property.
 
 ```tsx
 // React
-const plan = useComponent(radioGroup, { defaultValue: 'pro', onValueChange });
+const plan = useBehavior(radioGroup, { defaultValue: 'pro', onValueChange });
 return (
   <div {...plan.parts.root}>
     <span {...plan.parts.label}>Plan</span>
@@ -250,7 +250,7 @@ return (
 );
 
 function Option({ value, children }) {
-  const option = useComponent(radio, { value, labelElementType: 'span' });
+  const option = useBehavior(radio, { value, labelElementType: 'span' });
   return (
     <label {...option.parts.root}>
       <input {...option.parts.input} />

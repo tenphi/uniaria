@@ -40,7 +40,7 @@ except that focus moves into the list while it is open (see
 
 ```tsx
 import { select } from '@uniaria/core/select';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -49,7 +49,7 @@ const fruits = [
 ];
 
 export function FruitSelect() {
-  const fruit = useComponent(select, {
+  const fruit = useBehavior(select, {
     items: fruits,
     placeholder: 'Pick a fruit',
     isRequired: true,
@@ -83,7 +83,7 @@ export function FruitSelect() {
 ```vue
 <script setup lang="ts">
 import { select } from '@uniaria/core/select';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -91,7 +91,7 @@ const fruits = [
   { key: 'cherry', textValue: 'Cherry' },
 ];
 
-const fruit = useComponent(select, {
+const fruit = useBehavior(select, {
   items: fruits,
   placeholder: 'Pick a fruit',
   isRequired: true,
@@ -178,7 +178,7 @@ render the value yourself:
 <Tab label="React">
 
 ```tsx
-const selected = useComponentState(fruit, (state) => state.value[0]);
+const selected = useBehaviorState(fruit, (state) => state.value[0]);
 return (
   <button {...fruit.parts.trigger}>
     {selected ? <FruitBadge fruit={selected} /> : 'Pick a fruit'}
@@ -191,8 +191,8 @@ return (
 
 ```vue
 <script setup lang="ts">
-const fruit = useComponent(select, { items: fruits });
-const selected = useComponentState(fruit, (state) => state.value[0]);
+const fruit = useBehavior(select, { items: fruits });
+const selected = useBehaviorState(fruit, (state) => state.value[0]);
 </script>
 
 <template>
@@ -235,17 +235,17 @@ over the frame hovers the trigger.
 import { useState } from 'react';
 import { button } from '@uniaria/core/button';
 import { select } from '@uniaria/core/select';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitSelect() {
   const [value, setValue] = useState<readonly string[]>([]);
-  const fruit = useComponent(select, {
+  const fruit = useBehavior(select, {
     items: fruits,
     placeholder: 'Pick a fruit',
     value,
     onValueChange: setValue,
   });
-  const clear = useComponent(button, { onPress: () => setValue([]) });
+  const clear = useBehavior(button, { onPress: () => setValue([]) });
   return (
     <div {...fruit.parts.root}>
       <span {...fruit.parts.label}>Fruit</span>
@@ -277,16 +277,16 @@ export function FruitSelect() {
 import { ref } from 'vue';
 import { button } from '@uniaria/core/button';
 import { select } from '@uniaria/core/select';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const value = ref<readonly string[]>([]);
-const fruit = useComponent(select, () => ({
+const fruit = useBehavior(select, () => ({
   items: fruits,
   placeholder: 'Pick a fruit',
   value: value.value,
   onValueChange: (keys) => (value.value = keys),
 }));
-const clear = useComponent(button, { onPress: () => (value.value = []) });
+const clear = useBehavior(button, { onPress: () => (value.value = []) });
 </script>
 
 <template>
@@ -385,19 +385,19 @@ the option.
 ```tsx
 import { select } from '@uniaria/core/select';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitSelect() {
-  const valueTip = useComponent(tooltip, {
+  const valueTip = useBehavior(tooltip, {
     shouldOpenOnlyWhenTruncated: true,
     relation: 'none',
   });
-  const optionTip = useComponent(tooltip, {
+  const optionTip = useBehavior(tooltip, {
     shouldOpenOnlyWhenTruncated: true,
     relation: 'none',
     positionArea: 'right',
   });
-  const fruit = useComponent(select, {
+  const fruit = useBehavior(select, {
     items: fruits,
     tooltip: valueTip.instance,
     optionTooltip: optionTip.instance,
@@ -429,18 +429,18 @@ export function FruitSelect() {
 <script setup lang="ts">
 import { select } from '@uniaria/core/select';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const valueTip = useComponent(tooltip, {
+const valueTip = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
 });
-const optionTip = useComponent(tooltip, {
+const optionTip = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
   positionArea: 'right',
 });
-const fruit = useComponent(select, {
+const fruit = useBehavior(select, {
   items: fruits,
   tooltip: valueTip.instance,
   optionTooltip: optionTip.instance,
@@ -539,7 +539,7 @@ ArrowLeft and ArrowRight on the closed trigger change nothing in multiple mode.
 ```tsx
 const [value, setValue] = useState<readonly string[]>([]);
 const [isOpen, setOpen] = useState(false);
-const fruit = useComponent(select, {
+const fruit = useBehavior(select, {
   items: fruits,
   value,
   onValueChange: setValue,
@@ -555,7 +555,7 @@ const fruit = useComponent(select, {
 <script setup lang="ts">
 const value = ref<readonly string[]>([]);
 const isOpen = ref(false);
-const fruit = useComponent(select, () => ({
+const fruit = useBehavior(select, () => ({
   items: fruits,
   value: value.value,
   onValueChange: (keys) => (value.value = keys),
@@ -699,7 +699,7 @@ change to you.
 Select what you render, and the component renders again only when it changes:
 
 ```tsx
-const isOpen = useComponentState(fruit, (state) => state.isOpen);
+const isOpen = useBehaviorState(fruit, (state) => state.isOpen);
 ```
 
 On the custom element, read `element.instance.getState()`. See

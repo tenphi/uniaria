@@ -14,7 +14,7 @@ In React, you pass the options as data and render each one yourself:
 
 ```tsx
 import { listbox } from '@uniaria/core/listbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -23,7 +23,7 @@ const fruits = [
 ];
 
 function FruitList() {
-  const list = useComponent(listbox, { items: fruits });
+  const list = useBehavior(listbox, { items: fruits });
   return (
     <div {...list.parts.root}>
       <span {...list.parts.label}>Fruit</span>
@@ -48,7 +48,7 @@ In Vue, the same with `v-for`:
 ```vue
 <script setup lang="ts">
 import { listbox } from '@uniaria/core/listbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -56,7 +56,7 @@ const fruits = [
   { key: 'cherry', textValue: 'Cherry', isDisabled: true },
 ];
 
-const list = useComponent(listbox, { items: fruits });
+const list = useBehavior(listbox, { items: fruits });
 </script>
 
 <template>
@@ -138,7 +138,7 @@ lists that don't virtualize don't load it.
 import { virtualizer } from '@uniaria/core/virtual';
 
 function Users({ users }: { users: readonly User[] }) {
-  const list = useComponent(listbox, {
+  const list = useBehavior(listbox, {
     items: users,
     virtualizer,
     itemSize: 32,
@@ -155,8 +155,8 @@ function Users({ users }: { users: readonly User[] }) {
   );
 }
 
-function UserRows({ list }: { list: ComponentHandle<typeof listbox> }) {
-  const keys = useComponentState(list, (state) => state.renderedKeys);
+function UserRows({ list }: { list: BehaviorHandle<typeof listbox> }) {
+  const keys = useBehaviorState(list, (state) => state.renderedKeys);
   return keys.map((key) => (
     <div key={key} {...list.getItemProps('option', key)}>
       {usersByKey.get(key)!.name}
@@ -175,14 +175,14 @@ the child reads the keys the same way, as a ref:
 <!-- UserRows.vue -->
 <script setup lang="ts">
 import type { listbox } from '@uniaria/core/listbox';
-import type { ComponentHandle } from '@uniaria/vue';
-import { useComponentState } from '@uniaria/vue';
+import type { BehaviorHandle } from '@uniaria/vue';
+import { useBehaviorState } from '@uniaria/vue';
 
 const props = defineProps<{
-  list: ComponentHandle<typeof listbox>;
+  list: BehaviorHandle<typeof listbox>;
   names: ReadonlyMap<string, string>;
 }>();
-const keys = useComponentState(props.list, (state) => state.renderedKeys);
+const keys = useBehaviorState(props.list, (state) => state.renderedKeys);
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 ---
 title: Vue
-description: '@uniaria/vue: useComponent and useComponentState.'
+description: '@uniaria/vue: useBehavior and useBehaviorState.'
 ---
 
 `@uniaria/vue` renders any UniAria definition in Vue with one composable. It
@@ -8,7 +8,7 @@ has no component-specific code: every component on this site works through
 the same two exports.
 
 ```ts
-import { useComponent, useComponentState } from '@uniaria/vue';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
 ```
 
 It needs Vue 3.5 or later (`vue` is a peer dependency) and nothing else.
@@ -17,12 +17,12 @@ Internal state never renders your component again. Each part renders with its
 current props, and after mount UniAria writes every change (hover, press,
 focus, an opening popover, the highlighted option) straight to the elements.
 Your component renders again only for its own reactive data and for state you
-[select](#usecomponentstate). See [State](../guide/state.md).
+[select](#usebehaviorstate). See [State](../guide/state.md).
 
-## useComponent
+## useBehavior
 
 ```ts
-useComponent<D>(definition: D, props?: MaybeRefOrGetter<PropsOf<D>>): ComponentHandle<D>
+useBehavior<D>(definition: D, props?: MaybeRefOrGetter<PropsOf<D>>): BehaviorHandle<D>
 ```
 
 Call it in `setup()` or `<script setup>`. It creates an instance of
@@ -31,11 +31,11 @@ Call it in `setup()` or `<script setup>`. It creates an instance of
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ change: [isSelected: boolean] }>();
 
-const wifi = useComponent(toggleSwitch, {
+const wifi = useBehavior(toggleSwitch, {
   defaultSelected: true,
   labelElementType: 'span',
   onSelectedChange: (isSelected) => emit('change', isSelected),
@@ -73,12 +73,12 @@ attributes and never sets a class.
 
 Pass props in whichever form changes the way you need:
 
-| Form                                 | Example                                                   | Follows changes |
-| ------------------------------------ | --------------------------------------------------------- | --------------- |
-| A getter                             | `useComponent(dialog, () => ({ isOpen: open.value }))`    | Yes             |
-| A ref                                | `useComponent(dialog, dialogProps)`                       | Yes             |
-| Your component's own `defineProps()` | `useComponent(button, props)`                             | Yes             |
-| A plain object                       | `useComponent(button, { isFocusableWhenDisabled: true })` | No: read once   |
+| Form                                 | Example                                                  | Follows changes |
+| ------------------------------------ | -------------------------------------------------------- | --------------- |
+| A getter                             | `useBehavior(dialog, () => ({ isOpen: open.value }))`    | Yes             |
+| A ref                                | `useBehavior(dialog, dialogProps)`                       | Yes             |
+| Your component's own `defineProps()` | `useBehavior(button, props)`                             | Yes             |
+| A plain object                       | `useBehavior(button, { isFocusableWhenDisabled: true })` | No: read once   |
 
 A getter is the usual form: it reads refs, props and computed values like a
 `computed()` does. A change is stored before your component renders, so the
@@ -87,12 +87,12 @@ render shows it, and applied after Vue's patch, once every part is in place.
 ```vue
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ isSaving: boolean }>();
 const emit = defineEmits<{ save: [] }>();
 
-const save = useComponent(button, () => ({
+const save = useBehavior(button, () => ({
   onPress: () => emit('save'),
   isDisabled: props.isSaving,
   isFocusableWhenDisabled: true,
@@ -117,7 +117,7 @@ const save = useComponent(button, () => ({
 const props = withDefaults(defineProps<{ isOpen?: boolean }>(), {
   isOpen: undefined,
 });
-const ui = useComponent(popover, props);
+const ui = useBehavior(popover, props);
 ```
 
 ### v-model
@@ -128,11 +128,11 @@ A value is a prop and its change callback, as everywhere in UniAria, and
 ```vue
 <script setup lang="ts">
 import { popover } from '@uniaria/core/popover';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const open = defineModel<boolean>('open', { default: undefined });
 
-const ui = useComponent(popover, () => ({
+const ui = useBehavior(popover, () => ({
   isOpen: open.value,
   onOpenChange: (isOpen) => (open.value = isOpen),
 }));
@@ -152,12 +152,12 @@ keeps it closed.
 
 ### The handle
 
-| Member                    | Description                                                                                                                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instance`                | The stable [`Instance`](./core.md#instance). Pass it to `useComponentState`, or as another component's `owner` or link prop. `instance.getState()` reads state without subscribing. |
-| `actions`                 | The component's public [actions](./core.md#actions), such as an overlay's `open()` and `close()`.                                                                                   |
-| `parts`                   | Props for each part, read when the render reads them: `parts.root`, `parts.input`. Bind them with `v-bind`.                                                                         |
-| `getItemProps(part, key)` | Props for one item part of one item, for collections: `getItemProps('option', item.key)`. See [item parts](#item-parts).                                                            |
+| Member                    | Description                                                                                                                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `instance`                | The stable [`Instance`](./core.md#instance). Pass it to `useBehaviorState`, or as another component's `owner` or link prop. `instance.getState()` reads state without subscribing. |
+| `actions`                 | The component's public [actions](./core.md#actions), such as an overlay's `open()` and `close()`.                                                                                  |
+| `parts`                   | Props for each part, read when the render reads them: `parts.root`, `parts.input`. Bind them with `v-bind`.                                                                        |
+| `getItemProps(part, key)` | Props for one item part of one item, for collections: `getItemProps('option', item.key)`. See [item parts](#item-parts).                                                           |
 
 Render the parts you need: each component's page says which parts are
 optional. The handle and its instance are marked raw, so a `ref` or
@@ -169,7 +169,7 @@ For a controlled component, an action only calls the change callback
 (`onOpenChange`), as a user's click would.
 
 ```ts
-const conflict = useComponent(dialog);
+const conflict = useBehavior(dialog);
 
 async function save(draft: string) {
   const response = await fetch('/api/draft', { method: 'PUT', body: draft });
@@ -222,10 +222,10 @@ ref of your own:
 ```vue
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 import { shallowRef } from 'vue';
 
-const save = useComponent(button);
+const save = useBehavior(button);
 const own = shallowRef<HTMLButtonElement | null>(null);
 
 function setRef(element: unknown) {
@@ -251,10 +251,10 @@ Vue's `key`:
 ```vue
 <script setup lang="ts">
 import { listbox } from '@uniaria/core/listbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ items: { key: string; textValue: string }[] }>();
-const ui = useComponent(listbox, () => ({ items: props.items }));
+const ui = useBehavior(listbox, () => ({ items: props.items }));
 </script>
 
 <template>
@@ -274,11 +274,11 @@ Item props are computed lazily, only for the items you render, and later
 changes reach each row's element directly, so moving the highlight renders
 nothing. One handler per part and event serves every item.
 
-## useComponentState
+## useBehaviorState
 
 ```ts
-useComponentState<D, T>(
-  source: Instance<D> | ComponentHandle<D>,
+useBehaviorState<D, T>(
+  source: Instance<D> | BehaviorHandle<D>,
   selector: (state: StateOf<D>) => T,
   isEqual?: (a: T, b: T) => boolean,
 ): Readonly<Ref<T>>
@@ -292,10 +292,10 @@ State.
 ```vue
 <script setup lang="ts">
 import { dialog } from '@uniaria/core/dialog';
-import { useComponent, useComponentState } from '@uniaria/vue';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
 
-const confirm = useComponent(dialog);
-const isOpen = useComponentState(confirm, (state) => state.isOpen);
+const confirm = useBehavior(dialog);
+const isOpen = useBehaviorState(confirm, (state) => state.isOpen);
 </script>
 
 <template>
@@ -319,9 +319,9 @@ group, a radio in its radio group, a control in its field. A component finds
 its owner in this order:
 
 1. **The `owner` prop**, an instance:
-   `useComponent(checkbox, { value: 'sms', owner: group.instance })`. For
+   `useBehavior(checkbox, { value: 'sms', owner: group.instance })`. For
    parts that sit apart.
-2. **The nearest component that provides one.** Every `useComponent`
+2. **The nearest component that provides one.** Every `useBehavior`
    provides its instance to the components inside it, slot content
    included, through Vue's `provide()`. It holds only the stable instance,
    so it renders nothing when state changes, and it follows the component
@@ -334,9 +334,9 @@ its owner in this order:
 <!-- ContactGroup.vue -->
 <script setup lang="ts">
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const group = useComponent(checkboxGroup, { defaultValue: ['email'] });
+const group = useBehavior(checkboxGroup, { defaultValue: ['email'] });
 </script>
 
 <template>
@@ -351,10 +351,10 @@ const group = useComponent(checkboxGroup, { defaultValue: ['email'] });
 <!-- ContactOption.vue -->
 <script setup lang="ts">
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ value: string }>();
-const ui = useComponent(checkbox, () => ({
+const ui = useBehavior(checkbox, () => ({
   value: props.value,
   labelElementType: 'span',
 }));
@@ -383,8 +383,8 @@ nothing.
 tooltip gets the tooltip's instance as `tooltip`:
 
 ```ts
-const hint = useComponent(tooltip);
-const save = useComponent(button, { tooltip: hint.instance });
+const hint = useBehavior(tooltip);
+const save = useBehavior(button, { tooltip: hint.instance });
 ```
 
 Vue components also answer lookups from the DOM: a custom element inside a
@@ -428,9 +428,9 @@ rendered tag doesn't match `elementType`. Warnings are on while
 
 ## Server rendering
 
-`useComponent` renders complete HTML through `vue/server-renderer`: ids,
+`useBehavior` renders complete HTML through `vue/server-renderer`: ids,
 ARIA attributes, state attributes, the part markers, starting values of
-inputs and checkboxes, and state you select with `useComponentState`. Owners
+inputs and checkboxes, and state you select with `useBehaviorState`. Owners
 provided by components around it are part of it. Nothing that needs the
 DOM runs on the server: no listener, focus change or measurement. On the
 client, Vue hydrates the same markup, and UniAria attaches to the elements
@@ -439,11 +439,11 @@ without a second render. Nuxt needs nothing more. See
 
 ## Types
 
-| Type                 | Description                                                             |
-| -------------------- | ----------------------------------------------------------------------- |
-| `ComponentHandle<D>` | What `useComponent` returns.                                            |
-| `ComponentProps<D>`  | What `useComponent` takes: a getter, a ref, a reactive object or props. |
-| `VuePartProps`       | Props for one part: attributes, handlers, `style` and `ref`.            |
+| Type                | Description                                                            |
+| ------------------- | ---------------------------------------------------------------------- |
+| `BehaviorHandle<D>` | What `useBehavior` returns.                                            |
+| `BehaviorProps<D>`  | What `useBehavior` takes: a getter, a ref, a reactive object or props. |
+| `VuePartProps`      | Props for one part: attributes, handlers, `style` and `ref`.           |
 
 Component props and state types come from each component's subpath:
 `ButtonProps` and `ButtonState` from `@uniaria/core/button`.

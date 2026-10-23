@@ -186,7 +186,7 @@ wait for `customElements.whenDefined('uni-dialog')`.
 ### Instance and state
 
 `element.instance` is the [`Instance`](./core.md#instance) behind the
-element, the same kind React's `useComponent` creates:
+element, the same kind React's `useBehavior` creates:
 
 - `element.instance.getState()` reads the public state each component's page
   lists.

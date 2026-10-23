@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/radio` — the Radio definition, one option of a RadioGroup
- * (`@uniaria/core/radio-group`). Render it with `useComponent(radio, props)`
+ * (`@uniaria/core/radio-group`). Render it with `useBehavior(radio, props)`
  * from `@uniaria/react` inside its group's `OwnerProvider`, or the
  * `<uni-radio>` element from `@uniaria/elements/radio`.
  */

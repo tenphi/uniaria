@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/number-field` — the NumberField definition. Render it with
- * `useComponent(numberField, props)` from `@uniaria/react` or the
+ * `useBehavior(numberField, props)` from `@uniaria/react` or the
  * `<uni-number-field>` element from `@uniaria/elements/number-field`.
  */
 

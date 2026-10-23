@@ -37,19 +37,19 @@ UniAria component, `v-model` sugar, a Nuxt module, and Vue 3.6's Vapor mode
 ## API
 
 ```ts
-import { useComponent, useComponentState } from '@uniaria/vue';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
 ```
 
 Two composables, the same names and shape as React's. There is no
 `OwnerProvider`: Vue's `provide()` does its work (Owners and links).
 
-### useComponent
+### useBehavior
 
 ```ts
-useComponent<D>(
+useBehavior<D>(
   definition: D,
   props?: MaybeRefOrGetter<PropsOf<D>>,
-): ComponentHandle<D>
+): BehaviorHandle<D>
 ```
 
 Called in `setup()` (or `<script setup>`). Creates one instance of
@@ -58,11 +58,11 @@ Called in `setup()` (or `<script setup>`). Creates one instance of
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ change: [isSelected: boolean] }>();
 
-const wifi = useComponent(toggleSwitch, () => ({
+const wifi = useBehavior(toggleSwitch, () => ({
   defaultSelected: true,
   labelElementType: 'span',
   onSelectedChange: (isSelected) => emit('change', isSelected),
@@ -91,12 +91,12 @@ const wifi = useComponent(toggleSwitch, () => ({
 
 `props` is what Vue composables usually take (`MaybeRefOrGetter`):
 
-| Form                                | Example                                                | Reactive        |
-| ----------------------------------- | ------------------------------------------------------ | --------------- |
-| A getter (documented form)          | `useComponent(dialog, () => ({ isOpen: open.value }))` | Yes             |
-| A ref                               | `useComponent(dialog, dialogProps)`                    | Yes             |
-| The component's own `defineProps()` | `useComponent(button, props)`                          | Yes, key by key |
-| A plain object                      | `useComponent(button, { isDisabled: true })`           | No: read once   |
+| Form                                | Example                                               | Reactive        |
+| ----------------------------------- | ----------------------------------------------------- | --------------- |
+| A getter (documented form)          | `useBehavior(dialog, () => ({ isOpen: open.value }))` | Yes             |
+| A ref                               | `useBehavior(dialog, dialogProps)`                    | Yes             |
+| The component's own `defineProps()` | `useBehavior(button, props)`                          | Yes, key by key |
+| A plain object                      | `useBehavior(button, { isDisabled: true })`           | No: read once   |
 
 A change goes the way React's does, in two steps:
 
@@ -129,7 +129,7 @@ and `defineModel()` connects them to the consumer's `v-model`:
 
 ```ts
 const open = defineModel<boolean>('open', { default: undefined });
-const ui = useComponent(dialog, () => ({
+const ui = useBehavior(dialog, () => ({
   isOpen: open.value,
   onOpenChange: (isOpen) => (open.value = isOpen),
 }));
@@ -149,12 +149,12 @@ wrapper that wants emits re-emits from the callback, as above.
 
 ### The handle
 
-| Member                    | Description                                                                                               |
-| ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `instance`                | The stable `Instance`. Pass it to `useComponentState`, as another component's `owner`, or as a link prop. |
-| `actions`                 | The public actions (`open()`, `close()` on overlays), stable.                                             |
-| `parts`                   | Props for each part, read when the render reads them. Bind them with `v-bind="ui.parts.root"`.            |
-| `getItemProps(part, key)` | Props for one item part of one item, for collections.                                                     |
+| Member                    | Description                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `instance`                | The stable `Instance`. Pass it to `useBehaviorState`, as another component's `owner`, or as a link prop. |
+| `actions`                 | The public actions (`open()`, `close()` on overlays), stable.                                            |
+| `parts`                   | Props for each part, read when the render reads them. Bind them with `v-bind="ui.parts.root"`.           |
+| `getItemProps(part, key)` | Props for one item part of one item, for collections.                                                    |
 
 `parts` is a getter: each read takes the props from the current
 `connect()` (cached while it returns the same object), so every render reads
@@ -220,13 +220,13 @@ As in React: props computed lazily per rendered item and reused while
 `connectItem()` returns the same object, one handler per part and event that
 finds the key from the element, and one ref per part and key. A virtualized
 list renders `renderedKeys` from a child component that reads them with
-`useComponentState`, so the owner never renders again for them.
+`useBehaviorState`, so the owner never renders again for them.
 
-### useComponentState
+### useBehaviorState
 
 ```ts
-useComponentState<D, T>(
-  source: Instance<D> | ComponentHandle<D>,
+useBehaviorState<D, T>(
+  source: Instance<D> | BehaviorHandle<D>,
   selector: (state: StateOf<D>) => T,
   isEqual?: (a: T, b: T) => boolean,
 ): Readonly<Ref<T>>
@@ -237,8 +237,8 @@ that render, and only a change of the selected value (`Object.is`, or
 `isEqual`) triggers it.
 
 ```ts
-const confirm = useComponent(dialog, () => ({}));
-const isOpen = useComponentState(confirm, (state) => state.isOpen);
+const confirm = useBehavior(dialog, () => ({}));
+const isOpen = useBehaviorState(confirm, (state) => state.isOpen);
 ```
 
 - The ref reads the state when it is read, so a render after a prop change
@@ -254,7 +254,7 @@ const isOpen = useComponentState(confirm, (state) => state.isOpen);
 A component finds its owner in the same order as in React:
 
 1. **The `owner` prop**, an instance.
-2. **`provide`/`inject`.** Every `useComponent` provides its instance to the
+2. **`provide`/`inject`.** Every `useBehavior` provides its instance to the
    component's descendants, slot content included, and finds the nearest
    provided instance of its owner's definition during setup. The first
    render and the server HTML have the owner's state. Like React context,
@@ -264,15 +264,15 @@ A component finds its owner in the same order as in React:
    custom element or another adapter's part.
 
 React needs `OwnerProvider` because a hook can't provide a context; Vue's
-`provide()` can, so a Vue component provides by calling `useComponent`.
+`provide()` can, so a Vue component provides by calling `useBehavior`.
 
 ```vue
 <!-- ContactGroup.vue -->
 <script setup lang="ts">
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const group = useComponent(checkboxGroup, () => ({ defaultValue: ['email'] }));
+const group = useBehavior(checkboxGroup, () => ({ defaultValue: ['email'] }));
 </script>
 
 <template>
@@ -284,13 +284,13 @@ const group = useComponent(checkboxGroup, () => ({ defaultValue: ['email'] }));
 ```
 
 `<ContactGroup><Option value="email">Email</Option></ContactGroup>`: each
-`Option` calls `useComponent(checkbox, …)` and injects the group.
+`Option` calls `useBehavior(checkbox, …)` and injects the group.
 
 The adapter also answers DOM requests for its owner parts, so a custom
 element inside a Vue group's root finds that group, as with React.
 
 **Links** pass the instance in the prop named after the link:
-`useComponent(button, () => ({ tooltip: hint.instance }))`.
+`useBehavior(button, () => ({ tooltip: hint.instance }))`.
 
 ### Attributes UniAria owns
 
@@ -324,7 +324,7 @@ uses, so an overlay open from the start is `data-entering` as it shows.
 happens on the server. The HTML has ids from `useId()`, ARIA and state
 attributes, the part markers, starting values of inputs and checkboxes
 (`^value` and `^checked` render as `value` and `checked`), injected owners'
-state, and state read with `useComponentState`. Hydration calls the refs
+state, and state read with `useBehaviorState`. Hydration calls the refs
 with the server's elements and starts the instance in `onMounted`, without a
 second render. Nuxt is Vue's server renderer with `useId()`, so it needs
 nothing more.
@@ -371,9 +371,9 @@ packages/vue/
 ├── tsconfig.json
 ├── tsdown.config.ts           One entry, ESM, platform neutral
 └── src/
-    ├── index.ts               useComponent, useComponentState, types
-    ├── use-component.ts
-    ├── use-component-state.ts
+    ├── index.ts               useBehavior, useBehaviorState, types
+    ├── use-behavior.ts
+    ├── use-behavior-state.ts
     ├── owner.ts               The provide/inject scope
     ├── props.ts               Part props → Vue props
     ├── conformance-adapter.ts The mount contract (test support, not exported)
@@ -394,12 +394,12 @@ listeners merged, `v-for` with item parts.
 
 - **Conformance.** `src/conformance-adapter.ts` renders a template with
   `h()` in a harness component that counts its renders; `nested()` becomes a
-  component with its own `useComponent()`, `rows()` a child component that
+  component with its own `useBehavior()`, `rows()` a child component that
   reads `renderedKeys` and `renderedSections`. Props live in a shallow ref:
   `setProps()` replaces it and awaits `nextTick()`, which covers the
   post-flush `sync()`. `src/conformance.browser.test.ts` runs every suite at
   phase 4.
-- **`useComponent`.** First paint; part markers beside the consumer's
+- **`useBehavior`.** First paint; part markers beside the consumer's
   `class`; handler identity; attributes the binder wrote surviving a
   re-render; latest callbacks without a render; actions; zero renders for
   internal interactions; every props form (getter, ref, `defineProps()`,
@@ -410,7 +410,7 @@ listeners merged, `v-for` with item parts.
 - **Development warnings**, **part ids**, **live DOM properties**, **item
   parts** and **element effects** (`data-entering` from the start): the
   cases React's tests cover, in Vue.
-- **`useComponentState`.** Renders only for a change; once for a prop
+- **`useBehaviorState`.** Renders only for a change; once for a prop
   change; again for a change the sync makes; `isEqual`; unsubscribes on
   unmount.
 - **Owners.** Injection from the first render and on the server, through
@@ -466,7 +466,7 @@ One pull request (owner, 2026-10-21: bigger pull requests):
 
 1. This spec, on its own commit, for review. Nothing else starts before the
    owner approves it.
-2. The package: `useComponent`, `useComponentState`, owners, with their
+2. The package: `useBehavior`, `useBehaviorState`, owners, with their
    tests.
 3. The conformance adapter, every suite at phase 4.
 4. Server rendering and hydration tests.
@@ -497,7 +497,7 @@ The owner took every recommendation (2026-10-21).
 1. **Props forms.** A getter, a ref, the component's `defineProps()` or a
    plain object. A getter only would make wrappers write
    `() => ({ ...props })`.
-2. **Owners.** `useComponent` provides its instance automatically; there is
+2. **Owners.** `useBehavior` provides its instance automatically; there is
    no `provideOwner()`. Provided instances are matched by definition, so
    providing one no descendant asks for changes nothing.
 3. **Docs scope.** A Vue tab beside every React tab, in the same pull
