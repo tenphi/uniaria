@@ -6,7 +6,7 @@ seo:
   title: UniAria — accessible component behavior, written once
 hero:
   title: Accessible behavior, written once
-  tagline: UniAria is a headless component library. Each component's keyboard handling, focus management, ARIA and state are written once in plain TypeScript and used from React, from Vue, as custom elements, or from any framework. Your design system keeps the look.
+  tagline: UniAria is a headless component library. Each component's keyboard handling, focus management, ARIA and state are written once in plain TypeScript and used from React, from Vue, as custom elements, or from any framework. Your design system keeps the look, or starts from the optional default styles.
   image:
     html: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="currentColor"/><circle cx="32" cy="32" r="9" fill="#fff"/><circle cx="32" cy="12.5" r="4.5" fill="#fff" opacity=".85"/><circle cx="49" cy="42" r="4.5" fill="#fff" opacity=".85"/><circle cx="15" cy="42" r="4.5" fill="#fff" opacity=".85"/><path d="M32 17v6M45 39.5l-5.2-3M19 39.5l5.2-3" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/></svg>'
   actions:
@@ -49,7 +49,9 @@ import { Callout, Card } from '@tenphi/cookbook/components';
 - **Headless, with hooks for your CSS.** A component's root carries
   `data-uni="<name>"` and its other parts `data-element`, all with state
   attributes such as `data-pressed` and `data-focus-visible`. Style them with
-  any CSS you like, or with Tasty. [Styling](./guide/styling.md).
+  any CSS you like, or with Tasty. [Styling](./guide/styling.md). Or start
+  from the optional [default styles](./guide/default-styles.md), written
+  against the same attributes.
 
 ## What it looks like
 
@@ -140,4 +142,5 @@ The first release covers fifteen components.
 ## Next
 
 Read the [introduction](./guide/introduction.md) for the ideas behind UniAria,
-or go straight to [getting started](./guide/getting-started.mdx).
+see how it [compares with other libraries](./guide/comparison.md), or go
+straight to [getting started](./guide/getting-started.mdx).
