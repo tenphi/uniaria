@@ -34,7 +34,8 @@ Space, toggle it natively, and Enter submits its form.
 Not part of Checkbox:
 
 - **Validation.** As in Field: Checkbox shows `isInvalid`, the form decides
-  it. No native `required`, `setCustomValidity` or `invalid` handling.
+  it. No native `required`, `setCustomValidity` or `invalid` handling. Inside a Form, the form checks it and decides it (Form spec, Changes to
+  approved specs).
 - **Switch.** Next on the roadmap, as its own definition on Checkbox's core:
   `role="switch"` on the same native input, no indeterminate state. React
   Aria and Cube UI Kit have separate components, and the APG a separate

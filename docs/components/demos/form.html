@@ -1,0 +1,60 @@
+<uni-form id="signup">
+  <form data-uni="form" aria-labelledby="signup-title" novalidate>
+    <h2 id="signup-title">Sign up</h2>
+
+    <uni-text-field id="email" required>
+      <div data-uni="text-field">
+        <label data-element="Label"
+          >Email <span aria-hidden="true">*</span></label
+        >
+        <input
+          data-element="Input"
+          name="email"
+          type="email"
+          autocomplete="email"
+        />
+        <p data-element="Description">Try taken@example.com.</p>
+        <p data-element="Error"><span data-element="ErrorText"></span></p>
+      </div>
+    </uni-text-field>
+
+    <uni-text-field id="password" required>
+      <div data-uni="text-field">
+        <label data-element="Label"
+          >Password <span aria-hidden="true">*</span></label
+        >
+        <input
+          data-element="Input"
+          name="password"
+          type="password"
+          minlength="8"
+          autocomplete="new-password"
+        />
+        <p data-element="Error"><span data-element="ErrorText"></span></p>
+      </div>
+    </uni-text-field>
+
+    <uni-checkbox id="terms" required>
+      <div data-uni="checkbox">
+        <label data-element="Wrapper">
+          <input data-element="Input" type="checkbox" name="terms" />
+          <span data-element="Indicator"></span>
+          <span data-element="Label">I accept the terms</span>
+        </label>
+        <p data-element="Error"><span data-element="ErrorText"></span></p>
+      </div>
+    </uni-checkbox>
+
+    <p data-element="Error" class="submit-error"></p>
+
+    <div class="actions">
+      <uni-button type="submit">
+        <button data-uni="button" data-variant="primary">Sign up</button>
+      </uni-button>
+      <uni-button type="reset">
+        <button data-uni="button">Reset</button>
+      </uni-button>
+    </div>
+  </form>
+</uni-form>
+<output id="log">Leave a field, or submit the form empty.</output>

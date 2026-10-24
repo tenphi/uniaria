@@ -58,6 +58,10 @@ reviewed.
 
 Not part of Combobox:
 
+- **Validation.** As in Field: Combobox shows `isInvalid`, the form decides
+  it. Inside a Form, the form checks it when focus leaves it, and Combobox
+  writes the `name` and the form's id on its hidden input (Form spec,
+  Changes to approved specs).
 - **Multiple selection** (tags in the field): a later TagField. Resolved
   questions 16.
 - **A clear button.** The consumer's button: clearing sets `value` to `[]`

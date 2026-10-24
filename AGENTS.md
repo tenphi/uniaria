@@ -262,12 +262,14 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   …); it is public API, and the spec documents it.
 - `actions` lists the members of `api` consumers may call, each run in a
   batch: `instance.actions`, the React and Vue handles' `actions`, and one method per
-  action on the custom element (`element.open()`). Only the overlays and
-  Autocomplete have any: `open` and `close` on Dialog, Popover, Tooltip,
-  Select and Combobox (owner, 2026-10-19), and `open`, `close` and `showAll`
-  on Autocomplete, whose `open` and `close` do nothing inline (owner,
-  2026-10-24, the composition spec). An action is public API, and its spec's
-  Actions section documents it.
+  action on the custom element (`element.open()`). Only the overlays,
+  Autocomplete, Form and Field have any: `open` and `close` on Dialog,
+  Popover, Tooltip, Select and Combobox (owner, 2026-10-19); `open`, `close`
+  and `showAll` on Autocomplete, whose `open` and `close` do nothing inline
+  (owner, 2026-10-24, the composition spec); Form's `submit`, `reset`,
+  `validate`, `setValue` and the rest, and Field's `setValue` for a custom
+  control (owner, 2026-10-24, the Form spec). An action is public API, and
+  its spec's Actions section documents it.
 - `createInstance(definition, { props, id, env })` in the runtime is the
   instance every adapter drives. Node tests use it directly: call part
   handlers from `instance.connect()` and read `attrs` and `getState()`
@@ -303,6 +305,12 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   since the composer resets its own (owner, 2026-10-24, the composition
   spec). An uncontrolled bindable inside a composed definition resets as
   before.
+- A bindable can be bound to a source (owner, 2026-10-24, the Form spec):
+  `Bindable.bind(() => source | null)` reads and writes the value through
+  the source the function returns, read on every access. While there is
+  one, the value is controlled, `set()` writes the source and then calls
+  the change callback, and `reset()` does nothing. Field binds a field's
+  value to its form this way: the form holds it under the field's `name`.
 - The core reads props only through getters and never keeps a copy.
 
 ### Composition between instances
@@ -328,7 +336,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
 - State flows between stores: `ctx.owner(def)` returns the owner's actions
   and exposed state and subscribes the child's binder to the owner's store.
   It is `undefined` until the owner is resolved; resolving it triggers a
-  flush.
+  flush. `ctx.link(key, select)` follows only what `select` returns from
+  the linked instance's `api` (`Object.is`), so a field re-runs for its own
+  name in a form, not for every keystroke in it (the Form spec).
 - Request events are `composed` (owner decision, 2026-10-19): a child in a
   wrapper's shadow root finds the owner its wrapper sits in. Lookup by id
   stays in the child's root node.
@@ -349,6 +359,17 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   2026-10-22, the items spec). A composed definition reads only the links
   its composer passes on through `ctx.use()` (Behavior lives in
   definitions).
+- An inherited key (`isInherited: true`; owner, 2026-10-24, the Form spec)
+  resolves as an owner does, from the nearest provider across other UniAria
+  hosts: `OwnerProvider` and Vue's provides answer it, and on elements the
+  request event goes past the host, with a nearer provider that connects
+  later taking over. Form's `form` link is one, so a field inside a group
+  finds its form. A link prop takes an instance or a handle, and `null`
+  means no link (an empty attribute on elements). Elements provide on their
+  root part too, so an id finds `<form id="signup">` inside `<uni-form>`;
+  ids are read with `getAttribute('id')` and the form's own methods are
+  called from `HTMLFormElement.prototype`, since a control named `id`,
+  `submit` or `elements` shadows a form's property.
 - Tests cover each path: nested, consumer portal (React) or `<Teleport>`
   (Vue), another branch, a React or Vue child inside a custom-element owner,
   and an owner that connects late.
@@ -558,12 +579,16 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
 - Attribute ownership is per part: the element owns ARIA state, `data-state`
   and the part markers; the consumer owns content, `class` and every other
   attribute, `id` included: UniAria
-  writes an id only on a part that has none.
+  writes an id only on a part that has none. A field with a `name` writes it
+  on the native control it submits through, and in a form whose `<form>`
+  isn't around that control, the form's id in its `form` attribute (the
+  Form spec).
   A part can be declared element-owned: the consumer leaves it empty and
   UniAria writes its content, in every adapter. Select's displayed value
-  (its text), its hidden `<select>` (its `<option>`s) and Tooltip's `text`
-  (the text it shows) are the three (Select spec, Resolved questions 10 and
-  11; the items spec, Resolved questions 5).
+  (its text), its hidden `<select>` (its `<option>`s), Tooltip's `text`
+  (the text it shows) and Field's `errorText` (the first error a form
+  found) are the four (Select spec, Resolved questions 10 and 11; the items
+  spec, Resolved questions 5; the Form spec, Resolved questions 5).
 - Parts are found by a query that stops at nested UniAria elements of any
   kind (a nested element can still be a part itself), plus a
   `MutationObserver` for parts added later. Listeners are delegated from the
@@ -684,7 +709,8 @@ NumberField → Listbox, Select, Combobox. Dialog and Tooltip joined on
 the overlay contract Popover reuses; Tooltip after Popover, whose
 positioning and top-layer fallback it reuses. TextInput and Autocomplete
 joined on 2026-10-24 (owner, the composition spec), with TextField,
-NumberField and Combobox rebuilt on them.
+NumberField and Combobox rebuilt on them. Form joined on 2026-10-24 (owner,
+the Form spec), with every field binding to it through Field.
 
 Button also covers navigation (link mode with `href`); there is no separate
 Link component. Field plus a text control is `<Name>Field` (TextField,

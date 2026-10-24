@@ -46,6 +46,7 @@ export default defineConfig({
     'select/index': 'src/components/select/index.ts',
     'autocomplete/index': 'src/components/autocomplete/index.ts',
     'combobox/index': 'src/components/combobox/index.ts',
+    'form/index': 'src/components/form/index.ts',
     'virtual/index': 'src/virtual/index.ts',
   },
   format: 'esm',

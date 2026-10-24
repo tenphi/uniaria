@@ -37,7 +37,9 @@
     "./src/autocomplete.ts",
     "./dist/autocomplete.js",
     "./src/combobox.ts",
-    "./dist/combobox.js"
+    "./dist/combobox.js",
+    "./src/form.ts",
+    "./dist/form.js"
   ],
   "exports": {
     ".": {
@@ -114,6 +116,11 @@
       "uniaria-source": "./src/combobox.ts",
       "types": "./dist/combobox.d.ts",
       "default": "./dist/combobox.js"
+    },
+    "./form": {
+      "uniaria-source": "./src/form.ts",
+      "types": "./dist/form.d.ts",
+      "default": "./dist/form.js"
     },
     "./radio": {
       "uniaria-source": "./src/radio.ts",

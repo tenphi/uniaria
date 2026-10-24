@@ -92,7 +92,7 @@ export const radio = defineBehavior({
             .filter(Boolean)
             .join(' ') || undefined,
       }),
-      { parts: { control: 'input', error: null } },
+      { parts: { control: 'input', error: null, errorText: null } },
     );
 
     if (isDevelopment()) {
@@ -282,7 +282,7 @@ export const radio = defineBehavior({
         ...state,
         type: 'radio',
         // Only once known: until then the consumer's stay.
-        ...(owner ? { name: owner.api.name() } : {}),
+        ...(owner ? owner.api.submitAttrs() : {}),
         ...(value === undefined ? {} : { value }),
         ...(tabIndex === undefined ? {} : { tabindex: tabIndex }),
         disabled: flag(isDisabled && !isInert),

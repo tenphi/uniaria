@@ -26,7 +26,8 @@ invalid states.
 Not part of CheckboxGroup:
 
 - **Validation.** As in Field: the group shows `isInvalid`, the form decides
-  it.
+  it. Inside a Form, the form checks it and decides it (Form spec, Changes to
+  approved specs).
 - **A select-all checkbox.** A checkbox outside the group whose
   `isSelected` and `isIndeterminate` the consumer computes from the group's
   value, as Cube UI Kit's TableView does.

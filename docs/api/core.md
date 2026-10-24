@@ -244,7 +244,8 @@ and the few members the definition lists as [actions](#actions). Everything
 
 ### Bindables in setup
 
-A bindable reads as `{ get(), set(value), isControlled(), reset(options?) }`.
+A bindable reads as `{ get(), set(value), isControlled(), reset(options?),
+getDefault(), bind(source) }`.
 
 - **Uncontrolled**, `set()` commits the value, notifies, and calls the
   consumer's change callback.
@@ -252,6 +253,13 @@ A bindable reads as `{ get(), set(value), isControlled(), reset(options?) }`.
   the consumer passes a new one. Never assume a requested change took effect:
   read `get()` again.
 - `set()` with the current value does nothing.
+- **Bound**, `bind(() => source | null)` reads and writes the value through
+  the `{ get(), set(value) }` the function returns, read on every access:
+  the value is controlled, `set()` writes the source and then calls the
+  callback, and `reset()` does nothing. With `null`, the props hold the
+  value again. Field binds a field's value to its form this way.
+- `getDefault()` is the consumer's `default<Name>`, or `undefined` without
+  one: never the schema's default.
 
 ```ts
 setup(ctx) {
@@ -439,6 +447,16 @@ only the links its composer passed on with `ctx.use()`'s
 [`links`](#composition), as Combobox passes its options' tooltip to
 Autocomplete, and is `undefined` for any other.
 
+An inherited key (`isInherited: true`) resolves as an owner does, from the
+nearest provider across other UniAria hosts: Form's `formLink` is one, so a
+field inside a group finds its form. A link prop takes an instance or a
+handle, and `null` means no link; on elements, an empty attribute.
+
+`ctx.link(key, select)` follows only what `select` returns from the linked
+instance's `api`: the instance's `connect()`, `expose()` and watches re-run
+when that changes (`Object.is`), not on every change of the linked one. A
+field follows its own name in a form this way.
+
 How each adapter resolves owners and links:
 [React](./react.md#owners-and-links), [custom elements](./elements.md#owners-and-links).
 
@@ -534,7 +552,8 @@ Consumers call them as `instance.actions.open()`, as
 (Dialog, Popover, Tooltip, Select and Combobox) list `open` and `close`.
 Autocomplete lists `showAll`, which shows every option again until the user
 types, and `open` and `close` too, which do nothing while its list is always
-shown.
+shown. [Form](../components/form.mdx#actions) lists `submit`, `reset`,
+`validate`, `setValue` and the rest, and Field lists `setValue`.
 
 - **Only listed members are public.** `ActionsOf<D>` picks them from the
   setup result's type; everything else stays internal.

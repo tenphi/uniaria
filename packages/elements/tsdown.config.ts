@@ -22,6 +22,7 @@ export default defineConfig({
     select: 'src/select.ts',
     autocomplete: 'src/autocomplete.ts',
     combobox: 'src/combobox.ts',
+    form: 'src/form.ts',
   },
   format: 'esm',
   platform: 'neutral',

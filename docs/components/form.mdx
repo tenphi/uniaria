@@ -1,0 +1,435 @@
+---
+title: Form
+description: Holds the values of the fields bound to it by name, checks them, shows each field's errors, submits and resets.
+---
+
+import { Preview, Tab, Tabs } from '@tenphi/cookbook/components';
+
+import css from './demos/form.css?raw';
+import html from './demos/form.html?raw';
+import javascript from './demos/form.js?raw';
+
+A form holds the values of the fields inside it, by their `name`, checks
+them, shows each field's errors through the field, submits and resets. It
+goes on your own `<form>` element. Every UniAria field binds to it: TextField,
+NumberField, Checkbox, Switch, CheckboxGroup, RadioGroup, Select, Combobox
+and [Field](./field.mdx) around a control of your own.
+
+Typing in a field never renders your component: the form's store changes,
+and UniAria writes the field's value, `aria-invalid` and error text to the
+page. A component renders only for the form state it selects.
+
+There is no WAI-ARIA pattern for a form. A `<form>` with a name is a form
+landmark: name it by a visible heading.
+
+<Preview
+  title="Sign-up form"
+  scripts={['/demo/form.js']}
+  html={html}
+  css={css}
+  javascript={javascript}
+/>
+
+## Usage
+
+<Tabs label="Usage">
+<Tab label="React">
+
+```tsx
+import { form } from '@uniaria/core/form';
+import { OwnerProvider, useBehavior, useBehaviorState } from '@uniaria/react';
+
+export function SignUp() {
+  const signup = useBehavior(form, {
+    defaultValues: { email: '', plan: null },
+    handleSubmit: (values, { signal }) => api.signUp(values, signal),
+  });
+  const error = useBehaviorState(signup, (state) => state.submitError);
+
+  return (
+    <OwnerProvider owner={signup}>
+      <form {...signup.parts.root} aria-labelledby="signup-title">
+        <h2 id="signup-title">Sign up</h2>
+        <EmailField name="email" isRequired validate={checkEmail} />
+        <PlanSelect name="plan" isRequired />
+        <p {...signup.parts.error}>{String(error ?? '')}</p>
+        <button type="submit">Sign up</button>
+      </form>
+    </OwnerProvider>
+  );
+}
+```
+
+</Tab>
+<Tab label="Vue">
+
+```vue
+<script setup lang="ts">
+import { form } from '@uniaria/core/form';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
+
+const signup = useBehavior(form, () => ({
+  defaultValues: { email: '', plan: null },
+  handleSubmit: (values, { signal }) => api.signUp(values, signal),
+}));
+const error = useBehaviorState(signup, (state) => state.submitError);
+</script>
+
+<template>
+  <form v-bind="signup.parts.root" aria-labelledby="signup-title">
+    <h2 id="signup-title">Sign up</h2>
+    <EmailField name="email" is-required :validate="checkEmail" />
+    <PlanSelect name="plan" is-required />
+    <p v-bind="signup.parts.error">{{ error ?? '' }}</p>
+    <button type="submit">Sign up</button>
+  </form>
+</template>
+```
+
+</Tab>
+<Tab label="HTML">
+
+```html
+<!-- Checks, then posts natively to /signup. -->
+<uni-form>
+  <form data-uni="form" action="/signup" method="post" novalidate>
+    <uni-text-field required>
+      <label data-element="Label">Email</label>
+      <input data-element="Input" name="email" type="email" />
+      <p data-element="Error"><span data-element="ErrorText"></span></p>
+    </uni-text-field>
+    <button type="submit">Sign up</button>
+  </form>
+</uni-form>
+
+<script type="module">
+  import '@uniaria/elements/form';
+  import '@uniaria/elements/text-field';
+</script>
+```
+
+</Tab>
+</Tabs>
+
+Write `novalidate` on the `<form>`, in server markup too: the form checks the
+fields itself, and without it the browser stops a submit with its own bubbles
+before the form sees it. UniAria writes it as well once the form starts.
+
+### Binding fields
+
+A field binds to the form while it has a `name` and finds a form: the
+nearest one around it (through `OwnerProvider` in React, the component tree
+in Vue, the page on custom elements), or the one you pass in its `form`
+prop. On custom elements, `form` takes the `id` of the `<form>` element, as
+HTML's `form` attribute does, and a field reads its `name` from its native
+control's `name` attribute. `form: null` (an empty `form` attribute on
+custom elements) leaves a field inside a form unbound.
+
+A bound field's value is the form's value under its name:
+
+| Field         | Form value                                                       | Checks by default when |
+| ------------- | ---------------------------------------------------------------- | ---------------------- |
+| TextField     | `string`                                                         | focus leaves it        |
+| NumberField   | `number \| null`                                                 | focus leaves it        |
+| Checkbox      | `boolean`                                                        | it changes             |
+| Switch        | `boolean`                                                        | it changes             |
+| CheckboxGroup | `string[]`                                                       | it changes             |
+| RadioGroup    | `string \| null`                                                 | it changes             |
+| Select        | `string \| null`, or `string[]` with `selectionMode: 'multiple'` | it changes             |
+| Combobox      | `string \| null`: the key, or the custom text                    | focus leaves it        |
+| Field         | its control's value, or what its `setValue` action gives         | focus leaves it        |
+
+A Checkbox in a CheckboxGroup and a Radio in a RadioGroup belong to the
+group, which binds. A name is one key (`'email'`), or a path for nested data
+(`['users', 0, 'email']`); a field writes it on its native control as one
+key, `users.0.email`, so a native post sends flat names.
+
+Values live in the form, not in the fields: they exist before their fields
+mount and stay after they unmount, out of the payload. A field keeps
+reporting its own change event (`valueChange`, `selectedChange`) for the
+user's changes; changes that start in the form come out as the form's
+`valuesChange`. A `value` you pass to a bound field is ignored.
+
+While bound, a field takes the form's `isDisabled` and `isReadOnly` on top
+of its own, and shows the form's errors unless you set its `isInvalid`.
+
+### Checks
+
+A bound field checks, in order, stopping at the first that fails:
+
+1. **Bad input:** text the browser can't read in a native control.
+2. **Required:** with `isRequired`, an empty value (`null`, `undefined`,
+   `''`, `false`, `[]`) fails.
+3. **Native constraints** you write on a text input: `pattern`, `min`,
+   `max`, `step`, `type="email"`, `type="url"`, `minlength` and `maxlength`.
+   NumberField checks its own `minValue`, `maxValue` and `step`.
+4. **`validate`,** for every value, empty included.
+
+```ts
+const email = useBehavior(textField, {
+  name: 'email',
+  isRequired: true,
+  validate: async (value, { signal }) =>
+    (await api.isTaken(value, signal)) ? 'This email has an account' : null,
+});
+```
+
+`validate` returns `null`, `undefined`, `''` or `true` when the value is
+fine; else an error or a list of them, or a promise of either. A thrown
+error counts as one. Its `signal` aborts once the result can no longer count
+(the value changed, the form reset), and a late result is dropped.
+
+A field checks on its trigger: when focus leaves it, or when it changes
+(the table above). Set `validationTrigger` (`'change'`, `'blur'` or
+`'submit'`) on a field, or on the form for every field. While a field shows
+errors, every change checks it again, so an error goes as soon as it is
+fixed; a change that doesn't check clears the field's last result.
+`validationDelay` waits that many milliseconds first. `dependsOn` lists
+names whose changes check a field again once it has been checked. Disabled
+and read-only fields aren't checked.
+
+### Messages
+
+A built-in check's message is the field's `validationMessages`, else the
+form's, else the browser's:
+
+```js
+form.validationMessages = {
+  valueMissing: 'Fill this in',
+  tooShort: ({ min }) => `Use at least ${min} characters`,
+};
+```
+
+The keys are `valueMissing`, `badInput`, `patternMismatch`, `typeMismatch`,
+`rangeUnderflow`, `rangeOverflow`, `stepMismatch`, `tooShort` and `tooLong`.
+A browser's messages are in the browser's language and differ between
+engines, so set them for a translated app. For `tooShort` and `tooLong` the
+browser gives none, and the English defaults are "Use at least `min`
+characters" and "Use at most `max` characters", with the control's
+`minlength` or `maxlength`.
+
+### Showing errors
+
+A field shows its errors as soon as it holds them, through its
+[Field](./field.mdx): `aria-invalid` on the control, `data-invalid` on every
+part, and the error part shown and linked. Put an `errorText` part inside the
+error part and the field writes the first error's text there:
+
+```html
+<p data-element="Error"><span data-element="ErrorText"></span></p>
+```
+
+To show something richer, leave `errorText` out and render `errors[0]` from
+the field's state.
+
+### Submitting
+
+On submit, the form checks every active field, waiting for async checks,
+then:
+
+- **with `handleSubmit`,** calls it with the values and waits for it. A
+  throw or a rejection becomes `submitError`, which the form's `error` part
+  shows.
+- **without it,** posts the `<form>` natively, with its `action`, `method`
+  and `target`.
+
+If a check fails, it reports `submitFailed`, then in the next frame scrolls
+to the first invalid field and focuses it. A submit button with
+`formnovalidate` skips the checks. A value that changes while the checks run
+makes the submit stale: nothing is sent.
+
+`handleSubmit` gets the values of the active names, those with a field
+mounted now; `submitValues: 'all'` sends every value the form holds. Its
+second argument is `{ signal, submitter, include, formData }`, where
+`formData` is the `<form>`'s own data, for controls no field binds (a CSRF
+token).
+
+### Errors from the server
+
+```ts
+signup.actions.setFieldErrors('email', ['This email has an account']);
+signup.actions.focusInvalid();
+```
+
+A server error shows until the field is checked again, and one set for a
+name with no field yet shows when its field mounts. `setSubmitError()` sets
+the form's error.
+
+### Resetting
+
+A reset button, or the `reset()` action, puts every value back to its
+default, clears errors and touched state, and aborts a running submit. A
+`reset` listener that calls `preventDefault()` cancels it. `reset({ values
+})` sets new defaults first, for starting a new record.
+
+### Defaults
+
+A name's default is `defaultValues[name]`, else its field's own default
+(`defaultValue`, `defaultSelected`). A name nobody changed follows its
+default when `defaultValues` changes later, or through `setDefaultValues()`.
+
+## Anatomy
+
+| Part    | Element | Notes                                                                                                                                                         |
+| ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`  | `form`  | Required: the form is the element. UniAria writes `id` (unless it has one), `novalidate` and the state attributes. `action`, `method` and the rest are yours. |
+| `error` | any     | Optional. The submit error: hidden while there is none. Render its content from `submitError`.                                                                |
+
+On custom elements, `<uni-form>` goes around your `<form>`, which carries
+`data-uni="form"`.
+
+## Props
+
+| Prop                 | Attribute            | Type                                   | Default    | Description                                                                                                         |
+| -------------------- | -------------------- | -------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| `defaultValues`      | — (property only)    | `Record<string, unknown>`              | `{}`       | What names start with and reset goes back to.                                                                       |
+| `handleSubmit`       | — (property only)    | `(values, context) => unknown`         | —          | Called with the values once the checks pass; the form waits for a promise. Without it, a valid form posts natively. |
+| `submitValues`       | `submit-values`      | `'active' \| 'all'`                    | `'active'` | Which values a submit sends.                                                                                        |
+| `validationTrigger`  | `validation-trigger` | `'change' \| 'blur' \| 'submit'`       | per field  | When the fields that set none check.                                                                                |
+| `validationDelay`    | `validation-delay`   | `number`                               | `0`        | Milliseconds a change or a blur waits before checking.                                                              |
+| `validationMessages` | — (property only)    | `Partial<Record<MessageKey, Message>>` | —          | Messages for the built-in checks.                                                                                   |
+| `isDisabled`         | `disabled`           | `boolean`                              | `false`    | Disables every bound field.                                                                                         |
+| `isReadOnly`         | `readonly`           | `boolean`                              | `false`    | Makes every bound field read-only.                                                                                  |
+
+### Field props for the form
+
+Every field takes these, Field included.
+
+| Prop                 | Attribute                            | Type                                           | Default      | Description                                                                 |
+| -------------------- | ------------------------------------ | ---------------------------------------------- | ------------ | --------------------------------------------------------------------------- |
+| `name`               | `name`; read from the native control | `string \| (string \| number)[]`               | —            | The name in the form, written on the native control it submits through.     |
+| `form`               | `form` (the `<form>`'s id)           | a Form's instance or handle, or `null`         | nearest form | The form to bind to.                                                        |
+| `validate`           | — (property only)                    | `(value, { name, values, signal }) => unknown` | —            | The field's own check.                                                      |
+| `validationTrigger`  | `validation-trigger`                 | `'change' \| 'blur' \| 'submit'`               | the form's   | When it checks.                                                             |
+| `validationDelay`    | `validation-delay`                   | `number`                                       | the form's   | Milliseconds it waits before checking.                                      |
+| `validationMessages` | — (property only)                    | `Partial<Record<MessageKey, Message>>`         | the form's   | Its messages for the built-in checks.                                       |
+| `dependsOn`          | `depends-on` (JSON)                  | `Name[]`                                       | `[]`         | Names whose changes check it again.                                         |
+| `isEqual`            | — (property only)                    | `(a, b) => boolean`                            | shallow      | What counts as a change for `isDirty`.                                      |
+| `shouldPreserve`     | `preserve`                           | `boolean`                                      | `true`       | Keeps the value when the field unmounts; `false` drops it.                  |
+| `isInvalid`          | `invalid`                            | `boolean`                                      | —            | Unset, the field shows the form's errors; `true` or `false` wins over them. |
+
+## Events
+
+| Event          | Callback prop    | Detail                                                                                 | When                                                                          |
+| -------------- | ---------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `submitted`    | `onSubmitted`    | `{ values }`                                                                           | `handleSubmit` resolved, or the native post went out.                         |
+| `submitfailed` | `onSubmitFailed` | `{ status: 'invalid', errors }` or `{ status: 'failed', error }`                       | The checks failed, or `handleSubmit` threw. Before focus moves.               |
+| `valueschange` | `onValuesChange` | `{ values, names, source: 'user' \| 'program', kind: 'set' \| 'reset' \| 'defaults' }` | Once per batch of the user's changes, a reset, or a program write that asked. |
+
+## State
+
+| Field           | Type                         | Meaning                                                                                                        |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `values`        | `Record<string, unknown>`    | Every value the form holds.                                                                                    |
+| `activeValues`  | `Record<string, unknown>`    | The values of names with a field mounted: what a submit sends.                                                 |
+| `defaultValues` | `Record<string, unknown>`    | What a reset goes back to.                                                                                     |
+| `fields`        | `Record<string, FieldState>` | One entry per name, keyed by its key: `{ value, defaultValue, errors, status, isTouched, isDirty, isActive }`. |
+| `isDirty`       | `boolean`                    | Some value differs from its default.                                                                           |
+| `isTouched`     | `boolean`                    | The user changed or left some field.                                                                           |
+| `isValid`       | `boolean`                    | Every active, checked field passed. `false` with no fields.                                                    |
+| `isInvalid`     | `boolean`                    | Some active field is invalid.                                                                                  |
+| `isValidating`  | `boolean`                    | A check waits or runs.                                                                                         |
+| `isSubmitting`  | `boolean`                    | From a submit until `handleSubmit` settles or the post goes out.                                               |
+| `submitError`   | `unknown`                    | What `handleSubmit` threw, or what `setSubmitError()` set.                                                     |
+| `canReset`      | `boolean`                    | A reset would change something. `false` while submitting.                                                      |
+| `isDisabled`    | `boolean`                    | The prop.                                                                                                      |
+| `isReadOnly`    | `boolean`                    | The prop.                                                                                                      |
+
+A field's `status` is `'unvalidated'`, `'validating'`, `'valid'` or
+`'invalid'`. `values`, `fields` and each field's entry keep their identity
+until they change, so selecting one renders only for it:
+
+```ts
+const email = useBehaviorState(signup, (state) => state.fields.email);
+```
+
+A field's own state gains `value`, `errors`, `status`, `isTouched`,
+`isDirty` and `isBound`.
+
+## Actions
+
+On custom elements they are methods of `<uni-form>`: `signup.submit()`.
+
+| Action                                        | Does                                                                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `submit({ submitter, include, shouldFocus })` | Submits as a submit button does. Resolves to `{ status }`: `'submitted'`, `'invalid'` (with `errors`), `'failed'` (with `error`), `'stale'` or `'ignored'`. `shouldFocus: false` moves no focus. |
+| `cancelSubmit()`                              | Aborts a running submit, which settles `'stale'`.                                                                                                                                                |
+| `reset({ values })`                           | Resets as a reset button does; `values` become the defaults first.                                                                                                                               |
+| `validate(names?)`                            | Checks those names, or every active one, now. Resolves to `{ isValid, isStale, errors }`.                                                                                                        |
+| `focusInvalid()`                              | Focuses the first invalid field, as a failed submit does.                                                                                                                                        |
+| `setValue(name, value, options)`              | Writes a value. `options`: `validation` (`'auto'`, `'always'`, `'never'`), `source`, `shouldTouch`, `shouldNotify`.                                                                              |
+| `setValues(values, options)`                  | Several at once.                                                                                                                                                                                 |
+| `setDefaultValues(values, { replaceValues })` | New defaults. `replaceValues`: `'untouched'` (the default), `'clean'` or `'all'`.                                                                                                                |
+| `touch(name, isTouched)`                      | Marks a name touched, or not.                                                                                                                                                                    |
+| `setFieldErrors(name, errors)`                | Shows errors from the server.                                                                                                                                                                    |
+| `clearFieldErrors(name?)`                     | Clears them, for one name or all.                                                                                                                                                                |
+| `setSubmitError(error)`, `clearSubmitError()` | The form's error.                                                                                                                                                                                |
+| `batch(fn)`                                   | Runs `fn`'s actions as one change.                                                                                                                                                               |
+
+Field gains one action, `setValue(value)`, for a custom control's change.
+
+## Styling
+
+| Attribute                        | On                          | When                                 |
+| -------------------------------- | --------------------------- | ------------------------------------ |
+| `data-uni="form"`                | root                        | Always.                              |
+| `data-element="Error"`           | error                       | Always.                              |
+| `data-submitting`                | root                        | From a submit until it settles.      |
+| `data-invalid`                   | root                        | Some active field is invalid.        |
+| `data-dirty`                     | root                        | Some value differs from its default. |
+| `data-validating`                | root; a bound field's parts | A check waits or runs.               |
+| `data-disabled`, `data-readonly` | root                        | The props.                           |
+| `hidden`                         | error                       | There is no submit error.            |
+
+A bound field keeps its own attributes: `data-invalid` on every part while
+it shows errors.
+
+## Keyboard
+
+Form handles no keys. Enter submits natively: in a text field it presses
+the form's first submit button, so a disabled first submit button turns it
+off. NumberField commits its number and Combobox settles its text first.
+
+## Accessibility
+
+- **Focus after a failed submit.** Focus moves to the first invalid field, in
+  page order, with the focus ring shown, and the field reads its label, its
+  error, "invalid" and "required". A field that can't take focus (in a
+  closed `<details>` or a hidden tab) is skipped.
+- **Announcements.** An error shown when focus leaves a field is announced
+  with the field's label, since focus is on the next field already. Errors a
+  submit shows aren't announced one by one: focus reads the first. When focus
+  can't move (Enter in the field that is wrong), the form announces the
+  first error with its label. A changing error isn't announced again while
+  its control has focus.
+- **The submit error** in the `error` part is announced when it shows. Don't
+  add `role="alert"` to it.
+- **A press on Submit** right after typing in a field that checks on leaving
+  it submits: the field's check waits for the press, so its error doesn't
+  move the button from under the pointer.
+- **Name the form** by a visible heading (`aria-labelledby`), so it is a form
+  landmark.
+
+## Compared with other libraries
+
+Form follows Cube UI Kit's modern form, with these differences:
+
+- **Focus moves** to the first invalid field after a failed submit, as React
+  Aria's native validation does; UI Kit moves none.
+- **Native constraints count:** a `pattern` or `type="email"` you write on an
+  input is checked. UI Kit ignores them.
+- **Without `handleSubmit`, a valid form posts natively.** UI Kit posts an
+  `action` form without checking it.
+- **Disabled and read-only fields aren't checked,** as in HTML and React Aria.
+- **`formnovalidate`** on a submit button skips the checks.
+- **A form with no fields submits.**
+- **Server errors** set before a field mounts show when it does.
+- **The required message** is the browser's unless you set one; UI Kit's is
+  "Required".
+- **Rules** are `isRequired`, native constraints and `validate`; UI Kit's
+  rule objects compile into `validate`.
+
+Compared with React Aria, the form works as its `validationBehavior: 'aria'`
+(no browser bubbles, errors shown as soon as they exist) and also reads the
+native constraints and focuses the first invalid field. Server errors come
+through `setFieldErrors`, not a `validationErrors` prop.

@@ -53,6 +53,7 @@ imported, with the `uni-` prefix. TextInput has no element: a
 | `@uniaria/elements/select`         | `<uni-select>`         | `UniSelect`        |
 | `@uniaria/elements/combobox`       | `<uni-combobox>`       | `UniCombobox`      |
 | `@uniaria/elements/autocomplete`   | `<uni-autocomplete>`   | `UniAutocomplete`  |
+| `@uniaria/elements/form`           | `<uni-form>`           | `UniForm`          |
 
 Import an entry once, anywhere on the page; importing it again does nothing.
 Each also exports the element's class (`undefined` on the server) and its

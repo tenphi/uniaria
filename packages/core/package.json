@@ -95,6 +95,11 @@
       "types": "./dist/combobox/index.d.ts",
       "default": "./dist/combobox/index.js"
     },
+    "./form": {
+      "uniaria-source": "./src/components/form/index.ts",
+      "types": "./dist/form/index.d.ts",
+      "default": "./dist/form/index.js"
+    },
     "./radio": {
       "uniaria-source": "./src/components/radio/index.ts",
       "types": "./dist/radio/index.d.ts",

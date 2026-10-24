@@ -43,7 +43,11 @@ import type { DomHandlers, DomPartProps, PressEvent } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
+import { formFieldProps, readFormProps } from '../field/binding';
 import { field } from '../field/field';
+import { checkNumber } from '../form/constraints';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import { textInput } from '../text-input/text-input';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 import { addDecimal, clamp, roundToStepPrecision, snapToStep } from './number';
@@ -146,8 +150,9 @@ export const numberField = defineBehavior({
     'hiddenInput',
     'description',
     'error',
+    'errorText',
   ],
-  links: [tooltipLink],
+  links: [tooltipLink, formLink],
   props: {
     // `null` when empty. The element adopts the input's text as the default;
     // it arrives as a string, which `committed()` parses for the locale.
@@ -165,7 +170,8 @@ export const numberField = defineBehavior({
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     // The buttons' whole names; without them "Increase" and "Decrease"
     // followed by the field's label (Resolved questions 2).
     incrementLabel: prop<string | undefined>(undefined, { type: 'string' }),
@@ -185,12 +191,24 @@ export const numberField = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    ...formFieldProps,
+    // The element reads the name from the hidden input's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'hiddenInput', attribute: 'name' },
+    }),
   },
   events: {
     focusChange: event<boolean>(),
   },
   setup(ctx) {
     const { props } = ctx;
+    // The field's own, or its form's, once Field is composed below.
+    const formed: {
+      field?: { isDisabled(): boolean; isReadOnly(): boolean };
+    } = {};
+    const isDisabled = () => formed.field?.isDisabled() ?? props.isDisabled();
+    const isReadOnly = () => formed.field?.isReadOnly() ?? props.isReadOnly();
     const min = () => numberOr(props.minValue());
     const max = () => numberOr(props.maxValue());
     const step = () => {
@@ -328,7 +346,7 @@ export const numberField = defineBehavior({
 
     /** Whether a step from the typed text would change it (React Aria). */
     const canStep = (direction: Direction) => {
-      if (props.isDisabled() || props.isReadOnly()) return false;
+      if (isDisabled() || isReadOnly()) return false;
       const value = typed();
       const bound = direction > 0 ? max() : min();
       if (Number.isNaN(value) || bound === undefined) return true;
@@ -405,7 +423,7 @@ export const numberField = defineBehavior({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || isComposing(event)) return;
-      if (props.isDisabled() || props.isReadOnly()) return;
+      if (isDisabled() || isReadOnly()) return;
       // Enter commits and still submits the form.
       if (event.key === 'Enter') return commitDraft();
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
@@ -479,7 +497,7 @@ export const numberField = defineBehavior({
     // `$1,234.50` works though its partial steps wouldn't (React Aria).
     const onPaste = (event: ClipboardEvent) => {
       if (event.defaultPrevented) return;
-      if (props.isDisabled() || props.isReadOnly()) return;
+      if (isDisabled() || isReadOnly()) return;
       const input = event.target as HTMLInputElement;
       const selected = (input.selectionEnd ?? 0) - (input.selectionStart ?? 0);
       if (selected !== input.value.length) return;
@@ -500,8 +518,8 @@ export const numberField = defineBehavior({
           if (isPartial(value)) type(value);
           else editing.api.revert();
         },
-        isDisabled: props.isDisabled(),
-        isReadOnly: props.isReadOnly(),
+        isDisabled: isDisabled(),
+        isReadOnly: isReadOnly(),
         onFocusChange: (isFocused: boolean) =>
           ctx.emit('focusChange', isFocused),
       }),
@@ -535,8 +553,8 @@ export const numberField = defineBehavior({
     // handlers are passive, so the listener is native.
     partEffect(ctx, 'input', (input) => {
       const onWheel = (event: WheelEvent) => {
-        if (props.isWheelDisabled() || props.isDisabled()) return;
-        if (props.isReadOnly() || !isFocusWithin(input)) return;
+        if (props.isWheelDisabled() || isDisabled()) return;
+        if (isReadOnly() || !isFocusWithin(input)) return;
         // A pinch zoom, or a mostly horizontal scroll.
         if (event.ctrlKey) return;
         if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
@@ -625,6 +643,7 @@ export const numberField = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
         labelledBy:
@@ -638,6 +657,29 @@ export const numberField = defineBehavior({
       }),
       { parts: { control: 'input' } },
     );
+    formed.field = labelling.api;
+    // In a form, the form holds the value (Form spec, Field binds), and
+    // checks the range and step as the field steps.
+    labelling.api.bindValue({
+      value: props.value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toField: (value) => (typeof value === 'number' ? value : null),
+      kind: 'text',
+      defaultTrigger: 'blur',
+      isFocusWithin: () => editing.state().isFocused,
+      check: (value) => {
+        const doc = partElement(ctx, 'input')?.ownerDocument;
+        return typeof value === 'number' && doc
+          ? checkNumber(doc, value, { min: min(), max: max(), step: step() })
+          : null;
+      },
+      submitControls: () => {
+        const hidden = partElement(ctx, 'hiddenInput');
+        return hidden ? [hidden] : [];
+      },
+      isControlSubmitted: false,
+    });
 
     // Form reset goes back to the default, as TextField's does: defaultValue
     // when uncontrolled, even one set after mount, and for a controlled
@@ -677,7 +719,7 @@ export const numberField = defineBehavior({
     const focusInput = (event: MouseEvent) => {
       const input = partElement(ctx, 'input');
       const wrapper = partElement(ctx, 'wrapper');
-      if (!input || !wrapper || event.button !== 0 || props.isDisabled()) {
+      if (!input || !wrapper || event.button !== 0 || isDisabled()) {
         return;
       }
       const control = (event.target as Element).closest(CONTROLS);
@@ -735,24 +777,24 @@ export const numberField = defineBehavior({
       isFocused,
       isFocusVisible,
       isHovered,
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
     };
   },
   connect({ props, ids, api }) {
     const { control, ...parts } = api.field.connect();
     const editing = api.editing.connect().root as DomPartProps;
     const { isFocused, isFocusVisible, isHovered } = api.editing.state();
-    const isDisabled = props.isDisabled();
+    const isDisabled = api.field.api.isDisabled();
     // Every field part, so the box, the label and the messages can be styled.
     const state = {
       'data-hovered': flag(isHovered),
       'data-focused': flag(isFocused),
       'data-focus-visible': flag(isFocusVisible),
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(api.field.api.isReadOnly()),
     };
     const withState = (part: PartProps): PartProps => ({
       ...part,
@@ -835,11 +877,16 @@ export const numberField = defineBehavior({
         'Decrease',
       ),
       hiddenInput: {
-        attrs: { type: 'hidden', disabled: flag(isDisabled) },
+        attrs: {
+          type: 'hidden',
+          disabled: flag(isDisabled),
+          ...api.field.api.submitAttrs(),
+        },
         properties: { value: formValue(value) },
       },
       description: withState(parts.description),
       error: withState(parts.error),
+      errorText: withState(parts.errorText),
     };
   },
 });

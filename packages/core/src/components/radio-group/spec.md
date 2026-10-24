@@ -38,7 +38,8 @@ Two definitions, as CheckboxGroup and Checkbox:
 Not part of RadioGroup:
 
 - **Validation.** As in Field: the group shows `isInvalid`, the form decides
-  it. No native `required`.
+  it. No native `required`. Inside a Form, the form checks it and decides it (Form spec, Changes to
+  approved specs).
 - **Looks.** Cube UI Kit's button and tabs radios (`Radio.ButtonGroup`,
   `Radio.Tabs`) are the same two definitions with other styles; their
   segmented look is consumer CSS. So are the dot and Zag's sliding
