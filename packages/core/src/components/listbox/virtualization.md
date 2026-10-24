@@ -40,7 +40,9 @@ engine (Resolved questions 2).
   set on each option"
   (`references/aria-practices/content/patterns/listbox/listbox-pattern.html:229`).
 - **Builds on:** Listbox, which gains the props, part and state below; Select
-  and Combobox, which forward them to their list; `@tanstack/virtual-core`
+  and Combobox, which forward them to their list, and Autocomplete, which
+  does too (changed on 2026-10-24 (owner), the composition spec,
+  `../composition.md`); `@tanstack/virtual-core`
   behind a small interface, imported only by lists that virtualize (Resolved
   questions 1 and 2). New in the runtime: an effect per item element and
   `connect()` re-run when an item element comes or goes (Runtime and
@@ -115,9 +117,16 @@ The list and the item parts are Listbox's, with what Layout writes on them.
 Select and Combobox expose `scroller` too, mapped to their list's; it goes
 inside the popover, around the list.
 
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+Autocomplete exposes `scroller` too, around its list, and Combobox's is
+Autocomplete's. Inline, Autocomplete's scroller and list are
+`tabindex="-1"` whether or not the list virtualizes, since an inline list
+usually scrolls and in virtual focus no option is focusable (Layout).
+
 ## Props
 
-On Listbox; Select and Combobox forward each to their list.
+On Listbox; Select and Combobox forward each to their list, and so does
+Autocomplete (changed on 2026-10-24 (owner), the composition spec).
 
 | Prop               | Type                                  | Default     | Bindable | Change event | Notes                                                                                                                                                                                                           |
 | ------------------ | ------------------------------------- | ----------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -165,7 +174,9 @@ absolutely positioned rows ignore margins and the list's `gap`.
 
 The scroller takes `tabindex="-1"`: a box that scrolls and holds nothing
 focusable is a tab stop in Chromium and Firefox, and in virtual focus
-(Combobox) no option is focusable. The list keeps Listbox's `tabindex`.
+(Autocomplete, and Combobox through it; changed on 2026-10-24 (owner), the
+composition spec) no option is focusable. The list keeps Listbox's
+`tabindex`, except inline in Autocomplete, which makes it `tabindex="-1"`.
 
 In development, UniAria warns once when the scroller part is missing, when a
 pinned option's element isn't rendered after the consumer rendered

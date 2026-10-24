@@ -8,12 +8,19 @@ A combo box is a text input with a list of suggestions under it: typing
 filters the options, and choosing one puts its text in the input and makes
 it the value. It replaces `<input list>` with `<datalist>` where the options
 need markup, groups, a styled popup, or a value separate from the text.
-Combobox is Field, Listbox and Popover composed (`ctx.use`), as root
-AGENTS.md says: Field names and describes the input; Listbox is the list
-with its options and selection; Popover holds the list over the page,
-places it and dismisses it. Combobox adds the input: filtering, which keys
-and presses open the list, the highlighted option (focus stays in the
-input), and how the typed text settles into a value.
+Combobox is Autocomplete and Popover composed (`ctx.use`), as root
+AGENTS.md says. Autocomplete is Field, TextInput and Listbox: Field names
+and describes the input; TextInput holds its text; Listbox is the list with
+its options and selection; Autocomplete adds filtering, which keys and
+presses open the list, and the highlighted option (focus stays in the
+input). Popover holds the list over the page, places it and dismisses it.
+Combobox adds the value: how the typed text settles into it.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+Combobox was Field, Listbox and Popover with the input built in; it is now
+Autocomplete, in popup mode, and Popover. Its props, events, public state,
+actions, parts and spoken output don't change; its behavior changes only
+where this spec marks it.
 
 Cube UI Kit's ComboBox is the model. Unlike its Select, it is UI Kit's own
 implementation, not React Aria's `useComboBox`: UI Kit replaced it because
@@ -32,13 +39,15 @@ reviewed.
   `role="combobox"` on the input, `aria-autocomplete="list"`, DOM focus on
   the input and the highlighted option in `aria-activedescendant`, with a
   `tabindex="-1"` button that opens the list.
-- **Builds on:** Field (`ctx.use`, its `control` part as `input`); Listbox
-  (`ctx.use`: `list`, `empty` and the item parts, without its label,
-  description and error), with a new virtual focus mode (Resolved questions 1);
+- **Builds on:** Autocomplete in popup mode (`ctx.use`, its `popup` part as
+  `popover`; changed on 2026-10-24 (owner), the composition spec), which is
+  Field (its `control` part as `input`), TextInput and Listbox (`list`,
+  `empty` and the item parts, without its label, description and error) in
+  a new virtual focus mode (Resolved questions 1), and holds the button,
+  `findByText`'s collator for the default filter and the live announcer;
   Popover (`ctx.use`: its `root` as `popover`, its `trigger` as the input,
   `anchor` and `arrow`), non-modal, with a new prop to leave focus where it
-  is on open (Resolved questions 10); `createPress` for the button;
-  `findByText`'s collator for the default filter; the live announcer.
+  is on open (Resolved questions 10).
 - **Owner:** none.
 - **Custom element:** yes, `<uni-combobox>`, hosting consumer markup. As
   `<uni-listbox>`, it reads its items from the options in the popover when
@@ -112,35 +121,35 @@ part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 
 Boolean props read as predicates. Keys are strings.
 
-| Prop                    | Type                                                            | Default                                         | Bindable | Change event  | Notes                                                                                                                                                                                                                         |
-| ----------------------- | --------------------------------------------------------------- | ----------------------------------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items                   | `readonly Item[]`                                               | `[]`                                            | no       | —             | Listbox's: every option, unfiltered. The element reads them from its markup when unset.                                                                                                                                       |
-| getKey                  | `(item: Item) => string`                                        | `item.key`                                      | no       | —             | Listbox's.                                                                                                                                                                                                                    |
-| getTextValue            | `(item: Item) => string`                                        | `item.textValue`                                | no       | —             | Listbox's. Also what the filter matches and what the input shows once the option is chosen.                                                                                                                                   |
-| isItemDisabled          | `(item: Item) => boolean`                                       | `item.isDisabled === true`                      | no       | —             | Listbox's.                                                                                                                                                                                                                    |
-| getChildren             | `(item: Item) => readonly Item[] \| undefined`                  | `item.items`                                    | no       | —             | Listbox's.                                                                                                                                                                                                                    |
-| disabledKeys            | `readonly string[]`                                             | `[]`                                            | no       | —             | Listbox's.                                                                                                                                                                                                                    |
-| value                   | `readonly string[]`                                             | `[]`                                            | yes      | `valueChange` | The selected key, at most one; with `allowsCustomValue`, the custom text. Changes only when the text settles (Selection), never per keystroke.                                                                                |
-| inputValue              | `string`                                                        | the selected option's text                      | yes      | `inputChange` | The input's text. `defaultInputValue` seeds it, else `defaultValue`'s option text.                                                                                                                                            |
-| isOpen                  | `boolean`                                                       | `false`                                         | yes      | `openChange`  | Popover's. A controlled combo box that refuses to close stays open.                                                                                                                                                           |
-| popoverTrigger          | `'input' \| 'focus' \| 'manual'`                                | `'input'`                                       | no       | —             | What opens the list besides the button and the arrow keys: typing (UI Kit's default), focus too, or neither (Resolved questions 8). React Aria's `menuTrigger`.                                                               |
-| filter                  | `((textValue: string, inputValue: string) => boolean) \| false` | contains                                        | no       | —             | Which options match the typed text. The default: the text contains the trimmed input, ignoring case and accents, in the field's language. `false` shows every item as given (a `null` prop reads as unset, owner 2026-10-18). |
-| allowsCustomValue       | `boolean`                                                       | `false`                                         | no       | —             | Text that matches no option becomes the value when it settles (Resolved questions 4).                                                                                                                                         |
-| isDisabled              | `boolean`                                                       | `false`                                         | no       | —             | Field's. The input and the button are natively `disabled`.                                                                                                                                                                    |
-| isReadOnly              | `boolean`                                                       | `false`                                         | no       | —             | The input is natively `readonly`; the list opens from the button and the arrows and the highlight moves, but nothing selects (Resolved questions 17). Attribute `readonly`.                                                   |
-| isRequired              | `boolean`                                                       | `false`                                         | no       | —             | Field's `aria-required`, and the input's native `required` (Resolved questions 13).                                                                                                                                           |
-| isInvalid               | `boolean`                                                       | `false`                                         | no       | —             | Field's.                                                                                                                                                                                                                      |
-| shouldFocusWrap         | `boolean`                                                       | `false`                                         | no       | —             | Listbox's: the arrows wrap from the last option to the first. Attribute `focus-wrap`.                                                                                                                                         |
-| positionArea            | `PositionArea`                                                  | `'block-end span-inline-end'`                   | no       | —             | Popover's: below the field, aligned to its start edge, as Select and UI Kit.                                                                                                                                                  |
-| positionTryFallbacks    | `string`                                                        | `'flip-block, flip-inline'`                     | no       | —             | Popover's.                                                                                                                                                                                                                    |
-| locale                  | `string \| undefined`                                           | the nearest `lang`                              | no       | —             | The default filter's language, as NumberField: the prop, else the nearest `lang`, else the browser's.                                                                                                                         |
-| buttonLabel             | `string`                                                        | `'Show suggestions'`                            | no       | —             | The button's own name, read with the label ("Show suggestions Fruit"), as NumberField's button labels. English, replaced whole by a translation.                                                                              |
-| optionCountAnnouncement | `(count: number) => string`                                     | `'1 option available'`, `'N options available'` | no       | —             | The live announcement of the option count (Live announcements). English, replaced whole by a translation. Property only.                                                                                                      |
-| inputId                 | `string \| undefined`                                           | generated                                       | no       | —             | Field's `controlId`: the input's `id` where the input has none of its own.                                                                                                                                                    |
-| listId                  | `string \| undefined`                                           | generated                                       | no       | —             | Listbox's: the list's `id` where it has none of its own. Option ids follow the list's id.                                                                                                                                     |
-| labelElementType        | `string`                                                        | `'label'`                                       | no       | —             | Field's. The element reads the label's tag.                                                                                                                                                                                   |
-| labelledBy              | `string \| undefined`                                           | —                                               | no       | —             | Field's; names the list too.                                                                                                                                                                                                  |
-| describedBy             | `string \| undefined`                                           | —                                               | no       | —             | Field's.                                                                                                                                                                                                                      |
+| Prop                    | Type                                                                        | Default                                         | Bindable | Change event  | Notes                                                                                                                                                                                                                                                                                             |
+| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items                   | `readonly Item[]`                                                           | `[]`                                            | no       | —             | Listbox's: every option, unfiltered. The element reads them from its markup when unset.                                                                                                                                                                                                           |
+| getKey                  | `(item: Item) => string`                                                    | `item.key`                                      | no       | —             | Listbox's.                                                                                                                                                                                                                                                                                        |
+| getTextValue            | `(item: Item) => string`                                                    | `item.textValue`                                | no       | —             | Listbox's. Also what the filter matches and what the input shows once the option is chosen.                                                                                                                                                                                                       |
+| isItemDisabled          | `(item: Item) => boolean`                                                   | `item.isDisabled === true`                      | no       | —             | Listbox's.                                                                                                                                                                                                                                                                                        |
+| getChildren             | `(item: Item) => readonly Item[] \| undefined`                              | `item.items`                                    | no       | —             | Listbox's.                                                                                                                                                                                                                                                                                        |
+| disabledKeys            | `readonly string[]`                                                         | `[]`                                            | no       | —             | Listbox's.                                                                                                                                                                                                                                                                                        |
+| value                   | `readonly string[]`                                                         | `[]`                                            | yes      | `valueChange` | The selected key, at most one; with `allowsCustomValue`, the custom text. Changes only when the text settles (Selection), never per keystroke.                                                                                                                                                    |
+| inputValue              | `string`                                                                    | the selected option's text                      | yes      | `inputChange` | The input's text. `defaultInputValue` seeds it, else `defaultValue`'s option text.                                                                                                                                                                                                                |
+| isOpen                  | `boolean`                                                                   | `false`                                         | yes      | `openChange`  | Popover's. A controlled combo box that refuses to close stays open.                                                                                                                                                                                                                               |
+| popoverTrigger          | `'input' \| 'focus' \| 'manual'`                                            | `'input'`                                       | no       | —             | What opens the list besides the button and the arrow keys: typing (UI Kit's default), focus too, or neither (Resolved questions 8). React Aria's `menuTrigger`.                                                                                                                                   |
+| filter                  | `((textValue: string, inputValue: string, item: Item) => boolean) \| false` | contains                                        | no       | —             | Which options match the typed text. The default: the text contains the trimmed input, ignoring case and accents, in the field's language. `false` shows every item as given (a `null` prop reads as unset, owner 2026-10-18). `item` changed on 2026-10-24 (owner), the composition spec (below). |
+| allowsCustomValue       | `boolean`                                                                   | `false`                                         | no       | —             | Text that matches no option becomes the value when it settles (Resolved questions 4).                                                                                                                                                                                                             |
+| isDisabled              | `boolean`                                                                   | `false`                                         | no       | —             | Field's. The input and the button are natively `disabled`.                                                                                                                                                                                                                                        |
+| isReadOnly              | `boolean`                                                                   | `false`                                         | no       | —             | The input is natively `readonly`; the list opens from the button and the arrows and the highlight moves, but nothing selects (Resolved questions 17). Attribute `readonly`.                                                                                                                       |
+| isRequired              | `boolean`                                                                   | `false`                                         | no       | —             | Field's `aria-required`, and the input's native `required` (Resolved questions 13).                                                                                                                                                                                                               |
+| isInvalid               | `boolean`                                                                   | `false`                                         | no       | —             | Field's.                                                                                                                                                                                                                                                                                          |
+| shouldFocusWrap         | `boolean`                                                                   | `false`                                         | no       | —             | Listbox's: the arrows wrap from the last option to the first. Attribute `focus-wrap`.                                                                                                                                                                                                             |
+| positionArea            | `PositionArea`                                                              | `'block-end span-inline-end'`                   | no       | —             | Popover's: below the field, aligned to its start edge, as Select and UI Kit.                                                                                                                                                                                                                      |
+| positionTryFallbacks    | `string`                                                                    | `'flip-block, flip-inline'`                     | no       | —             | Popover's.                                                                                                                                                                                                                                                                                        |
+| locale                  | `string \| undefined`                                                       | the nearest `lang`                              | no       | —             | The default filter's language, as NumberField: the prop, else the nearest `lang`, else the browser's.                                                                                                                                                                                             |
+| buttonLabel             | `string`                                                                    | `'Show suggestions'`                            | no       | —             | The button's own name, read with the label ("Show suggestions Fruit"), as NumberField's button labels. English, replaced whole by a translation.                                                                                                                                                  |
+| optionCountAnnouncement | `(count: number) => string`                                                 | `'1 option available'`, `'N options available'` | no       | —             | The live announcement of the option count (Live announcements). English, replaced whole by a translation. Property only.                                                                                                                                                                          |
+| inputId                 | `string \| undefined`                                                       | generated                                       | no       | —             | Field's `controlId`: the input's `id` where the input has none of its own.                                                                                                                                                                                                                        |
+| listId                  | `string \| undefined`                                                       | generated                                       | no       | —             | Listbox's: the list's `id` where it has none of its own. Option ids follow the list's id.                                                                                                                                                                                                         |
+| labelElementType        | `string`                                                                    | `'label'`                                       | no       | —             | Field's. The element reads the label's tag.                                                                                                                                                                                                                                                       |
+| labelledBy              | `string \| undefined`                                                       | —                                               | no       | —             | Field's; names the list too.                                                                                                                                                                                                                                                                      |
+| describedBy             | `string \| undefined`                                                       | —                                               | no       | —             | Field's.                                                                                                                                                                                                                                                                                          |
 
 Fixed rather than props: the list is in Listbox's virtual focus mode with
 `shouldFocusOnHover` on and vertical orientation; the popover is non-modal
@@ -148,6 +157,14 @@ and dismissable and doesn't take focus on open (Resolved questions 10).
 
 `Item` is Listbox's. Development warns when the input has no name. The
 button always has one, `buttonLabel`.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+the filter's type, `ComboboxFilter`, is an alias of Autocomplete's
+`AutocompleteFilter`, and takes a third argument, the item as `items` holds
+it, so a filter can match keywords or descriptions; a filter written for
+two arguments still works. `popoverTrigger` goes on to Autocomplete's
+`popupTrigger`, and its type, `ComboboxPopoverTrigger`, is an alias of
+`AutocompletePopupTrigger`.
 
 ## Events
 
@@ -190,6 +207,11 @@ and these are the only members of it consumers may call. They are
 | `close()` | Asks to close the list and leaves the text as it is. Controlled, only `openChange(false)` is reported. Nothing while closed.                                                                                                                                                                                    |
 
 ## Filtering
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`,
+Autocomplete's Filtering): filtering is Autocomplete's, whose popup mode
+follows the rules below. "The text last settled" is where Combobox calls
+Autocomplete's `showAll()`: choosing, reverting and settling.
 
 - **What matches.** Each option's `getTextValue` against the input's text,
   trimmed. An empty or blank text matches every option. Group headings
@@ -239,6 +261,13 @@ text, or empty.
 
 On the input. Keys with Ctrl or Meta, and every key during IME composition,
 are left to the browser.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`,
+Autocomplete's Keyboard): Autocomplete handles these keys, except the cells
+about the text settling or reverting, which stay Combobox's: Enter with
+nothing highlighted, Escape while closed, and Tab as focus leaves.
+Autocomplete leaves those unprevented, and Combobox's handler, merged after
+it, skips a `keydown` already prevented.
 
 | Key                                 | Closed                                                                                                                                                      | Open                                                                                      |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -308,6 +337,15 @@ it. React Aria and UI Kit write it only while open.
   element, so the browser focuses it and shows its message (Resolved questions
   13).
 
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`,
+Autocomplete's Focus, pointer and touch): the highlight, opening, the
+button and focus leaving closing the list are Autocomplete's. Settling the
+text stays Combobox's, on Autocomplete's `focusChange`, which comes before
+the list closes. The input losing focus while focus stays in the combo box
+or returns nowhere (a control in the popover taking it, the window losing
+it) now drops a controlled draft the consumer hasn't answered, as
+TextField does; that still settles nothing.
+
 ## Pointer and touch
 
 - **A press on the input** places the caret. With `popoverTrigger: 'focus'`,
@@ -319,6 +357,10 @@ it. React Aria and UI Kit write it only while open.
 - **Options** select on a press released over the option it started on
   (Listbox's press). Hover marks options (`data-hovered`) and highlights them.
   A disabled option does nothing.
+- **A press in the popover** on the list or the scroller, outside an
+  option, has its `mousedown` prevented, so focus stays in the input and a
+  virtualized scroller's `tabindex` no longer takes it (changed on
+  2026-10-24 (owner), the composition spec, `../composition.md`).
 - **A press outside** closes the list and acts on what it hit (Popover's
   rule; UI Kit swallows it, Mapping). The text settles first, since focus
   leaves.
@@ -333,6 +375,10 @@ Through the live announcer, politely (Resolved questions 14):
   open: "3 options available", from `optionCountAnnouncement(count)` (English
   by default, replaced whole by a translation). Disabled options count, as in
   React Aria, so the number matches the set size a screen reader reads.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`,
+Autocomplete's Live announcements): the announcement is Autocomplete's, in
+popup mode, as written here.
 
 ## Styling tokens
 

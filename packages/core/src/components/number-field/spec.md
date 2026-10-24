@@ -22,10 +22,12 @@ selection APIs throw.
   example). NumberField follows its keys and its buttons; the input's role is
   Resolved questions 1.
 - **Builds on:** Field (`ctx.use`) for the labelling, as TextField does;
-  Button (`ctx.use`, twice) for the increment and decrement parts; `hover`,
-  `focus`, `press` and the live announcer from `dom/`. New in `dom/`: phone
-  detection for the keyboard (`inputmode`). New dependency, approved:
-  `@internationalized/number` (Resolved questions 9).
+  TextInput (`ctx.use`) for the input's text, IME guard, hover and focus,
+  as TextField does (changed on 2026-10-24 (owner), the composition spec,
+  `../composition.md`); Button (`ctx.use`, twice) for the increment and
+  decrement parts; `press` and the live announcer from `dom/`. New in
+  `dom/`: phone detection for the keyboard (`inputmode`). New dependency,
+  approved: `@internationalized/number` (Resolved questions 9).
 - **Owner:** none.
 - **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec,
   Resolved questions 2), as TextField: hover, focus and keys count on the
@@ -169,6 +171,15 @@ as. They differ only while the user types.
   at once, as React Aria does, so pasting `$1,234.50` into a currency field
   works even though its partial steps wouldn't. Other pastes are checked like
   typing.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+NumberField passes its text (the typed text, else the formatted value) to
+TextInput as a controlled value. Where it refuses an edit or undoes a
+composition, it reverts through TextInput, which drops the typed text and
+writes NumberField's at the next flush, never mid-composition; NumberField
+puts the caret back itself. So an `input` that isn't a number in the making
+(autofill, a replacement the `beforeinput` check missed) goes at the next
+flush, where before it stayed on screen until the next write.
 
 ### Commit
 

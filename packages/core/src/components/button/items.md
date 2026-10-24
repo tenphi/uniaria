@@ -160,6 +160,10 @@ Popover's and Dialog's trigger parts sit outside the overlay, as the trigger
 does: `data-uni-part="popover-trigger-label"`. Select's trigger is named by
 the field's label and its value (Select spec) and has neither part.
 
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+Combobox's button is Autocomplete's, which composes Button and owns it in
+popup mode; Combobox renders it as before.
+
 ## Extras
 
 ### Anatomy
@@ -331,21 +335,21 @@ Workday's `OverflowTooltip` and MUI X's recipe measure the same way.
 
 ### Option tooltips
 
-Listbox, Select and Combobox take a second tooltip link, `optionTooltip`: one
-tooltip for all their options. Options get no link of their own (root
-AGENTS.md → Composition: collections stay data).
+Listbox, Select, Autocomplete and Combobox take a second tooltip link,
+`optionTooltip`: one tooltip for all their options. Options get no link of
+their own (root AGENTS.md → Composition: collections stay data).
 
 - **The list drives it.** Hover over an option, as Listbox counts hover (mouse
   and pen, not the mouse events iOS emulates after a tap), is hover over a
   trigger. Visible focus on an option (Listbox, Select) or the visible
-  highlight (Combobox) is keyboard focus on one. The option is the anchor,
-  and its text is measured and copied (The trigger's text).
+  highlight (Autocomplete, Combobox) is keyboard focus on one. The option is
+  the anchor, and its text is measured and copied (The trigger's text).
 - **Moving on.** Moving to another option while it's open moves it there at
   once if that option's text is cut off (the page is warm), and closes it
   otherwise.
 - **Presses and typing.** A press on an option closes it, as a press on a
   trigger does, until the pointer leaves that option. Typing (typeahead, or
-  Combobox's input) closes it until focus or the highlight moves with a
+  Autocomplete's input) closes it until focus or the highlight moves with a
   navigation key: Arrow keys, Home, End, Page Up or Page Down.
 - **Never a description.** The list writes no relation for it: give it
   `relation: 'none'`, or development warns. It is usually an overflow
@@ -362,6 +366,11 @@ AGENTS.md → Composition: collections stay data).
   a removed trigger does.
 - **Placement** is any tooltip's, against the option. UI Kit puts option
   tooltips beside the list (`positionArea: 'right'`).
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+Autocomplete takes `optionTooltip` and drives it from its highlight. In
+Combobox, Autocomplete drives it: Combobox passes its link on through
+`ctx.use()`'s `links`, so Combobox's own `ctx.link()` no longer reads it.
 
 ### Select's trigger tooltip
 
@@ -443,18 +452,19 @@ Changed on 2026-10-22 (owner), from the implementation:
 
 ## New API
 
-| Component                 | Prop or link                | Type                                                                       | Default | Notes                         |
-| ------------------------- | --------------------------- | -------------------------------------------------------------------------- | ------- | ----------------------------- |
-| Tooltip                   | shouldOpenOnlyWhenTruncated | `boolean`                                                                  | `false` | The overflow tooltip.         |
-| Tooltip                   | relation                    | adds `'none'`                                                              | —       | Visual only.                  |
-| Listbox, Select, Combobox | optionTooltip (link)        | a Tooltip instance (React, Vue); `option-tooltip`, an id (custom elements) | —       | One tooltip for every option. |
-| Select                    | tooltip (link)              | as Button's                                                                | —       | The trigger's tooltip.        |
+| Component                               | Prop or link                | Type                                                                       | Default | Notes                                                                                           |
+| --------------------------------------- | --------------------------- | -------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| Tooltip                                 | shouldOpenOnlyWhenTruncated | `boolean`                                                                  | `false` | The overflow tooltip.                                                                           |
+| Tooltip                                 | relation                    | adds `'none'`                                                              | —       | Visual only.                                                                                    |
+| Listbox, Select, Combobox, Autocomplete | optionTooltip (link)        | a Tooltip instance (React, Vue); `option-tooltip`, an id (custom elements) | —       | One tooltip for every option. Autocomplete changed on 2026-10-24 (owner), the composition spec. |
+| Select                                  | tooltip (link)              | as Button's                                                                | —       | The trigger's tooltip.                                                                          |
 
 New parts: Button's and ToggleButton's `label`, `description`, `frame` and
 `extras`; Popover's and Dialog's `triggerLabel`, `triggerDescription`,
 `triggerFrame` and `triggerExtras`; Select's `triggerFrame` and
 `triggerExtras`; the `optionExtras` item part of Listbox, Select and
-Combobox; Tooltip's `text`.
+Combobox, and of Autocomplete (changed on 2026-10-24 (owner), the
+composition spec); Tooltip's `text`.
 
 No new events. No new public state: Button's and ToggleButton's `isHovered`
 counts over the frame while one is rendered.
