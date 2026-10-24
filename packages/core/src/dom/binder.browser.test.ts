@@ -57,6 +57,29 @@ afterEach(() => {
 });
 
 describe('createBinder', () => {
+  it('warns once about each composed part left out for want of a place', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const card = defineBehavior({
+      name: 'card',
+      parts: ['root'],
+      props: {},
+      setup: (ctx) => ({
+        inner: ctx.use(toy, () => ({})),
+        quiet: ctx.use(toy, () => ({}), { parts: { item: null } }),
+      }),
+      expose: () => ({}),
+      connect: ({ api }) => ({ root: api.inner.connect().root }),
+    });
+    createBinder(createInstance(card));
+    createBinder(createInstance(card));
+    expect(warn.mock.calls).toEqual([
+      [
+        '[uniaria] card composes toy, whose "item" part has no part to render on, so it is left out. Map it to null to leave it out on purpose.',
+      ],
+    ]);
+    warn.mockRestore();
+  });
+
   it('writes part props when it starts, with the part markers', () => {
     const { root, item } = setup();
     const instance = createInstance(toy, { props: { label: 'Go' } });

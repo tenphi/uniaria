@@ -994,7 +994,7 @@ describe('ctx.use', () => {
     });
   });
 
-  it('refuses a composed part with nothing to render on', () => {
+  it('leaves out a composed part with nowhere to go, and lists it', () => {
     const host = defineBehavior({
       name: 'host',
       parts: ['trigger'],
@@ -1003,10 +1003,49 @@ describe('ctx.use', () => {
         return ctx.use(disclosure, () => ({}));
       },
       expose: () => ({}),
+      connect: ({ api }) => ({ trigger: api.connect().trigger }),
+    });
+    const instance = createInstance(host, { id: 'h' });
+    instance.attach('trigger', {});
+    // The trigger still points at the panel's own id, which nothing renders.
+    expect(instance.connect().trigger.attrs['aria-controls']).toBe(
+      'h-disclosure-panel',
+    );
+    expect(instance.leftOutParts).toEqual([
+      { composer: 'host', composed: 'disclosure', part: 'panel' },
+    ]);
+  });
+
+  it('lists no part mapped to null', () => {
+    const host = defineBehavior({
+      name: 'host',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(disclosure, () => ({}), { parts: { panel: null } });
+      },
+      expose: () => ({}),
+      connect: () => ({ trigger: { attrs: {} } }),
+    });
+    expect(createInstance(host).leftOutParts).toEqual([]);
+  });
+
+  it('refuses a mapping to a part the composer doesn’t have', () => {
+    const host = defineBehavior({
+      name: 'host',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(disclosure, () => ({}), {
+          // @ts-expect-error: the host has no body
+          parts: { panel: 'body' },
+        });
+      },
+      expose: () => ({}),
       connect: () => ({ trigger: { attrs: {} } }),
     });
     expect(() => createInstance(host)).toThrow(
-      'host composes disclosure, whose "panel" part has no "panel" part to render on.',
+      'host composes disclosure, whose "panel" part has no "body" part to render on.',
     );
   });
 

@@ -62,6 +62,13 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    * `open()` and `close()`. Each runs in a batch, so it notifies once.
    */
   readonly actions: ActionsOf<D>;
+  /**
+   * Internal: the composed parts left out because the composer has no part
+   * of their name and maps them nowhere (composition spec, Runtime changes
+   * 1). The DOM binder warns about them in development, which the DOM-free
+   * runtime can't tell.
+   */
+  readonly leftOutParts: readonly LeftOutPart[];
   getProps(): PropsOf<D>;
   /**
    * The current value of the bindable `key`: the consumer's while
@@ -144,6 +151,15 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   owner(): Instance | undefined;
   /** The instance linked by `key` now: the key's prop, else the link. */
   linked(key: LinkKey): Instance | undefined;
+}
+
+/** A composed definition's part with nowhere to render. */
+export interface LeftOutPart {
+  /** The composing definition's name. */
+  readonly composer: string;
+  /** The composed definition's name. */
+  readonly composed: string;
+  readonly part: string;
 }
 
 interface Watcher {
@@ -305,6 +321,7 @@ export function createInstance<D extends AnyDefinition>(
       }
     }
   };
+  const leftOutParts: LeftOutPart[] = [];
   const watchers: Watcher[] = [];
   const effects: (() => void | (() => void))[] = [];
   let cleanups: (() => void)[] = [];
@@ -538,12 +555,26 @@ export function createInstance<D extends AnyDefinition>(
       use(child, childProps, composeOptions) {
         const map: Readonly<Record<string, string | null | undefined>> =
           composeOptions?.parts ?? {};
+        // This definition's part for each of the composed one's, or `null`.
+        // A part with no mapping and no part of its name is left out, so a
+        // control that gains a part doesn't break its composers (composition
+        // spec, Runtime changes 1); a mapping to a missing part is a mistake.
+        const placed: Record<string, string | null> = {};
         for (const part of child.parts) {
-          const own = map[part] === null ? null : (map[part] ?? part);
-          if (own !== null && !scoped.parts.includes(own)) {
+          const own = map[part];
+          if (own === undefined && !scoped.parts.includes(part)) {
+            placed[part] = null;
+            leftOutParts.push({
+              composer: scoped.name,
+              composed: child.name,
+              part,
+            });
+          } else if (own !== null && !scoped.parts.includes(own ?? part)) {
             throw new Error(
               `[uniaria] ${scoped.name} composes ${child.name}, whose "${part}" part has no "${own}" part to render on.`,
             );
+          } else {
+            placed[part] = own === undefined ? part : own;
           }
         }
         const passed = new Set<LinkKey>();
@@ -560,8 +591,8 @@ export function createInstance<D extends AnyDefinition>(
           child,
           childProps as () => Readonly<Record<string, unknown>>,
           (part) => {
-            const own = map[part];
-            return own === null ? null : partOf(own ?? part);
+            const own = placed[part];
+            return own === null || own === undefined ? null : partOf(own);
           },
           passed,
         );
@@ -642,6 +673,7 @@ export function createInstance<D extends AnyDefinition>(
     ids,
     api,
     actions,
+    leftOutParts,
     getProps: () => props as never,
     getValue(key) {
       // Plain props read as functions, bindables as objects.

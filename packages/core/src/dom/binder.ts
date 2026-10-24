@@ -61,6 +61,7 @@
  */
 
 import type { AnyDefinition, Instance, PartProps } from '../runtime';
+import { isDevelopment, warn } from './dev';
 
 export interface BinderOptions {
   /** The custom-element host to delegate part listeners for. */
@@ -276,11 +277,33 @@ function unlistenFromRoot(root: Node, type: string, host: Node): void {
 
 const itemEntryId = (part: string, key: string) => `${part}\n${key}`;
 
+/** The left-out parts already warned about, once per page. */
+const warnedLeftOut = new Set<string>();
+
+/**
+ * Warns once about each composed part that has nowhere to render (composition
+ * spec, Runtime changes 1): the runtime leaves it out, and can't tell a
+ * development build.
+ */
+function warnLeftOut(parts: Instance['leftOutParts']): void {
+  for (const { composer, composed, part } of parts) {
+    const id = `${composer}\n${composed}\n${part}`;
+    if (warnedLeftOut.has(id)) continue;
+    warnedLeftOut.add(id);
+    warn(
+      `${composer} composes ${composed}, whose "${part}" part has no part ` +
+        `to render on, so it is left out. Map it to null to leave it out ` +
+        `on purpose.`,
+    );
+  }
+}
+
 export function createBinder<D extends AnyDefinition>(
   instance: Instance<D>,
   options: BinderOptions = {},
 ): Binder {
   const { host } = options;
+  if (isDevelopment()) warnLeftOut(instance.leftOutParts);
   const bound = new Map<string, Bound>();
   const items = new Map<string, BoundItem>();
   const itemsByKey = new Map<string, Set<BoundItem>>();
