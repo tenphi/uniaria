@@ -17,6 +17,7 @@ import { checkboxGroupConformance } from './checkbox-group/checkbox-group.confor
 import { dialogConformance } from './dialog/dialog.conformance';
 import { dialogItemsConformance } from './dialog/items.conformance';
 import { fieldConformance } from './field/field.conformance';
+import { formConformance } from './form/form.conformance';
 import { listboxConformance } from './listbox/listbox.conformance';
 import { listboxItemsConformance } from './listbox/items.conformance';
 import { listboxVirtualizationConformance } from './listbox/virtualization.conformance';
@@ -44,6 +45,7 @@ export {
   dialogConformance,
   dialogItemsConformance,
   fieldConformance,
+  formConformance,
   listboxConformance,
   listboxItemsConformance,
   listboxVirtualizationConformance,
@@ -79,6 +81,26 @@ export type {
   DialogState,
 } from './dialog/types';
 export type { FieldProps, FieldState } from './field/types';
+export type {
+  FormErrors,
+  FormFieldState,
+  FormFieldStatus,
+  FormMessage,
+  FormMessageContext,
+  FormMessageKey,
+  FormMessages,
+  FormName,
+  FormProps,
+  FormState,
+  FormSubmitContext,
+  FormSubmitFailedDetail,
+  FormSubmitResult,
+  FormSubmittedDetail,
+  FormValidateResult,
+  FormValidationTrigger,
+  FormValues,
+  FormValuesChangeDetail,
+} from './form/types';
 export type {
   ListboxItem,
   ListboxProps,
@@ -137,4 +159,6 @@ export const suites = [
   comboboxItemsConformance,
   // The composition spec (phase 6).
   autocompleteConformance,
+  // The Form spec (phase 7).
+  formConformance,
 ];
