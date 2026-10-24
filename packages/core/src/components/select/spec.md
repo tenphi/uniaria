@@ -283,9 +283,12 @@ the list is hidden needs a real one (Resolved questions 1).
   a tooltip on the trigger doesn't open for it (Popover's rule).
 - **The label**: a press on it focuses the trigger and shows focus as if from
   the keyboard.
-- **A form submitted without a required value**: on the hidden `<select>`'s
-  `invalid` event, focus moves to the trigger, as React Aria. The browser's
-  message points at the hidden `<select>`, which sits inside the root.
+- **A form submitted without a required value**: when the browser reports
+  the hidden `<select>` as the form's first invalid control and focuses it,
+  focus moves to the trigger and shows, as React Aria. The `invalid` event
+  alone moves none: every invalid control in the form gets one, and
+  `checkValidity()` sends it too. The browser's message points at the hidden
+  `<select>`, which sits inside the root.
 
 ## Pointer and touch
 
