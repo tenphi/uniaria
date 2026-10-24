@@ -6,6 +6,7 @@
 
 import type { Styles } from '@tenphi/tasty';
 import { partElement } from '@uniaria/core';
+import { autocomplete } from '@uniaria/core/autocomplete';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
@@ -48,6 +49,7 @@ const DEFINITIONS: Record<
   'number-field': numberField,
   listbox,
   select,
+  autocomplete,
   combobox,
   dialog,
   popover,

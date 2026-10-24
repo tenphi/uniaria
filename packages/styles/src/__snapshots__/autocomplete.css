@@ -1,0 +1,242 @@
+/* autocomplete */
+[data-uni="autocomplete"] [data-element="Label"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-weight: 500; margin-block: 0 calc(0.5 * var(--uni-gap)); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+}
+
+[data-uni="autocomplete"] [data-element="Description"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="autocomplete"] [data-element="Error"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"] [data-element="Error"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
+}
+
+[data-uni="autocomplete"] [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *))::placeholder { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+
+[data-uni="autocomplete"] [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; border-radius: var(--uni-radius); margin: 0px; font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2 - var(--uni-border-width)) calc(var(--uni-gap) - var(--uni-border-width)); }
+
+[data-uni="autocomplete"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:disabled, [data-disabled])) { background-color: var(--uni-surface-color); color: var(--uni-text-color); --current-color: var(--uni-text-color); }
+
+[data-uni="autocomplete"]:where(:not([data-disabled]):not([data-invalid]):not(:has([data-element="Input"]:disabled))) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+[data-uni="autocomplete"] [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:focus-within, [data-focused])) { outline: 0 solid transparent; outline-offset: var(--uni-border-width); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="autocomplete"] [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="autocomplete"] [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { box-sizing: border-box; padding: calc(0.5 * var(--uni-gap)); border-radius: calc(var(--uni-radius) + calc(0.5 * var(--uni-gap))); overflow: auto; }
+
+[data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { background-color: var(--uni-surface-color); }
+
+[data-uni="autocomplete"]:where(:not([data-disabled]):not([data-invalid])) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="autocomplete"] [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="autocomplete"] [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { box-sizing: border-box; padding: calc(0.5 * var(--uni-gap)); border-radius: calc(var(--uni-radius) + calc(0.5 * var(--uni-gap))); overflow: auto; display: block; }
+
+[data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { background-color: var(--uni-surface-color); }
+
+[data-uni="autocomplete"]:where(:not([data-disabled]):not([data-invalid])) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { border: var(--uni-border-width) solid var(--uni-border-color); }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="autocomplete"] [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { transition: border var(--uni-transition), border-top var(--uni-transition), border-right var(--uni-transition), border-bottom var(--uni-transition), border-left var(--uni-transition); }
+}
+
+[data-uni="autocomplete"] [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; list-style: none; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *))::after { content: var(--uni-option-mark); position: absolute; inset-inline: auto calc(var(--uni-gap) + .125rem); inset-block: calc(50% - .3125rem) auto; box-sizing: border-box; inline-size: .25rem; min-inline-size: .25rem; max-inline-size: .25rem; block-size: .5rem; min-block-size: .5rem; max-block-size: .5rem; border-top: 0 solid currentcolor; border-right: calc(2 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(2 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { position: relative; inset-inline: auto 0; box-sizing: border-box; block-size: auto; min-block-size: max(24px, var(--uni-control-height)); max-block-size: initial; margin: 0px; padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); padding-inline: var(--uni-gap) calc(2.5 * var(--uni-gap)); border-radius: var(--uni-radius); font-size: var(--uni-font-size); line-height: var(--uni-line-height); font-family: inherit; grid-template-columns: [icon] auto [label] minmax(0, 1fr) [suffix] auto [extras] auto; align-items: center; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-disabled]), [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered]):not([data-pressed])), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected]):not([data-hovered])[data-pressed]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered]:not([data-pressed])), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-selected])[data-hovered][data-pressed]) { background-color: transparent; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-selected])) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-focus-visible])) { outline: 0 solid transparent; outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:has(> [data-element="OptionLabel"]))), [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([hidden]:has(> [data-element="OptionLabel"])) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:has(> [data-element="OptionDescription"]))) { grid-template-rows: auto; }
+
+[data-uni="autocomplete"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])) { cursor: pointer; }
+
+@media (not (prefers-reduced-motion: reduce)) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { transition: background-color var(--uni-transition), background-image var(--uni-transition), --tasty-second-fill-color var(--uni-transition), color var(--uni-transition); }
+}
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-selected])) { --uni-option-mark: none; }
+
+[data-uni="autocomplete"] [data-element="OptionLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; grid-column: label; grid-row: 1; margin: 0px; padding: 0px; text-align: start; }
+
+[data-uni="autocomplete"] [data-element="OptionDescription"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; color: inherit; --current-color: inherit; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; grid-column: label; grid-row: 2; padding: 0px; text-align: start; }
+
+[data-uni="autocomplete"] [data-element="OptionExtras"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { display: flex; gap: calc(0.5 * var(--uni-gap)); align-items: center; grid-column: extras; grid-row: 1 / -1; margin-inline: calc(0.5 * var(--uni-gap)) 0; }
+
+[data-uni="autocomplete"] [data-element="GroupLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: 0px; font-size: var(--uni-font-size-small); line-height: var(--uni-line-height-small); letter-spacing: .01em; font-weight: 600; text-transform: uppercase; display: block; padding: var(--uni-gap) var(--uni-gap) calc(0.5 * var(--uni-gap)) var(--uni-gap); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="GroupLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="autocomplete"] [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { margin: calc(calc(0.5 * var(--uni-gap)) + var(--uni-border-width)); padding: calc(calc(var(--uni-control-height) - var(--uni-line-height)) / 2) var(--uni-gap); font-size: var(--uni-font-size); line-height: var(--uni-line-height); pointer-events: none; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-text-soft-color); --current-color: var(--uni-text-soft-color); }
+}
+
+[data-uni="autocomplete"] { display: grid; gap: calc(0.5 * var(--uni-gap)); grid-template-columns: minmax(0, 1fr); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"] [data-element="Error"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: CanvasText; --current-color: CanvasText; }
+}
+
+[data-uni="autocomplete"]:where(:is(:not([data-disabled]):has([data-element="Input"]:disabled), [data-disabled])) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)), [data-uni="autocomplete"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:is(:disabled, [data-disabled])) { background-color: var(--uni-disabled-surface-color); color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="autocomplete"]:where([data-invalid]:not([data-disabled]):not(:has([data-element="Input"]:disabled))) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not(:disabled, [data-disabled])) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where(:not([data-invalid])) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="autocomplete"]:where([data-disabled]) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { background-color: var(--uni-disabled-surface-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="autocomplete"]:where([data-invalid]:not([data-disabled])) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+[data-uni="autocomplete"]:where([data-empty]) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-column: 1; }
+
+[data-uni="autocomplete"]:where([data-empty]:not(:has(> [data-element="Label"]))) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 2; }
+
+[data-uni="autocomplete"] [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-virtualized]) { padding: 0px; }
+
+[data-uni="autocomplete"]:where([data-disabled]) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { background-color: var(--uni-disabled-surface-color); border: var(--uni-border-width) solid var(--uni-disabled-border-color); }
+
+[data-uni="autocomplete"]:where([data-invalid]:not([data-disabled])) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-virtualized])) { border: var(--uni-border-width) solid var(--uni-danger-border-color); }
+
+[data-uni="autocomplete"]:where([data-empty]) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-column: 1; }
+
+[data-uni="autocomplete"]:where([data-empty]:not(:has(> [data-element="Label"]))) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 2; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-selected]):not([data-pressed])[data-focused]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-selected])[data-pressed][data-focused]), [data-uni="autocomplete"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-pressed]):not([data-selected])[data-hovered]) { background-color: var(--uni-surface-hover-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])[data-selected]) { color: var(--uni-accent-text-color); --current-color: var(--uni-accent-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid var(--uni-accent-outline-color); outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+}
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([hidden]):has(> [data-element="OptionLabel"])) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: grid; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:has(> [data-element="OptionDescription"])) { grid-template-rows: auto auto; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-disabled]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])) { cursor: default; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-selected]) { --uni-option-mark: ""; }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) > *:where(:not(:is([data-element="OptionLabel"] ~ *)):has(~ [data-element="OptionLabel"])), [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) > *:where(:is([data-element="OptionDescription"], [data-element="OptionExtras"]):is([data-element="OptionLabel"] ~ *):has(~ [data-element="OptionLabel"])) { grid-column: icon; margin-inline: 0 calc(0.5 * var(--uni-gap)); }
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) > *:where(:has(~ [data-element="OptionLabel"])), [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) > *:where(:not(:has(~ [data-element="OptionLabel"])):not(:is([data-element="OptionDescription"], [data-element="OptionExtras"])):is([data-element="OptionLabel"] ~ *)) { grid-row: 1 / -1; }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="GroupLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+[data-uni="autocomplete"]:where([data-empty]) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-column: 1; }
+
+[data-uni="autocomplete"]:where([data-empty]:not(:has(> [data-element="Label"]))) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 2; }
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Label"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: CanvasText; --current-color: CanvasText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Description"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: CanvasText; --current-color: CanvasText; }
+}
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"]:where([data-invalid]) [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid var(--uni-danger-outline-color); outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="autocomplete"]:where([data-empty]:has(> [data-element="Label"])) [data-element="Scroller"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 3; }
+
+[data-uni="autocomplete"]:where([data-empty]:has(> [data-element="Label"])) [data-element="List"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 3; }
+
+[data-uni="autocomplete"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-selected])[data-pressed]) { background-color: var(--uni-surface-pressed-color); }
+
+@media (not (forced-colors: active)) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-disabled]) { color: var(--uni-disabled-text-color); --current-color: var(--uni-disabled-text-color); }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-focus-visible]) { outline: var(--uni-outline-width) solid highlight; outline-offset: calc(calc(-1 * var(--uni-outline-width))); }
+}
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) > *:where(:not(:is([data-element="OptionDescription"], [data-element="OptionExtras"])):is([data-element="OptionLabel"] ~ *)) { grid-column: suffix; margin-inline: calc(0.5 * var(--uni-gap)) 0; }
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="GroupLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: CanvasText; --current-color: CanvasText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where(:not([data-disabled])) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: CanvasText; --current-color: CanvasText; }
+}
+
+[data-uni="autocomplete"]:where([data-empty]:has(> [data-element="Label"])) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { grid-row: 3; }
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Label"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: GrayText; --current-color: GrayText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Description"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: GrayText; --current-color: GrayText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"] [data-element="Input"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:is(:focus-within, [data-focused])) { outline: var(--uni-outline-width) solid highlight; outline-offset: var(--uni-border-width); }
+}
+
+[data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered]):not([data-pressed])[data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused]):not([data-hovered])[data-pressed][data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered]:not([data-pressed])[data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-focused])[data-hovered][data-pressed][data-selected]) { background-color: var(--uni-accent-surface-color); }
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])) { color: CanvasText; --current-color: CanvasText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="GroupLabel"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: GrayText; --current-color: GrayText; }
+}
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"]:where([data-disabled]) [data-element="Empty"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)) { color: GrayText; --current-color: GrayText; }
+}
+
+[data-uni="autocomplete"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered][data-selected]), [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-pressed]):not([data-hovered])[data-focused][data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled]):not([data-pressed])[data-hovered][data-focused][data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])[data-pressed]:not([data-hovered])[data-focused][data-selected]), [data-uni="autocomplete"]:where([data-readonly]) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])[data-pressed][data-hovered][data-focused][data-selected]) { background-color: var(--uni-accent-surface-hover-color); }
+
+@media (forced-colors: active) {
+  [data-uni="autocomplete"] [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where([data-disabled]) { color: GrayText; --current-color: GrayText; }
+}
+
+[data-uni="autocomplete"]:where(:not([data-readonly])) [data-element="Option"]:where(:not([data-uni="autocomplete"] [data-uni]:not([data-uni="autocomplete"]) *)):where(:not([data-disabled])[data-pressed][data-selected]) { background-color: var(--uni-accent-surface-pressed-color); }

@@ -6,6 +6,7 @@
 
 import type { Styles } from '@tenphi/tasty';
 
+import { autocompleteStyles } from './autocomplete';
 import { buttonExtrasStyles, buttonFrameStyles, buttonStyles } from './button';
 import { checkboxStyles } from './checkbox';
 import { checkboxGroupStyles } from './checkbox-group';
@@ -68,6 +69,7 @@ export const COMPONENTS = {
   'number-field': { styles: numberFieldStyles },
   listbox: { styles: listboxStyles },
   select: { styles: selectStyles },
+  autocomplete: { styles: autocompleteStyles },
   combobox: { styles: comboboxStyles },
   dialog: {
     styles: dialogStyles,

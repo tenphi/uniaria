@@ -1,12 +1,15 @@
 /**
- * Listbox, Select and Combobox with the default styles, mounted through
- * both adapters with the same markup (spec: Testing → Components).
+ * Listbox, Select, Autocomplete and Combobox with the default styles,
+ * mounted through both adapters with the same markup (spec: Testing →
+ * Components).
  */
 
+import '@uniaria/elements/autocomplete';
 import '@uniaria/elements/combobox';
 import '@uniaria/elements/listbox';
 import '@uniaria/elements/select';
 
+import { autocomplete } from '@uniaria/core/autocomplete';
 import { combobox } from '@uniaria/core/combobox';
 import { listbox } from '@uniaria/core/listbox';
 import { select } from '@uniaria/core/select';
@@ -54,6 +57,7 @@ interface Adapter {
   /** Each resolves to the component's root. */
   listbox(props?: ListboxProps): Promise<HTMLElement>;
   select(props?: SelectProps): Promise<HTMLElement>;
+  autocomplete(): Promise<HTMLElement>;
   combobox(): Promise<HTMLElement>;
   unmount(): void;
 }
@@ -108,6 +112,16 @@ const SELECT = `
     </div>
   </uni-select>`;
 
+const AUTOCOMPLETE = `
+  <uni-autocomplete disabled-keys='["cherry"]'>
+    <div data-uni="autocomplete">
+      <label data-element="Label">Fruit</label>
+      <input data-element="Input" type="search" />
+      <div data-element="List">${optionsHtml(FRUITS)}</div>
+      <p data-element="Empty">No fruit matches.</p>
+    </div>
+  </uni-autocomplete>`;
+
 const COMBOBOX = `
   <uni-combobox>
     <div data-uni="combobox">
@@ -145,6 +159,10 @@ const elements: Adapter = {
   async select(props = {}) {
     await mountElement(SELECT, props.value);
     return rootOf('select');
+  },
+  async autocomplete() {
+    await mountHtml(AUTOCOMPLETE);
+    return rootOf('autocomplete');
   },
   async combobox() {
     await mountHtml(COMBOBOX);
@@ -223,6 +241,26 @@ function ReactSelect(props: SelectProps) {
   );
 }
 
+function ReactAutocomplete() {
+  const fruit = useBehavior(autocomplete, {
+    items: FRUITS,
+    disabledKeys: ['cherry'],
+  });
+  return (
+    <div {...fruit.parts.root}>
+      <label {...fruit.parts.label}>Fruit</label>
+      <input {...fruit.parts.input} type="search" />
+      <div {...fruit.parts.list}>
+        <ReactOptions
+          items={FRUITS}
+          getItemProps={fruit.getItemProps as ItemProps}
+        />
+      </div>
+      <p {...fruit.parts.empty}>No fruit matches.</p>
+    </div>
+  );
+}
+
 function ReactCombobox() {
   const fruit = useBehavior(combobox, { items: FRUITS });
   return (
@@ -253,6 +291,10 @@ const react: Adapter = {
   async select(props = {}) {
     await mountReact(<ReactSelect {...props} />);
     return rootOf('select');
+  },
+  async autocomplete() {
+    await mountReact(<ReactAutocomplete />);
+    return rootOf('autocomplete');
   },
   async combobox() {
     await mountReact(<ReactCombobox />);
@@ -492,6 +534,70 @@ describe.each([
       await tabInto();
       expect(ring(part(root, 'Trigger')).width).toBe(2);
       expect(ring(part(root, 'Trigger')).contrast).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe('Autocomplete', () => {
+    test("the input is a field's box, and the list's box is under it", async () => {
+      const root = await adapter.autocomplete();
+      const input = part(root, 'Input');
+      const list = part(root, 'List');
+      expect(box(input).height).toBeCloseTo(32, 0);
+      expect(style(input).borderTopWidth).toBe('1px');
+      expect(rgba(style(input).borderTopColor)).toEqual(rgba(token('border')));
+      expect(rgba(style(input).backgroundColor)).toEqual(
+        rgba(token('surface')),
+      );
+      expect(box(input).top - box(part(root, 'Label')).bottom).toBeCloseTo(
+        8,
+        0,
+      );
+      expect(style(list).borderTopWidth).toBe('1px');
+      expect(style(list).paddingTop).toBe('4px');
+      expect(style(list).borderTopLeftRadius).toBe('10px');
+      expect(box(list).top - box(input).bottom).toBeCloseTo(4, 0);
+      expect(box(input).width).toBeCloseTo(box(list).width, 0);
+      expect(box(option(root, 'apple')).height).toBeCloseTo(32, 0);
+      expect(style(part(root, 'Empty')).display).toBe('none');
+    });
+
+    test('typing hides the options that no longer match', async () => {
+      const root = await adapter.autocomplete();
+      await pointer.click(part(root, 'Input'));
+      await type('b');
+      expect(style(option(root, 'apple')).display).toBe('none');
+      expect(box(option(root, 'banana')).height).toBeCloseTo(32, 0);
+      expect(style(part(root, 'Empty')).display).toBe('none');
+    });
+
+    test('nothing matching holds the empty text in an option’s place, inside the list', async () => {
+      const root = await adapter.autocomplete();
+      await pointer.click(part(root, 'Input'));
+      await type('zz');
+      const empty = part(root, 'Empty');
+      expect(style(empty).display).not.toBe('none');
+      expect(rgba(style(empty).color)).toEqual(rgba(token('text-soft')));
+      const list = box(part(root, 'List'));
+      const text = box(empty);
+      // Inside the list's padding and border, 4 and 1 pixels.
+      expect(text.top - list.top).toBeCloseTo(5, 0);
+      expect(list.bottom - text.bottom).toBeCloseTo(5, 0);
+      expect(list.top - box(part(root, 'Input')).bottom).toBeCloseTo(4, 0);
+    });
+
+    test('the keys ring the highlighted option, and the input keeps its ring', async () => {
+      const root = await adapter.autocomplete();
+      await tabInto();
+      expect(document.activeElement).toBe(part(root, 'Input'));
+      await keyboard.press('ArrowDown');
+      await settle();
+      const apple = option(root, 'apple');
+      expect(apple.hasAttribute('data-focused')).toBe(true);
+      expect(ring(apple).width).toBe(2);
+      expect(ring(apple).offset).toBe(-2);
+      expect(ring(part(root, 'Input')).width).toBe(2);
+      expect(ring(part(root, 'Input')).contrast).toBeGreaterThanOrEqual(3);
+      expect(style(part(root, 'List')).outlineStyle).toBe('none');
     });
   });
 
