@@ -120,6 +120,11 @@ interface FruitOptions {
   readonly listClass?: string;
   /** Wrap the autocomplete in `<form id="form">`. */
   readonly inForm?: boolean;
+  /**
+   * Wrap the autocomplete in a focusable `<div id="frame" tabindex="-1">`,
+   * as a dialog is.
+   */
+  readonly inFocusable?: boolean;
   /** Render the root around the parts; it is optional. */
   readonly hasRoot?: boolean;
 }
@@ -137,6 +142,7 @@ function fruit({
   hasScroller = false,
   listClass = '',
   inForm = false,
+  inFocusable = false,
   hasRoot = true,
 }: FruitOptions = {}): TemplateNode[] {
   const isGrouped = items.some((item) => item.items);
@@ -181,9 +187,12 @@ function fruit({
       : list,
     ...(hasEmpty ? [empty] : []),
   ];
-  const search = hasRoot
+  const rooted = hasRoot
     ? [h('div', { part: 'root', class: 'ac-root' }, ...parts)]
     : parts;
+  const search = inFocusable
+    ? [h('div', { id: 'frame', tabindex: '-1' }, ...rooted)]
+    : rooted;
   return [
     LAYOUT,
     h('input', { id: 'before', class: 'ac-before', 'aria-label': 'Before' }),
@@ -931,6 +940,31 @@ export const autocompleteConformance = defineConformance<
       },
       PHASE,
     );
+
+    scenario(
+      'shouldHighlightFirstMatch: options arriving after a keystroke get the first match, until the arrows move the highlight',
+      async ({ mount, keyboard }) => {
+        // A server-side filter: the consumer filters, and the options for
+        // the typed text arrive later, into a list that may be empty.
+        const mounted = await mount({
+          template: fruit({ items: [] }),
+          props: { items: [], filter: false, shouldHighlightFirstMatch: true },
+        });
+        input(mounted).focus();
+        await keyboard.press('a');
+        expect(mounted.state().focusedKey).toBe(null);
+        await mounted.setProps({ items: FRUIT });
+        expect(mounted.state().focusedKey).toBe('apple');
+        await mounted.setProps({ items: FRUIT.slice(1) });
+        expect(mounted.state().focusedKey).toBe('banana');
+
+        await keyboard.press('ArrowDown');
+        expect(mounted.state().focusedKey).toBe('cherry');
+        await mounted.setProps({ items: FRUIT });
+        expect(mounted.state().focusedKey).toBe('cherry');
+      },
+      PHASE,
+    );
   });
 
   group('choosing', () => {
@@ -1373,6 +1407,32 @@ export const autocompleteConformance = defineConformance<
       },
       PHASE,
     );
+
+    scenario(
+      'a key a handler already prevented is left alone',
+      async ({ mount, keyboard, pointer }) => {
+        const mounted = await mount({
+          template: fruit(),
+          props: { items: FRUIT, defaultInputValue: 'a' },
+          events: EVENTS,
+        });
+        await pointer.moveOutside(mounted.part('root'));
+        mounted.container.addEventListener(
+          'keydown',
+          (event) => event.preventDefault(),
+          { capture: true },
+        );
+        input(mounted).focus();
+        await keyboard.press('ArrowDown');
+        expect(mounted.state().focusedKey).toBe(null);
+        expect(highlighted(mounted)).toBe(null);
+        await keyboard.press('Escape');
+        expect(input(mounted).value).toBe('a');
+        expect(shownKeys(mounted)).toEqual(['apple', 'banana', 'date']);
+        expect(texts(mounted)).toEqual([]);
+      },
+      PHASE,
+    );
   });
 
   group('announcements', () => {
@@ -1598,6 +1658,29 @@ export const autocompleteConformance = defineConformance<
     );
 
     scenario(
+      'a mouse press on the empty part brings focus to the input, inside a focusable element too',
+      async ({ mount, keyboard, pointer }) => {
+        const mounted = await mount({
+          template: fruit({ inFocusable: true }),
+          props: { items: FRUIT },
+          events: EVENTS,
+        });
+        input(mounted).focus();
+        await typeText(keyboard, 'zz');
+        expect(mounted.part('empty').hidden).toBe(false);
+        byId(mounted, 'before').focus();
+        const presses = watchPresses(mounted);
+        await pointer.click(mounted.part('empty'));
+        presses.stop();
+        expect(presses.prevented).toEqual([['mousedown', true]]);
+        expect(active(mounted)).toBe(input(mounted));
+        expect(focusChanges(mounted)).toEqual([true, false, true]);
+        expect(input(mounted).value).toBe('zz');
+      },
+      PHASE,
+    );
+
+    scenario(
       'a press on a control of its own in the empty part takes focus, which stays within',
       async ({ mount, keyboard, pointer }) => {
         const mounted = await mount({
@@ -1741,6 +1824,8 @@ export const autocompleteConformance = defineConformance<
         expect(mounted.part('list').getAttribute('aria-readonly')).toBe('true');
         expectOnEveryPart(mounted, 'data-readonly', true);
         expect(shownKeys(mounted)).toEqual(['apple', 'banana', 'date']);
+        // The pointer may rest over an option from an earlier scenario.
+        await pointer.moveOutside(mounted.part('root'));
         input(mounted).focus();
         const keys = watchKeys(mounted);
         await keyboard.press('b');
@@ -2139,12 +2224,14 @@ export const autocompleteConformance = defineConformance<
   group('virtualization', () => {
     scenario(
       'ArrowUp highlights the last option, rendered, named as the active descendant and scrolled into view',
-      async ({ mount, keyboard }) => {
+      async ({ mount, keyboard, pointer }) => {
         const mounted = await mount({
           template: virtualFruit(),
           props: VIRTUAL,
         });
         expect(mounted.part('scroller').getAttribute('tabindex')).toBe('-1');
+        // The pointer may rest over a row from an earlier scenario.
+        await pointer.moveOutside(mounted.part('root'));
         input(mounted).focus();
         await keyboard.press('ArrowUp');
         await expect.poll(() => highlighted(mounted)).toBe('item-999');
@@ -2258,6 +2345,9 @@ export const autocompleteConformance = defineConformance<
         await screenReader.press('Tab');
         await screenReader.type('ch');
         await screenReader.spoken();
+        // NVDA takes Escape in the focus mode it entered on its own, going
+        // back to browse mode; there the next Escape reaches the input.
+        if (screenReader.name === 'nvda') await screenReader.press('Escape');
         await screenReader.press('Escape');
         expect(input(mounted).value).toBe('');
         expect.soft(await screenReader.spoken()).toMatch(/4 options available/);
