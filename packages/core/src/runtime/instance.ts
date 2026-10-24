@@ -430,6 +430,9 @@ export function createInstance<D extends AnyDefinition>(
           beforeReport,
         }: ResetOptions<unknown> = {}) {
           const isControlledNow = isControlled();
+          // A composed definition's controlled value is its composer's, and
+          // the composer resets it (composition spec, Runtime changes 4).
+          if (isControlledNow && scoped !== definition) return get();
           // A null default reads as none, as in `get()`.
           const own = readProps()[defaultKey] ?? undefined;
           const previous =

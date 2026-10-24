@@ -1078,6 +1078,78 @@ describe('ctx.use', () => {
     });
   });
 
+  describe('reset', () => {
+    /** A control whose `api.reset()` resets its own value. */
+    const control = defineBehavior({
+      name: 'control',
+      parts: ['root'],
+      props: { value: bindable('') },
+      setup(ctx) {
+        return {
+          set: (value: string) => ctx.props.value.set(value),
+          reset: () => ctx.props.value.reset({ fallback: 'mounted' }),
+        };
+      },
+      expose: ({ props }) => ({ value: props.value.get() }),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+
+    it('leaves a composed, controlled value to the composer', () => {
+      const onValueChange = vi.fn();
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: { value: bindable('') },
+        setup(ctx) {
+          const inner = ctx.use(control, () => ({
+            value: ctx.props.value.get(),
+            onValueChange: (value: string) => {
+              onValueChange(value);
+              ctx.props.value.set(value);
+            },
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host, {
+        props: { defaultValue: 'default' },
+      });
+      instance.api.inner.api.set('typed');
+      onValueChange.mockClear();
+
+      // The value now, with nothing reported: the composer resets its own.
+      expect(instance.api.inner.api.reset()).toBe('typed');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(instance.getState().value).toBe('typed');
+    });
+
+    it('resets a composed value the composer leaves uncontrolled', () => {
+      const onValueChange = vi.fn();
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: {},
+        setup(ctx) {
+          const inner = ctx.use(control, () => ({
+            defaultValue: 'default',
+            onValueChange,
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host);
+      instance.api.inner.api.set('typed');
+      onValueChange.mockClear();
+
+      expect(instance.api.inner.api.reset()).toBe('default');
+      expect(onValueChange.mock.calls).toEqual([['default']]);
+      expect(instance.getState().value).toBe('default');
+    });
+  });
 });
 
 describe('part ids', () => {
