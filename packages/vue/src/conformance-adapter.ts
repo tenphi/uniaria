@@ -233,9 +233,13 @@ export const vueAdapter: ConformanceAdapter = {
         await nextTick();
       },
       state: () => instance!.getState() as Readonly<Record<string, unknown>>,
-      async call(action) {
+      async call(action, ...args) {
         // The handle's `actions`, as a consumer calls them.
-        (actions as Record<string, () => void>)[action]!();
+        const result = await (
+          actions as Record<string, (...args: readonly unknown[]) => unknown>
+        )[action]!(...args);
+        await nextTick();
+        return result;
       },
       renderCount: () => renders,
       async unmount() {

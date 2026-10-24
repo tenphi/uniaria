@@ -272,9 +272,11 @@ export const reactAdapter: ConformanceAdapter = {
         render();
       },
       state: () => instance!.getState() as Readonly<Record<string, unknown>>,
-      async call(action) {
+      async call(action, ...args) {
         // The handle's `actions`, as a consumer calls them.
-        (actions as Record<string, () => void>)[action]!();
+        return await (
+          actions as Record<string, (...args: readonly unknown[]) => unknown>
+        )[action]!(...args);
       },
       renderCount: () => renders,
       async unmount() {
