@@ -23,6 +23,7 @@ const COMPONENTS = {
   tooltip: 'tooltip',
   listbox: 'listbox',
   select: 'select',
+  autocomplete: 'autocomplete',
   combobox: 'combobox',
 };
 

@@ -8,4 +8,4 @@ import { runConformance } from '@uniaria/testing/browser';
 
 import { vueAdapter } from './conformance-adapter';
 
-runConformance(vueAdapter, suites, { phase: 5 });
+runConformance(vueAdapter, suites, { phase: 6 });

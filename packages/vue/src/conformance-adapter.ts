@@ -10,6 +10,7 @@ import { answers, callbackName } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
+import { autocomplete } from '@uniaria/core/autocomplete';
 import { combobox } from '@uniaria/core/combobox';
 import { dialog } from '@uniaria/core/dialog';
 import { field } from '@uniaria/core/field';
@@ -64,6 +65,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   'number-field': numberField,
   listbox,
   select,
+  autocomplete,
   combobox,
 };
 

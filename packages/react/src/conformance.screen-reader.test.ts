@@ -9,4 +9,4 @@ import { runConformance } from '@uniaria/testing/browser';
 
 import { reactAdapter } from './conformance-adapter';
 
-runConformance(reactAdapter, suites, { phase: 5, screenReader: true });
+runConformance(reactAdapter, suites, { phase: 6, screenReader: true });

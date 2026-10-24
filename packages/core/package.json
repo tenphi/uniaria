@@ -85,6 +85,11 @@
       "types": "./dist/select/index.d.ts",
       "default": "./dist/select/index.js"
     },
+    "./autocomplete": {
+      "uniaria-source": "./src/components/autocomplete/index.ts",
+      "types": "./dist/autocomplete/index.d.ts",
+      "default": "./dist/autocomplete/index.js"
+    },
     "./combobox": {
       "uniaria-source": "./src/components/combobox/index.ts",
       "types": "./dist/combobox/index.d.ts",

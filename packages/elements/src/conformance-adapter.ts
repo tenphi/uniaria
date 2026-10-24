@@ -31,6 +31,7 @@ import './tooltip';
 import './number-field';
 import './listbox';
 import './select';
+import './autocomplete';
 import './combobox';
 import type { UniElement } from './define-element';
 

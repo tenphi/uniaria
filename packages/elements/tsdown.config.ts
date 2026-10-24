@@ -20,6 +20,7 @@ export default defineConfig({
     'number-field': 'src/number-field.ts',
     listbox: 'src/listbox.ts',
     select: 'src/select.ts',
+    autocomplete: 'src/autocomplete.ts',
     combobox: 'src/combobox.ts',
   },
   format: 'esm',
