@@ -614,8 +614,24 @@ export const select = defineBehavior({
           if (!isSameKeys(next, value.get())) setValue(next);
           syncHiddenSelect(element);
         });
-      // Validation and autofill may focus it: the trigger takes focus.
-      const onFocus = () => triggerElement()?.focus();
+      // The browser focuses the first invalid control it reports (a submit,
+      // `reportValidity()`), and autofill may focus it: the trigger takes
+      // focus. `invalid` itself moves none, since every invalid control in
+      // the form gets one and `checkValidity()` sends it too; focus that
+      // follows it in the same task shows, as React Aria shows it.
+      let isReporting = false;
+      const onInvalid = () => {
+        isReporting = true;
+        setTimeout(() => {
+          isReporting = false;
+        });
+      };
+      const onFocus = () => {
+        const trigger = triggerElement();
+        if (!trigger) return;
+        if (isReporting) modalityTrackerFor(trigger)?.set('keyboard');
+        trigger.focus();
+      };
       // Form reset goes back to the default, as NumberField's does:
       // defaultValue when uncontrolled, even one set after mount, and for a
       // controlled select without one, the value it mounted with, reported
@@ -634,13 +650,13 @@ export const select = defineBehavior({
       };
       element.addEventListener('change', onChange);
       element.addEventListener('input', onChange);
-      element.addEventListener('invalid', onFocus);
+      element.addEventListener('invalid', onInvalid);
       element.addEventListener('focus', onFocus);
       form?.addEventListener('reset', onReset);
       return () => {
         element.removeEventListener('change', onChange);
         element.removeEventListener('input', onChange);
-        element.removeEventListener('invalid', onFocus);
+        element.removeEventListener('invalid', onInvalid);
         element.removeEventListener('focus', onFocus);
         form?.removeEventListener('reset', onReset);
         for (const name of Object.keys(VISUALLY_HIDDEN)) {

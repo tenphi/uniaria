@@ -515,8 +515,9 @@ first `<option>` and one `<option>` per item, keeps its selection, `multiple`,
 
 - The form submits the selected key under the `<select>`'s name, once per key
   in multiple mode.
-- With `isRequired`, the browser blocks submitting nothing and focus moves to
-  the trigger.
+- With `isRequired`, the browser blocks submitting nothing. When the select
+  is the form's first invalid control, focus moves to its trigger and shows.
+  `form.checkValidity()` moves no focus.
 - Resetting the form goes back to `defaultValue`, even one set after the
   select rendered, and `valueChange` reports it. A controlled select gets a
   `valueChange` asking for `defaultValue`, or without one the value it
