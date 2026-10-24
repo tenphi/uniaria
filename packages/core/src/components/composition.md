@@ -42,9 +42,9 @@ fields on the lower one:
    - Combobox becomes Autocomplete and Popover, plus how the text settles
      into a value.
 
-   None of them changes in API or behavior, apart from two additions listed
-   in [Changes to approved specs](#changes-to-approved-specs). Their
-   approved conformance suites are the check.
+   None of them changes in API, and their behavior changes only in the few
+   places [Changes to approved specs](#changes-to-approved-specs) lists.
+   Their approved conformance suites pass unchanged.
 
 3. **A composition contract** for definitions outside UniAria that compose
    its controls: what such a definition may rely on, and four runtime
@@ -118,8 +118,9 @@ one concern on one part. Definitions at either level use them.
 **Names.**
 
 - `<Name>Input` is a text control without labelling, and `<Name>Field` is
-  Field around it. The TextField spec already uses the second half of that
-  rule ("Field plus a text control is `<Name>Field`").
+  Field around a control, with a form value. The TextField spec already
+  uses the second half of that rule ("Field plus a text control is
+  `<Name>Field`").
 - `Autocomplete` is the name the APG (`aria-autocomplete="list"`) and React
   Aria give a text box that filters a list.
 
@@ -220,7 +221,10 @@ And three rules for putting them together:
 - **Handlers.** A composer that adds handlers to a composed part merges
   them with `mergeHandlers` from `@uniaria/core/dom`; they run in the order
   given. Autocomplete ignores a `keydown` that is already prevented, so a
-  composer that puts its own handler first takes a key over.
+  composer that puts its own handler first takes a key over. A composer
+  that acts on a key Autocomplete leaves to it puts its handler after, and
+  skips a `keydown` that is prevented, mid-composition, with Ctrl or Meta,
+  or while disabled, as Autocomplete does.
 - **Item parts.** `parts` maps a composed definition's parts, not its item
   parts. A composer of Listbox or Autocomplete declares the item parts
   under their names (`option`, `group`, …) in its own `itemParts` and
@@ -262,12 +266,15 @@ TextInput inside TextField would report the value it mounted with right
 after TextField reported its default. Runtime change 4 makes a composed
 definition's controlled bindable ignore `reset()`.
 
-- **TextInput**, composed or not, drops its draft on a reset, and writes
-  its text again after the native reset puts back the `value` attribute.
-- **Autocomplete** resets its text, as a field resets its value: the
-  input's text is what a form would submit if the consumer names it. Its
-  selection stays, as Listbox's does, since a list has no form value.
-  Composed in Combobox, its text is Combobox's, which resets it.
+- **TextInput** resets its value through `reset()`, which change 4 turns
+  off when it is composed and given its value. A controlled TextInput with
+  no `defaultValue` goes back to the value it mounted with, as TextField
+  does. Composed or not, it drops its draft on a reset, and writes its text
+  again after the native reset puts back the `value` attribute.
+- **Autocomplete** resets its text the same way, as a field resets its
+  value: the input's text is what a form would submit if the consumer names
+  it. Its selection stays, as Listbox's does, since a list has no form
+  value. Composed in Combobox, its text is Combobox's, which resets it.
 
 ## TextInput
 
@@ -344,10 +351,11 @@ UniAria's composers also read two things from TextInput's internal `api`:
 - `text()`, the text on screen: the draft, else the value. Autocomplete
   filters by it and exposes it as its `inputValue` state, as Combobox does
   today.
-- `revert()`, which drops the draft and writes the value back at once.
-  NumberField calls it when it refuses an edit and when it undoes a
-  composition; Combobox, through Autocomplete, wherever it drops its draft
-  today (choosing, reverting, settling, a form reset).
+- `revert()`, which drops the draft and has the next flush write the
+  value, never mid-composition. NumberField calls it when it refuses an
+  edit and when it undoes a composition, and puts the caret back itself;
+  Combobox, through Autocomplete, wherever it drops its draft today
+  (choosing, reverting, settling, a form reset).
 
 ### Keyboard, focus and pointer
 
@@ -404,45 +412,51 @@ It has two modes:
   as Combobox does with a Popover ([Open questions](#open-questions) 11).
   `isOpen` says whether the list shows. Autocomplete asks to open and close
   it from the keys, typing, focus and its button, as Combobox does today,
-  and closes it when focus leaves. The composer shows and hides the list
-  (Popover's top layer, or `hidden`), and handles what
-  [Choosing](#choosing) and [Keyboard](#keyboard) leave to it. The element
-  and the documentation show inline mode only.
+  and closes it when focus leaves. The composer maps Autocomplete's `popup`
+  part to the element that holds the list, shows and hides it (Popover's
+  top layer, or `hidden`), and handles what [Choosing](#choosing) and
+  [Keyboard](#keyboard) leave to it. Development warns when popup mode has
+  no popup part. The documentation shows inline mode only, and popup mode's
+  props have no attribute.
 
 `name: 'autocomplete'`; exported as `autocomplete` from
 `@uniaria/core/autocomplete`; the element is `<uni-autocomplete>`.
 
 ### Anatomy
 
-| Part        | Element                    | Attributes UniAria owns                                                                                                                                                                                                                                                                   | Notes                                                                      |
-| ----------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| root        | any; usually `div`         | state attributes                                                                                                                                                                                                                                                                          | Optional. Field's root, around every other part.                           |
-| label       | `label` by default         | Field's                                                                                                                                                                                                                                                                                   | Optional. Names the input and the list.                                    |
-| input       | `input`                    | Combobox's: `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`, Field's control attributes, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `readonly`, `disabled`; TextInput's `value` property; state attributes | `type` is the consumer's.                                                  |
-| button      | `button`                   | Combobox's button attributes                                                                                                                                                                                                                                                              | Optional; popup mode only. Opens and closes the list without taking focus. |
-| scroller    | any                        | Listbox's, and `tabindex="-1"`                                                                                                                                                                                                                                                            | Optional.                                                                  |
-| list        | any; usually `ul` or `div` | Listbox's in virtual focus mode, with `aria-labelledby` = the label (or `labelledBy`) and `tabindex="-1"`                                                                                                                                                                                 |                                                                            |
-| empty       | any                        | Listbox's                                                                                                                                                                                                                                                                                 | Optional. Shown while no option matches.                                   |
-| description | any                        | Field's                                                                                                                                                                                                                                                                                   | Optional.                                                                  |
-| error       | any                        | Field's                                                                                                                                                                                                                                                                                   | Optional.                                                                  |
+| Part        | Element                    | Attributes UniAria owns                                                                                                                                                                                                                                                                                              | Notes                                                                      |
+| ----------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| root        | any; usually `div`         | state attributes                                                                                                                                                                                                                                                                                                     | Optional. Field's root, around every other part.                           |
+| label       | `label` by default         | Field's                                                                                                                                                                                                                                                                                                              | Optional. Names the input and the list.                                    |
+| input       | `input`                    | Combobox's, but not native `required`: `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`, Field's control attributes, `autocomplete="off"`, `autocorrect="off"`, `spellcheck="false"`, `readonly`, `disabled`; TextInput's `value` property; state attributes | `type` is the consumer's.                                                  |
+| button      | `button`                   | Combobox's button attributes                                                                                                                                                                                                                                                                                         | Optional; popup mode only. Opens and closes the list without taking focus. |
+| popup       | any                        | state attributes                                                                                                                                                                                                                                                                                                     | Optional; popup mode only. The element the composer shows the list in.     |
+| scroller    | any                        | Listbox's; inline, `tabindex="-1"`                                                                                                                                                                                                                                                                                   | Optional.                                                                  |
+| list        | any; usually `ul` or `div` | Listbox's in virtual focus mode, with `aria-labelledby` = the label and `labelledBy`; inline, `tabindex="-1"`                                                                                                                                                                                                        |                                                                            |
+| empty       | any                        | Listbox's                                                                                                                                                                                                                                                                                                            | Optional. Shown while no option matches.                                   |
+| description | any                        | Field's                                                                                                                                                                                                                                                                                                              | Optional.                                                                  |
+| error       | any                        | Field's                                                                                                                                                                                                                                                                                                              | Optional.                                                                  |
 
 The item parts are Listbox's: `option`, `optionLabel`, `optionDescription`,
 `optionExtras`, `group` and `groupLabel`. As in Combobox, an option the
 filter leaves out gets `hidden`, and so does a group with no option left.
 
-The list and the scroller take `tabindex="-1"` because Firefox and Chromium
-make a scrolling element with no focusable child a tab stop, and in virtual
-focus mode no option is focusable. An inline list usually scrolls, so Tab
-from the input would land on a list that handles no keys. This is Listbox's
-virtual focus mode, so Combobox's list gets it too
-([Changes to approved specs](#changes-to-approved-specs)).
+Inline, the list and the scroller take `tabindex="-1"` because Firefox and
+Chromium make a scrolling element with no focusable child a tab stop, and
+in virtual focus mode no option is focusable. An inline list usually
+scrolls, so Tab from the input would land on a list that handles no keys.
+Combobox's open list has the same problem, but an approved Combobox
+scenario checks that its list has no `tabindex`, so fixing it there is a
+follow-up with a change to that scenario.
 
 ### Props
 
 From Listbox: `items`, `getKey`, `getTextValue`, `isItemDisabled`,
 `getChildren`, `disabledKeys`, `value`, `selectionMode`, `shouldFocusWrap`,
 `listId` and the virtualization props. Autocomplete fixes the rest, as
-Combobox does: virtual focus on, `shouldFocusOnHover` on, vertical.
+Combobox does: virtual focus on, vertical, and `shouldFocusOnHover` on, but
+inline only while focus is in Autocomplete
+([Focus](#focus-pointer-and-touch)).
 
 From Field: `isDisabled`, `isRequired`, `isInvalid`, `inputId`,
 `labelElementType`, `labelledBy` and `describedBy`.
@@ -460,14 +474,13 @@ Its own:
 | inputValue                | `string`                         | `''`      | yes      | `inputChange` | The input's text.                                                                                                                 |
 | shouldHighlightFirstMatch | `boolean`                        | `false`   | no       | —             | Typing highlights the first match ([The highlight while typing](#the-highlight-while-typing)). Attribute `highlight-first-match`. |
 | hasPopup                  | `boolean`                        | `false`   | no       | —             | Popup mode, for definitions: no attribute.                                                                                        |
-| isOpen                    | `boolean`                        | `false`   | yes      | `openChange`  | Popup mode: whether the list shows. Inline mode ignores it.                                                                       |
+| isOpen                    | `boolean`                        | `false`   | yes      | `openChange`  | Popup mode, no attribute: whether the list shows. Inline mode ignores it.                                                         |
 | popupTrigger              | `'input' \| 'focus' \| 'manual'` | `'input'` | no       | —             | Popup mode, no attribute: Combobox's `popoverTrigger`, which Combobox passes on to it.                                            |
 
 `hasPopup` says the list sits in a popup; it is not `aria-haspopup`, which
 a combobox carries implicitly. `popupTrigger` is Combobox's
-`popoverTrigger` under a name that doesn't assume a Popover. In
-development, a popup-only prop (`isOpen`, `defaultOpen`, `popupTrigger`,
-`buttonLabel`) passed in inline mode warns.
+`popoverTrigger` under a name that doesn't assume a Popover. `buttonLabel`
+has no attribute either, since only popup mode has a button.
 
 The filter's type is `AutocompleteFilter`:
 `(textValue: string, inputValue: string, item: Item) => boolean`, where
@@ -478,14 +491,14 @@ and `ComboboxPopoverTrigger` an alias of it.
 
 ### Events
 
-| Event                | Detail              | When                                                                                                           |
-| -------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `valueChange`        | `readonly string[]` | Listbox's: a press or Enter changed the selection.                                                             |
-| `action`             | `string`            | Listbox's: an option was chosen by a press or Enter, with its key ([Choosing](#choosing)).                     |
-| `inputChange`        | `string`            | The text changed: typing, pasting, an IME commit, or Escape clearing it inline.                                |
-| `openChange`         | `boolean`           | Popup mode: the user opened or closed the list.                                                                |
-| `focusChange`        | `boolean`           | Focus entered or left Autocomplete: the root, or without one the input, the button and the list, taken as one. |
-| `renderedKeysChange` | Listbox's           | Listbox's, when virtualized.                                                                                   |
+| Event                | Detail              | When                                                                                                       |
+| -------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `valueChange`        | `readonly string[]` | Listbox's: a press or Enter changed the selection.                                                         |
+| `action`             | `string`            | Listbox's: an option was chosen by a press or Enter, with its key ([Choosing](#choosing)).                 |
+| `inputChange`        | `string`            | The text changed: typing, pasting, an IME commit, or Escape clearing it inline.                            |
+| `openChange`         | `boolean`           | Popup mode: the user opened or closed the list.                                                            |
+| `focusChange`        | `boolean`           | Focus entered or left Autocomplete: the root, the input, the button, the popup and the list, taken as one. |
+| `renderedKeysChange` | Listbox's           | Listbox's, when virtualized.                                                                               |
 
 ### Public state
 
@@ -532,6 +545,11 @@ transformed text, or a cleared one. Combobox calls `showAll()` wherever its
 text settles today (choosing, reverting, settling), so its behavior doesn't
 change.
 
+Typing is every `input` event on the input. Autocomplete merges its own
+`input` handler after TextInput's, so it reads the text TextInput took, and
+filters, clears the highlight and opens even when the text is the value
+already, as Combobox does today.
+
 With no matches, popup mode behaves as Combobox's: with an empty part the
 list stays open, and without one it closes. Inline, the list stays shown
 with its empty part.
@@ -544,11 +562,15 @@ Resolved questions 2), and ArrowDown highlights. With
 Autocomplete ([Open questions](#open-questions) 10):
 
 - Typing that inserts text (`insertText`, or an IME commit) highlights the
-  selected option when it is shown, else the first enabled shown option.
+  first shown option, in list order, that is selected and enabled, else the
+  first enabled shown option. The highlight isn't focus-visible, and it
+  scrolls into view.
 - Deleting, pasting, undoing and redoing clear the highlight.
-- `aria-activedescendant` follows the highlight 500 ms after the last
-  keystroke, so a screen reader still reads the typed character (React
-  Aria's delay, for NVDA). The highlight itself, its `data-focused` and
+- While typing holds the highlight, the input has no
+  `aria-activedescendant`: it is written 500 ms after the last insertion,
+  so a screen reader still reads the typed character (React Aria's delay,
+  for NVDA). Arrow keys, presses and hover move the highlight and write it
+  at once, ending the wait. The highlight itself, its `data-focused` and
   Enter act at once.
 
 ### Choosing
@@ -577,8 +599,10 @@ prevent them, so the composer can act on them:
   leaving closes the list in popup mode ([Focus](#focus-pointer-and-touch));
   Combobox settles the text then.
 
-Autocomplete ignores a `keydown` that is already prevented, and one during
-an IME composition, as Combobox does.
+Autocomplete ignores a `keydown` that is already prevented, one during an
+IME composition, and one with Ctrl or Meta, as Combobox does. A composer
+that acts on the keys above skips the same ones
+([What a composing definition may use](#what-a-composing-definition-may-use)).
 
 Inline mode differs in three ways:
 
@@ -594,7 +618,9 @@ Inline mode differs in three ways:
 ### ARIA and state attributes per state
 
 The input, button, list and option rows of the Combobox spec's table apply
-as written, and the root, label, description and error rows are Field's.
+as written, except native `required` on the input, which Combobox adds
+itself: inline, the text is no value, and an empty search would block a
+form. The root, label, description and error rows are Field's.
 Inline, the input is always `aria-expanded="true"` and there is no button.
 In multiple mode the list is `aria-multiselectable="true"`, as Listbox's.
 
@@ -619,20 +645,30 @@ From the Combobox spec:
 - **Pointer and touch.** The rules for the input, the button and the
   options, from its Pointer and touch section.
 
-Popup mode: focus leaving Autocomplete closes the list. The Combobox rule
-moves here except settling the text, which stays with Combobox. Combobox's
-own focus-within also counts its popover, and a press outside is
-Popover's.
+Popup mode: focus leaving Autocomplete closes the list, and its
+focus-within counts the popup part, so focus on a control in the popup
+stays inside. The Combobox rule moves here except settling the text, which
+stays with Combobox. Autocomplete reports `focusChange` before it closes,
+so a composer that settles on it acts first, as Combobox does today. The
+window losing focus leaves the input focused and closes nothing. A press
+in the popup, outside a control of its own, keeps focus in the input
+(Combobox's rule, moved); a press outside is Popover's.
 
-Inline mode adds three rules, since nothing closes:
+Inline mode adds four rules, since nothing closes:
 
 - **Leaving.** The highlight clears when focus leaves Autocomplete, as it
   clears on close in popup mode, so no option looks highlighted while focus
   is elsewhere.
-- **Pressing in the list.** A mouse or pen press in the root or the list,
-  outside a control of its own, keeps focus in the input or moves it there
-  (`preventScroll`), as Combobox keeps it on a press in its popup. A touch
-  press doesn't move focus, so the virtual keyboard doesn't open.
+- **Hover** highlights an option only while focus is in Autocomplete; with
+  focus elsewhere, the option gets only `data-hovered`. Otherwise a resting
+  pointer would leave an option for Enter to choose after tabbing in.
+- **Pressing in the list.** A press in the list, the scroller or the empty
+  part, outside a control of its own, has its `mousedown` prevented for
+  every pointer type. A mouse or pen press then moves focus to the input
+  (`preventScroll`); a touch press doesn't, so the virtual keyboard doesn't
+  open. The list and the scroller count as no control, though they carry a
+  `tabindex`. The same goes for the popup in popup mode, which fixes
+  Combobox's virtualized scroller taking focus on a press today.
 - **Tab** passes the list by, since it is `tabindex="-1"`
   ([Anatomy](#anatomy-1)).
 
@@ -729,7 +765,9 @@ The element follows `<uni-combobox>`, in inline mode:
   `highlight-first-match`, `disabled`, `readonly`, `required`, `invalid`,
   `focus-wrap`, `locale`, `labelled-by` and `described-by`.
 - **Properties:** `items`, `filter`, `value`, `defaultValue`,
-  `inputValue`, `defaultInputValue` and `optionCountAnnouncement`.
+  `inputValue`, `defaultInputValue` and `optionCountAnnouncement`. Popup
+  mode's props are properties too, as every prop is, and are for
+  definitions.
 - **Events:** `valuechange`, `action`, `inputchange`, `focuschange` and
   `renderedkeyschange`.
 - **Methods:** `showAll()`. `open()` and `close()` exist, as every action
@@ -753,8 +791,9 @@ NumberField becomes Field, TextInput and two Buttons. It passes its text
 attributes. It keeps everything that is about numbers: parsing, the
 `beforeinput` veto, committing a paste, undoing an invalid composition,
 stepping, the wheel and its form reset. Where it refuses an edit or undoes
-a composition, it calls TextInput's `revert()`, so the refused text leaves
-the screen at once instead of on blur.
+a composition, it calls TextInput's `revert()`. Today an `input` that isn't
+a partial number (autofill, a replacement the veto missed) stays on screen
+until the next write; it now goes at the next flush.
 
 ### Combobox
 
@@ -771,7 +810,7 @@ the screen at once instead of on blur.
 | Popover                                                                                 | Combobox                                                                               |
 | An unset `inputValue` showing the value's text; Selection; what choosing an option does | Combobox                                                                               |
 | Escape reverting while closed; Enter settling with nothing highlighted                  | Combobox                                                                               |
-| Focus leaving: settling                                                                 | Combobox, with its popover counted in its focus-within                                 |
+| Focus leaving: settling                                                                 | Combobox, on Autocomplete's `focusChange`, with the popover mapped to its `popup` part |
 | `hiddenInput`, native `required`, form reset                                            | Combobox                                                                               |
 
 ```ts
@@ -799,25 +838,44 @@ setup(ctx) {
       // Listbox's and Field's props, as given.
       value: props.value.get(),
       onValueChange: (next: readonly string[]) => setValue(next),
-      inputValue: text(),
+      // The text without the draft: the consumer's, else the seed, else
+      // the value's.
+      inputValue: committedText(),
       onInputChange: (next: string) => props.inputValue.set(next),
       hasPopup: true,
       isOpen: props.isOpen.get(),
       onOpenChange: (next: boolean) => props.isOpen.set(next),
       popupTrigger: props.popoverTrigger(),
       onAction: (key: string) => onChosen(key),
+      onFocusChange: (isFocusWithin: boolean) => onFocusChange(isFocusWithin),
     }),
-    { links: [optionTooltipLink] },
+    { parts: { popup: 'popover' }, links: [optionTooltipLink] },
   );
-  // Selection, Escape while closed, Enter with nothing highlighted, focus
-  // leaving, the hidden input and form reset: as today, with the text read
-  // and the draft dropped through `search.api`.
+  // Selection, Escape while closed, Enter with nothing highlighted,
+  // settling as focus leaves, the hidden input and form reset: as today,
+  // with the text read and the draft dropped through `search.api`.
 }
 ```
 
+Combobox reads these from Autocomplete's internal `api`:
+
+| Member          | For                                                                        |
+| --------------- | -------------------------------------------------------------------------- |
+| `text()`        | The text on screen, the draft included: settling, and Escape's check.      |
+| `revertText()`  | Dropping the draft where Combobox drops it today.                          |
+| `isFiltering()` | Whether a value from elsewhere writes its text in, and settling's matches. |
+| `matchesFor()`  | The options a typed text matches, for settling.                            |
+| `collection()`  | Every option, matching or not: the text a value shows, and settling.       |
+| `collator()`    | The exact match settling looks for.                                        |
+
+And its actions: `open()` (as the button opens), `close()` and `showAll()`.
+
 Its props, events, public state, actions, parts and spoken output don't
-change, apart from the filter's third argument and the list's
-`tabindex="-1"`.
+change. Its behavior changes in three places, listed in
+[Changes to approved specs](#changes-to-approved-specs): the filter's
+third argument, a press on a virtualized scroller keeping focus in the
+input, and the window losing focus dropping a controlled draft, since
+TextInput puts a value the consumer hasn't taken back on blur.
 
 ## Runtime changes
 
@@ -836,10 +894,13 @@ owner). Changes 1, 3 and 4 are open questions 6 to 8; change 2 only adds.
      update.
 
    The change: a part with no part of the same name and no mapping is left
-   out, as `null` leaves it out, and development warns once for each,
-   naming the part and the composer. A `null` mapping silences the warning,
-   so UniAria's own composites keep their lists. A mapping that names a
-   part the composer doesn't have still throws.
+   out, as `null` leaves it out. The instance lists such parts, and the DOM
+   binder warns about each once per page in development, keyed on the
+   composer's, the composed definition's and the part's names: the DOM-free
+   runtime can't tell a development build. A `null` mapping silences the
+   warning, so UniAria's own composites keep their lists, and a composer of
+   Autocomplete maps the parts it doesn't render to `null`. A mapping that
+   names a part the composer doesn't have still throws.
 
    Change 1 covers only parts with nowhere to go. A part whose name the
    composer also has still binds to it, which is why `NO_ITEM_PARTS` keeps
@@ -859,8 +920,11 @@ owner). Changes 1, 3 and 4 are open questions 6 to 8; change 2 only adds.
    - Passing a link on hands it over: the composer's own `ctx.link(key)`
      returns `undefined` from then on, so one definition drives a linked
      tooltip, as the items spec has it.
-   - Composing throws when the key isn't among the composer's links (its
-     own, or passed to it) or the composed definition's `links`.
+   - Composing throws unless the key is among both the composer's links
+     (its own, or passed to it) and the composed definition's `links`, so a
+     key passed on once can't be passed again.
+   - A link prop given in the composed definition's props is ignored: the
+     instance's link props are the top level's.
    - A composed definition reads only the links passed to it; any other
      stays `undefined`, as all of them do today.
    - Combobox passes `optionTooltip` on to Autocomplete, which drives it
@@ -868,8 +932,10 @@ owner). Changes 1, 3 and 4 are open questions 6 to 8; change 2 only adds.
      UniAria's internal helpers ([Open questions](#open-questions) 7).
 4. **A composed, controlled bindable doesn't reset.** When the composer
    passes a composed definition's value, `reset()` on that bindable
-   returns the current value and reports nothing, because the composer
-   resets its own ([Who resets a form value](#who-resets-a-form-value)). An
+   returns the current value and changes nothing: no report, no
+   `beforeReport`, and an uncontrolled value it held stays, because the
+   composer resets its own
+   ([Who resets a form value](#who-resets-a-form-value)). An
    uncontrolled bindable inside a composed definition resets as before
    ([Open questions](#open-questions) 8). No composed definition calls
    `reset()` today, so nothing changes for the existing components.
@@ -882,7 +948,8 @@ marked in place as changed on its date (owner):
 - **TextField:** the Summary and Builds on say Field and TextInput, and its
   Value section points to TextInput's. The behavior is the same.
 - **NumberField:** Builds on gains TextInput; a refused edit and an undone
-  composition revert through it.
+  composition revert through it, so an `input` that isn't a partial number
+  goes at the next flush instead of at the next write.
 - **Combobox:**
   - the Summary and Builds on name Autocomplete (Field, TextInput and
     Listbox) and Popover;
@@ -892,14 +959,18 @@ marked in place as changed on its date (owner):
   - `ComboboxFilter` is an alias of `AutocompleteFilter` and gains the
     item argument; `ComboboxPopoverTrigger` is an alias of
     `AutocompletePopupTrigger`;
-  - the list and the scroller are `tabindex="-1"`.
-- **Listbox:** in virtual focus mode the list and the scroller are
-  `tabindex="-1"`; the composers it names in virtual focus mode become
+  - a press on the popover's list or scroller, outside an option, keeps
+    focus in the input, a virtualized scroller's `tabindex` included;
+  - the window losing focus drops a controlled draft the consumer hasn't
+    answered, as TextField does.
+- **Listbox:** the composer it names for virtual focus mode becomes
   Autocomplete, and Combobox through it.
 - **Virtualization:** Autocomplete forwards the virtualization props to
-  its list, as Select and Combobox do.
+  its list, as Select and Combobox do, and its inline scroller is
+  `tabindex="-1"`.
 - **Items:** in Combobox, Autocomplete drives the option tooltip and owns
-  the button that the triggers table lists.
+  the button that the triggers table lists; Option tooltips and New API
+  name Autocomplete.
 - **Styles:** the component table gains Autocomplete.
 - **Root AGENTS.md:**
   - Behavior lives in definitions: Combobox is Autocomplete and Popover;
@@ -910,8 +981,11 @@ marked in place as changed on its date (owner):
     doesn't reset;
   - Packages and Custom elements: TextInput has no element, so "one
     registering entry per component" names the components that have one;
-  - Component workflow, naming: `<Name>Input` is a text control without
-    labelling.
+  - Component workflow: TextInput has no element and no suite of its own;
+    naming: `<Name>Input` is a text control without labelling;
+  - `packages/core/AGENTS.md` and `packages/elements/AGENTS.md`: the
+    `text-input/` and `autocomplete/` folders hold a `spec.md` that points
+    to this spec.
 
 ## Documentation
 
@@ -936,16 +1010,27 @@ marked in place as changed on its date (owner):
 - **`docs/guide/forms.md`**, Reset: Autocomplete resets its text and keeps
   its selection.
 - **`@uniaria/styles`**' Default styles page: Autocomplete.
+- **`docs/components/combobox.mdx`:** the filter's third argument.
+- **Sentences this spec makes wrong:** that every component registers an
+  element or has conformance scenarios (`docs/guide/introduction.md`,
+  `docs/api/index.md`, `docs/contributing/index.md`,
+  `docs/contributing/testing.md`, `docs/guide/accessibility.md`), that
+  Combobox composes Listbox and that a composed definition takes no links
+  (`docs/contributing/architecture.md`, `docs/guide/collections.md`), and
+  the `ctx.use()` and `ctx.link()` JSDoc in `runtime/define.ts`.
 
 ## Implementation order and checks
 
 1. **The runtime changes**, a commit each, with Node tests in `runtime/`.
-2. **TextInput, then TextField on it.** TextField's suite passes unchanged.
+2. **TextInput, then TextField on it.** TextField's suite passes unchanged,
+   and TextInput gets browser tests of its own for what TextField never
+   reaches: uncontrolled, its own reset, standalone markers.
 3. **NumberField on TextInput.** Its suite passes unchanged.
 4. **Autocomplete's conformance scenarios**, in a pull request of their
-   own (Conformance): inline mode, and the real-reader scenarios above.
-   Popup mode is covered by Combobox's suite, since only a composer uses
-   it.
+   own (Conformance): inline mode, and the real-reader scenarios above, at
+   phase 6, so every adapter skips them until the implementation raises
+   its run. Popup mode is covered by Combobox's suite, since only a
+   composer uses it.
 5. **Autocomplete, then Combobox on it.** Combobox's suite passes unchanged
    in every adapter, and so does Autocomplete's.
 6. **The rest:** docs, the styles and the element entry.
@@ -1013,13 +1098,19 @@ The unchanged suites are what catch a difference.
 ## Deviations from the WAI-ARIA pattern
 
 Autocomplete keeps Combobox's deviations, such as Tab not choosing the
-highlighted option (Combobox spec, Resolved questions 7). Inline mode adds
-one. The APG's Escape dismisses a visible popup, and Alt+ArrowUp closes it.
-An inline list can't hide, so Escape clears the text instead, and then goes
-to the page; Alt+ArrowUp does nothing. A screen reader announces the input
-as expanded, so its user may expect Escape to collapse the list and loses
-the text instead. UI Kit's FilterListBox and React Aria's search field in
-its Autocomplete clear on Escape too.
+highlighted option (Combobox spec, Resolved questions 7). It adds three:
+
+- **Always expanded, inline.** The APG's popup is hidden by default. An
+  inline list is always shown, so the input is always `aria-expanded`.
+- **Escape, inline.** The APG's Escape dismisses a visible popup, and
+  Alt+ArrowUp closes it. An inline list can't hide, so Escape clears the
+  text instead, and then goes to the page; Alt+ArrowUp does nothing. A
+  screen reader announces the input as expanded, so its user may expect
+  Escape to collapse the list and loses the text instead. UI Kit's
+  FilterListBox and React Aria's search field in its Autocomplete clear on
+  Escape too.
+- **Multiple selection.** The APG's combobox has no keys for it. Enter and
+  a press toggle an option, and Space types (Choosing).
 
 ## Open questions
 
@@ -1081,9 +1172,9 @@ its Autocomplete clear on Escape too.
 6. **A part with nowhere to go.**
    - (a) It is left out, with a development warning that a `null` mapping
      silences ([Runtime changes](#runtime-changes) 1).
-   - (b) Left out silently. A dropped part that ARIA points at (an
-     Autocomplete `list` mapped by mistake to nothing) then fails without a
-     word.
+   - (b) Left out silently. A composer with no part of a needed name (an
+     Autocomplete `list` its composer calls `listbox`) then leaves the
+     input's `aria-controls` pointing at nothing without a word.
    - (c) Composing keeps throwing, so every new part on a control is a
      breaking change for definitions that compose it.
 
@@ -1134,9 +1225,10 @@ its Autocomplete clear on Escape too.
     Recommended: (a).
 
 11. **Who uses popup mode.**
-    - (a) Definitions only: `hasPopup` and `popupTrigger` have no
-      attribute, and the element and the docs show inline mode. The
-      composer shows and hides the list.
+    - (a) Definitions only: popup mode's props have no attribute, and the
+      docs show inline mode. The element still has them as properties, as
+      every prop is one, and development warns when popup mode has no
+      popup part. The composer shows and hides the list.
     - (b) Everyone: Autocomplete hides the list itself while closed
       (`hidden`), and `<uni-autocomplete has-popup>` works without a
       Popover. It would clash with a Popover's exit animation, and a list
