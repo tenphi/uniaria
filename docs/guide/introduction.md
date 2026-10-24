@@ -16,9 +16,9 @@ _definition_. Three small adapters bind every definition to a framework:
   returns props to spread onto your elements.
 - [`@uniaria/vue`](../api/vue.md): the same composable, with props to bind
   with `v-bind`.
-- [`@uniaria/elements`](../api/elements.md): every component is also a
-  light-DOM custom element, such as `<uni-button>`, that wraps your markup. It
-  works in plain HTML and in any framework that renders HTML: Svelte,
+- [`@uniaria/elements`](../api/elements.md): the components are also
+  light-DOM custom elements, such as `<uni-button>`, that wrap your markup.
+  They work in plain HTML and in any framework that renders HTML: Svelte,
   Angular, server templates.
 
 Every adapter runs the same definition, and the same conformance tests check
@@ -75,10 +75,12 @@ locale-aware numbers, and TanStack Virtual, bundled into the optional
 
 ## Components
 
-The first release covers Button (with link mode), ToggleButton, Field,
-TextField (inputs and text areas), NumberField, Checkbox, CheckboxGroup,
-Switch, RadioGroup, Dialog, Popover, Tooltip, Listbox, Select and Combobox.
-See [Components](../components/index.mdx).
+UniAria covers Button (with link mode), ToggleButton, Field, TextField
+(inputs and text areas), NumberField, Checkbox, CheckboxGroup, Switch,
+RadioGroup, Dialog, Popover, Tooltip, Listbox, Autocomplete, Select and
+Combobox. TextInput, the input inside the text fields, has no element and is
+for your own definitions. See [Components](../components/index.mdx) and
+[Custom components](./custom-components.md#build-on-the-controls).
 
 ## Status
 

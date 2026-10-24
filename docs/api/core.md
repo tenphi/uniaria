@@ -277,6 +277,11 @@ control's, and returns the value it goes back to. Call it from a form's
   component mounted with.
 - Either way, the change callback gets the value it goes back to, unless
   that is the value now.
+- **Composed and controlled**, in a definition composed with
+  [`ctx.use()`](#composition) whose composer passes the value, `reset()`
+  changes and reports nothing and returns the value now: the value is the
+  composer's, and the composer resets its own. An uncontrolled bindable in a
+  composed definition resets as above.
 
 | Option         | Type                      | Description                                                                                                                                                           |
 | -------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -324,8 +329,10 @@ element changes, rather than reading the element once in `effect()`.
 
 `ctx.use(definition, props, options?)` runs another definition's `setup()` on
 this instance: the same store, lifecycle and elements. This is how
-ToggleButton is Button plus selection, and Select is Listbox, Popover and
-Field.
+ToggleButton is Button plus selection, TextField is Field and TextInput,
+Select is Listbox, Popover and Field, and Combobox is Autocomplete and
+Popover. [Build on the controls](../guide/custom-components.md#build-on-the-controls)
+composes TextInput and Autocomplete in definitions of your own.
 
 ```ts
 setup(ctx) {
@@ -357,12 +364,32 @@ connect: ({ props, api }) => {
 - The composed definition renders on this component's parts of the same
   name. `options.parts` maps them instead: `{ parts: { root: 'trigger' } }`.
   `null` leaves a part out; it still gets an id, and the composed definition
-  sees no element for it. A mapping to a part this component doesn't have
+  sees no element for it. A part with no part of its name here and no
+  mapping is left out too, and the DOM binder warns about it once in
+  development; map it to `null` to leave it out on purpose. An unmapped
+  part whose name this component also has binds to it, wanted or not. A
+  mapping to a part this component doesn't have throws.
+- `options.links` hands links this component takes to the composed
+  definition, which must take them too: `{ links: [optionTooltipLink] }`.
+  Its `ctx.link()` then reads them, and this component's returns
+  `undefined` for them, so one definition drives the linked instance. A
+  link can be passed on once; passing one that either side doesn't take
   throws.
-- It returns `{ api, state(), connect(), connectItem(part, key) }`. Fold
-  `state()` into `expose()` and `connect()` into `connect()`. Its part props
-  come keyed by its own part names, without the part markers.
+- It returns `{ api, actions, state(), connect(), connectItem(part, key) }`.
+  Fold `state()` into `expose()` and `connect()` into `connect()`. Its part
+  props come keyed by its own part names, without the part markers.
+  `actions` are its public [actions](#actions), each run in a batch, as on
+  an instance.
+- Item parts aren't mapped. A definition that composes one with item parts
+  declares those it renders under the same names in its own `itemParts`
+  and returns the composed `connectItem()` for them.
 - Call it during `setup()` only.
+
+A definition may rely on what the composed component documents: the props
+it passes and the events they report back, `state()`, `connect()` and
+`connectItem()`, `actions`, and the names of its parts and links. `api` is
+internal: UniAria's own components, released in one version, read each
+other's, and it can change in any version.
 
 ### Owners and links
 
@@ -407,8 +434,10 @@ the attribute, an element links to the UniAria host it sits in directly. A
 key can name another attribute (`attribute: 'option-tooltip'`) and come only
 from it (`isAttributeOnly: true`): a Select inside a `<uni-tooltip>` takes
 that tooltip for its trigger, and its options' tooltip only by id.
-`ctx.link()` is always `undefined` in a composed definition: links belong to
-the instance.
+Links belong to the instance: in a composed definition, `ctx.link()` reads
+only the links its composer passed on with `ctx.use()`'s
+[`links`](#composition), as Combobox passes its options' tooltip to
+Autocomplete, and is `undefined` for any other.
 
 How each adapter resolves owners and links:
 [React](./react.md#owners-and-links), [custom elements](./elements.md#owners-and-links).
@@ -503,6 +532,9 @@ Consumers call them as `instance.actions.open()`, as
 [`actions.open()` on the React handle](./react.md#the-handle), and as
 [`element.open()` on the custom element](./elements.md#actions). The overlays
 (Dialog, Popover, Tooltip, Select and Combobox) list `open` and `close`.
+Autocomplete lists `showAll`, which shows every option again until the user
+types, and `open` and `close` too, which do nothing while its list is always
+shown.
 
 - **Only listed members are public.** `ActionsOf<D>` picks them from the
   setup result's type; everything else stays internal.
@@ -606,6 +638,7 @@ browser. See [Testing](./testing.md).
 | `BindableKeyOf<D>`                              | The keys of a definition's bindables, which `getValue()` takes.                                            |
 | `ResetOptions<T>`                               | The options of a bindable's [`reset()`](#resetting-a-bindable).                                            |
 | `LinkKey<Name, Api>`, `Linked<Api>`, `Owned<D>` | A link key, and what `ctx.link()` and `ctx.owner()` return.                                                |
+| `Composed<D>`, `ComposeOptions`, `LinkOf<D>`    | What [`ctx.use()`](#composition) returns and takes, and the link keys a definition takes.                  |
 
 Each component subpath also exports `<Name>Props` and `<Name>State`, which are
 `PropsOf` and `StateOf` of its definition.

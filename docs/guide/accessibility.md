@@ -65,7 +65,8 @@ to the highlighted option by its key.
 ## How it is tested
 
 Each component has conformance scenarios, written from its approved
-specification before its implementation. The same scenarios run:
+specification before its implementation; TextInput, the input inside the
+text fields, is checked through TextField's. The same scenarios run:
 
 | Run                   | When        | What                                                                                                                                                             |
 | --------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |

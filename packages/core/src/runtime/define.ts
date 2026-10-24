@@ -124,7 +124,9 @@ export interface Bindable<T> {
    * default set later still applies. Controlled, it only asks for
    * `default<Name>`, or without one `options.fallback`. Either way the
    * change callback gets the value it goes back to, unless that is the
-   * value now.
+   * value now. In a definition composed with `ctx.use()`, a controlled value
+   * is the composer's, which resets it, so this returns the value now and
+   * does nothing (composition spec, Runtime changes 4).
    */
   reset(options?: ResetOptions<T>): T;
 }
@@ -271,8 +273,9 @@ export interface SetupContext<
    * `setup()` runs here, on this instance's store and lifecycle, and reads
    * its props from `props()` on every access, so pass this component's props
    * and callbacks through. Its parts are this component's parts of the same
-   * name, unless `options.parts` maps them. Call it during `setup()`, and
-   * fold what it returns into `expose()` and `connect()`.
+   * name, unless `options.parts` maps them; one with neither is left out.
+   * `options.links` hands it links. Call it during `setup()`, and fold what
+   * it returns into `expose()` and `connect()`.
    */
   use<D extends AnyDefinition>(
     definition: D,
@@ -306,7 +309,10 @@ export interface ComposeOptions<
   /**
    * This component's part for each of the composed one's; same name by
    * default. `null` leaves a part out: nothing renders it, and the composed
-   * definition sees no element for it.
+   * definition sees no element for it. A part with no mapping and no part of
+   * its name is left out too, and the DOM binder warns about it in
+   * development (composition spec, Runtime changes 1); a mapping to a part
+   * this component lacks throws.
    */
   readonly parts?: Readonly<Partial<Record<Inner, Outer | null>>>;
   /**

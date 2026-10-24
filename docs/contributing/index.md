@@ -42,9 +42,9 @@ links to the rules rather than repeating each one. If a page here and an
 | `packages/core`     | `@uniaria/core`: the runtime, `dom/` (the binder, interactions, overlays, positioning), collections, the virtualizer and one subpath per component            | Yes                  |
 | `packages/react`    | `@uniaria/react`: `useBehavior`, `useBehaviorState` and `OwnerProvider`                                                                                       | Yes                  |
 | `packages/vue`      | `@uniaria/vue`: `useBehavior` and `useBehaviorState`; its spec in `spec.md`                                                                                   | Yes                  |
-| `packages/elements` | `@uniaria/elements`: `defineElement` and one registering entry per component                                                                                  | Yes                  |
+| `packages/elements` | `@uniaria/elements`: `defineElement` and one registering entry per component element                                                                          | Yes                  |
 | `packages/testing`  | `@uniaria/testing`: the mount contract, the conformance runner, real input and screen-reader helpers                                                          | Yes, for development |
-| `conformance`       | `@uniaria/conformance`: the scenarios every adapter must pass, one folder per component                                                                       | No                   |
+| `conformance`       | `@uniaria/conformance`: the scenarios every adapter must pass, one folder per component with a suite                                                          | No                   |
 | `apps/docs`         | This site, built with Cookbook                                                                                                                                | No                   |
 | `docs`              | The site's pages. `docs/_internal/` holds the component spec template and `interaction-layer.md`, the catalogue of what `dom/` must do; it is never published | No                   |
 | `scripts`           | Repository checks CI runs, and the script that fetches the reference repos                                                                                    | No                   |

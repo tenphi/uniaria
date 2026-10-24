@@ -5,8 +5,9 @@ description: Node and browser tests, conformance scenarios, render counts, and s
 
 Behavior is tested in real browsers, not in a simulated DOM. Logic that
 needs no DOM is tested in Node. Every component has conformance scenarios
-that every adapter must pass, and they check what a screen reader says as
-well as what the DOM holds.
+that every adapter must pass (TextInput, which has no element, through
+TextField's), and they check what a screen reader says as well as what the
+DOM holds.
 
 The rules are in the
 [root `AGENTS.md`](https://github.com/tenphi/uniaria/blob/main/AGENTS.md)

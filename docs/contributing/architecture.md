@@ -196,9 +196,10 @@ uncontrolled otherwise. `setup()` sees it as `get()`, `set(value)`,
 - **Form reset** goes through `reset()` in every form component, as a native
   reset does: an uncontrolled value forgets its changes and follows
   `default<Name>` again; a controlled one asks for `default<Name>`, or
-  without one the value it mounted with. Never put back a value captured at
-  mount on an uncontrolled bindable: a custom element's default often
-  arrives after it connects.
+  without one the value it mounted with, except in a composed definition
+  ([Composition](#composition)). Never put back a value captured at mount
+  on an uncontrolled bindable: a custom element's default often arrives
+  after it connects.
 - The runtime reads props only through getters and never keeps a copy.
 
 ### `setProps()` and `sync()`
@@ -408,8 +409,9 @@ instance, and finds its owner by `inject()` during setup.
 `packages/elements/src/define-element.ts` creates the element class inside the
 call, so the package imports in Node, and registers `<prefix>-<name>` (`uni-`
 by default). It returns the existing class when the name is already defined,
-and `undefined` where there is no `customElements`. Each component has a
-registering entry, `@uniaria/elements/<name>`.
+and `undefined` where there is no `customElements`. Each component but
+TextInput, which only definitions compose, has a registering entry,
+`@uniaria/elements/<name>`.
 
 - **Props in through properties and attributes.** There is one property per
   prop, plus `default<Name>` for each bindable. A plain prop also has an
@@ -445,16 +447,38 @@ current instance. The composed definition:
   composing definition passes its own props and callbacks through, and
   receives the composed one's events through those callbacks;
 - renders on the composing component's parts of the same name, or as
-  `options.parts` maps them (`null` leaves a part out);
-- returns `api`, `state()`, `connect()` and `connectItem()`, which the
-  composing definition folds into its own `expose()` and `connect()`.
+  `options.parts` maps them (`null` leaves a part out). A part with neither
+  is left out too, and the binder warns about it once per page in
+  development, since the DOM-free runtime can't tell a development build.
+  So a control that gains an optional part doesn't break the definitions
+  that compose it;
+- reads through `ctx.link()` only the links the composing definition hands
+  it in `options.links`, which the composing definition then no longer
+  reads, so one definition drives a linked instance;
+- returns `api`, `actions`, `state()`, `connect()` and `connectItem()`,
+  which the composing definition folds into its own `expose()` and
+  `connect()`.
 
-That is how there is exactly one implementation of each behavior.
-ToggleButton is Button plus a bindable `isSelected`. Select composes Field,
-Listbox, Popover and a Button trigger; Combobox composes the same Listbox and
-Popover around an input. A composed definition never takes links:
-`ctx.link()` returns `undefined` inside it, since links belong to the
-instance.
+A composed definition's bindable that the composing definition controls
+ignores `reset()`: the value is the composing definition's, which resets
+its own on a form reset.
+
+That is how there is exactly one implementation of each behavior, at two
+levels. Controls are behaviors for one widget: Button, ToggleButton,
+TextInput, Listbox, Autocomplete, Popover and Dialog. Fields put Field
+around a control and hold a form value. TextField is Field and TextInput,
+NumberField adds two Buttons to them, Select composes Field, Listbox,
+Popover and a Button trigger, and Combobox is Autocomplete (Field,
+TextInput and Listbox) and Popover. A control is labelled by one Field:
+TextInput has none of its own, Listbox and Autocomplete carry Field's
+parts as optional parts, and a composite maps them rather than composing a
+second Field.
+
+`api` is internal. UniAria's components read each other's, which is safe
+because they ship in one version. A definition outside UniAria relies only
+on the props it passes and the events they report, `state()`, `connect()`,
+`connectItem()`, `actions`, and part and link names
+([Custom components](../guide/custom-components.md#build-on-the-controls)).
 
 ## Owners and links
 

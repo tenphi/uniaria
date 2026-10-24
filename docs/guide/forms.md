@@ -73,6 +73,7 @@ and links the group's error to each.
 | Select        | The selected keys, from an optional `hiddenSelect` part: a hidden native `<select>` that also takes autofill. |
 | Combobox      | The selected key (or the custom text), from an optional `hiddenInput` part.                                   |
 | Listbox       | Nothing: a listbox has no native form value. Read its `value` state.                                          |
+| Autocomplete  | The input's text, under its own `name` if you give it one. The selection isn't submitted.                     |
 
 Put `name`, `form` and `autocomplete` on those parts yourself; UniAria owns the
 value. A checkbox or switch disabled with `isFocusableWhenDisabled` stays out of
@@ -80,7 +81,8 @@ the form's data, as a natively disabled one does.
 
 Enter submits a form natively from a text input (a text area adds a line), a
 number field (after committing the typed number), a checkbox, a switch, a
-radio and a combo box (after settling its text), as it would without UniAria.
+radio, a combo box (after settling its text) and an autocomplete with no
+option highlighted, as it would without UniAria.
 
 ## Reset
 
@@ -93,6 +95,10 @@ connected, and so does one set after the reset, until the next change. It
 reports the change. A controlled control reports `default<Value>`, or
 without one the value it started with, through its change event, and waits
 for you. A `reset` listener that calls `preventDefault()` cancels this.
+
+Autocomplete resets its text the same way, to `defaultInputValue`, since a
+form submits the input's text if you name it. It keeps its selection, as
+Listbox does: a list has no form value.
 
 ## Before JavaScript runs
 
