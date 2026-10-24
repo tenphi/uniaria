@@ -545,13 +545,18 @@ async function typeText(keyboard: KeyboardInput, text: string): Promise<void> {
   for (const character of text) await keyboard.press(character);
 }
 
-/** Focuses a text control with the caret at its end. */
+/**
+ * Focuses a text control with the caret at its end. Not with End, which
+ * moves no caret in WebKit on macOS.
+ */
 async function focusEnd(
-  keyboard: KeyboardInput,
+  _keyboard: KeyboardInput,
   control: HTMLElement,
 ): Promise<void> {
   control.focus();
-  await keyboard.press('End');
+  const input = control as HTMLInputElement;
+  input.setSelectionRange(input.value.length, input.value.length);
+  await Promise.resolve();
 }
 
 /**
@@ -761,9 +766,14 @@ export const formConformance = defineConformance<FormProps, FormState>(
           controlOf(mounted, 'email').focus();
           await keyboard.tab();
           await expect.poll(() => statusOf(mounted, 'email')).toBe('invalid');
+          // The change that fixes the error checks; later ones uncheck it.
           controlOf(mounted, 'email').focus();
-          await typeText(keyboard, 'jane');
+          await typeText(keyboard, 'j');
           await expect.poll(() => statusOf(mounted, 'email')).toBe('valid');
+          await typeText(keyboard, 'ane');
+          await expect
+            .poll(() => statusOf(mounted, 'email'))
+            .toBe('unvalidated');
           expect(mounted.renderCount()).toBe(renders);
         },
         PHASE,

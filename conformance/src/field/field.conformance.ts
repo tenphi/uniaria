@@ -362,14 +362,24 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
       );
 
       scenario(
-        'public state is the three props and whether the error is shown',
+        'public state is the three props, whether the error is shown, and no binding outside a form',
         async ({ mount }) => {
           const mounted = await mount({ template: email() });
+          // A field outside a form has no binding (Form spec, Public state).
+          const unbound = {
+            value: undefined,
+            errors: [],
+            status: 'unvalidated',
+            isTouched: false,
+            isDirty: false,
+            isBound: false,
+          };
           expect(mounted.state()).toEqual({
             isInvalid: false,
             isRequired: false,
             isDisabled: false,
             isErrorShown: false,
+            ...unbound,
           });
 
           await mounted.setProps({ isInvalid: true, isRequired: true });
@@ -378,6 +388,7 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
             isRequired: true,
             isDisabled: false,
             isErrorShown: true,
+            ...unbound,
           });
 
           await mounted.setProps({ isDisabled: true });
@@ -386,6 +397,7 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
             isRequired: true,
             isDisabled: true,
             isErrorShown: false,
+            ...unbound,
           });
         },
         PHASE,
