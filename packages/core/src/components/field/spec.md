@@ -201,7 +201,7 @@ CheckboxGroup's spec decides whether that is enough.
 
 ```tsx
 // React, around a native input
-const email = useComponent(field, { isInvalid: !!error, isRequired: true });
+const email = useBehavior(field, { isInvalid: !!error, isRequired: true });
 return (
   <div {...email.parts.root}>
     <label {...email.parts.label}>Email</label>

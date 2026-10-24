@@ -29,7 +29,7 @@ import {
 } from '../../dom';
 import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, itemId, prop } from '../../runtime';
+import { bindable, defineBehavior, event, itemId, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
 import { listbox, optionTooltipSource } from '../listbox/listbox';
@@ -98,7 +98,7 @@ function contains(text: string, query: string, collator: Intl.Collator) {
   return false;
 }
 
-export const combobox = defineComponent({
+export const combobox = defineBehavior({
   name: 'combobox',
   parts: [
     'root',

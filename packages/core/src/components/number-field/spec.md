@@ -347,7 +347,7 @@ to these tokens. UniAria sets no look.
 | `data-element`                                                                                                          | every other part                                | Which part an element is.                                  |
 | `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled`, `data-readonly`, `data-invalid`, `data-required` | root, wrapper, label, input, description, error | The field's state, as TextField's.                         |
 | `data-pressed`, `data-hovered`, `data-focus-visible`, `data-disabled`                                                   | increment, decrement                            | Button's own; `data-disabled` while the button can't step. |
-| `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useComponentState`)              | The same, for a framework's own bindings.                  |
+| `value`, `canIncrement`, `canDecrement`, `isFocused`, `isFocusVisible`, `isHovered`, `isInvalid`, …                     | public state (`useBehaviorState`)               | The same, for a framework's own bindings.                  |
 
 ## Expected spoken output
 
@@ -377,7 +377,7 @@ formatted value needs `aria-valuetext` (`spinbutton, Price, current value
 
 ```tsx
 // React
-const quantity = useComponent(numberField, {
+const quantity = useBehavior(numberField, {
   minValue: 0,
   maxValue: 99,
   locale,

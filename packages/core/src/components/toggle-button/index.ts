@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/toggle-button` — the ToggleButton definition. Render it with
- * `useComponent(toggleButton, props)` from `@uniaria/react` or the
+ * `useBehavior(toggleButton, props)` from `@uniaria/react` or the
  * `<uni-toggle-button>` element from `@uniaria/elements/toggle-button`.
  */
 

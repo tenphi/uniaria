@@ -1,7 +1,7 @@
 # @uniaria/elements
 
 Light-DOM custom elements for UniAria. Each element wraps your markup and binds
-a component definition from
+a behavior definition from
 [`@uniaria/core`](https://www.npmjs.com/package/@uniaria/core) to it, with no
 shadow root: your elements stay yours, styled by your CSS. For plain HTML,
 server templates and any framework that renders HTML.

@@ -110,7 +110,7 @@ on the host, with the press event in `detail`.
 
 ## Public state
 
-What `expose()` returns. Selectors (`useComponentState`) read it, so it is
+What `expose()` returns. Selectors (`useBehaviorState`) read it, so it is
 public API: adding a field is a feature, changing one is a breaking change.
 
 | Field          | Type      | Meaning                                                                                                             |
@@ -250,23 +250,23 @@ Changed on 2026-10-22 (owner): the last two rows, from the items spec.
 
 ```tsx
 // React
-const save = useComponent(button, {
+const save = useBehavior(button, {
   onPress: submit,
   isDisabled: isSaving,
   isFocusableWhenDisabled: true,
 });
-const isPressed = useComponentState(save, (s) => s.isPressed); // only if the render needs it
+const isPressed = useBehaviorState(save, (s) => s.isPressed); // only if the render needs it
 return <button {...save.parts.root}>Save</button>;
 
 // Link mode: same component, same look, link semantics
-const docs = useComponent(button, { href: '/docs' });
+const docs = useBehavior(button, { href: '/docs' });
 return <a {...docs.parts.root}>Docs</a>; // or the router's link component
 ```
 
 ```tsx
 // A label part, and a frame with extras (the items spec)
-const fruit = useComponent(button, {});
-const clear = useComponent(button, { onPress: clearFruit });
+const fruit = useBehavior(button, {});
+const clear = useBehavior(button, { onPress: clearFruit });
 return (
   <div {...fruit.parts.frame}>
     <button {...fruit.parts.root}>

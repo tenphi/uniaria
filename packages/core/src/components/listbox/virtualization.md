@@ -298,7 +298,7 @@ gate 5.
 import { virtualizer } from '@uniaria/core/virtual';
 
 function Users({ users }: { users: readonly User[] }) {
-  const list = useComponent(listbox, {
+  const list = useBehavior(listbox, {
     items: users,
     virtualizer,
     itemSize: 32,
@@ -315,8 +315,8 @@ function Users({ users }: { users: readonly User[] }) {
   );
 }
 
-function UserRows({ list }: { list: ComponentHandle<typeof listbox> }) {
-  const keys = useComponentState(list, (state) => state.renderedKeys);
+function UserRows({ list }: { list: BehaviorHandle<typeof listbox> }) {
+  const keys = useBehaviorState(list, (state) => state.renderedKeys);
   return keys.map((key) => (
     <div key={key} {...list.getItemProps('option', key)}>
       {byKey.get(key)!.name}

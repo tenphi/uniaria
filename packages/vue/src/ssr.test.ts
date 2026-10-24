@@ -15,8 +15,8 @@ import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { describe, expect, it } from 'vitest';
 
-import { useComponent } from './use-component';
-import { useComponentState } from './use-component-state';
+import { useBehavior } from './use-behavior';
+import { useBehaviorState } from './use-behavior-state';
 
 const html = (component: Component, props?: Record<string, unknown>) =>
   renderToString(createSSRApp(component, props));
@@ -24,11 +24,11 @@ const html = (component: Component, props?: Record<string, unknown>) =>
 const Docs = defineComponent({
   props: { isDisabled: Boolean },
   setup(props) {
-    const ui = useComponent(button, () => ({
+    const ui = useBehavior(button, () => ({
       href: '/docs',
       isDisabled: props.isDisabled,
     }));
-    const isUnavailable = useComponentState(ui, (state) => state.isDisabled);
+    const isUnavailable = useBehaviorState(ui, (state) => state.isDisabled);
     return () =>
       h(
         'a',
@@ -58,7 +58,7 @@ describe('server rendering without a DOM', () => {
 });
 
 const Email = defineComponent(() => {
-  const ui = useComponent(field, { isInvalid: true, controlId: 'email' });
+  const ui = useBehavior(field, { isInvalid: true, controlId: 'email' });
   return () =>
     h('div', ui.parts.root, [
       h('label', ui.parts.label, 'Email'),
@@ -80,7 +80,7 @@ describe('Field on the server', () => {
 });
 
 const Name = defineComponent(() => {
-  const ui = useComponent(textField, { defaultValue: 'Jane', inputId: 'name' });
+  const ui = useBehavior(textField, { defaultValue: 'Jane', inputId: 'name' });
   return () =>
     h('div', ui.parts.root, [
       h('label', ui.parts.label, 'Name'),
@@ -98,7 +98,7 @@ describe('TextField on the server', () => {
 });
 
 const Terms = defineComponent(() => {
-  const ui = useComponent(checkbox, {
+  const ui = useBehavior(checkbox, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -122,7 +122,7 @@ describe('Checkbox on the server', () => {
 });
 
 const Wifi = defineComponent(() => {
-  const ui = useComponent(toggleSwitch, {
+  const ui = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
   });
@@ -148,7 +148,7 @@ describe('Switch on the server', () => {
 const PlanOption = defineComponent({
   props: { value: { type: String, required: true } },
   setup(props, { slots }) {
-    const ui = useComponent(radio, () => ({
+    const ui = useBehavior(radio, () => ({
       value: props.value,
       labelElementType: 'span',
     }));
@@ -161,7 +161,7 @@ const PlanOption = defineComponent({
 });
 
 const Plan = defineComponent(() => {
-  const ui = useComponent(radioGroup, { defaultValue: 'pro', name: 'plan' });
+  const ui = useBehavior(radioGroup, { defaultValue: 'pro', name: 'plan' });
   return () =>
     h('div', ui.parts.root, [
       h('span', ui.parts.label, 'Plan'),
@@ -188,7 +188,7 @@ describe('RadioGroup on the server', () => {
 });
 
 const Confirm = defineComponent(() => {
-  const ui = useComponent(dialog, { defaultOpen: true });
+  const ui = useBehavior(dialog, { defaultOpen: true });
   return () => [
     h('button', ui.parts.trigger, 'Delete file'),
     h('dialog', ui.parts.root, [
@@ -212,7 +212,7 @@ describe('Dialog on the server', () => {
 });
 
 const SizePicker = defineComponent(() => {
-  const ui = useComponent(popover, {});
+  const ui = useBehavior(popover, {});
   return () => [
     h('button', ui.parts.trigger, 'Size'),
     h('div', ui.parts.root, [h('input', { 'aria-label': 'Width' })]),
@@ -258,7 +258,7 @@ const options = (ui: Handle) =>
   );
 
 const FruitList = defineComponent(() => {
-  const ui = useComponent(listbox, {
+  const ui = useBehavior(listbox, {
     items: FRUIT,
     defaultValue: ['banana'],
     listId: 'fruit',
@@ -295,7 +295,7 @@ describe('Listbox on the server', () => {
 });
 
 const FruitSelect = defineComponent(() => {
-  const ui = useComponent(select, {
+  const ui = useBehavior(select, {
     items: FRUIT,
     defaultValue: ['banana'],
     triggerId: 'pick',
@@ -332,7 +332,7 @@ describe('Select on the server', () => {
 });
 
 const FruitCombobox = defineComponent(() => {
-  const ui = useComponent(combobox, {
+  const ui = useBehavior(combobox, {
     items: FRUIT,
     defaultValue: ['banana'],
     inputId: 'pick',

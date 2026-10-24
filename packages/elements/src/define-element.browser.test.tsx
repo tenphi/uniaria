@@ -1,4 +1,4 @@
-import { bindable, defineComponent, prop } from '@uniaria/core';
+import { bindable, defineBehavior, prop } from '@uniaria/core';
 import type { AnyDefinition, LinkKey } from '@uniaria/core';
 import type { combobox } from '@uniaria/core/combobox';
 import type { dialog } from '@uniaria/core/dialog';
@@ -38,7 +38,7 @@ function hostedBy(host: Element, part: string): unknown {
 }
 
 /** A disclosure with a bindable and props of every attribute type. */
-const disclosure = defineComponent({
+const disclosure = defineBehavior({
   name: 'test-disclosure',
   parts: ['trigger', 'panel'],
   props: {
@@ -296,7 +296,7 @@ describe('defineElement', () => {
     });
 
     it('keeps a bindable property set before upgrade controlling the value', () => {
-      const late = defineComponent({
+      const late = defineBehavior({
         name: 'test-late-bindable',
         parts: ['root'],
         props: { isOn: bindable(false) },
@@ -344,7 +344,7 @@ describe('defineElement', () => {
   });
 
   it('re-applies properties set before the element was defined', () => {
-    const late = defineComponent({
+    const late = defineBehavior({
       name: 'test-late',
       parts: ['root'],
       props: { delay: prop(0) },
@@ -387,7 +387,7 @@ describe('defineElement', () => {
   });
 
   it('leaves the parts inside a nested UniAria element of another kind to it', () => {
-    const wrapper = defineComponent({
+    const wrapper = defineBehavior({
       name: 'test-wrapper',
       parts: ['trigger'],
       props: {},
@@ -428,7 +428,7 @@ describe('defineElement', () => {
     expect(host.instance.element('trigger')).toBe(inner);
 
     defineElement(
-      defineComponent({
+      defineBehavior({
         name: 'test-late-wrapper',
         parts: ['trigger'],
         props: {},
@@ -460,7 +460,7 @@ describe('defineElement', () => {
     expect(inner.hasAttribute('hidden')).toBe(true);
 
     defineElement(
-      defineComponent({
+      defineBehavior({
         name: 'test-late-panel',
         parts: ['panel'],
         props: {},
@@ -521,7 +521,7 @@ describe('defineElement', () => {
   });
 
   it('adopts a live property into a bindable default before upgrade', () => {
-    const live = defineComponent({
+    const live = defineBehavior({
       name: 'test-live',
       parts: ['input'],
       props: {
@@ -567,7 +567,7 @@ describe('defineElement', () => {
   });
 
   it('refuses actions that would shadow element members', () => {
-    const shadowing = defineComponent({
+    const shadowing = defineBehavior({
       name: 'test-shadowing-action',
       parts: ['root'],
       props: {},
@@ -582,7 +582,7 @@ describe('defineElement', () => {
   });
 
   it('refuses props that would shadow element properties', () => {
-    const shadowing = defineComponent({
+    const shadowing = defineBehavior({
       name: 'test-shadowing',
       parts: ['root'],
       props: { hidden: prop(false) },
@@ -595,7 +595,7 @@ describe('defineElement', () => {
 });
 
 /** A root and a trigger, each writing an attribute that shows it attached. */
-const marked = defineComponent({
+const marked = defineBehavior({
   name: 'test-marked',
   parts: ['root', 'trigger'],
   props: {},
@@ -612,7 +612,7 @@ type Marked = UniElement<typeof marked>;
 defineElement(marked);
 
 /** An overlay whose trigger sits outside its root. */
-const overlay = defineComponent({
+const overlay = defineBehavior({
   name: 'test-overlay',
   parts: ['trigger', 'root', 'title'],
   outsideParts: ['trigger'],
@@ -749,7 +749,7 @@ describe('part markers', () => {
 });
 
 /** Item parts keyed by data-key, with items read from the markup. */
-const rows = defineComponent({
+const rows = defineBehavior({
   name: 'test-rows',
   parts: ['list'],
   itemParts: ['row', 'section'],
@@ -938,7 +938,7 @@ describe('item parts', () => {
 
 describe('links', () => {
   const hintLink: LinkKey<'hint'> = { name: 'hint' };
-  const hint = defineComponent({
+  const hint = defineBehavior({
     name: 'test-hint',
     parts: ['root'],
     props: {},
@@ -947,7 +947,7 @@ describe('links', () => {
     expose: () => ({}),
     connect: () => ({ root: { attrs: {} } }),
   });
-  const linker = defineComponent({
+  const linker = defineBehavior({
     name: 'test-linker',
     parts: ['root'],
     props: {},
@@ -1008,7 +1008,7 @@ describe('links', () => {
       attribute: 'aside-hint',
       isAttributeOnly: true,
     };
-    const both = defineComponent({
+    const both = defineBehavior({
       name: 'test-both-hints',
       parts: ['root'],
       props: {},
@@ -1017,7 +1017,7 @@ describe('links', () => {
       expose: () => ({}),
       connect: () => ({ root: { attrs: {} } }),
     });
-    const pair = defineComponent({
+    const pair = defineBehavior({
       name: 'test-hint-pair',
       parts: ['root'],
       props: {},
@@ -1170,7 +1170,7 @@ describe('<uni-field>', () => {
 
   it('leaves a UniAria input inside it alone and warns', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const textInput = defineComponent({
+    const textInput = defineBehavior({
       name: 'test-text-input',
       parts: ['root', 'label', 'input', 'description', 'error'],
       props: {},

@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/combobox` — the Combobox definition. Render it with
- * `useComponent(combobox, props)` and `getItemProps(part, key)` from
+ * `useBehavior(combobox, props)` and `getItemProps(part, key)` from
  * `@uniaria/react`, or the `<uni-combobox>` element from
  * `@uniaria/elements/combobox`.
  */

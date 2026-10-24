@@ -10,7 +10,7 @@ covers how each reaches your code.
 
 ## Props
 
-Pass props to `useComponent` in React; they update on every render. In Vue,
+Pass props to `useBehavior` in React; they update on every render. In Vue,
 pass them as a getter (`() => ({ isDisabled: props.isSaving })`), which
 follows the props and refs it reads. On a custom element, set the attribute or
 the property of the same name:
@@ -43,27 +43,27 @@ import { checkbox } from '@uniaria/core/checkbox';
 import { dialog } from '@uniaria/core/dialog';
 
 // Uncontrolled: seeded once by `default<Name>`, then owned by the component.
-const terms = useComponent(checkbox, {
+const terms = useBehavior(checkbox, {
   defaultSelected: false,
   onSelectedChange: (isSelected) => track('terms', isSelected),
 });
 
 // Controlled: you pass the value and update it from the change callback.
 const [isOpen, setOpen] = useState(false);
-const settings = useComponent(dialog, { isOpen, onOpenChange: setOpen });
+const settings = useBehavior(dialog, { isOpen, onOpenChange: setOpen });
 ```
 
 In Vue, the same props, with a getter for the controlled one; `defineModel()`
 turns it into your component's `v-model` (see [Vue](../api/vue.md#v-model)):
 
 ```ts
-const terms = useComponent(checkbox, {
+const terms = useBehavior(checkbox, {
   defaultSelected: false,
   onSelectedChange: (isSelected) => track('terms', isSelected),
 });
 
 const isOpen = ref(false);
-const settings = useComponent(dialog, () => ({
+const settings = useBehavior(dialog, () => ({
   isOpen: isOpen.value,
   onOpenChange: (open) => (isOpen.value = open),
 }));
@@ -121,15 +121,15 @@ rendering anything. Read it in code only when a render or a script needs it.
 
 ### In React
 
-`useComponentState` selects one value and renders the component again only
+`useBehaviorState` selects one value and renders the component again only
 when that value changes:
 
 ```tsx
-import { useComponent, useComponentState } from '@uniaria/react';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
 
 function Menu() {
-  const menu = useComponent(popover, {});
-  const isOpen = useComponentState(menu, (state) => state.isOpen);
+  const menu = useBehavior(popover, {});
+  const isOpen = useBehaviorState(menu, (state) => state.isOpen);
 
   return (
     <>
@@ -150,18 +150,18 @@ tests count renders to keep it that way.
 
 ### In Vue
 
-`useComponentState` returns a read-only ref of one selected value. A template
+`useBehaviorState` returns a read-only ref of one selected value. A template
 that reads it renders again only when that value changes:
 
 ```vue
 <script setup lang="ts">
 import { popover } from '@uniaria/core/popover';
-import { useComponent, useComponentState } from '@uniaria/vue';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
 
 import ExpensiveContent from './ExpensiveContent.vue';
 
-const menu = useComponent(popover);
-const isOpen = useComponentState(menu, (state) => state.isOpen);
+const menu = useBehavior(popover);
+const isOpen = useBehaviorState(menu, (state) => state.isOpen);
 </script>
 
 <template>

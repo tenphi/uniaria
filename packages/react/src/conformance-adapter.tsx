@@ -39,8 +39,8 @@ import { createRoot } from 'react-dom/client';
 
 import { OwnerContext, OwnerProvider } from './owner';
 import { reactPropName, reactPropValue, reactStyleName } from './props';
-import type { ComponentHandle } from './use-component';
-import { useComponent, useComponentState } from './use-component';
+import type { BehaviorHandle } from './use-behavior';
+import { useBehavior, useBehaviorState } from './use-behavior';
 
 /** Definitions by component name, as conformance suites name them. */
 const definitions: Readonly<Record<string, AnyDefinition>> = {
@@ -114,7 +114,7 @@ function resolveProps(
  */
 function renderNodes(
   nodes: readonly TemplateNode[],
-  ui: ComponentHandle<AnyDefinition>,
+  ui: BehaviorHandle<AnyDefinition>,
   isKeyed = false,
 ): ReactNode[] {
   const itemParts: readonly string[] = ui.instance.definition.itemParts ?? [];
@@ -160,13 +160,13 @@ function Rows({
   ui,
 }: {
   readonly node: TemplateRows;
-  readonly ui: ComponentHandle<AnyDefinition>;
+  readonly ui: BehaviorHandle<AnyDefinition>;
 }) {
-  const keys = useComponentState(
+  const keys = useBehaviorState(
     ui,
     (state: { renderedKeys?: readonly string[] }) => state.renderedKeys ?? NONE,
   );
-  const sections = useComponentState(
+  const sections = useBehaviorState(
     ui,
     (state: { renderedSections?: readonly string[] }) =>
       state.renderedSections ?? NONE,
@@ -184,18 +184,18 @@ function definitionOf(component: string): AnyDefinition {
 
 /**
  * A component nested in the template, rendered as a consumer would: its own
- * `useComponent()`, inside its owner's provider.
+ * `useBehavior()`, inside its owner's provider.
  */
 function Nested({ node }: { readonly node: TemplateComponent }) {
   const definition = definitionOf(node.component);
   // A link to the component it sits in directly, passed as a consumer
-  // would: `useComponent(button, { tooltip: hint.instance })`.
+  // would: `useBehavior(button, { tooltip: hint.instance })`.
   const parent = useContext(OwnerContext)?.instance;
   const links: Record<string, unknown> = {};
   for (const key of definition.links ?? []) {
     if (parent && answers(parent.definition, key)) links[key.name] = parent;
   }
-  const ui = useComponent(definition, { ...links, ...node.props } as never);
+  const ui = useBehavior(definition, { ...links, ...node.props } as never);
   return createElement(
     OwnerProvider,
     { owner: ui.instance },
@@ -219,7 +219,7 @@ function Harness({
   onInstance,
 }: HarnessProps) {
   onRender();
-  const ui = useComponent(definition, props as never);
+  const ui = useBehavior(definition, props as never);
   onInstance(ui.instance, ui.actions);
   // Components nested in the template find this one as their owner.
   return createElement(

@@ -19,7 +19,7 @@ import {
   warn,
 } from '../../dom';
 import type { DomPartProps, PressEvent } from '../../dom';
-import { defineComponent, event, prop } from '../../runtime';
+import { defineBehavior, event, prop } from '../../runtime';
 import { linkTooltip, relationAttributes, tooltipLink } from '../tooltip/link';
 
 /** Roots with native button semantics; anything else gets `role="button"`. */
@@ -58,7 +58,7 @@ function role(isLink: boolean, isNative: boolean, isDisabled: boolean) {
   return isNative ? undefined : 'button';
 }
 
-export const button = defineComponent({
+export const button = defineBehavior({
   name: 'button',
   parts: ['root', 'label', 'description', 'frame', 'extras'],
   // Beside the root, not inside it (items spec, Runtime and harness

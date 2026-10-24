@@ -37,11 +37,11 @@ modes it shares with Popover.
 ```tsx
 import { button } from '@uniaria/core/button';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function SaveButton(props: { onSave(): void }) {
-  const hint = useComponent(tooltip, {});
-  const save = useComponent(button, {
+  const hint = useBehavior(tooltip, {});
+  const save = useBehavior(button, {
     onPress: props.onSave,
     tooltip: hint.instance,
   });
@@ -64,12 +64,12 @@ export function SaveButton(props: { onSave(): void }) {
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ save: [] }>();
 
-const hint = useComponent(tooltip);
-const save = useComponent(button, {
+const hint = useBehavior(tooltip);
+const save = useBehavior(button, {
   onPress: () => emit('save'),
   tooltip: hint.instance,
 });
@@ -163,7 +163,7 @@ is the tooltip's `trigger` part. It gets the relation and nothing else.
 <Tab label="React">
 
 ```tsx
-const hint = useComponent(tooltip, {});
+const hint = useBehavior(tooltip, {});
 return (
   <>
     <a {...hint.parts.trigger} href="/pricing">
@@ -179,7 +179,7 @@ return (
 
 ```vue
 <script setup lang="ts">
-const hint = useComponent(tooltip);
+const hint = useBehavior(tooltip);
 </script>
 
 <template>
@@ -231,8 +231,8 @@ off.
 <Tab label="React">
 
 ```tsx
-const hint = useComponent(tooltip, { relation: 'label' });
-const bold = useComponent(toggleButton, { tooltip: hint.instance });
+const hint = useBehavior(tooltip, { relation: 'label' });
+const bold = useBehavior(toggleButton, { tooltip: hint.instance });
 return (
   <>
     <button {...bold.parts.root}>
@@ -248,8 +248,8 @@ return (
 
 ```vue
 <script setup lang="ts">
-const hint = useComponent(tooltip, { relation: 'label' });
-const bold = useComponent(toggleButton, { tooltip: hint.instance });
+const hint = useBehavior(tooltip, { relation: 'label' });
+const bold = useBehavior(toggleButton, { tooltip: hint.instance });
 </script>
 
 <template>
@@ -289,14 +289,14 @@ trigger already.
 ```tsx
 import { button } from '@uniaria/core/button';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function ReportButton(props: { name: string; onOpen(): void }) {
-  const full = useComponent(tooltip, {
+  const full = useBehavior(tooltip, {
     shouldOpenOnlyWhenTruncated: true,
     relation: 'none',
   });
-  const report = useComponent(button, {
+  const report = useBehavior(button, {
     onPress: props.onOpen,
     tooltip: full.instance,
   });
@@ -320,16 +320,16 @@ export function ReportButton(props: { name: string; onOpen(): void }) {
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 defineProps<{ name: string }>();
 const emit = defineEmits<{ open: [] }>();
 
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
 });
-const report = useComponent(button, {
+const report = useBehavior(button, {
   onPress: () => emit('open'),
   tooltip: full.instance,
 });
@@ -493,7 +493,7 @@ the root `inset: auto`, a `position-area` and fallbacks in your CSS. See
 <Tab label="React">
 
 ```tsx
-const hint = useComponent(tooltip, { positionArea: 'right' });
+const hint = useBehavior(tooltip, { positionArea: 'right' });
 ```
 
 </Tab>
@@ -501,7 +501,7 @@ const hint = useComponent(tooltip, { positionArea: 'right' });
 
 ```vue
 <script setup lang="ts">
-const hint = useComponent(tooltip, { positionArea: 'right' });
+const hint = useBehavior(tooltip, { positionArea: 'right' });
 </script>
 ```
 
@@ -590,7 +590,7 @@ change to you.
 | `placement`  | `'top' \| 'bottom' \| 'left' \| 'right' \| undefined` | The side it was placed on, after fallbacks; `undefined` while it isn't shown. |
 
 ```tsx
-const placement = useComponentState(hint, (state) => state.placement);
+const placement = useBehaviorState(hint, (state) => state.placement);
 ```
 
 On the custom element, read `element.instance.getState()`. See

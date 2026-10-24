@@ -1,7 +1,7 @@
 # @uniaria/core
 
 Framework-agnostic headless UI behavior: the runtime, the interactions and the
-component definitions behind UniAria's adapters. Each component's state,
+behavior definitions behind UniAria's adapters. Each component's state,
 keyboard handling, focus management and ARIA are written here once, in plain
 TypeScript, and an adapter binds them to your elements:
 
@@ -24,10 +24,10 @@ Each component's definition comes from its own subpath:
 
 ```ts
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function SaveButton({ onSave }: { onSave(): void }) {
-  const save = useComponent(button, { onPress: onSave });
+  const save = useBehavior(button, { onPress: onSave });
   return <button {...save.parts.root}>Save</button>;
 }
 ```

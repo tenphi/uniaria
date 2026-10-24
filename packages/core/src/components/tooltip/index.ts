@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/tooltip` — the Tooltip definition. Render it with
- * `useComponent(tooltip, props)` from `@uniaria/react` or the
+ * `useBehavior(tooltip, props)` from `@uniaria/react` or the
  * `<uni-tooltip>` element from `@uniaria/elements/tooltip`. Components take
  * a tooltip through `tooltipLink`, from `./link`.
  */

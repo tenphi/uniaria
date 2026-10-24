@@ -39,7 +39,7 @@ It follows the WAI-ARIA [Listbox pattern](https://www.w3.org/WAI/ARIA/apg/patter
 
 ```tsx
 import { listbox } from '@uniaria/core/listbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -48,7 +48,7 @@ const fruits = [
 ];
 
 export function FruitList(props: { onChange(keys: readonly string[]): void }) {
-  const fruit = useComponent(listbox, {
+  const fruit = useBehavior(listbox, {
     items: fruits,
     defaultValue: ['banana'],
     onValueChange: props.onChange,
@@ -79,7 +79,7 @@ change to the option elements.
 ```vue
 <script setup lang="ts">
 import { listbox } from '@uniaria/core/listbox';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const fruits = [
   { key: 'apple', textValue: 'Apple' },
@@ -89,7 +89,7 @@ const fruits = [
 
 const emit = defineEmits<{ change: [keys: readonly string[]] }>();
 
-const fruit = useComponent(listbox, {
+const fruit = useBehavior(listbox, {
   items: fruits,
   defaultValue: ['banana'],
   onValueChange: (keys) => emit('change', keys),
@@ -159,7 +159,7 @@ selected. Without accessors, an item is read as
 instead of copying it:
 
 ```tsx
-const people = useComponent(listbox, {
+const people = useBehavior(listbox, {
   items: users,
   getKey: (user: User) => user.id,
   getTextValue: (user: User) => user.name,
@@ -212,7 +212,7 @@ const produce = [
   },
 ];
 
-const fruit = useComponent(listbox, { items: produce });
+const fruit = useBehavior(listbox, { items: produce });
 return (
   <div {...fruit.parts.list}>
     {produce.map((item) =>
@@ -254,7 +254,7 @@ const produce = [
   },
 ];
 
-const fruit = useComponent(listbox, { items: produce });
+const fruit = useBehavior(listbox, { items: produce });
 </script>
 
 <template>
@@ -355,15 +355,15 @@ as the list's `optionTooltip`. On the element, name it by id with the
 ```tsx
 import { listbox } from '@uniaria/core/listbox';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function FruitList() {
-  const full = useComponent(tooltip, {
+  const full = useBehavior(tooltip, {
     shouldOpenOnlyWhenTruncated: true,
     relation: 'none',
     positionArea: 'right',
   });
-  const fruit = useComponent(listbox, {
+  const fruit = useBehavior(listbox, {
     items: fruits,
     optionTooltip: full.instance,
   });
@@ -394,14 +394,14 @@ export function FruitList() {
 <script setup lang="ts">
 import { listbox } from '@uniaria/core/listbox';
 import { tooltip } from '@uniaria/core/tooltip';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
-const full = useComponent(tooltip, {
+const full = useBehavior(tooltip, {
   shouldOpenOnlyWhenTruncated: true,
   relation: 'none',
   positionArea: 'right',
 });
-const fruit = useComponent(listbox, {
+const fruit = useBehavior(listbox, {
   items: fruits,
   optionTooltip: full.instance,
 });
@@ -506,7 +506,7 @@ keeps the order of selection; a range adds its options in list order.
 
 ```tsx
 const [value, setValue] = useState<readonly string[]>([]);
-const fruit = useComponent(listbox, {
+const fruit = useBehavior(listbox, {
   items: fruits,
   selectionMode: 'multiple',
   value,
@@ -520,7 +520,7 @@ const fruit = useComponent(listbox, {
 ```vue
 <script setup lang="ts">
 const value = ref<readonly string[]>([]);
-const fruit = useComponent(listbox, () => ({
+const fruit = useBehavior(listbox, () => ({
   items: fruits,
   selectionMode: 'multiple',
   value: value.value,
@@ -565,11 +565,11 @@ keyboard or typeahead moves there. Lists that don't virtualize never load
 ```tsx
 import { listbox } from '@uniaria/core/listbox';
 import { virtualizer } from '@uniaria/core/virtual';
-import type { ComponentHandle } from '@uniaria/react';
-import { useComponent, useComponentState } from '@uniaria/react';
+import type { BehaviorHandle } from '@uniaria/react';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
 
 export function UserList({ users }: { users: readonly User[] }) {
-  const list = useComponent(listbox, {
+  const list = useBehavior(listbox, {
     items: users,
     getKey: (user: User) => user.id,
     getTextValue: (user: User) => user.name,
@@ -590,10 +590,10 @@ export function UserList({ users }: { users: readonly User[] }) {
 
 // The rows render again when the rendered set changes; the list doesn't.
 function UserRows(props: {
-  list: ComponentHandle<typeof listbox>;
+  list: BehaviorHandle<typeof listbox>;
   users: readonly User[];
 }) {
-  const keys = useComponentState(props.list, (state) => state.renderedKeys);
+  const keys = useBehaviorState(props.list, (state) => state.renderedKeys);
   const byId = new Map(props.users.map((user) => [user.id, user]));
   return keys.map((key) => (
     <div key={key} {...props.list.getItemProps('option', key)}>
@@ -611,13 +611,13 @@ function UserRows(props: {
 <script setup lang="ts">
 import { listbox } from '@uniaria/core/listbox';
 import { virtualizer } from '@uniaria/core/virtual';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 import UserRows from './UserRows.vue';
 
 const props = defineProps<{ users: readonly User[] }>();
 
-const list = useComponent(listbox, () => ({
+const list = useBehavior(listbox, () => ({
   items: props.users,
   getKey: (user: User) => user.id,
   getTextValue: (user: User) => user.name,
@@ -642,17 +642,17 @@ const list = useComponent(listbox, () => ({
 <!-- UserRows.vue -->
 <script setup lang="ts">
 import type { listbox } from '@uniaria/core/listbox';
-import type { ComponentHandle } from '@uniaria/vue';
-import { useComponentState } from '@uniaria/vue';
+import type { BehaviorHandle } from '@uniaria/vue';
+import { useBehaviorState } from '@uniaria/vue';
 import { computed } from 'vue';
 
 const props = defineProps<{
-  list: ComponentHandle<typeof listbox>;
+  list: BehaviorHandle<typeof listbox>;
   users: readonly User[];
 }>();
 
 // The rows render again when the rendered set changes; the list doesn't.
-const keys = useComponentState(props.list, (state) => state.renderedKeys);
+const keys = useBehaviorState(props.list, (state) => state.renderedKeys);
 const byId = computed(
   () => new Map(props.users.map((user) => [user.id, user])),
 );
@@ -841,7 +841,7 @@ what that option needs, and the component renders again only when that value
 changes:
 
 ```tsx
-const isBananaSelected = useComponentState(fruit, (state) =>
+const isBananaSelected = useBehaviorState(fruit, (state) =>
   state.value.includes('banana'),
 );
 ```

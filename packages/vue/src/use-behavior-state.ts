@@ -1,5 +1,5 @@
 /**
- * `useComponentState` (Vue adapter spec): one selected value of an
+ * `useBehaviorState` (Vue adapter spec): one selected value of an
  * instance's public state as a read-only ref. The ref reads the state when
  * it is read, so a render after a prop change already shows the new value,
  * and it triggers only when the store's notification changes the value a
@@ -11,15 +11,15 @@ import { warn } from '@uniaria/core/dom';
 import type { Ref } from 'vue';
 import { customRef, getCurrentScope, onScopeDispose } from 'vue';
 
-import type { ComponentHandle } from './use-component';
+import type { BehaviorHandle } from './use-behavior';
 
 /**
  * Reads one value of an instance's public state as a ref that triggers only
  * when the value changes (`Object.is`, or `isEqual`). Takes the instance or
- * the handle `useComponent` returned.
+ * the handle `useBehavior` returned.
  */
-export function useComponentState<D extends AnyDefinition, T>(
-  source: Instance<D> | ComponentHandle<D>,
+export function useBehaviorState<D extends AnyDefinition, T>(
+  source: Instance<D> | BehaviorHandle<D>,
   selector: (state: StateOf<D>) => T,
   isEqual: (a: T, b: T) => boolean = Object.is,
 ): Readonly<Ref<T>> {
@@ -57,7 +57,7 @@ export function useComponentState<D extends AnyDefinition, T>(
       },
       set() {
         warn(
-          `${instance.definition.name}: useComponentState returns a read-only ref.`,
+          `${instance.definition.name}: useBehaviorState returns a read-only ref.`,
         );
       },
     };

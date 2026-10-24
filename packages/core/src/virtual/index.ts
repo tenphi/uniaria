@@ -7,7 +7,7 @@
  *
  * ```ts
  * import { virtualizer } from '@uniaria/core/virtual';
- * useComponent(listbox, { items, virtualizer, itemSize: 32 });
+ * useBehavior(listbox, { items, virtualizer, itemSize: 32 });
  * ```
  *
  * UniAria measures rows itself (by key, ignoring the 0 a hidden row

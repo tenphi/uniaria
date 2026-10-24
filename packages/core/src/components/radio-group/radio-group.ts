@@ -9,7 +9,7 @@
 import { createFocusWithin, partEffect, partElement } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { field } from '../field/field';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -23,7 +23,7 @@ const NEXT: Readonly<Record<string, number>> = {
   ArrowLeft: -1,
 };
 
-export const radioGroup = defineComponent({
+export const radioGroup = defineBehavior({
   name: 'radio-group',
   parts: ['root', 'label', 'description', 'error'],
   props: {

@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 
 import { createBinder } from '../../dom';
-import { createInstance, defineComponent, prop } from '../../runtime';
+import { createInstance, defineBehavior, prop } from '../../runtime';
 import type { AnyDefinition } from '../../runtime';
 import { field } from './field';
 
@@ -54,7 +54,7 @@ it('links a part rendered after start, and unlinks one removed', () => {
 });
 
 it('composes into an input, whose own part is the control', () => {
-  const textInput = defineComponent({
+  const textInput = defineBehavior({
     name: 'test-text-input',
     parts: ['root', 'label', 'input', 'description', 'error'],
     props: { isInvalid: prop(false) },

@@ -40,8 +40,8 @@ links to the rules rather than repeating each one. If a page here and an
 | Path                | Contents                                                                                                                                                      | Published            |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | `packages/core`     | `@uniaria/core`: the runtime, `dom/` (the binder, interactions, overlays, positioning), collections, the virtualizer and one subpath per component            | Yes                  |
-| `packages/react`    | `@uniaria/react`: `useComponent`, `useComponentState` and `OwnerProvider`                                                                                     | Yes                  |
-| `packages/vue`      | `@uniaria/vue`: `useComponent` and `useComponentState`; its spec in `spec.md`                                                                                 | Yes                  |
+| `packages/react`    | `@uniaria/react`: `useBehavior`, `useBehaviorState` and `OwnerProvider`                                                                                       | Yes                  |
+| `packages/vue`      | `@uniaria/vue`: `useBehavior` and `useBehaviorState`; its spec in `spec.md`                                                                                   | Yes                  |
 | `packages/elements` | `@uniaria/elements`: `defineElement` and one registering entry per component                                                                                  | Yes                  |
 | `packages/testing`  | `@uniaria/testing`: the mount contract, the conformance runner, real input and screen-reader helpers                                                          | Yes, for development |
 | `conformance`       | `@uniaria/conformance`: the scenarios every adapter must pass, one folder per component                                                                       | No                   |

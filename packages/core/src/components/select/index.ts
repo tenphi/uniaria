@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/select` — the Select definition. Render it with
- * `useComponent(select, props)` and `getItemProps(part, key)` from
+ * `useBehavior(select, props)` and `getItemProps(part, key)` from
  * `@uniaria/react`, or the `<uni-select>` element from
  * `@uniaria/elements/select`.
  */

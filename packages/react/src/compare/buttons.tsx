@@ -6,7 +6,7 @@
  * - `UniButton`: UniAria as designed. The component reads no interaction state,
  *   so it renders once and the binder writes state attributes to the element.
  * - `UniSharedButton`: the component reads all of Button's public state with
- *   `useComponentState`, as a design system that renders from state would,
+ *   `useBehaviorState`, as a design system that renders from state would,
  *   so it re-renders on every change, as React Aria does.
  * - `AriaButton`: React Aria's hooks (`useButton`, `useHover`, `useFocusRing`)
  *   writing the same data attributes from React state, the way React Aria
@@ -21,7 +21,7 @@ import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { mergeProps, useButton, useFocusRing, useHover } from 'react-aria';
 
-import { useComponent, useComponentState } from '../use-component';
+import { useBehavior, useBehaviorState } from '../use-behavior';
 
 export interface ButtonRenderState {
   readonly isPressed: boolean;
@@ -55,7 +55,7 @@ export function UniButton({
   isDisabled = false,
 }: CompareButtonProps) {
   renders.count++;
-  const ui = useComponent(button, { onPress, isDisabled });
+  const ui = useBehavior(button, { onPress, isDisabled });
   // A render prop sees the state of this render only: nothing re-renders it.
   return (
     <button {...ui.parts.root}>
@@ -70,8 +70,8 @@ export function UniSharedButton({
   isDisabled = false,
 }: CompareButtonProps) {
   renders.count++;
-  const ui = useComponent(button, { onPress, isDisabled });
-  const state = useComponentState(ui, (current) => current);
+  const ui = useBehavior(button, { onPress, isDisabled });
+  const state = useBehaviorState(ui, (current) => current);
   return <button {...ui.parts.root}>{content(children, state)}</button>;
 }
 

@@ -14,7 +14,7 @@ import { button } from '@uniaria/core/button';
 import { listbox } from '@uniaria/core/listbox';
 import { popover } from '@uniaria/core/popover';
 import { select } from '@uniaria/core/select';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 import { pointer, releaseInput } from '@uniaria/testing/browser';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -168,7 +168,7 @@ function ReactContent(props: {
 }
 
 function ReactClear() {
-  const clear = useComponent(button, {});
+  const clear = useBehavior(button, {});
   return (
     <>
       <span className="count">3</span>
@@ -180,7 +180,7 @@ function ReactClear() {
 }
 
 function ReactButton(props: ItemButtonProps) {
-  const { parts } = useComponent(button, {});
+  const { parts } = useBehavior(button, {});
   return (
     <button
       {...parts.root}
@@ -193,7 +193,7 @@ function ReactButton(props: ItemButtonProps) {
 }
 
 function ReactFramed(props: ItemButtonProps) {
-  const { parts } = useComponent(button, {});
+  const { parts } = useBehavior(button, {});
   return (
     <div {...parts.frame} style={{ inlineSize: 240 }}>
       <button {...parts.root} data-variant={props.variant}>
@@ -207,7 +207,7 @@ function ReactFramed(props: ItemButtonProps) {
 }
 
 function ReactPopover() {
-  const { parts } = useComponent(popover, {});
+  const { parts } = useBehavior(popover, {});
   return (
     <>
       <div {...parts.triggerFrame} style={{ inlineSize: 240 }}>
@@ -226,7 +226,7 @@ function ReactPopover() {
 }
 
 function ReactListbox() {
-  const fruit = useComponent(listbox, { items: ITEMS, value: ['apple'] });
+  const fruit = useBehavior(listbox, { items: ITEMS, value: ['apple'] });
   const item = fruit.getItemProps as (part: string, key: string) => object;
   return (
     <div {...fruit.parts.root} style={{ inlineSize: 240 }}>
@@ -242,7 +242,7 @@ function ReactListbox() {
 }
 
 function ReactSelect() {
-  const fruit = useComponent(select, { items: ITEMS, value: ['apple'] });
+  const fruit = useBehavior(select, { items: ITEMS, value: ['apple'] });
   const item = fruit.getItemProps as (part: string, key: string) => object;
   return (
     <div {...fruit.parts.root} style={{ inlineSize: 240 }}>

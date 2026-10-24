@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/popover` — the Popover definition. Render it with
- * `useComponent(popover, props)` from `@uniaria/react` or the
+ * `useBehavior(popover, props)` from `@uniaria/react` or the
  * `<uni-popover>` element from `@uniaria/elements/popover`.
  */
 

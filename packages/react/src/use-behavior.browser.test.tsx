@@ -1,4 +1,4 @@
-import { defineComponent, itemId, prop } from '@uniaria/core';
+import { defineBehavior, itemId, prop } from '@uniaria/core';
 import { button } from '@uniaria/core/button';
 import { field } from '@uniaria/core/field';
 import type { ButtonProps } from '@uniaria/core/button';
@@ -13,8 +13,8 @@ import type { Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import type { ComponentHandle } from './use-component';
-import { useComponent, useComponentState } from './use-component';
+import type { BehaviorHandle } from './use-behavior';
+import { useBehavior, useBehaviorState } from './use-behavior';
 
 let root: Root | undefined;
 let container: HTMLElement | undefined;
@@ -54,16 +54,16 @@ afterEach(async () => {
 function Save(props: ButtonProps & { readonly onRender?: () => void }) {
   const { onRender, ...rest } = props;
   onRender?.();
-  const ui = useComponent(button, rest);
+  const ui = useBehavior(button, rest);
   return <button {...ui.parts.root}>Save</button>;
 }
 
 function Docs() {
-  const ui = useComponent(button, { href: '/docs' });
+  const ui = useBehavior(button, { href: '/docs' });
   return <a {...ui.parts.root}>Docs</a>;
 }
 
-describe('useComponent', () => {
+describe('useBehavior', () => {
   it('renders part props for the first paint', () => {
     const element = render(<Save isDisabled />).querySelector('button')!;
     expect(element.getAttribute('data-uni')).toBe('button');
@@ -77,7 +77,7 @@ describe('useComponent', () => {
   it('marks the root with data-uni, beside any className the consumer passes', () => {
     const warn = vi.spyOn(console, 'warn');
     function Primary() {
-      const ui = useComponent(button, {});
+      const ui = useBehavior(button, {});
       return (
         <button {...ui.parts.root} className="mine">
           Save
@@ -99,7 +99,7 @@ describe('useComponent', () => {
   it('marks other parts with data-element, and no class', () => {
     let label: Record<string, unknown> = {};
     function Name() {
-      const ui = useComponent(field, {});
+      const ui = useBehavior(field, {});
       label = ui.parts.label;
       return (
         <div {...ui.parts.root}>
@@ -123,7 +123,7 @@ describe('useComponent', () => {
 
   it('marks a part outside the root with data-uni-part', () => {
     const warn = vi.spyOn(console, 'warn');
-    const overlay = defineComponent({
+    const overlay = defineBehavior({
       name: 'test-overlay',
       parts: ['trigger', 'root'],
       outsideParts: ['trigger'],
@@ -136,7 +136,7 @@ describe('useComponent', () => {
       }),
     });
     function Overlay() {
-      const ui = useComponent(overlay, {});
+      const ui = useBehavior(overlay, {});
       return (
         <>
           <button {...ui.parts.trigger}>Open</button>
@@ -153,9 +153,9 @@ describe('useComponent', () => {
   });
 
   it('keeps handler identity across renders', () => {
-    const seen: ComponentHandle<typeof button>['parts']['root'][] = [];
+    const seen: BehaviorHandle<typeof button>['parts']['root'][] = [];
     function Probe({ label }: { readonly label: string }) {
-      const ui = useComponent(button, {});
+      const ui = useBehavior(button, {});
       // Committed renders only: StrictMode throws away its first mount render.
       useLayoutEffect(() => {
         seen.push(ui.parts.root);
@@ -222,7 +222,7 @@ describe('useComponent', () => {
     const seen: boolean[] = [];
     function Mute() {
       // Only the definition infers the props type, so the parameter is typed.
-      const ui = useComponent(toggleButton, {
+      const ui = useBehavior(toggleButton, {
         onSelectedChange: (isSelected) => {
           expectTypeOf(isSelected).toEqualTypeOf<boolean>();
           seen.push(isSelected);
@@ -239,7 +239,7 @@ describe('useComponent', () => {
   });
 
   it("returns the public actions, never setup()'s internal API", () => {
-    const panel = defineComponent({
+    const panel = defineBehavior({
       name: 'test-panel',
       parts: ['root'],
       props: { label: prop('') },
@@ -251,9 +251,9 @@ describe('useComponent', () => {
       expose: () => ({}),
       connect: () => ({ root: { attrs: {} } }),
     });
-    let handle: ComponentHandle<typeof panel> | undefined;
+    let handle: BehaviorHandle<typeof panel> | undefined;
     function Panel() {
-      handle = useComponent(panel, {});
+      handle = useBehavior(panel, {});
       return <div {...handle.parts.root} />;
     }
     render(<Panel />);
@@ -268,7 +268,7 @@ describe('development warnings', () => {
   it('warns when the consumer writes an attribute UniAria owns', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     function Override() {
-      const ui = useComponent(button, {});
+      const ui = useBehavior(button, {});
       return (
         <button {...ui.parts.root} type="submit" data-pressed="">
           Save
@@ -287,7 +287,7 @@ describe('development warnings', () => {
   it('warns when the JSX replaces the data-uni of the root', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     function Replaced() {
-      const ui = useComponent(button, {});
+      const ui = useBehavior(button, {});
       return (
         <button {...ui.parts.root} data-uni="mine">
           Save
@@ -308,7 +308,7 @@ describe('development warnings', () => {
   it('warns when the root tag and elementType differ', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     function Wrong() {
-      const ui = useComponent(button, {});
+      const ui = useBehavior(button, {});
       return <span {...ui.parts.root}>Save</span>;
     }
     render(<Wrong />);
@@ -332,7 +332,7 @@ describe('development warnings', () => {
   it('stays quiet when StrictMode attaches an element UniAria wrote to', () => {
     const warn = vi.spyOn(console, 'warn');
     function Name() {
-      const ui = useComponent(field, {});
+      const ui = useBehavior(field, {});
       return (
         <>
           <label {...ui.parts.label}>Name</label>
@@ -357,7 +357,7 @@ describe('part ids', () => {
     readonly labelId?: string;
     readonly inputId?: string;
   }) {
-    const ui = useComponent(field, {});
+    const ui = useBehavior(field, {});
     return (
       <>
         <label
@@ -435,7 +435,7 @@ describe('part ids', () => {
   });
 
   it('leaves nothing it wrote on an element the part moves away from', async () => {
-    const pressable = defineComponent({
+    const pressable = defineBehavior({
       name: 'pressable',
       parts: ['trigger'],
       props: {},
@@ -448,9 +448,9 @@ describe('part ids', () => {
         trigger: { attrs: { 'aria-pressed': String(api.isOn()) } },
       }),
     });
-    let instance: ComponentHandle<typeof pressable>['instance'] | undefined;
+    let instance: BehaviorHandle<typeof pressable>['instance'] | undefined;
     function Two({ isFirst }: { readonly isFirst: boolean }) {
-      const ui = useComponent(pressable, {});
+      const ui = useBehavior(pressable, {});
       instance = ui.instance;
       return (
         <>
@@ -472,12 +472,12 @@ describe('part ids', () => {
   });
 });
 
-describe('useComponentState', () => {
+describe('useBehaviorState', () => {
   it('re-renders only when the selected value changes', async () => {
     const renders: boolean[] = [];
     function Selecting() {
-      const ui = useComponent(button, {});
-      const isPressed = useComponentState(ui, (state) => state.isPressed);
+      const ui = useBehavior(button, {});
+      const isPressed = useBehaviorState(ui, (state) => state.isPressed);
       renders.push(isPressed);
       return <button {...ui.parts.root}>{isPressed ? 'Down' : 'Up'}</button>;
     }
@@ -500,8 +500,8 @@ describe('useComponentState', () => {
   it('renders once for a prop change the selected state shows', () => {
     const states: boolean[] = [];
     function Selecting({ isDisabled }: { readonly isDisabled: boolean }) {
-      const ui = useComponent(button, { isDisabled });
-      states.push(useComponentState(ui, (state) => state.isDisabled));
+      const ui = useBehavior(button, { isDisabled });
+      states.push(useBehaviorState(ui, (state) => state.isDisabled));
       return <button {...ui.parts.root}>Save</button>;
     }
     renderPlain(<Selecting isDisabled={false} />);
@@ -513,8 +513,8 @@ describe('useComponentState', () => {
   it('re-renders for a change the prop sync makes', async () => {
     const states: { isDisabled: boolean; isHovered: boolean }[] = [];
     function Selecting({ isDisabled }: { readonly isDisabled: boolean }) {
-      const ui = useComponent(button, { isDisabled });
-      const state = useComponentState(ui, (current) => current);
+      const ui = useBehavior(button, { isDisabled });
+      const state = useBehaviorState(ui, (current) => current);
       states.push({ isDisabled: state.isDisabled, isHovered: state.isHovered });
       return <button {...ui.parts.root}>Save</button>;
     }
@@ -536,8 +536,8 @@ describe('useComponentState', () => {
   it('accepts an equality function', async () => {
     const renders = vi.fn();
     function Selecting() {
-      const ui = useComponent(button, {});
-      const state = useComponentState(
+      const ui = useBehavior(button, {});
+      const state = useBehaviorState(
         ui.instance,
         (current) => ({ pressed: current.isPressed }),
         (a, b) => a.pressed === b.pressed,
@@ -587,7 +587,7 @@ describe('server rendering', () => {
   });
 });
 
-const live = defineComponent({
+const live = defineBehavior({
   name: 'live',
   parts: ['input'],
   props: { text: prop('') },
@@ -599,7 +599,7 @@ const live = defineComponent({
 });
 
 function Live({ text }: { readonly text: string }) {
-  const ui = useComponent(live, { text });
+  const ui = useBehavior(live, { text });
   return <input {...ui.parts.input} />;
 }
 
@@ -627,7 +627,7 @@ describe('live DOM properties', () => {
 });
 
 /** Rows keyed by item, one active, as a listbox's options are. */
-const rows = defineComponent({
+const rows = defineBehavior({
   name: 'rows',
   parts: ['list'],
   itemParts: ['row', 'rowLabel'],
@@ -671,10 +671,10 @@ function Rows({
   readonly keys?: readonly string[];
   readonly tone?: string;
   readonly onRender?: () => void;
-  readonly onHandle?: (handle: ComponentHandle<typeof rows>) => void;
+  readonly onHandle?: (handle: BehaviorHandle<typeof rows>) => void;
 }) {
   onRender?.();
-  const ui = useComponent(rows, tone === undefined ? {} : { tone });
+  const ui = useBehavior(rows, tone === undefined ? {} : { tone });
   onHandle?.(ui);
   return (
     <div {...ui.parts.list}>
@@ -717,7 +717,7 @@ describe('item parts', () => {
   });
 
   it('finds the key from the element, with one handler per part and event', async () => {
-    const handles: ComponentHandle<typeof rows>[] = [];
+    const handles: BehaviorHandle<typeof rows>[] = [];
     const element = render(<Rows onHandle={(ui) => handles.push(ui)} />);
     const handle = handles.at(-1)!;
     expect(handle.getItemProps('row', 'a').onClick).toBe(
@@ -745,8 +745,8 @@ describe('item parts', () => {
 
   it('hands the binder the rows a commit of their own attaches, in one flush', async () => {
     let setKeys: (keys: readonly string[]) => void = () => undefined;
-    let handle: ComponentHandle<typeof rows> | undefined;
-    function RowList({ ui }: { readonly ui: ComponentHandle<typeof rows> }) {
+    let handle: BehaviorHandle<typeof rows> | undefined;
+    function RowList({ ui }: { readonly ui: BehaviorHandle<typeof rows> }) {
       const [keys, set] = useState<readonly string[]>(['a']);
       setKeys = set;
       return keys.map((key) => (
@@ -756,7 +756,7 @@ describe('item parts', () => {
       ));
     }
     function Owner() {
-      const ui = useComponent(rows, {});
+      const ui = useBehavior(rows, {});
       handle = ui;
       return (
         <div {...ui.parts.list}>
@@ -777,7 +777,7 @@ describe('item parts', () => {
   });
 
   it('detaches an item that unmounts', () => {
-    const handles: ComponentHandle<typeof rows>[] = [];
+    const handles: BehaviorHandle<typeof rows>[] = [];
     render(<Rows onHandle={(ui) => handles.push(ui)} />);
     const { instance } = handles.at(-1)!;
     expect(instance.itemElement('row', 'c')).not.toBeNull();
@@ -803,7 +803,7 @@ describe('element effects', () => {
       readonly defaultOpen?: boolean;
     }) {
       const { id, ...rest } = props;
-      const ui = useComponent(popover, rest);
+      const ui = useBehavior(popover, rest);
       return (
         <div id={id}>
           <button {...ui.parts.trigger}>Size</button>

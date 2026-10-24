@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createBinder } from './binder';
 import { createFocus } from './focus';
 import { modalityTrackerFor } from './modality';
 
-const focusable = defineComponent({
+const focusable = defineBehavior({
   name: 'focusable',
   parts: ['root'],
   props: { isTextInput: prop(false) },

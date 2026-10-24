@@ -3,10 +3,11 @@ title: Runtime
 description: '@uniaria/core: definitions, props, bindables, events and instances.'
 ---
 
-`@uniaria/core` is the runtime every component is built on. A component is
-one _definition_: its parts, its props and events, and the behavior that
-turns state into attributes. Both adapters are generic over definitions, so
-the same object renders in React and as a custom element.
+`@uniaria/core` is the runtime every component is built on. A component's
+behavior is one _definition_, made with `defineBehavior`: its parts, its props
+and events, and the logic that turns state into attributes. The adapters are
+generic over definitions, so the same object renders in React, in Vue and as a
+custom element.
 
 You need this entry to write your own component (see
 [Custom components](../guide/custom-components.md)), to test a definition
@@ -18,7 +19,7 @@ components themselves come from their own subpaths, such as
 import {
   bindable,
   createInstance,
-  defineComponent,
+  defineBehavior,
   event,
   prop,
 } from '@uniaria/core';
@@ -28,15 +29,15 @@ The runtime has no DOM types and touches no browser globals, so it also runs
 in Node. Interactions that need the DOM live in
 [`@uniaria/core/dom`](./dom.md).
 
-## defineComponent
+## defineBehavior
 
-`defineComponent(config)` checks a config and returns the definition the
+`defineBehavior(config)` checks a config and returns the definition the
 adapters take.
 
 ```ts
-import { bindable, defineComponent } from '@uniaria/core';
+import { bindable, defineBehavior } from '@uniaria/core';
 
-export const disclosure = defineComponent({
+export const disclosure = defineBehavior({
   name: 'disclosure',
   parts: ['trigger', 'panel'],
   props: {
@@ -81,7 +82,7 @@ export const disclosure = defineComponent({
 | `links`        | `readonly LinkKey[]`                | Links this component takes, each through a prop named after the key, such as `tooltip`.                                                                                                                                                       |
 | `provides`     | `readonly LinkKey[]`                | Links this component answers, such as Tooltip's `tooltipLink`.                                                                                                                                                                                |
 
-`defineComponent` throws when:
+`defineBehavior` throws when:
 
 - the name isn't kebab case (`/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/`);
 - two of the names it derives collide: a prop, a bindable's `default<Name>`
@@ -400,7 +401,7 @@ export const tooltipLink: LinkKey<'tooltip', TooltipLinkApi> = {
 The taking definition lists the key in `links`; the answering one lists it
 in `provides`. `ctx.link(tooltipLink)` returns `{ instance, api }`, or
 `undefined`. The key's name is the prop that takes the instance in React
-(`useComponent(button, { tooltip: hint.instance })`) and the element
+(`useBehavior(button, { tooltip: hint.instance })`) and the element
 attribute that names the host by id (`<uni-button tooltip="hint">`); without
 the attribute, an element links to the UniAria host it sits in directly. A
 key can name another attribute (`attribute: 'option-tooltip'`) and come only
@@ -418,7 +419,7 @@ Both receive the same view: `{ props, ids, api }`, where `api` is what
 `setup()` returned.
 
 **`expose(view)`** returns the public state, the object consumers read with
-`useComponentState` and `instance.getState()`. It is public API, so keep it
+`useBehaviorState` and `instance.getState()`. It is public API, so keep it
 small and stable: `isOpen`, `isPressed`, `value`. The instance caches it
 until state or props change.
 
@@ -476,9 +477,9 @@ definition makes those public by listing members of `setup()`'s result in
 `actions`:
 
 ```ts
-import { bindable, defineComponent } from '@uniaria/core';
+import { bindable, defineBehavior } from '@uniaria/core';
 
-export const sheet = defineComponent({
+export const sheet = defineBehavior({
   name: 'sheet',
   parts: ['root'],
   props: { isOpen: bindable(false) },
@@ -510,7 +511,7 @@ Consumers call them as `instance.actions.open()`, as
 - **An action changes state the way the user would.** Setting a bindable
   while it is controlled only calls its change callback (`onOpenChange`), so
   a controlled sheet opens when the consumer passes the new value.
-- **Names are checked.** `defineComponent` throws when an action is named like
+- **Names are checked.** `defineBehavior` throws when an action is named like
   a prop or callback, `createInstance` throws when `setup()` doesn't return a
   function under that name, and `defineElement` throws when the name would
   shadow an element member such as `focus` or `click`.

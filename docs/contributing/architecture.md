@@ -20,7 +20,7 @@ needs the owner's approval.
 ```mermaid
 flowchart TD
   accTitle: UniAria's layers
-  accDescr: The React, Vue and custom-element adapters import component definitions. Definitions import dom/, which imports the DOM-free runtime/ and collections/. Nothing imports upward.
+  accDescr: The React, Vue and custom-element adapters import behavior definitions. Definitions import dom/, which imports the DOM-free runtime/ and collections/. Nothing imports upward.
   react["@uniaria/react"]
   vue["@uniaria/vue"]
   elements["@uniaria/elements"]
@@ -65,7 +65,7 @@ component as its own subpath (`./button`).
 
 ### Definitions
 
-Each component is one `defineComponent()` call in
+Each component is one `defineBehavior()` call in
 `packages/core/src/components/<name>/`:
 
 | Field                        | What it holds                                                                                                                                 |
@@ -96,7 +96,7 @@ attributes and properties, and the events. The adapters derive every name from i
   in the markup. A bindable adopts into its `default<Name>`, so it stays
   uncontrolled.
 
-`defineComponent()` throws when the name isn't kebab-case, when two props or
+`defineBehavior()` throws when the name isn't kebab-case, when two props or
 events would produce the same React prop, and when item parts come without
 `connectItem()`.
 
@@ -104,9 +104,9 @@ A sketch of the shape, without the interactions a real component uses
 (`createPress`, `createFocus` and the rest of `dom/`):
 
 ```ts
-import { bindable, defineComponent, prop } from '@uniaria/core';
+import { bindable, defineBehavior, prop } from '@uniaria/core';
 
-export const disclosure = defineComponent({
+export const disclosure = defineBehavior({
   name: 'disclosure',
   parts: ['trigger', 'panel'],
   props: {
@@ -326,7 +326,7 @@ arrow key. So the change goes from the store to the binder to the DOM, and no
 framework render happens. This is the reason UniAria exists.
 
 - A component re-renders for state only when it selects it with
-  `useComponentState`, and only when the selected value changes.
+  `useBehaviorState`, and only when the selected value changes.
 - Every render reads the current state, so a parent's re-render writes the
   values the binder already set. The two never fight.
 - Every adapter writes through the same binder, so React, Vue and custom
@@ -340,7 +340,7 @@ framework render happens. This is the reason UniAria exists.
 
 ### React
 
-`useComponent(definition, props)` in `packages/react/src/use-component.ts`:
+`useBehavior(definition, props)` in `packages/react/src/use-behavior.ts`:
 
 1. Creates the instance on the first render, with an id from `useId()`. Later
    renders call `setProps()`, silently.
@@ -362,7 +362,7 @@ framework render happens. This is the reason UniAria exists.
 In development it warns when an element's attributes differ from what React
 just rendered: the consumer passed an attribute the binder owns.
 
-`useComponentState(instance, selector, isEqual?)` reads one selected value
+`useBehaviorState(instance, selector, isEqual?)` reads one selected value
 through `useSyncExternalStore` and re-renders only when it changes
 (`Object.is` by default). The snapshot is the selected value, cached per
 state object, so it stays stable between changes. It skips the notification
@@ -374,7 +374,7 @@ component-specific code; any per-component sugar may only wrap these hooks.
 
 ### Vue
 
-`useComponent(definition, props)` in `packages/vue/src/use-component.ts`,
+`useBehavior(definition, props)` in `packages/vue/src/use-behavior.ts`,
 called in `setup()`:
 
 1. Creates the instance in setup, with an id from Vue's `useId()`. Props come
@@ -396,10 +396,10 @@ called in `setup()`:
    answers owner requests; `onDeactivated` and `onBeforeUnmount` stop them.
 
 It warns in development as React does, including about attributes a parent
-lets fall through onto a part. `useComponentState` returns a `customRef` that
+lets fall through onto a part. `useBehaviorState` returns a `customRef` that
 reads the state when it is read and triggers only when the store's
 notification changes the value a render last read, so a prop change renders
-once. Owners go through `provide()`: every `useComponent` provides its
+once. Owners go through `provide()`: every `useBehavior` provides its
 instance, and finds its owner by `inject()` during setup.
 
 ### Custom elements
@@ -479,7 +479,7 @@ A child finds its owner in this order:
    it during render, so the first render and the server HTML know the owner,
    and React context crosses portals. Providers nest; each component takes
    the nearest owner of the definition it names. In Vue, every
-   `useComponent` provides its instance this way through `provide()`, and a
+   `useBehavior` provides its instance this way through `provide()`, and a
    child finds it with `inject()` during setup; it crosses `<Teleport>`.
 3. **The nearest DOM ancestor.** After mount the child dispatches a bubbling
    request event from its element, in the shape of the

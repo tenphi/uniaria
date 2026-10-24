@@ -40,12 +40,12 @@ its input is a text box rather than a `spinbutton` (see
 
 ```tsx
 import { numberField } from '@uniaria/core/number-field';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function QuantityField(props: {
   onQuantityChange(quantity: number | null): void;
 }) {
-  const quantity = useComponent(numberField, {
+  const quantity = useBehavior(numberField, {
     defaultValue: 1,
     minValue: 1,
     maxValue: 99,
@@ -71,11 +71,11 @@ export function QuantityField(props: {
 ```vue
 <script setup lang="ts">
 import { numberField } from '@uniaria/core/number-field';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ quantityChange: [quantity: number | null] }>();
 
-const quantity = useComponent(numberField, {
+const quantity = useBehavior(numberField, {
   defaultValue: 1,
   minValue: 1,
   maxValue: 99,
@@ -181,7 +181,7 @@ per event, up increments, and the page doesn't scroll. Turn it off with
 <Tab label="React">
 
 ```tsx
-const price = useComponent(numberField, {
+const price = useBehavior(numberField, {
   locale: 'de-DE',
   formatOptions: { style: 'currency', currency: 'EUR' },
   minValue: 0,
@@ -194,7 +194,7 @@ const price = useComponent(numberField, {
 
 ```vue
 <script setup lang="ts">
-const price = useComponent(numberField, {
+const price = useBehavior(numberField, {
   locale: 'de-DE',
   formatOptions: { style: 'currency', currency: 'EUR' },
   minValue: 0,
@@ -248,7 +248,7 @@ number, put it beside the input instead, as the Deposit field above does:
 <Tab label="React">
 
 ```tsx
-const deposit = useComponent(numberField, {
+const deposit = useBehavior(numberField, {
   formatOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 },
   minValue: 0,
 });
@@ -269,7 +269,7 @@ return (
 
 ```vue
 <script setup lang="ts">
-const deposit = useComponent(numberField, {
+const deposit = useBehavior(numberField, {
   formatOptions: { minimumFractionDigits: 2, maximumFractionDigits: 2 },
   minValue: 0,
 });
@@ -330,7 +330,7 @@ const deposit = useComponent(numberField, {
 ```tsx
 function AmountField({ limit }: { limit: number }) {
   const [amount, setAmount] = useState<number | null>(0);
-  const field = useComponent(numberField, {
+  const field = useBehavior(numberField, {
     value: amount,
     onValueChange: setAmount,
     minValue: 0,
@@ -350,7 +350,7 @@ function AmountField({ limit }: { limit: number }) {
 const props = defineProps<{ limit: number }>();
 const amount = ref<number | null>(0);
 
-const field = useComponent(numberField, () => ({
+const field = useBehavior(numberField, () => ({
   value: amount.value,
   onValueChange: (value) => (amount.value = value),
   minValue: 0,
@@ -414,7 +414,7 @@ For another language, pass whole names: they replace the English ones, so the
 label can go anywhere in them.
 
 ```tsx
-const menge = useComponent(numberField, {
+const menge = useBehavior(numberField, {
   locale: 'de-DE',
   incrementLabel: 'Menge erhöhen',
   decrementLabel: 'Menge verringern',
@@ -512,7 +512,7 @@ render something from state in React or Vue, select it (in Vue, it is a
 ref):
 
 ```tsx
-const canIncrement = useComponentState(quantity, (state) => state.canIncrement);
+const canIncrement = useBehaviorState(quantity, (state) => state.canIncrement);
 ```
 
 On the custom element, read `element.instance.getState()`. See

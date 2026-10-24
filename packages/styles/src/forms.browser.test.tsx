@@ -19,7 +19,7 @@ import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
 import { toggleSwitch } from '@uniaria/core/switch';
 import { toggleButton } from '@uniaria/core/toggle-button';
-import { OwnerProvider, useComponent } from '@uniaria/react';
+import { OwnerProvider, useBehavior } from '@uniaria/react';
 import { emulateMedia, pointer, releaseInput } from '@uniaria/testing/browser';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -189,12 +189,12 @@ const elements: Adapter = {
 };
 
 function ReactToggleButton(props: ToggleButtonProps) {
-  const { parts } = useComponent(toggleButton, props);
+  const { parts } = useBehavior(toggleButton, props);
   return <button {...parts.root}>Bold</button>;
 }
 
 function ReactSwitch(props: SwitchProps) {
-  const { parts } = useComponent(toggleSwitch, {
+  const { parts } = useBehavior(toggleSwitch, {
     labelElementType: 'span',
     ...props,
   });
@@ -214,7 +214,7 @@ function ReactSwitch(props: SwitchProps) {
 }
 
 function ReactRadio({ value, label }: { value: string; label: string }) {
-  const { parts } = useComponent(radio, { value, labelElementType: 'span' });
+  const { parts } = useBehavior(radio, { value, labelElementType: 'span' });
   return (
     <label {...parts.root}>
       <input {...parts.input} />
@@ -225,7 +225,7 @@ function ReactRadio({ value, label }: { value: string; label: string }) {
 }
 
 function ReactRadioGroup({ selected, ...props }: GroupProps) {
-  const plan = useComponent(radioGroup, {
+  const plan = useBehavior(radioGroup, {
     name: 'plan',
     ...props,
     ...(selected === undefined ? {} : { defaultValue: selected }),
@@ -245,7 +245,7 @@ function ReactRadioGroup({ selected, ...props }: GroupProps) {
 }
 
 function ReactCheckbox({ value, label }: { value: string; label: string }) {
-  const { parts } = useComponent(checkbox, {
+  const { parts } = useBehavior(checkbox, {
     value,
     labelElementType: 'span',
   });
@@ -259,7 +259,7 @@ function ReactCheckbox({ value, label }: { value: string; label: string }) {
 }
 
 function ReactCheckboxGroup({ selected, orientation, ...props }: GroupProps) {
-  const plan = useComponent(checkboxGroup, {
+  const plan = useBehavior(checkboxGroup, {
     name: 'plan',
     ...props,
     ...(selected === undefined ? {} : { defaultValue: [selected] }),
@@ -279,7 +279,7 @@ function ReactCheckboxGroup({ selected, orientation, ...props }: GroupProps) {
 }
 
 function ReactField(props: FieldProps) {
-  const { parts } = useComponent(field, props);
+  const { parts } = useBehavior(field, props);
   return (
     <div {...parts.root}>
       <label {...parts.label}>Email</label>

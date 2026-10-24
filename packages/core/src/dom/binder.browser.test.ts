@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, itemId, prop } from '../runtime';
+import { createInstance, defineBehavior, itemId, prop } from '../runtime';
 import { createBinder } from './binder';
 
-const toy = defineComponent({
+const toy = defineBehavior({
   name: 'toy',
   parts: ['root', 'item'],
   props: { label: prop<string | undefined>(undefined) },
@@ -138,7 +138,7 @@ describe('createBinder', () => {
   });
 
   it('sets live properties only when they differ, leaving undefined alone', () => {
-    const live = defineComponent({
+    const live = defineBehavior({
       name: 'live',
       parts: ['input'],
       props: { text: prop<string | undefined>(undefined) },
@@ -201,7 +201,7 @@ describe('createBinder', () => {
 
   describe('part ids', () => {
     /** A trigger that controls a panel, as a disclosure's. */
-    const disclosure = defineComponent({
+    const disclosure = defineBehavior({
       name: 'disc',
       parts: ['trigger', 'panel'],
       props: {
@@ -334,7 +334,7 @@ describe('createBinder', () => {
   });
 
   describe('letting an element go', () => {
-    const panel = defineComponent({
+    const panel = defineBehavior({
       name: 'panel',
       parts: ['trigger', 'panel'],
       props: { isOpen: prop(false) },
@@ -465,7 +465,7 @@ describe('createBinder', () => {
       const calls: string[] = [];
       const log = (part: string) => (event: Event) =>
         calls.push(`${part}:${event.type}`);
-      const nested = defineComponent({
+      const nested = defineBehavior({
         name: 'nested',
         parts: ['root', 'item'],
         props: {},
@@ -514,7 +514,7 @@ describe('createBinder', () => {
     // the document's listeners for them apart.
     const heard = (types: readonly string[]) => {
       const calls: string[] = [];
-      const definition = defineComponent({
+      const definition = defineBehavior({
         name: 'heard',
         parts: ['root'],
         props: {},
@@ -602,7 +602,7 @@ describe('createBinder', () => {
     it('reaches nested hosts innermost first, and none after a handler stops it', () => {
       const calls: string[] = [];
       const logging = (name: string, stops = false) =>
-        defineComponent({
+        defineBehavior({
           name,
           parts: ['root'],
           props: {},
@@ -676,7 +676,7 @@ describe('createBinder', () => {
     });
 
     it('writes no stale live property while an input event is on its way to it', () => {
-      const field = defineComponent({
+      const field = defineBehavior({
         name: 'field',
         parts: ['input'],
         props: { mark: prop(0) },
@@ -768,7 +768,7 @@ describe('createBinder', () => {
 });
 
 /** Rows keyed by item, one active, as a listbox's options are. */
-const rows = defineComponent({
+const rows = defineBehavior({
   name: 'rows',
   parts: ['root'],
   itemParts: ['row', 'rowLabel'],

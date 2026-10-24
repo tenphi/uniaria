@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/dialog` — the Dialog definition. Render it with
- * `useComponent(dialog, props)` from `@uniaria/react` or the
+ * `useBehavior(dialog, props)` from `@uniaria/react` or the
  * `<uni-dialog>` element from `@uniaria/elements/dialog`.
  */
 

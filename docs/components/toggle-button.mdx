@@ -33,13 +33,13 @@ It follows the toggle-button variant of the WAI-ARIA
 
 ```tsx
 import { toggleButton } from '@uniaria/core/toggle-button';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function BoldButton(props: {
   isBold: boolean;
   onBoldChange(isBold: boolean): void;
 }) {
-  const bold = useComponent(toggleButton, {
+  const bold = useBehavior(toggleButton, {
     isSelected: props.isBold,
     onSelectedChange: props.onBoldChange,
     shouldPreventFocusOnPress: true,
@@ -54,11 +54,11 @@ export function BoldButton(props: {
 ```vue
 <script setup lang="ts">
 import { toggleButton } from '@uniaria/core/toggle-button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const isBold = defineModel<boolean>({ required: true });
 
-const bold = useComponent(toggleButton, () => ({
+const bold = useBehavior(toggleButton, () => ({
   isSelected: isBold.value,
   onSelectedChange: (isSelected) => (isBold.value = isSelected),
   shouldPreventFocusOnPress: true,
@@ -110,7 +110,7 @@ value you set yourself never fires `selectedchange`. See
 
 ```tsx
 const [isMuted, setMuted] = useState(false);
-const mute = useComponent(toggleButton, {
+const mute = useBehavior(toggleButton, {
   isSelected: isMuted,
   onSelectedChange: setMuted,
 });
@@ -122,7 +122,7 @@ const mute = useComponent(toggleButton, {
 ```vue
 <script setup lang="ts">
 const isMuted = ref(false);
-const mute = useComponent(toggleButton, () => ({
+const mute = useBehavior(toggleButton, () => ({
   isSelected: isMuted.value,
   onSelectedChange: (isSelected) => (isMuted.value = isSelected),
 }));
@@ -163,8 +163,8 @@ it that can't be inside it, such as a button that opens its settings. See
 <Tab label="React">
 
 ```tsx
-const subtitles = useComponent(toggleButton, { defaultSelected: true });
-const language = useComponent(button, { onPress: openLanguages });
+const subtitles = useBehavior(toggleButton, { defaultSelected: true });
+const language = useBehavior(button, { onPress: openLanguages });
 return (
   <div {...subtitles.parts.frame}>
     <button {...subtitles.parts.root}>
@@ -189,8 +189,8 @@ return (
 
 ```vue
 <script setup lang="ts">
-const subtitles = useComponent(toggleButton, { defaultSelected: true });
-const language = useComponent(button, { onPress: openLanguages });
+const subtitles = useBehavior(toggleButton, { defaultSelected: true });
+const language = useBehavior(button, { onPress: openLanguages });
 </script>
 
 <template>
@@ -321,7 +321,7 @@ To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (Vue gives a ref):
 
 ```ts
-const isBold = useComponentState(bold, (state) => state.isSelected);
+const isBold = useBehaviorState(bold, (state) => state.isSelected);
 ```
 
 On the custom element, read `element.instance.getState()`. The `isSelected`

@@ -19,7 +19,7 @@ interface Scope {
 export const OwnerContext = createContext<Scope | null>(null);
 
 export interface OwnerProviderProps<D extends AnyDefinition = AnyDefinition> {
-  /** The owner: an instance, or the handle `useComponent` returned. */
+  /** The owner: an instance, or the handle `useBehavior` returned. */
   readonly owner: Instance<D> | { readonly instance: Instance<D> };
   readonly children?: ReactNode;
 }

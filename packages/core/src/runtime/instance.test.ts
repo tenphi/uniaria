@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import {
-  defineComponent,
+  defineBehavior,
   isOwnerDefinition,
   itemId,
   partElement,
@@ -18,7 +18,7 @@ import { createInstance } from './instance';
 import { bindable, event, prop } from './schema';
 
 /** A disclosure like design decision 9's example, plus a watcher and an effect. */
-const disclosure = defineComponent({
+const disclosure = defineBehavior({
   name: 'disclosure',
   parts: ['trigger', 'panel'],
   props: {
@@ -80,7 +80,7 @@ const click = (
   instance: ReturnType<typeof createInstance<typeof disclosure>>,
 ) => instance.connect().trigger.on!.click!(undefined as never);
 
-describe('defineComponent', () => {
+describe('defineBehavior', () => {
   it('derives props, callbacks and state types from the definition', () => {
     expectTypeOf<PropsOf<typeof disclosure>>().toEqualTypeOf<
       {
@@ -130,7 +130,7 @@ describe('defineComponent', () => {
   });
 
   it('drops predicate prefixes from derived names', () => {
-    const def = defineComponent({
+    const def = defineBehavior({
       name: 'prefixes',
       parts: ['root'],
       props: {
@@ -155,7 +155,7 @@ describe('defineComponent', () => {
   });
 
   it('takes a custom change event and attribute', () => {
-    const def = defineComponent({
+    const def = defineBehavior({
       name: 'custom',
       parts: ['root'],
       props: {
@@ -176,7 +176,7 @@ describe('defineComponent', () => {
 
   it('rejects names that are not kebab-case', () => {
     expect(() =>
-      defineComponent({
+      defineBehavior({
         name: 'BadName',
         parts: ['root'],
         props: {},
@@ -189,7 +189,7 @@ describe('defineComponent', () => {
 
   it('rejects a prop that collides with a callback', () => {
     expect(() =>
-      defineComponent({
+      defineBehavior({
         name: 'clash',
         parts: ['root'],
         props: { onPress: prop<string | undefined>(undefined) },
@@ -204,7 +204,7 @@ describe('defineComponent', () => {
   it('rejects an outside part that is the root or no part', () => {
     for (const part of ['root', 'missing']) {
       expect(() =>
-        defineComponent({
+        defineBehavior({
           name: 'overlay',
           parts: ['root', 'trigger'],
           outsideParts: [part as 'trigger'],
@@ -256,7 +256,7 @@ describe('createInstance', () => {
       'HiddenInput',
     ]);
     expect(partElement('hiddenInput')).toBe('HiddenInput');
-    const overlay = defineComponent({
+    const overlay = defineBehavior({
       name: 'pop-up',
       parts: ['trigger', 'root', 'hiddenInput'],
       outsideParts: ['trigger'],
@@ -384,7 +384,7 @@ describe('createInstance', () => {
 
   describe('bindable reset', () => {
     /** A field whose `api.reset()` calls the bindable's. */
-    const resettable = defineComponent({
+    const resettable = defineBehavior({
       name: 'resettable',
       parts: ['root'],
       props: {
@@ -668,7 +668,7 @@ describe('createInstance', () => {
     });
 
     it('settles state changed by watchers before other listeners read it', () => {
-      const def = defineComponent({
+      const def = defineBehavior({
         name: 'settle',
         parts: ['root'],
         props: { isDisabled: prop(false) },
@@ -702,7 +702,7 @@ describe('createInstance', () => {
   describe('memo', () => {
     it('recomputes only when a dependency changes', () => {
       const compute = vi.fn((label: string | undefined) => label?.length ?? 0);
-      const def = defineComponent({
+      const def = defineBehavior({
         name: 'memo',
         parts: ['root'],
         props: { label: prop<string | undefined>(undefined) },
@@ -752,7 +752,7 @@ describe('createInstance', () => {
 });
 
 /** Composes the disclosure, as a component built on another would. */
-const accordionItem = defineComponent({
+const accordionItem = defineBehavior({
   name: 'accordion-item',
   parts: ['heading', 'trigger', 'body'],
   props: {
@@ -783,7 +783,7 @@ const accordionItem = defineComponent({
 });
 
 describe('actions', () => {
-  const panel = defineComponent({
+  const panel = defineBehavior({
     name: 'panel',
     parts: ['root'],
     props: { isOpen: bindable(false) },
@@ -832,7 +832,7 @@ describe('actions', () => {
   });
 
   it('rejects an action setup() does not return as a function', () => {
-    const broken = defineComponent({
+    const broken = defineBehavior({
       name: 'broken',
       parts: ['root'],
       props: {},
@@ -848,7 +848,7 @@ describe('actions', () => {
 
   it('rejects an action named like a prop', () => {
     expect(() =>
-      defineComponent({
+      defineBehavior({
         name: 'clash',
         parts: ['root'],
         props: { isOpen: bindable(false) },
@@ -935,7 +935,7 @@ describe('ctx.use', () => {
 
   it('looks up composed parts on the elements they render on', () => {
     const seen: unknown[] = [];
-    const probe = defineComponent({
+    const probe = defineBehavior({
       name: 'probe',
       parts: ['panel'],
       props: {},
@@ -945,7 +945,7 @@ describe('ctx.use', () => {
       expose: () => ({}),
       connect: () => ({ panel: { attrs: {} } }),
     });
-    const host = defineComponent({
+    const host = defineBehavior({
       name: 'host',
       parts: ['body'],
       props: {},
@@ -963,7 +963,7 @@ describe('ctx.use', () => {
   });
 
   it('leaves out a composed part mapped to null', () => {
-    const probe = defineComponent({
+    const probe = defineBehavior({
       name: 'probe',
       parts: ['panel', 'note'],
       props: {},
@@ -973,7 +973,7 @@ describe('ctx.use', () => {
       expose: () => ({}),
       connect: () => ({ panel: { attrs: {} }, note: { attrs: {} } }),
     });
-    const host = defineComponent({
+    const host = defineBehavior({
       name: 'host',
       parts: ['body'],
       props: {},
@@ -995,7 +995,7 @@ describe('ctx.use', () => {
   });
 
   it('refuses a composed part with nothing to render on', () => {
-    const host = defineComponent({
+    const host = defineBehavior({
       name: 'host',
       parts: ['trigger'],
       props: {},
@@ -1013,7 +1013,7 @@ describe('ctx.use', () => {
 
 describe('part ids', () => {
   /** A disclosure whose panel id can come from a prop, as Field's control. */
-  const named = defineComponent({
+  const named = defineBehavior({
     name: 'named',
     parts: ['trigger', 'panel'],
     itemParts: ['row'],
@@ -1094,7 +1094,7 @@ describe('part ids', () => {
   });
 
   it("gives a composed definition the outer part's id, after its own idOf prop", () => {
-    const outer = defineComponent({
+    const outer = defineBehavior({
       name: 'outer',
       parts: ['button', 'body'],
       props: {},
@@ -1122,7 +1122,7 @@ describe('part ids', () => {
   });
 
   it("lets an instance that reads another's ids see one adopted before either started", () => {
-    const labelled = defineComponent({
+    const labelled = defineBehavior({
       name: 'labelled',
       parts: ['root'],
       props: {},
@@ -1158,13 +1158,13 @@ describe('part ids', () => {
     } as const;
     const message = 'idOf takes a plain prop and a part no other prop names';
     expect(() =>
-      defineComponent({
+      defineBehavior({
         ...base,
         props: { a: prop<string | undefined>(undefined, { idOf: 'nothing' }) },
       }),
     ).toThrow(message);
     expect(() =>
-      defineComponent({
+      defineBehavior({
         ...base,
         props: {
           a: prop<string | undefined>(undefined, { idOf: 'panel' }),
@@ -1173,7 +1173,7 @@ describe('part ids', () => {
       }),
     ).toThrow(message);
     expect(() =>
-      defineComponent({
+      defineBehavior({
         ...base,
         props: { a: bindable<string>('', { idOf: 'panel' }) },
       }),
@@ -1182,7 +1182,7 @@ describe('part ids', () => {
 });
 
 describe('owner', () => {
-  const group = defineComponent({
+  const group = defineBehavior({
     name: 'group',
     parts: ['root'],
     props: { value: bindable<string[]>([]) },
@@ -1194,7 +1194,7 @@ describe('owner', () => {
     expose: ({ props }) => ({ value: props.value.get() }),
     connect: () => ({ root: { attrs: {} } }),
   });
-  const item = defineComponent({
+  const item = defineBehavior({
     name: 'item',
     parts: ['root'],
     props: { value: prop('') },
@@ -1284,7 +1284,7 @@ describe('owner', () => {
   });
 
   it('returns nothing for another definition', () => {
-    const other = defineComponent({
+    const other = defineBehavior({
       name: 'other',
       parts: ['root'],
       props: {},
@@ -1304,7 +1304,7 @@ describe('links', () => {
     setText(text: string): void;
   }
   const hintLink: LinkKey<'hint', HintApi> = { name: 'hint' };
-  const hint = defineComponent({
+  const hint = defineBehavior({
     name: 'hint',
     parts: ['root'],
     props: { text: prop('') },
@@ -1319,7 +1319,7 @@ describe('links', () => {
     expose: () => ({}),
     connect: () => ({ root: { attrs: {} } }),
   });
-  const button = defineComponent({
+  const button = defineBehavior({
     name: 'button',
     parts: ['root'],
     props: {},
@@ -1338,7 +1338,7 @@ describe('links', () => {
     expect(isOwnerDefinition(hint)).toBe(true);
     expect(isOwnerDefinition(button)).toBe(false);
     expect(() =>
-      defineComponent({
+      defineBehavior({
         name: 'clash',
         parts: ['root'],
         props: { hint: prop('') },
@@ -1401,7 +1401,7 @@ describe('links', () => {
 });
 
 /** Rows keyed by item, one active, as a listbox's options are. */
-const rows = defineComponent({
+const rows = defineBehavior({
   name: 'rows',
   parts: ['root'],
   itemParts: ['row', 'rowLabel'],
@@ -1452,11 +1452,11 @@ describe('item parts', () => {
       expose: () => ({}),
       connect: () => ({ root: { attrs: {} } }),
     } as const;
-    expect(() => defineComponent({ ...base, itemParts: ['row'] })).toThrow(
+    expect(() => defineBehavior({ ...base, itemParts: ['row'] })).toThrow(
       'item parts need connectItem()',
     );
     expect(() =>
-      defineComponent({
+      defineBehavior({
         ...base,
         itemParts: ['root'],
         connectItem: () => ({ attrs: {} }),
@@ -1593,7 +1593,7 @@ describe('item parts', () => {
 
   it('runs item effects for each element as it attaches, and cleans up as it detaches or the instance stops', () => {
     const log: string[] = [];
-    const tracked = defineComponent({
+    const tracked = defineBehavior({
       name: 'tracked',
       parts: ['root'],
       itemParts: ['row'],
@@ -1637,7 +1637,7 @@ describe('item parts', () => {
   });
 
   it('forwards connectItem through ctx.use', () => {
-    const outer = defineComponent({
+    const outer = defineBehavior({
       name: 'outer',
       parts: ['root'],
       itemParts: ['row', 'rowLabel'],

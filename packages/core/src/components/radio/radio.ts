@@ -17,14 +17,14 @@ import {
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { defineComponent, event, prop } from '../../runtime';
+import { defineBehavior, event, prop } from '../../runtime';
 import { field } from '../field/field';
 import { radioGroup } from '../radio-group/radio-group';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
-export const radio = defineComponent({
+export const radio = defineBehavior({
   name: 'radio',
   parts: ['root', 'wrapper', 'input', 'indicator', 'label', 'description'],
   owner: { definition: radioGroup, attribute: 'group' },

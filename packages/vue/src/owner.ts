@@ -1,6 +1,6 @@
 /**
  * Owners in Vue (decision 11, Vue adapter spec: Owners and links): every
- * `useComponent` provides its instance to the component's descendants, slot
+ * `useBehavior` provides its instance to the component's descendants, slot
  * content included, through `provide()`, which holds only the stable
  * instance and renders nothing. A component finds its owner during setup,
  * so the first render and the server HTML have the owner's state. Scopes
@@ -23,7 +23,7 @@ export const OWNER_SCOPE: InjectionKey<Scope | null> = Symbol.for(
 
 /**
  * The scope each component provides last. `inject()` reads the parent's
- * provides, so a second `useComponent` in one component chains onto the
+ * provides, so a second `useBehavior` in one component chains onto the
  * first through this, not through `inject()`.
  */
 const provided = new WeakMap<object, Scope>();

@@ -316,17 +316,17 @@ closes. Everything else on the root is the consumer's.
 
 ## Styling tokens
 
-| Token                                                                                          | On                                 | Meaning                                                                     |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
-| `data-uni="popover"`                                                                           | root                               | The root part.                                                              |
-| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                            | trigger, anchor                    | Which part an element is: they sit outside the root.                        |
-| `data-element`                                                                                 | its other parts                    | Which part an element is.                                                   |
-| `data-open`, `data-entering`, `data-exiting`                                                   | every part                         | Open; the first two frames after opening; closing until its animations end. |
-| `data-placement`                                                                               | root, arrow                        | The side it was placed on, after fallbacks.                                 |
-| Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                     | As Button.                                                                  |
-| `--anchor-width`                                                                               | root                               | The anchor's width, in pixels (for `min-width`).                            |
-| `--available-width`, `--available-height`                                                      | root                               | The most room it could take, in pixels, in any of its options.              |
-| `isOpen`, `isEntering`, `isExiting`, `placement`                                               | public state (`useComponentState`) | The same, for a framework's own bindings.                                   |
+| Token                                                                                          | On                                | Meaning                                                                     |
+| ---------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| `data-uni="popover"`                                                                           | root                              | The root part.                                                              |
+| `data-uni-part="popover-trigger"`, `data-uni-part="popover-anchor"`                            | trigger, anchor                   | Which part an element is: they sit outside the root.                        |
+| `data-element`                                                                                 | its other parts                   | Which part an element is.                                                   |
+| `data-open`, `data-entering`, `data-exiting`                                                   | every part                        | Open; the first two frames after opening; closing until its animations end. |
+| `data-placement`                                                                               | root, arrow                       | The side it was placed on, after fallbacks.                                 |
+| Button's `data-pressed`, `data-hovered`, `data-focused`, `data-focus-visible`, `data-disabled` | trigger, close                    | As Button.                                                                  |
+| `--anchor-width`                                                                               | root                              | The anchor's width, in pixels (for `min-width`).                            |
+| `--available-width`, `--available-height`                                                      | root                              | The most room it could take, in pixels, in any of its options.              |
+| `isOpen`, `isEntering`, `isExiting`, `placement`                                               | public state (`useBehaviorState`) | The same, for a framework's own bindings.                                   |
 
 The variables resolve on the root only, so use them there, not on its
 children. Nothing caps the size unless the consumer uses them.
@@ -351,7 +351,7 @@ modal popover's page is hidden by walking it.
 
 ```tsx
 // React
-const size = useComponent(popover, {
+const size = useBehavior(popover, {
   positionArea: 'bottom span-right',
   onOpenChange,
 });

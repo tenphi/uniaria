@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, event, prop } from '../runtime';
+import { createInstance, defineBehavior, event, prop } from '../runtime';
 import { createBinder } from './binder';
 import { commands, userEvent } from 'vitest/browser';
 
@@ -10,7 +10,7 @@ import type { PressEvent } from './press';
 // Press behavior runs through the Button conformance suite in both adapters;
 // these cover what a single component can't show.
 
-const pressable = defineComponent({
+const pressable = defineBehavior({
   name: 'pressable',
   parts: ['root'],
   props: { isDisabled: prop(false) },
@@ -22,7 +22,7 @@ const pressable = defineComponent({
 });
 
 /** Emits `press`, for counting presses. */
-const emitting = defineComponent({
+const emitting = defineBehavior({
   name: 'emitting',
   parts: ['root'],
   props: {},
@@ -223,7 +223,7 @@ describe('createPress on macOS', () => {
 });
 
 /** Items pressed through one shared press, as a listbox's options are. */
-const pressableItems = defineComponent({
+const pressableItems = defineBehavior({
   name: 'pressable-items',
   parts: ['root'],
   itemParts: ['item'],

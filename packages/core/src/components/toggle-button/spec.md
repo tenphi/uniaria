@@ -170,7 +170,7 @@ announce the new state when it changes.
 
 ```tsx
 // React, controlled
-const bold = useComponent(toggleButton, {
+const bold = useBehavior(toggleButton, {
   isSelected: isBold,
   onSelectedChange: setBold,
   shouldPreventFocusOnPress: true,
@@ -178,7 +178,7 @@ const bold = useComponent(toggleButton, {
 return <button {...bold.parts.root}>Bold</button>;
 
 // Uncontrolled
-const mute = useComponent(toggleButton, { defaultSelected: true });
+const mute = useBehavior(toggleButton, { defaultSelected: true });
 ```
 
 ```html

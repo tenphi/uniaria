@@ -1,6 +1,6 @@
 ---
 title: React
-description: '@uniaria/react: useComponent, useComponentState and OwnerProvider.'
+description: '@uniaria/react: useBehavior, useBehaviorState and OwnerProvider.'
 ---
 
 `@uniaria/react` renders any UniAria definition in React with one hook. It has
@@ -8,7 +8,7 @@ no component-specific code: every component on this site works through the
 same three exports.
 
 ```ts
-import { OwnerProvider, useComponent, useComponentState } from '@uniaria/react';
+import { OwnerProvider, useBehavior, useBehaviorState } from '@uniaria/react';
 ```
 
 It needs React 18 or 19 (`react` is a peer dependency) and nothing else.
@@ -17,12 +17,12 @@ Internal state never renders your component again. Each part renders once with
 its current props, and after mount UniAria writes every change (hover, press,
 focus, an opening popover, the highlighted option) straight to the elements.
 Your component renders again only for props you pass and for state you
-[select](#usecomponentstate). See [State](../guide/state.md).
+[select](#usebehaviorstate). See [State](../guide/state.md).
 
-## useComponent
+## useBehavior
 
 ```ts
-useComponent<D>(definition: D, props: PropsOf<D>): ComponentHandle<D>
+useBehavior<D>(definition: D, props: PropsOf<D>): BehaviorHandle<D>
 ```
 
 Creates an instance of `definition` for this component and returns props to
@@ -30,10 +30,10 @@ spread onto each part.
 
 ```tsx
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function WifiSwitch() {
-  const wifi = useComponent(toggleSwitch, {
+  const wifi = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
     onSelectedChange: (isSelected) => console.log(isSelected),
@@ -67,12 +67,12 @@ attributes and never sets a class.
 
 ### The handle
 
-| Member                    | Description                                                                                                                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instance`                | The stable [`Instance`](./core.md#instance). Pass it to `useComponentState`, to `OwnerProvider`, or as another component's `owner` or link prop. `instance.getState()` reads state without subscribing. |
-| `actions`                 | The component's public [actions](./core.md#actions), such as an overlay's `open()` and `close()`. Stable across renders.                                                                                |
-| `parts`                   | Props for each part, from this render: `parts.root`, `parts.input`. Spread them onto the part's element.                                                                                                |
-| `getItemProps(part, key)` | Props for one item part of one item, for collections: `getItemProps('option', item.key)`. See [item parts](#item-parts).                                                                                |
+| Member                    | Description                                                                                                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `instance`                | The stable [`Instance`](./core.md#instance). Pass it to `useBehaviorState`, to `OwnerProvider`, or as another component's `owner` or link prop. `instance.getState()` reads state without subscribing. |
+| `actions`                 | The component's public [actions](./core.md#actions), such as an overlay's `open()` and `close()`. Stable across renders.                                                                               |
+| `parts`                   | Props for each part, from this render: `parts.root`, `parts.input`. Spread them onto the part's element.                                                                                               |
+| `getItemProps(part, key)` | Props for one item part of one item, for collections: `getItemProps('option', item.key)`. See [item parts](#item-parts).                                                                               |
 
 Render the parts you need: each component's page says which parts are
 optional.
@@ -83,7 +83,7 @@ For a controlled component, an action only calls the change callback
 (`onOpenChange`), as a user's click would.
 
 ```tsx
-const conflict = useComponent(dialog, {});
+const conflict = useBehavior(dialog, {});
 
 async function save(draft: string) {
   const response = await fetch('/api/draft', { method: 'PUT', body: draft });
@@ -136,7 +136,7 @@ and the part stops working. To get the element yourself, read
 callback of your own:
 
 ```tsx
-const save = useComponent(button, {});
+const save = useBehavior(button, {});
 const own = useRef<HTMLButtonElement | null>(null);
 const ref = useCallback(
   (element: HTMLButtonElement | null) => {
@@ -159,7 +159,7 @@ Collections (Listbox, Select, Combobox) repeat item parts per item. Spread
 React's `key`:
 
 ```tsx
-const ui = useComponent(listbox, { items });
+const ui = useBehavior(listbox, { items });
 return (
   <ul {...ui.parts.list}>
     {items.map((item) => (
@@ -175,11 +175,11 @@ Item props are computed lazily, only for the items you render, and later
 changes reach each row's element directly, so moving the highlight renders
 nothing. One handler per part and event serves every item.
 
-## useComponentState
+## useBehaviorState
 
 ```ts
-useComponentState<D, T>(
-  source: Instance<D> | ComponentHandle<D>,
+useBehaviorState<D, T>(
+  source: Instance<D> | BehaviorHandle<D>,
   selector: (state: StateOf<D>) => T,
   isEqual?: (a: T, b: T) => boolean,
 ): T
@@ -192,8 +192,8 @@ component's page lists under State.
 ```tsx
 import { dialog } from '@uniaria/core/dialog';
 
-const confirm = useComponent(dialog, {});
-const isOpen = useComponentState(confirm, (state) => state.isOpen);
+const confirm = useBehavior(dialog, {});
+const isOpen = useBehaviorState(confirm, (state) => state.isOpen);
 ```
 
 - Select what the render needs, not the whole state: a selector that returns
@@ -212,7 +212,7 @@ group, a radio in its radio group, a control in its field. A component finds
 its owner in this order:
 
 1. **The `owner` prop**, an instance:
-   `useComponent(checkbox, { value: 'sms', owner: group.instance })`. For
+   `useBehavior(checkbox, { value: 'sms', owner: group.instance })`. For
    parts that sit apart.
 2. **`OwnerProvider`**, the nearest one whose instance has the owner's
    definition. It holds only the stable instance, so it renders nothing when
@@ -224,11 +224,11 @@ its owner in this order:
 ```tsx
 import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
-import { OwnerProvider, useComponent } from '@uniaria/react';
+import { OwnerProvider, useBehavior } from '@uniaria/react';
 import type { ReactNode } from 'react';
 
 function Option(props: { value: string; children: ReactNode }) {
-  const ui = useComponent(checkbox, {
+  const ui = useBehavior(checkbox, {
     value: props.value,
     labelElementType: 'span',
   });
@@ -241,7 +241,7 @@ function Option(props: { value: string; children: ReactNode }) {
 }
 
 function Contact() {
-  const group = useComponent(checkboxGroup, { defaultValue: ['email'] });
+  const group = useBehavior(checkboxGroup, { defaultValue: ['email'] });
   return (
     <div {...group.parts.root}>
       <span {...group.parts.label}>Contact me by</span>
@@ -254,7 +254,7 @@ function Contact() {
 }
 ```
 
-`OwnerProvider` takes `owner`, an instance or the handle `useComponent`
+`OwnerProvider` takes `owner`, an instance or the handle `useBehavior`
 returned, and `children`. Providers nest; each component takes the nearest
 owner of the definition it needs.
 
@@ -262,8 +262,8 @@ owner of the definition it needs.
 tooltip gets the tooltip's instance as `tooltip`:
 
 ```tsx
-const hint = useComponent(tooltip, {});
-const save = useComponent(button, { tooltip: hint.instance });
+const hint = useBehavior(tooltip, {});
+const save = useBehavior(button, { tooltip: hint.instance });
 ```
 
 React components also answer lookups from the DOM: a custom element inside a
@@ -302,16 +302,16 @@ unmount.
 
 ## Server rendering
 
-`useComponent` renders complete HTML on the server: ids, ARIA attributes,
+`useBehavior` renders complete HTML on the server: ids, ARIA attributes,
 state attributes, the part markers, starting values of inputs and checkboxes, and state you
-select with `useComponentState`. Owners found
+select with `useBehaviorState`. Owners found
 through `OwnerProvider` are part of it. Effects never run on the server, so
 no listener, focus change or measurement happens there, and layout effects
 fall back to plain effects so React doesn't warn. On the client, React
 hydrates the same markup, and UniAria attaches to the elements without a
 second render.
 
-In React Server Components frameworks, `useComponent` is a hook like any
+In React Server Components frameworks, `useBehavior` is a hook like any
 other: call it from a client component (`'use client'`). See
 [Server rendering](../guide/server-rendering.md).
 
@@ -319,7 +319,7 @@ other: call it from a client component (`'use client'`). See
 
 | Type                    | Description                                                  |
 | ----------------------- | ------------------------------------------------------------ |
-| `ComponentHandle<D>`    | What `useComponent` returns.                                 |
+| `BehaviorHandle<D>`     | What `useBehavior` returns.                                  |
 | `ReactPartProps`        | Props for one part: attributes, handlers, `style` and `ref`. |
 | `OwnerProviderProps<D>` | `owner` (an instance or a handle) and `children`.            |
 

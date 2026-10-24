@@ -38,7 +38,7 @@ import {
   watchLeavingView,
 } from '../../dom';
 import type { DomPartProps, PositionArea } from '../../dom';
-import { bindable, defineComponent, prop } from '../../runtime';
+import { bindable, defineBehavior, prop } from '../../runtime';
 import type {
   TooltipDriver,
   TooltipItem,
@@ -93,7 +93,7 @@ function isHoverPointer(event: PointerEvent): boolean {
   );
 }
 
-export const tooltip = defineComponent({
+export const tooltip = defineBehavior({
   name: 'tooltip',
   parts: ['trigger', 'anchor', 'root', 'arrow', 'text'],
   // They sit outside the tooltip (root AGENTS.md → Part markers).

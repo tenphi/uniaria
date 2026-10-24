@@ -12,7 +12,7 @@ markup and the CSS.
 Each component's behavior is written once, in plain TypeScript, as a
 _definition_. Three small adapters bind every definition to a framework:
 
-- [`@uniaria/react`](../api/react.md): `useComponent(definition, props)`
+- [`@uniaria/react`](../api/react.md): `useBehavior(definition, props)`
   returns props to spread onto your elements.
 - [`@uniaria/vue`](../api/vue.md): the same composable, with props to bind
   with `v-bind`.

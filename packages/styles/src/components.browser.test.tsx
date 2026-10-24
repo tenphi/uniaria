@@ -8,7 +8,7 @@ import '@uniaria/elements/checkbox';
 
 import { button } from '@uniaria/core/button';
 import { checkbox } from '@uniaria/core/checkbox';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 import { emulateMedia, pointer, releaseInput } from '@uniaria/testing/browser';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -92,7 +92,7 @@ const elements: Adapter = {
 };
 
 function ReactButton({ variant, label, ...props }: ButtonProps) {
-  const { parts } = useComponent(button, props);
+  const { parts } = useBehavior(button, props);
   return (
     <button {...parts.root} data-variant={variant}>
       {label ?? 'Save'}
@@ -101,7 +101,7 @@ function ReactButton({ variant, label, ...props }: ButtonProps) {
 }
 
 function ReactCheckbox(props: CheckboxProps) {
-  const { parts } = useComponent(checkbox, {
+  const { parts } = useBehavior(checkbox, {
     labelElementType: 'span',
     ...props,
   });

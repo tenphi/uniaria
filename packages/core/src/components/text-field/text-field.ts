@@ -15,7 +15,7 @@ import {
 } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { field } from '../field/field';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 
@@ -25,7 +25,7 @@ const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 const CONTROLS =
   'a[href], button, input, select, textarea, label, [contenteditable], [tabindex]';
 
-export const textField = defineComponent({
+export const textField = defineBehavior({
   name: 'text-field',
   parts: ['root', 'wrapper', 'label', 'input', 'description', 'error'],
   links: [tooltipLink],

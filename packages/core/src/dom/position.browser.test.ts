@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createPosition } from './position';
 import type { PositionArea } from './position';
 import { configure } from './settings';
 import { supportsAnchorPositioning, supportsPopover } from './support';
 import { partElement } from './types';
 
-const floating = defineComponent({
+const floating = defineBehavior({
   name: 'floating',
   parts: ['anchor', 'root', 'arrow'],
   props: {

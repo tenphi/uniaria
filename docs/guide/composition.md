@@ -40,16 +40,16 @@ A child looks for its owner in this order:
 
 ## In React
 
-`useComponent` is a hook, and a hook can't provide context. Render an
+`useBehavior` is a hook, and a hook can't provide context. Render an
 `OwnerProvider` around the children:
 
 ```tsx
 import { radio } from '@uniaria/core/radio';
 import { radioGroup } from '@uniaria/core/radio-group';
-import { OwnerProvider, useComponent } from '@uniaria/react';
+import { OwnerProvider, useBehavior } from '@uniaria/react';
 
 function PlanPicker() {
-  const plan = useComponent(radioGroup, { defaultValue: 'pro' });
+  const plan = useBehavior(radioGroup, { defaultValue: 'pro' });
   return (
     <div {...plan.parts.root}>
       <span {...plan.parts.label}>Plan</span>
@@ -62,7 +62,7 @@ function PlanPicker() {
 }
 
 function Option({ value, children }: { value: string; children: string }) {
-  const option = useComponent(radio, { value, labelElementType: 'span' });
+  const option = useBehavior(radio, { value, labelElementType: 'span' });
   return (
     <label {...option.parts.root}>
       <input {...option.parts.input} />
@@ -77,13 +77,13 @@ provider renders nothing again when the group's value changes. Each radio
 reads the group's state directly and UniAria updates its attributes.
 
 For a child rendered somewhere else, pass the owner instance instead:
-`useComponent(radio, { value: 'pro', owner: plan.instance })`.
+`useBehavior(radio, { value: 'pro', owner: plan.instance })`.
 
 A tooltip is a link rather than an owner, and is passed by its own prop:
 
 ```tsx
-const hint = useComponent(tooltip, { positionArea: 'top' });
-const save = useComponent(button, {
+const hint = useBehavior(tooltip, { positionArea: 'top' });
+const save = useBehavior(button, {
   onPress: saveFile,
   tooltip: hint.instance,
 });
@@ -91,7 +91,7 @@ const save = useComponent(button, {
 
 ## In Vue
 
-Every `useComponent` provides its instance to the components inside it, slot
+Every `useBehavior` provides its instance to the components inside it, slot
 content included, so a group needs nothing more than a `<slot />` or child
 components:
 
@@ -99,11 +99,11 @@ components:
 <!-- PlanPicker.vue -->
 <script setup lang="ts">
 import { radioGroup } from '@uniaria/core/radio-group';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 import PlanOption from './PlanOption.vue';
 
-const plan = useComponent(radioGroup, { defaultValue: 'pro' });
+const plan = useBehavior(radioGroup, { defaultValue: 'pro' });
 </script>
 
 <template>
@@ -119,10 +119,10 @@ const plan = useComponent(radioGroup, { defaultValue: 'pro' });
 <!-- PlanOption.vue -->
 <script setup lang="ts">
 import { radio } from '@uniaria/core/radio';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ value: string }>();
-const option = useComponent(radio, () => ({
+const option = useBehavior(radio, () => ({
   value: props.value,
   labelElementType: 'span',
 }));
@@ -139,9 +139,9 @@ const option = useComponent(radio, () => ({
 Vue provides the stable instance, never state, so the group renders nothing
 again when its value changes. A radio teleported elsewhere with `<Teleport>`
 still finds it. For a child rendered in another branch, pass the owner
-instance: `useComponent(radio, { value: 'pro', owner: plan.instance })`. A
+instance: `useBehavior(radio, { value: 'pro', owner: plan.instance })`. A
 tooltip goes by its own prop, as in React:
-`useComponent(button, { tooltip: hint.instance })`.
+`useBehavior(button, { tooltip: hint.instance })`.
 
 ## On custom elements
 

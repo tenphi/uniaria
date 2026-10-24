@@ -12,7 +12,7 @@ import { Callout, Tab, Tabs } from '@tenphi/cookbook/components';
 ## Install
 
 Pick the adapter for your stack. Each brings `@uniaria/core`, where the
-component definitions live.
+behavior definitions live.
 
 <Tabs label="Install">
 <Tab label="React">
@@ -51,14 +51,14 @@ safely on a server.
 ## React
 
 Import a component's definition from its subpath of `@uniaria/core`, pass it
-to `useComponent` with props, and spread each part's props onto your element:
+to `useBehavior` with props, and spread each part's props onto your element:
 
 ```tsx
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function SaveButton({ onSave }: { onSave(): void }) {
-  const save = useComponent(button, { onPress: onSave });
+  const save = useBehavior(button, { onPress: onSave });
   return <button {...save.parts.root}>Save</button>;
 }
 ```
@@ -73,10 +73,10 @@ A component with several parts gives you one set of props per part:
 
 ```tsx
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function WifiSwitch() {
-  const wifi = useComponent(toggleSwitch, {
+  const wifi = useBehavior(toggleSwitch, {
     defaultSelected: true,
     labelElementType: 'span',
     onSelectedChange: (isSelected) => console.log(isSelected),
@@ -93,21 +93,21 @@ export function WifiSwitch() {
 
 Hovering, pressing or toggling the switch doesn't render `WifiSwitch` again:
 UniAria writes the new state straight to the elements. When your render needs
-a value, select it with `useComponentState`. See [State](./state.md).
+a value, select it with `useBehaviorState`. See [State](./state.md).
 
 ## Vue
 
-The same definitions work in Vue. Pass one to `useComponent` in
+The same definitions work in Vue. Pass one to `useBehavior` in
 `<script setup>`, with props, and bind each part's props onto your element
 with `v-bind`:
 
 ```vue
 <script setup lang="ts">
 import { button } from '@uniaria/core/button';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const emit = defineEmits<{ save: [] }>();
-const save = useComponent(button, { onPress: () => emit('save') });
+const save = useBehavior(button, { onPress: () => emit('save') });
 </script>
 
 <template>
@@ -124,11 +124,11 @@ like `computed()` does:
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ isOffline: boolean }>();
 
-const wifi = useComponent(toggleSwitch, () => ({
+const wifi = useBehavior(toggleSwitch, () => ({
   defaultSelected: true,
   isDisabled: props.isOffline,
   labelElementType: 'span',
@@ -145,7 +145,7 @@ const wifi = useComponent(toggleSwitch, () => ({
 ```
 
 Toggling the switch doesn't render this component again either. When your
-template needs a value, read it with `useComponentState`. See
+template needs a value, read it with `useBehaviorState`. See
 [Vue](../api/vue.md).
 
 ## Custom elements

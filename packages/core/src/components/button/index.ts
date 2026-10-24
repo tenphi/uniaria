@@ -1,6 +1,6 @@
 /**
  * `@uniaria/core/button` — the Button definition. Render it with
- * `useComponent(button, props)` from `@uniaria/react` or the
+ * `useBehavior(button, props)` from `@uniaria/react` or the
  * `<uni-button>` element from `@uniaria/elements/button`.
  */
 

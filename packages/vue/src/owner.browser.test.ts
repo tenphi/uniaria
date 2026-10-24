@@ -19,7 +19,7 @@ import {
 import { renderToString } from 'vue/server-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useComponent } from './use-component';
+import { useBehavior } from './use-behavior';
 
 const apps: App[] = [];
 
@@ -53,7 +53,7 @@ const Option = defineComponent({
     onRender: Function as PropType<() => void>,
   },
   setup(props) {
-    const ui = useComponent(checkbox, () => ({
+    const ui = useBehavior(checkbox, () => ({
       value: props.value,
       owner: props.owner,
       labelElementType: 'span',
@@ -76,7 +76,7 @@ const Group = defineComponent({
     onRender: Function as PropType<() => void>,
   },
   setup(props, { slots }) {
-    const ui = useComponent(checkboxGroup, {
+    const ui = useBehavior(checkboxGroup, {
       defaultValue: props.defaultValue,
       onValueChange: (value) => props.onValueChange?.(value),
     });
@@ -158,7 +158,7 @@ describe('owners in Vue', () => {
   it('links through the owner prop, from another branch', () => {
     let group: Instance<typeof checkboxGroup> | undefined;
     const Apart = defineComponent(() => {
-      const ui = useComponent(checkboxGroup, { defaultValue: ['email'] });
+      const ui = useBehavior(checkboxGroup, { defaultValue: ['email'] });
       group = ui.instance;
       return () => h('div', ui.parts.root);
     });
@@ -237,7 +237,7 @@ const Radio = defineComponent({
     owner: Object as PropType<Instance<typeof radioGroup>>,
   },
   setup(props) {
-    const ui = useComponent(radio, () => ({
+    const ui = useBehavior(radio, () => ({
       value: props.value,
       owner: props.owner,
       labelElementType: 'span',
@@ -261,7 +261,7 @@ describe('radios outside their group’s root', () => {
     elsewhere.id = 'plans-elsewhere';
     let group: Instance<typeof radioGroup> | undefined;
     const Plan = defineComponent(() => {
-      const ui = useComponent(radioGroup, { defaultValue: 'free' });
+      const ui = useBehavior(radioGroup, { defaultValue: 'free' });
       group = ui.instance;
       return () =>
         h('div', ui.parts.root, [

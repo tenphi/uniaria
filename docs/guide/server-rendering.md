@@ -9,7 +9,7 @@ Node. Effects, timers and listeners start only in the browser.
 
 ## React
 
-`useComponent` renders each part with its current props on the first render,
+`useBehavior` renders each part with its current props on the first render,
 so the server HTML already has the roles, ARIA states, ids and state
 attributes a component starts with: a selected checkbox's `checked`, a
 disabled button's `disabled`, a listbox's selected options.
@@ -39,7 +39,7 @@ disabled button's `disabled`, a listbox's selected options.
 ## Vue
 
 `renderToString` from `vue/server-renderer`, and Nuxt with it, gives the same
-HTML: `useComponent` renders each part with its current props during setup
+HTML: `useBehavior` renders each part with its current props during setup
 and the first render.
 
 - **Ids** come from Vue's `useId`, so they match between the server and the

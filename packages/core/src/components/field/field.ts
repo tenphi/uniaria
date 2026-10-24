@@ -13,7 +13,7 @@ import {
   partElement,
   warn,
 } from '../../dom';
-import { defineComponent, prop } from '../../runtime';
+import { defineBehavior, prop } from '../../runtime';
 
 type FieldPart = 'root' | 'label' | 'control' | 'description' | 'error';
 
@@ -35,7 +35,7 @@ const references = (...ids: (string | undefined)[]): string | undefined =>
 const textOf = (element: HTMLElement): string =>
   (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
-export const field = defineComponent({
+export const field = defineBehavior({
   name: 'field',
   parts: ['root', 'label', 'control', 'description', 'error'],
   props: {

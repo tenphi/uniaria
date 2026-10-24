@@ -38,13 +38,13 @@ word in JavaScript. Its element and markers still say `switch`:
 
 ```tsx
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/react';
+import { useBehavior } from '@uniaria/react';
 
 export function WifiSwitch(props: {
   isOn: boolean;
   onChange(isOn: boolean): void;
 }) {
-  const wifi = useComponent(toggleSwitch, {
+  const wifi = useBehavior(toggleSwitch, {
     labelElementType: 'span',
     isSelected: props.isOn,
     onSelectedChange: props.onChange,
@@ -67,11 +67,11 @@ export function WifiSwitch(props: {
 ```vue
 <script setup lang="ts">
 import { toggleSwitch } from '@uniaria/core/switch';
-import { useComponent } from '@uniaria/vue';
+import { useBehavior } from '@uniaria/vue';
 
 const isOn = defineModel<boolean>({ required: true });
 
-const wifi = useComponent(toggleSwitch, () => ({
+const wifi = useBehavior(toggleSwitch, () => ({
   labelElementType: 'span',
   isSelected: isOn.value,
   onSelectedChange: (isSelected) => (isOn.value = isSelected),
@@ -222,7 +222,7 @@ To render something from state in React or Vue, select it, and the component
 renders again only when that value changes (in Vue, it is a ref):
 
 ```tsx
-const isOn = useComponentState(wifi, (state) => state.isSelected);
+const isOn = useBehaviorState(wifi, (state) => state.isSelected);
 ```
 
 On the custom element, read `element.instance.getState()`. The `isSelected`

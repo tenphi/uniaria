@@ -41,7 +41,7 @@ import {
 } from '../../dom';
 import type { DomPartProps, PressEvent } from '../../dom';
 import type { PartProps } from '../../runtime';
-import { bindable, defineComponent, event, prop } from '../../runtime';
+import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
@@ -133,7 +133,7 @@ function nextText(
   }
 }
 
-export const numberField = defineComponent({
+export const numberField = defineBehavior({
   name: 'number-field',
   parts: [
     'root',

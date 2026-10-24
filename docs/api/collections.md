@@ -206,8 +206,8 @@ rendered set renders only the rows:
 ```tsx
 import { listbox } from '@uniaria/core/listbox';
 import { virtualizer } from '@uniaria/core/virtual';
-import type { ComponentHandle } from '@uniaria/react';
-import { useComponent, useComponentState } from '@uniaria/react';
+import type { BehaviorHandle } from '@uniaria/react';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
 
 const zones = Intl.supportedValuesOf('timeZone').map((zone) => ({
   key: zone,
@@ -215,7 +215,7 @@ const zones = Intl.supportedValuesOf('timeZone').map((zone) => ({
 }));
 
 export function TimeZones() {
-  const ui = useComponent(listbox, { items: zones, virtualizer, itemSize: 32 });
+  const ui = useBehavior(listbox, { items: zones, virtualizer, itemSize: 32 });
   return (
     <div {...ui.parts.root}>
       <span {...ui.parts.label}>Time zone</span>
@@ -228,8 +228,8 @@ export function TimeZones() {
   );
 }
 
-function Rows({ ui }: { ui: ComponentHandle<typeof listbox> }) {
-  const keys = useComponentState(ui, (state) => state.renderedKeys);
+function Rows({ ui }: { ui: BehaviorHandle<typeof listbox> }) {
+  const keys = useBehaviorState(ui, (state) => state.renderedKeys);
   return keys.map((key) => (
     <div key={key} {...ui.getItemProps('option', key)}>
       {key}

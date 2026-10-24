@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createBinder } from './binder';
 import { createPress } from './press';
 import { disableTextSelection, restoreTextSelection } from './text-selection';
 
-const pressable = defineComponent({
+const pressable = defineBehavior({
   name: 'pressable',
   parts: ['root'],
   props: { isDisabled: prop(false) },

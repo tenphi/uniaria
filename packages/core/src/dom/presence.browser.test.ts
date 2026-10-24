@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createInstance, defineComponent, prop } from '../runtime';
+import { createInstance, defineBehavior, prop } from '../runtime';
 import { createBinder } from './binder';
 import { createPresence } from './presence';
 import { partEffect } from './types';
 
-const overlay = defineComponent({
+const overlay = defineBehavior({
   name: 'overlay',
   parts: ['root'],
   props: { isOpen: prop(false) },
@@ -94,7 +94,7 @@ describe('createPresence with the binder', () => {
 
   // An overlay as Dialog's: shown by a part effect, its state written by
   // the binder.
-  const shownOverlay = defineComponent({
+  const shownOverlay = defineBehavior({
     name: 'shown-overlay',
     parts: ['root'],
     props: { isOpen: prop(false) },
