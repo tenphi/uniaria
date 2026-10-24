@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 
 import { createBinder } from '../../dom';
 import { createInstance } from '../../runtime';
@@ -20,11 +21,16 @@ afterEach(() => {
  * A started select in `markup`, its parts found by their markers and its
  * listeners delegated, as the custom element does, and an input after it.
  */
-function start(markup: string, props: Record<string, unknown> = {}) {
+function start(
+  markup: string,
+  props: Record<string, unknown> = {},
+  container: ParentNode = document.body,
+) {
   const host = document.createElement('div');
   host.innerHTML = markup;
   const after = document.createElement('input');
-  document.body.append(host, after);
+  container.append(host);
+  document.body.append(after);
   const instance = createInstance(select, {
     props: { items: FRUIT, ...props } as never,
     env: { document },
@@ -92,4 +98,59 @@ it('writes its state attributes on the anchor, as on every named part', () => {
   );
   expect(part('Anchor').hasAttribute('data-disabled')).toBe(true);
   expect(part('Anchor').hasAttribute('data-placeholder')).toBe(true);
+});
+
+const REQUIRED = (name: string) =>
+  `<button type="button" data-element="Trigger"><span data-element="Value"></span></button>
+  <select data-element="HiddenSelect" name="${name}"></select>
+  <div data-element="Popover"><div data-element="List"></div></div>`;
+
+/**
+ * A form with `controls`, a submit button and two required selects with no
+ * value, and the triggers focus lands on.
+ */
+function invalidForm(controls = '') {
+  const form = document.createElement('form');
+  form.innerHTML = `${controls}<button>Submit</button>`;
+  form.addEventListener('submit', (event) => event.preventDefault());
+  document.body.append(form);
+  const first = start(REQUIRED('first'), { isRequired: true }, form);
+  const second = start(REQUIRED('second'), { isRequired: true }, form);
+  const focusedTriggers: Element[] = [];
+  const onFocusIn = (event: FocusEvent) => {
+    const target = event.target as Element;
+    if (target.matches('[data-element="Trigger"]')) {
+      focusedTriggers.push(target);
+    }
+  };
+  document.addEventListener('focusin', onFocusIn);
+  stops.push(() => document.removeEventListener('focusin', onFocusIn));
+  return { form, first, second, focusedTriggers };
+}
+
+// Every invalid control gets `invalid`, and focus went through each
+// select's trigger on its way to the first.
+it('focuses only the first invalid select when a submit reports it', async () => {
+  const { form, first, focusedTriggers } = invalidForm();
+  await userEvent.click(form.querySelector('button')!);
+  await expect.poll(() => document.activeElement).toBe(first.part('Trigger'));
+  expect(focusedTriggers).toEqual([first.part('Trigger')]);
+  // As React Aria: focus shows, though a pointer submitted.
+  expect(first.part('Trigger').hasAttribute('data-focus-visible')).toBe(true);
+});
+
+it('leaves focus on the first invalid control when it is not a select', () => {
+  const { form, focusedTriggers } = invalidForm('<input required />');
+  form.requestSubmit();
+  expect(document.activeElement).toBe(form.querySelector('input'));
+  expect(focusedTriggers).toEqual([]);
+});
+
+// The last invalid select took focus.
+it('moves no focus on checkValidity()', () => {
+  const { form, first, focusedTriggers } = invalidForm();
+  first.after.focus();
+  expect(form.checkValidity()).toBe(false);
+  expect(document.activeElement).toBe(first.after);
+  expect(focusedTriggers).toEqual([]);
 });
