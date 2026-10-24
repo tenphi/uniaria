@@ -1,6 +1,6 @@
 # Form spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-24
 
 ## Summary
 
@@ -31,7 +31,7 @@ renders unless it selected that state.
 - **Custom element:** yes, `<uni-form>` around the consumer's `<form>`.
 
 The differences from UI Kit's modern form are listed in Differences and
-each is an open question. The main ones: focus moves to the first invalid
+each is a resolved question. The main ones: focus moves to the first invalid
 field after a failed submit, the native constraints a consumer writes on a
 control still count, a form without a submit handler validates and then
 posts natively, and disabled and read-only fields aren't checked.
@@ -385,7 +385,7 @@ Form only reads `validity` and `validationMessage`; it never calls
 the detached control has none.
 
 A disabled or read-only field isn't checked and holds no errors from
-checks, as HTML bars them from constraint validation (open question 9).
+checks, as HTML bars them from constraint validation (Resolved questions 9).
 
 ### Messages
 
@@ -632,7 +632,7 @@ error). With a form, the rules become:
   the submit's. When focus doesn't move, because the first invalid field
   already has it (Enter in the field just left wrong) or no invalid field
   can take focus, Form announces the first error with its field's label,
-  assertively: the user would hear nothing otherwise (open question 8).
+  assertively: the user would hear nothing otherwise (Resolved questions 8).
 - **`setFieldErrors`** announces nothing; `focusInvalid()` does what a
   submit does.
 - **The submit error** is announced assertively when the error part shows,
@@ -819,7 +819,7 @@ the browser fires no `invalid` on submit, so this is a fix of its own.
 
 ## Differences from Cube UI Kit, React Aria and the platform
 
-From UI Kit's modern form; the owner decides each (Open questions):
+From UI Kit's modern form; the owner decided each (Resolved questions):
 
 - **Focus after a failed submit.** UI Kit moves none. React Aria focuses the
   first invalid field, and a user who presses Submit and hears nothing
@@ -855,47 +855,46 @@ through `setFieldErrors`, not a `validationErrors` prop.
 None: there is no form pattern. Errors are linked with `aria-describedby`,
 not `aria-errormessage`, for Field's reasons (Field spec, Deviations).
 
-## Open questions
+## Resolved questions
 
-Each has a recommendation, listed first.
+Decided by @tenphi on 2026-10-24, each as recommended.
 
 1. **Where values live.** (a) The form holds the bound fields' values (UI
    Kit's modern form); (b) fields keep their values and the form only
    checks and collects them. (a) gives values before mount, retained
    values, program writes and a typed payload; (b) changes no bindable but
-   leaves `setValue` and `defaultValues` to each field. Recommended: (a).
+   leaves `setValue` and `defaultValues` to each field. Decided: (a).
 2. **Where the binding lives.** (a) In Field, which every field composes
    and which binds any control, custom or native; (b) a separate
    `formField` behavior each field composes beside Field. (a) costs every
    field the binding's size, form or not; (b) costs the same in every field
-   and adds a second public behavior for custom controls. Recommended: (a).
+   and adds a second public behavior for custom controls. Decided: (a).
 3. **Rules.** (a) `isRequired`, native constraints and `validate`; UI Kit
    compiles its rule objects into `validate`; (b) UI Kit's rule objects
-   built in. Recommended: (a).
+   built in. Decided: (a).
 4. **Native constraints.** (a) Count them, through a detached control;
-   (b) ignore them, as UI Kit does. Recommended: (a).
+   (b) ignore them, as UI Kit does. Decided: (a).
 5. **Error text.** (a) An optional element-owned `errorText` part inside
    the error part, which Field fills with a string error; leave it out to
    render errors yourself; (b) the whole error part element-owned while
    bound; (c) the consumer always renders errors from state, and elements
-   need a script. Recommended: (a).
+   need a script. Decided: (a).
 6. **Focus after a failed submit.** (a) The first invalid field, visibly,
    and `submit()` does it too unless `shouldFocus: false`; (b) none, as UI
-   Kit. Recommended: (a).
+   Kit. Decided: (a).
 7. **Without a submit handler.** (a) Check, then post natively; (b) post
    without checking when `action` is set, else nothing, as UI Kit.
-   Recommended: (a).
+   Decided: (a).
 8. **Announcing a failed submit.** (a) Focus reads the first error; Form
    announces it only when focus doesn't move; (b) as (a), and also the
    number of invalid fields when there are several ("3 fields have
    errors"), politely, from a translatable message; (c) every field
-   announces its own. Recommended: (a).
+   announces its own. Decided: (a).
 9. **Disabled and read-only fields.** (a) Not checked, still in the payload;
-   (b) checked, as UI Kit. Recommended: (a).
+   (b) checked, as UI Kit. Decided: (a).
 10. **Names.** (a) Keys and paths, as UI Kit; (b) keys only, and UI Kit
-    flattens its paths. Recommended: (a).
+    flattens its paths. Decided: (a).
 11. **`handleSubmit`,** a function prop the form waits for, with
-    `submitted`, `submitFailed` and `valuesChange` as events. Recommended:
-    yes.
+    `submitted`, `submitFailed` and `valuesChange` as events. Decided: yes.
 12. **Server errors before mount.** (a) Kept until the field mounts and
-    shown then; (b) cleared on registering, as UI Kit. Recommended: (a).
+    shown then; (b) cleared on registering, as UI Kit. Decided: (a).
