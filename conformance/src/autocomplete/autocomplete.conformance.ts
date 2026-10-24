@@ -109,7 +109,10 @@ interface FruitOptions {
   readonly hasDescription?: boolean;
   /** Render the empty part. */
   readonly hasEmpty?: boolean;
-  /** Put a button, `#add`, in the empty part. */
+  /**
+   * Put a button, `#add`, in the empty part. It has a tabindex: WebKit
+   * focuses a button on a press only with one, as macOS.
+   */
   readonly hasEmptyButton?: boolean;
   /** Wrap the list in the scroller part, which scrolls. */
   readonly hasScroller?: boolean;
@@ -165,7 +168,7 @@ function fruit({
     { part: 'empty' },
     'No fruit',
     ...(hasEmptyButton
-      ? [h('button', { id: 'add', type: 'button' }, 'Add')]
+      ? [h('button', { id: 'add', type: 'button', tabindex: '0' }, 'Add')]
       : []),
   );
   const parts = [
@@ -1328,12 +1331,15 @@ export const autocompleteConformance = defineConformance<
 
     scenario(
       'keys with Ctrl or Meta, and keys during IME composition, are left to the browser',
-      async ({ mount, keyboard }) => {
+      async ({ mount, keyboard, pointer }) => {
         const mounted = await mount({
           template: fruit(),
           props: { items: FRUIT },
           events: EVENTS,
         });
+        // The pointer may rest over an option from an earlier scenario, where
+        // WebKit's synthetic moves would highlight it.
+        await pointer.moveOutside(mounted.part('root'));
         input(mounted).focus();
         const keys = watchKeys(mounted);
         await chord(keyboard, ['Control'], 'ArrowDown');
