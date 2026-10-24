@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { commands, userEvent } from 'vitest/browser';
 
 import { createInstance, defineBehavior, prop } from '../runtime';
 import { createBinder } from './binder';
-import { createFocus } from './focus';
+import { createFocus, createPressFocus } from './focus';
 import { modalityTrackerFor } from './modality';
 
 const focusable = defineBehavior({
@@ -41,7 +41,30 @@ function mount(
   return { root, instance, binder, state: () => instance.getState() };
 }
 
-afterEach(() => {
+/** Real mouse input, from the commands `@uniaria/testing` registers. */
+const mouse = commands as unknown as {
+  uniPointerDown(selector: string, button: 'left'): Promise<void>;
+  uniPointerMove(selector: string, where: 'center'): Promise<void>;
+  uniPointerUp(button: 'left'): Promise<void>;
+};
+let isHeld = false;
+const pointer = {
+  async down(element: Element) {
+    await mouse.uniPointerDown(`#${element.id}`, 'left');
+    isHeld = true;
+  },
+  move: (element: Element) => mouse.uniPointerMove(`#${element.id}`, 'center'),
+  async up() {
+    await mouse.uniPointerUp('left');
+    isHeld = false;
+  },
+};
+
+const stops: (() => void)[] = [];
+
+afterEach(async () => {
+  if (isHeld) await pointer.up();
+  for (const stop of stops.splice(0)) stop();
   document.body.replaceChildren();
 });
 
@@ -109,5 +132,92 @@ describe('createFocus', () => {
 
     instance.stop();
     expect(state()).toEqual({ isFocused: false, isFocusVisible: false });
+  });
+});
+
+const pressFocusable = defineBehavior({
+  name: 'press-focusable',
+  parts: ['root', 'input'],
+  props: {},
+  setup: (ctx) => createPressFocus(ctx, 'input'),
+  expose: () => ({}),
+  connect: ({ api }) => ({
+    root: { attrs: {}, on: api.handlers },
+    input: { attrs: {}, on: api.handlers },
+  }),
+});
+
+describe('createPressFocus', () => {
+  /** A checkbox in its label, the root, and a box below it. */
+  function mountToggle() {
+    const host = document.createElement('div');
+    host.innerHTML =
+      '<label id="label" style="display: block; height: 30px">' +
+      '<input id="box" type="checkbox"> Box</label>' +
+      '<div id="away" style="height: 30px">Away</div>';
+    document.body.append(host);
+    const label = host.querySelector<HTMLElement>('#label')!;
+    const box = host.querySelector<HTMLInputElement>('#box')!;
+    const instance = createInstance(pressFocusable, { props: {} });
+    const binder = createBinder(instance, { host });
+    binder.attach('root', label);
+    binder.attach('input', box);
+    instance.start();
+    binder.start();
+    stops.push(() => {
+      binder.stop();
+      instance.stop();
+    });
+    return { label, box, away: host.querySelector<HTMLElement>('#away')! };
+  }
+
+  it('focuses the control as a press on it or on its label ends', async () => {
+    const { label, box, away } = mountToggle();
+    await pointer.down(label);
+    await pointer.up();
+    expect(document.activeElement).toBe(box);
+    expect(box.checked).toBe(true);
+
+    await pointer.down(away);
+    await pointer.up();
+    expect(document.activeElement).not.toBe(box);
+    await pointer.down(box);
+    await pointer.up();
+    expect(document.activeElement).toBe(box);
+    expect(box.checked).toBe(false);
+  });
+
+  it('moves no focus for a press that ends elsewhere, or starts elsewhere after one', async () => {
+    const { label, box, away } = mountToggle();
+    await pointer.down(label);
+    await pointer.move(away);
+    await pointer.up();
+    expect(document.activeElement).not.toBe(box);
+
+    await pointer.down(away);
+    await pointer.move(label);
+    await pointer.up();
+    expect(document.activeElement).not.toBe(box);
+    expect(box.checked).toBe(false);
+  });
+
+  it('moves no focus for a press on the control whose mousedown is prevented, as Chromium', async () => {
+    const { label, box } = mountToggle();
+    const prevent = (event: Event) => event.preventDefault();
+    document.addEventListener('mousedown', prevent);
+    try {
+      await pointer.down(box);
+      await pointer.up();
+      expect(box.checked).toBe(true);
+      expect(document.activeElement).not.toBe(box);
+
+      // A label focuses it all the same, in Chromium natively.
+      await pointer.down(label);
+      await pointer.up();
+      expect(box.checked).toBe(false);
+      expect(document.activeElement).toBe(box);
+    } finally {
+      document.removeEventListener('mousedown', prevent);
+    }
   });
 });

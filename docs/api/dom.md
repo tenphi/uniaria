@@ -266,8 +266,9 @@ press ends on it or on a `label` that activates it: Safari and Firefox on
 macOS don't focus a clicked checkbox on their own. Put the handlers on the
 control and on every part around it that a press can reach it through. Keys,
 scripts and screen readers move no focus, nor does a press on a link or a
-button inside the label, and focus from a pointer isn't visible. Pressables
-need none: `createPress` focuses what it presses.
+button inside the label, or a press on the control whose `mousedown` the
+page prevented, and focus from a pointer isn't visible. Pressables need
+none: `createPress` focuses what it presses.
 
 ### createFocusWithin
 
