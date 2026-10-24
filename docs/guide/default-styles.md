@@ -4,7 +4,7 @@ description: An optional look for every component, as prebuilt CSS, as CSS built
 ---
 
 UniAria has no look, and everything in [Styling](./styling.md) works without
-this page. `@uniaria/styles` adds one: a neutral look for all 16 components,
+this page. `@uniaria/styles` adds one: a neutral look for all 17 components,
 accessible in every scheme, which you can keep, retheme
 ([Theming](./theming.mdx)) or replace part by part. The demos on these pages
 use it.
@@ -31,7 +31,7 @@ that need them.
 @import '@uniaria/styles/css';
 ```
 
-That is everything: the tokens and all 16 components. The package has a file
+That is everything: the tokens and all 17 components. The package has a file
 for each part of it too:
 
 | Import                                | Holds                                                                  |
@@ -158,7 +158,7 @@ writeFileSync(
 | ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `palette`     | The package's          | The colors: a palette from [`createPalette()`](./theming.mdx#your-palette), or `false` to leave them out.                               |
 | `tokens`      | None                   | Tokens over the sizes and the palette, as CSS: one value, or one per scheme ([Theming](./theming.mdx#tokens)).                          |
-| `components`  | All 16                 | The components to style; `[]` writes the tokens only.                                                                                   |
+| `components`  | All 17                 | The components to style; `[]` writes the tokens only.                                                                                   |
 | `overrides`   | None                   | Tasty styles merged into a component's, by its name (`checkbox`), or into a part outside its root, by its marker (`'popover-trigger'`). |
 | `extraThemes` | `['warning', 'note']`  | The status themes to write, which no component uses: they are there for yours.                                                          |
 | `schemes`     | Dark and high contrast | `{ dark: false }` or `{ highContrast: false }` leaves those schemes out.                                                                |

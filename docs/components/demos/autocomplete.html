@@ -1,0 +1,35 @@
+<div class="row">
+  <uni-autocomplete
+    id="fruit"
+    selection-mode="multiple"
+    highlight-first-match
+    disabled-keys='["durian"]'
+  >
+    <div data-uni="autocomplete">
+      <label data-element="Label">Fruit</label>
+      <input data-element="Input" type="search" placeholder="Filter" />
+      <div data-element="List">
+        <div data-element="Option" data-key="apple">Apple</div>
+        <div data-element="Option" data-key="apricot">Apricot</div>
+        <div data-element="Option" data-key="banana">Banana</div>
+        <div data-element="Option" data-key="blueberry">Blueberry</div>
+        <div data-element="Option" data-key="cherry">Cherry</div>
+        <div data-element="Option" data-key="durian">Durian</div>
+        <div data-element="Group" data-key="citrus">
+          <span data-element="GroupLabel" data-key="citrus">Citrus</span>
+          <div data-element="Option" data-key="lemon">Lemon</div>
+          <div data-element="Option" data-key="lime">Lime</div>
+          <div data-element="Option" data-key="orange">Orange</div>
+        </div>
+        <div data-element="Option" data-key="grape">Grape</div>
+        <div data-element="Option" data-key="kiwi">Kiwi</div>
+        <div data-element="Option" data-key="mango">Mango</div>
+        <div data-element="Option" data-key="peach">Peach</div>
+        <div data-element="Option" data-key="pear">Pear</div>
+      </div>
+      <p data-element="Empty">No fruit matches.</p>
+      <p data-element="Description">Pick as many as you like.</p>
+    </div>
+  </uni-autocomplete>
+  <output id="log">Type “ma”, press Enter, then Escape.</output>
+</div>

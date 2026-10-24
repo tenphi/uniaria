@@ -8,7 +8,10 @@ sidebar:
 Each component is one definition in `@uniaria/core/<name>`, rendered in React
 with `useBehavior` and registered as a custom element by
 `@uniaria/elements/<name>`. Every page has a live demo running the custom
-element, the React and HTML usage, and the full reference.
+element, the React and HTML usage, and the full reference. TextInput is the
+exception: a bare text input for building your own components, with no element
+or page of its own (see
+[Build on the controls](../guide/custom-components.md#build-on-the-controls)).
 
 ## Buttons
 
@@ -39,11 +42,12 @@ element, the React and HTML usage, and the full reference.
 
 ## Collections
 
-| Component                  | What it does                                                             | Pattern                                                                                                  | Element          |
-| -------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------- |
-| [Listbox](./listbox.mdx)   | A list of options, single or multiple selection, optionally virtualized. | [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)                                             | `<uni-listbox>`  |
-| [Select](./select.mdx)     | A button that opens a listbox to pick a value.                           | [Select-only combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/) | `<uni-select>`   |
-| [Combobox](./combobox.mdx) | A text input that filters a listbox of suggestions.                      | [Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) with list autocomplete                    | `<uni-combobox>` |
+| Component                          | What it does                                                             | Pattern                                                                                                  | Element              |
+| ---------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------- |
+| [Listbox](./listbox.mdx)           | A list of options, single or multiple selection, optionally virtualized. | [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)                                             | `<uni-listbox>`      |
+| [Select](./select.mdx)             | A button that opens a listbox to pick a value.                           | [Select-only combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/) | `<uni-select>`       |
+| [Autocomplete](./autocomplete.mdx) | A text input that filters a list shown under it.                         | [Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) with list autocomplete, always expanded   | `<uni-autocomplete>` |
+| [Combobox](./combobox.mdx)         | A text input that filters a listbox of suggestions.                      | [Combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) with list autocomplete                    | `<uni-combobox>`     |
 
 ## Shared behavior
 
