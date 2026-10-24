@@ -14,9 +14,11 @@
  */
 
 /**
- * NumberField, from the approved spec (`./spec.md`): Field composed on a
- * native `<input type="text">`, Button composed twice for the steppers, and
- * `@internationalized/number` to parse and format. Each edit is checked
+ * NumberField, from the approved spec (`./spec.md`): Field and TextInput
+ * composed on a native `<input type="text">`, Button composed twice for the
+ * steppers, and `@internationalized/number` to parse and format. TextInput
+ * holds the IME guard, hover and focus (composition spec); NumberField
+ * passes it the text to show. Each edit is checked
  * before the browser applies it; the text is committed on blur, on Enter and
  * after a paste that replaces it, and stepped by the arrow and page keys,
  * Home and End, the buttons held down and the wheel. Modelled on React
@@ -29,8 +31,6 @@ import { NumberFormatter, NumberParser } from '@internationalized/number';
 import {
   announce,
   clearAnnouncer,
-  createFocus,
-  createHover,
   isAndroid,
   isComposing,
   isIOS,
@@ -39,11 +39,12 @@ import {
   partEffect,
   partElement,
 } from '../../dom';
-import type { DomPartProps, PressEvent } from '../../dom';
+import type { DomHandlers, DomPartProps, PressEvent } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
 import { field } from '../field/field';
+import { textInput } from '../text-input/text-input';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 import { addDecimal, clamp, roundToStepPrecision, snapToStep } from './number';
 
@@ -442,10 +443,9 @@ export const numberField = defineBehavior({
       event.preventDefault();
     };
 
-    // Writing the value mid-composition breaks the IME, so it waits. An
-    // invalid composition is undone at its end: Chromium doesn't let one be
+    // TextInput holds the value back mid-composition. An invalid
+    // composition is undone at its end: Chromium doesn't let one be
     // cancelled (crbug 1022204).
-    const isComposingText = ctx.state(false);
     let beforeComposition:
       { value: string; start: number | null; end: number | null } | undefined;
     const type = (value: string) => {
@@ -456,11 +456,6 @@ export const numberField = defineBehavior({
         }
       });
     };
-    const onInput = (event: Event) => {
-      const { value } = event.target as HTMLInputElement;
-      // Anything else is put back by the next write of the text.
-      if (isPartial(value)) type(value);
-    };
     const onCompositionStart = (event: CompositionEvent) => {
       const input = event.target as HTMLInputElement;
       beforeComposition = {
@@ -468,17 +463,16 @@ export const numberField = defineBehavior({
         start: input.selectionStart,
         end: input.selectionEnd,
       };
-      isComposingText.set(true);
     };
     const onCompositionEnd = (event: CompositionEvent) => {
       const input = event.target as HTMLInputElement;
-      isComposingText.set(false);
       if (isPartial(input.value)) return type(input.value);
       if (!beforeComposition) return;
       const { value, start, end } = beforeComposition;
       input.value = value;
       input.setSelectionRange(start, end);
       type(value);
+      editing.api.revert();
     };
 
     // A paste over all the text is committed at once, so pasting
@@ -494,6 +488,25 @@ export const numberField = defineBehavior({
       if (pasted) typedSystem.set(parser().getNumberingSystem(pasted));
       commit(pasted);
     };
+
+    // The text, IME, hover and focus on the input. An edit `beforeinput`
+    // let through that isn't a partial number (one mid-composition) is put
+    // back at once.
+    const editing = ctx.use(
+      textInput,
+      () => ({
+        value: text(),
+        onValueChange: (value: string) => {
+          if (isPartial(value)) type(value);
+          else editing.api.revert();
+        },
+        isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
+        onFocusChange: (isFocused: boolean) =>
+          ctx.emit('focusChange', isFocused),
+      }),
+      { parts: { root: 'input' } },
+    );
 
     // Each edit is checked before the browser applies it.
     partEffect(ctx, 'input', (element) => {
@@ -625,14 +638,6 @@ export const numberField = defineBehavior({
       }),
       { parts: { control: 'input' } },
     );
-    const hover = createHover(ctx, {
-      part: 'input',
-      isDisabled: props.isDisabled,
-    });
-    const focus = createFocus(ctx, 'input');
-    ctx.watch(focus.isFocused, (isFocused) => {
-      ctx.emit('focusChange', isFocused);
-    });
 
     // Form reset goes back to the default, as TextField's does: defaultValue
     // when uncontrolled, even one set after mount, and for a controlled
@@ -709,30 +714,27 @@ export const numberField = defineBehavior({
       inputMode,
       isEnglish: () => locale().split('-')[0] === 'en',
       platform: () => platform.get(),
-      isHovered: hover.isHovered,
-      isFocused: focus.isFocused,
-      isFocusVisible: focus.isFocusVisible,
-      isComposing: () => isComposingText.get(),
+      editing,
       focusInput,
       onStepperContextMenu,
-      handlers: mergeHandlers(hover.handlers, focus.handlers, {
+      handlers: {
         keydown: onKeyDown,
-        input: onInput,
         paste: onPaste,
         focusout: commitDraft,
         compositionstart: onCompositionStart,
         compositionend: onCompositionEnd,
-      }),
+      } satisfies DomHandlers,
     };
   },
   expose({ props, api }) {
+    const { isFocused, isFocusVisible, isHovered } = api.editing.state();
     return {
       value: api.committed(),
       canIncrement: api.canStep(1),
       canDecrement: api.canStep(-1),
-      isFocused: api.isFocused(),
-      isFocusVisible: api.isFocusVisible(),
-      isHovered: api.isHovered(),
+      isFocused,
+      isFocusVisible,
+      isHovered,
       isDisabled: props.isDisabled(),
       isReadOnly: props.isReadOnly(),
       isRequired: props.isRequired(),
@@ -742,14 +744,15 @@ export const numberField = defineBehavior({
   },
   connect({ props, ids, api }) {
     const { control, ...parts } = api.field.connect();
+    const editing = api.editing.connect().root as DomPartProps;
+    const { isFocused, isFocusVisible, isHovered } = api.editing.state();
     const isDisabled = props.isDisabled();
-    const isReadOnly = props.isReadOnly();
     // Every field part, so the box, the label and the messages can be styled.
     const state = {
-      'data-hovered': flag(api.isHovered()),
-      'data-focused': flag(api.isFocused()),
-      'data-focus-visible': flag(api.isFocusVisible()),
-      'data-readonly': flag(isReadOnly),
+      'data-hovered': flag(isHovered),
+      'data-focused': flag(isFocused),
+      'data-focus-visible': flag(isFocusVisible),
+      'data-readonly': flag(props.isReadOnly()),
     };
     const withState = (part: PartProps): PartProps => ({
       ...part,
@@ -760,7 +763,9 @@ export const numberField = defineBehavior({
     const roleDescription =
       props.roleDescription() ?? (api.isEnglish() ? 'Number field' : undefined);
     const input: DomPartProps = {
+      ...editing,
       attrs: {
+        ...editing.attrs,
         ...control.attrs,
         ...state,
         type: 'text',
@@ -770,11 +775,8 @@ export const numberField = defineBehavior({
         spellcheck: 'false',
         // Left off on iOS, so VoiceOver reads the required state.
         'aria-roledescription': isApple ? undefined : roleDescription,
-        disabled: flag(isDisabled),
-        readonly: flag(isReadOnly),
       },
-      on: api.handlers,
-      properties: { value: api.isComposing() ? undefined : api.text() },
+      on: mergeHandlers(editing.on ?? {}, api.handlers),
     };
 
     // A name the consumer passes is the whole name, so a translation can put
