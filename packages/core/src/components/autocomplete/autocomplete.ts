@@ -336,7 +336,8 @@ export const autocomplete = defineBehavior({
       { parts: { root: 'input' } },
     );
     /** The text on screen. */
-    const text = () => editing.api.text();
+    // A controlled `null` is the empty text, as in TextField.
+    const text = (): string => editing.api.text() ?? '';
 
     const visible = ctx.memo(
       () =>
@@ -443,11 +444,16 @@ export const autocomplete = defineBehavior({
     };
     ctx.effect(() => releaseDescendant);
 
-    /** The option typing highlighted, while typing holds the highlight. */
+    /**
+     * Whether typing holds the highlight, and the option it highlighted:
+     * none while nothing matches yet.
+     */
+    let isTypingHeld = false;
     let typedKey: string | null = null;
 
     /** Highlights an option, or none, by keyboard or not. */
     const highlight = (key: string | null, isKeyboard: boolean) => {
+      isTypingHeld = false;
       typedKey = null;
       releaseDescendant();
       list.api.highlight(key, isKeyboard);
@@ -469,6 +475,7 @@ export const autocomplete = defineBehavior({
     };
     /** Highlights the first match, holding the active descendant on typing. */
     const highlightFirstMatch = (isTyping: boolean) => {
+      isTypingHeld = true;
       const key = firstMatch();
       if (key === null) return;
       if (key !== list.api.focusedKey()) {
@@ -484,20 +491,25 @@ export const autocomplete = defineBehavior({
         isDescendantHeld.set(false);
       }, ACTIVE_DESCENDANT_DELAY);
     };
-    // Hover moving the highlight ends typing's hold on it; Listbox clearing
-    // an option that left doesn't.
+    // Hover moving the highlight (Listbox's own in popup mode) ends
+    // typing's hold on it and the active descendant's wait; Listbox
+    // clearing an option that left doesn't.
     ctx.watch(
       () => list.api.focusedKey(),
       (key) => {
-        if (key !== null && key !== typedKey) typedKey = null;
+        if (key === null || key === typedKey) return;
+        isTypingHeld = false;
+        typedKey = null;
+        releaseDescendant();
       },
     );
     // Options arriving after a keystroke (a server-side filter) get the
-    // first match too, while typing holds the highlight.
+    // first match too, while typing holds the highlight, though the
+    // keystroke matched nothing.
     ctx.watch(
       () => list.api.collection(),
       () => {
-        if (typedKey === null || !props.shouldHighlightFirstMatch()) return;
+        if (!isTypingHeld || !props.shouldHighlightFirstMatch()) return;
         if (isShown()) highlightFirstMatch(false);
       },
     );
@@ -750,9 +762,9 @@ export const autocomplete = defineBehavior({
     /**
      * A press in the popup, or inline in the list, the scroller or the
      * empty part, outside a control of its own, keeps focus where it is:
-     * the list and the scroller count as no control, though they carry a
-     * `tabindex`. Inline, a mouse or pen press then moves focus to the
-     * input; a touch doesn't, so no virtual keyboard opens (Focus).
+     * those parts count as no control, though the list and the scroller
+     * carry a `tabindex`. Inline, a mouse or pen press then moves focus to
+     * the input; a touch doesn't, so no virtual keyboard opens (Focus).
      */
     let pressType = 'mouse';
     const onPointerDown = (pointerEvent: PointerEvent) => {
@@ -764,15 +776,18 @@ export const autocomplete = defineBehavior({
       if (handled.has(mouseEvent) || mouseEvent.button !== 0) return;
       handled.add(mouseEvent);
       const target = mouseEvent.target as Element | null;
-      const container = mouseEvent.currentTarget as Element | null;
-      if (!target || !container) return;
-      const control = target.closest(CONTROLS);
+      if (!target) return;
+      // The parts themselves: React and custom elements listen from the
+      // root, so `currentTarget` isn't one, and a focusable element around
+      // them (a dialog) is no control of theirs.
+      const parts = ['list', 'scroller', isPopup() ? 'popup' : 'empty'].map(
+        (name) => partElement(ctx, name),
+      );
+      const control = target.closest<HTMLElement>(CONTROLS);
       if (
         control &&
-        control !== container &&
-        container.contains(control) &&
-        control !== partElement(ctx, 'list') &&
-        control !== partElement(ctx, 'scroller')
+        !parts.includes(control) &&
+        parts.some((part) => part?.contains(control))
       ) {
         return;
       }

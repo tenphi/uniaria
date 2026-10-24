@@ -1,4 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 
 import { createBinder } from '../../dom';
 import { createInstance } from '../../runtime';
@@ -84,4 +85,23 @@ it('settles and closes as focus leaves, with no root rendered', () => {
     isFocusWithin: false,
   });
   expect(focusChanges).toEqual([true, false]);
+});
+
+// Not a conformance scenario: no template has a focusable element around it.
+it('a press in the popover outside an option keeps focus in the input, inside a focusable element too', async () => {
+  const { instance, input, type } = start(
+    `<div id="frame" tabindex="-1">${PARTS.replace(
+      'data-element="Popover"',
+      'data-element="Popover" style="padding: 10px"',
+    )}</div>`,
+  );
+  input.focus();
+  type('a');
+  expect(instance.getState().isOpen).toBe(true);
+  const popover = document.querySelector<HTMLElement>(
+    '[data-element="Popover"]',
+  )!;
+  await userEvent.click(popover, { position: { x: 3, y: 3 } });
+  expect(document.activeElement).toBe(input);
+  expect(instance.getState().isOpen).toBe(true);
 });
