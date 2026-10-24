@@ -1498,11 +1498,13 @@ export const autocompleteConformance = defineConformance<
           template: fruit(),
           props: { items: FRUIT },
         });
+        // Before focus, so the pointer's path over the options highlights
+        // none.
+        await pointer.move(input(mounted));
         byId(mounted, 'before').focus();
         await keyboard.tab();
         expect(active(mounted)).toBe(input(mounted));
         expectOnEveryPart(mounted, 'data-focus-visible', true);
-        await pointer.move(input(mounted));
         expect(input(mounted).hasAttribute('data-hovered')).toBe(false);
         expect(input(mounted).hasAttribute('data-focused')).toBe(false);
         await keyboard.press('ArrowDown');
