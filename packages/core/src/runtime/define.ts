@@ -129,6 +129,26 @@ export interface Bindable<T> {
    * does nothing (composition spec, Runtime changes 4).
    */
   reset(options?: ResetOptions<T>): T;
+  /**
+   * The consumer's `default<Name>`, or `undefined` without one: never the
+   * schema's default. A field registers it with its form (Form spec,
+   * Defaults).
+   */
+  getDefault(): T | undefined;
+  /**
+   * Reads and writes the value through the source `source()` returns, read
+   * on every access, while it returns one (Form spec, Runtime changes 2):
+   * the value is controlled, `set()` writes the source and then calls the
+   * change callback, and `reset()` returns the value and does nothing. With
+   * `null` the props hold the value again. A later call replaces `source`.
+   */
+  bind(source: () => BindableSource<T> | null): void;
+}
+
+/** Where a bound bindable reads and writes its value (`Bindable.bind()`). */
+export interface BindableSource<T> {
+  get(): T;
+  set(value: T): void;
 }
 
 /** How `Bindable.reset()` puts a value back. */
@@ -292,13 +312,20 @@ export interface SetupContext<
   /**
    * The instance linked by `key`, one of the definition's `links`, or
    * `undefined` until there is one: the prop of the key's name, else the
-   * adapter's link. In a definition composed with `ctx.use()`, only the
-   * links its composer passed on (`ComposeOptions.links`); and once passed
-   * on, `undefined` in the composer. Read it where it is used: while
-   * started, the linked instance's changes re-run `connect()`, `expose()`
-   * and watches.
+   * adapter's link; none while that prop is `null`. In a definition
+   * composed with `ctx.use()`, only the links its composer passed on
+   * (`ComposeOptions.links`); and once passed on, `undefined` in the
+   * composer. Read it where it is used: while started, the linked
+   * instance's changes re-run `connect()`, `expose()` and watches. With
+   * `select`, only those that change what it returns from the linked
+   * instance's `api` (`Object.is`), so a field follows its own record in a
+   * form (Form spec, Runtime changes 3); the latest `select` for a key is
+   * the one used.
    */
-  link<Api>(key: LinkKey<string, Api>): Linked<Api> | undefined;
+  link<Api>(
+    key: LinkKey<string, Api>,
+    select?: (api: Api) => unknown,
+  ): Linked<Api> | undefined;
 }
 
 export interface ComposeOptions<
@@ -462,9 +489,19 @@ type OwnerProps<D extends AnyDefinition> = [NonNullable<D['owner']>] extends [
     ? { readonly owner?: Instance<O> }
     : unknown;
 
-/** A linking component takes each linked instance as a prop of the key's name. */
+/**
+ * A linking component takes each linked instance as a prop of the key's
+ * name: the instance, the handle an adapter returned, or `null` for none.
+ */
 type LinkProps<D extends AnyDefinition> = D['links'] extends readonly LinkKey[]
-  ? Partial<Readonly<Record<D['links'][number]['name'], Linkable>>>
+  ? Partial<
+      Readonly<
+        Record<
+          D['links'][number]['name'],
+          Linkable | { readonly instance: Linkable } | null
+        >
+      >
+    >
   : unknown;
 
 /**
@@ -473,6 +510,20 @@ type LinkProps<D extends AnyDefinition> = D['links'] extends readonly LinkKey[]
  */
 export interface Linkable {
   readonly definition: AnyDefinition;
+}
+
+/**
+ * The instance a link prop holds: the instance itself, or the one a handle
+ * (React's or Vue's `useBehavior()`) carries; `null` for none (Form spec,
+ * Runtime changes 4), `undefined` while the prop is unset.
+ */
+export function linkTarget(value: unknown): Instance | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== 'object') return undefined;
+  if ('definition' in value) return value as Instance;
+  return 'instance' in value
+    ? (value as { instance: Instance }).instance
+    : undefined;
 }
 
 /**
@@ -494,6 +545,13 @@ export interface LinkKey<Name extends string = string, Api = unknown> {
    * host for the other one (items spec, Runtime and harness changes 3).
    */
   readonly isAttributeOnly?: boolean;
+  /**
+   * Found as an owner is, from the nearest provider around the component
+   * across other UniAria hosts, rather than only from the host it sits in
+   * directly: React context and Vue's provide in every component, the DOM
+   * request event on elements (Form spec, Runtime changes 1).
+   */
+  readonly isInherited?: boolean;
   /** Types `ctx.link()`; never set. */
   readonly api?: Api;
 }

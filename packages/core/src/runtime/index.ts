@@ -35,6 +35,7 @@ export {
   defineBehavior,
   isOwnerDefinition,
   itemId,
+  linkTarget,
   partElement,
   partMarker,
 } from './define';
@@ -44,6 +45,7 @@ export type {
   ApiOf,
   Bindable,
   BindableKeyOf,
+  BindableSource,
   Cell,
   BehaviorConfig,
   ComposeOptions,

@@ -11,6 +11,7 @@ import type {
   AnyDefinition,
   Instance,
   ItemPartOf,
+  LinkKey,
   OwnerLink,
   PartOf,
   PartProps,
@@ -107,6 +108,8 @@ interface Internal<D extends AnyDefinition> {
   readonly checked: WeakSet<Element>;
   /** Whether the instance's owner came from React context. */
   isLinkedByContext: boolean;
+  /** The inherited links that came from React context. */
+  readonly keysLinkedByContext: Set<LinkKey>;
   rendered?: {
     readonly connected: unknown;
     readonly parts: Record<string, ReactPartProps>;
@@ -334,6 +337,7 @@ export function useBehavior<D extends AnyDefinition>(
       defaults: new Map(),
       checked: new WeakSet(),
       isLinkedByContext: false,
+      keysLinkedByContext: new Set(),
     };
   } else {
     ref.current.instance.setProps(props);
@@ -359,6 +363,25 @@ export function useBehavior<D extends AnyDefinition>(
     ownerLink !== undefined &&
     contextOwner === undefined &&
     (props as { owner?: unknown }).owner === undefined;
+
+  // Inherited links (a field's form) the same way, unless the key's prop
+  // gives the instance, or `null` for none (Form spec, Runtime changes 1).
+  const keysByDom: LinkKey[] = [];
+  for (const key of (definition.links ?? []) as readonly LinkKey[]) {
+    if (!key.isInherited) continue;
+    const own = (props as Readonly<Record<string, unknown>>)[key.name];
+    const found = own === undefined ? findOwner(scope, key) : undefined;
+    if (found) {
+      instance.link(found, key);
+      internal.keysLinkedByContext.add(key);
+    } else {
+      if (internal.keysLinkedByContext.delete(key)) {
+        instance.link(undefined, key);
+      }
+      if (own === undefined) keysByDom.push(key);
+    }
+  }
+  const keysByDomName = keysByDom.map((key) => key.name).join(' ');
 
   useIsomorphicLayoutEffect(() => {
     flushAttaching(internal);
@@ -407,6 +430,26 @@ export function useBehavior<D extends AnyDefinition>(
       instance.sync();
     };
   }, [instance, isLinkedByDom]);
+
+  useIsomorphicLayoutEffect(() => {
+    if (keysByDom.length === 0) return;
+    const element = definition.parts
+      .map((part: string) => instance.element(part as PartOf<D>))
+      .find(Boolean) as Element | undefined;
+    if (!element) return;
+    const forgets = keysByDom.map((key) =>
+      requestOwner(element, key, (target) => {
+        instance.link(target, key);
+        instance.sync();
+      }),
+    );
+    return () => {
+      for (const forget of forgets) forget();
+      for (const key of keysByDom) instance.link(undefined, key);
+      instance.sync();
+    };
+    // By name: `keysByDom` is a new array every render.
+  }, [instance, keysByDomName]);
 
   useIsomorphicLayoutEffect(() => {
     flushAttaching(internal);

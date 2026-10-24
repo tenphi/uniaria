@@ -37,7 +37,12 @@
  *   owner around it; the `owner` property (an instance) wins over both. A
  *   link (`tooltip`) comes from its attribute or the host the element sits
  *   in directly, and has no property; a key found only by its attribute
- *   (`option-tooltip`) never comes from the host.
+ *   (`option-tooltip`) never comes from the host. An inherited link (a
+ *   field's `form`) comes from its attribute or the nearest provider around
+ *   the element, as an owner does, and an empty attribute (`form=""`) means
+ *   none, as HTML's does. A host that answers lookups also answers them on
+ *   its root part, so `form="signup"` finds `<form id="signup">` inside
+ *   `<uni-form>`.
  */
 
 import type {
@@ -50,7 +55,12 @@ import type {
   PropInfo,
   PropsOf,
 } from '@uniaria/core';
-import { callbackName, createInstance, domEventName } from '@uniaria/core';
+import {
+  callbackName,
+  createInstance,
+  domEventName,
+  isOwnerDefinition,
+} from '@uniaria/core';
 import type { Binder } from '@uniaria/core/dom';
 import {
   UNI_HOST,
@@ -309,6 +319,8 @@ export function defineElement<D extends AnyDefinition>(
     readonly #adoptedItems = new Map<string, string>();
     #unobserve: (() => void) | undefined;
     #unprovide: (() => void) | undefined;
+    /** The provider on the root part, and its element. */
+    #rootProvider: { element: HTMLElement; stop: () => void } | undefined;
     #unlink: (() => void) | undefined;
     readonly #unlinks = new Map<LinkKey, () => void>();
 
@@ -340,6 +352,7 @@ export function defineElement<D extends AnyDefinition>(
       this.#scan();
       this.#unobserve ??= observeParts(this, () => this.#scan());
       this.#unprovide ??= provideOwner(this.instance as Instance, this);
+      this.#provideOnRoot();
       // Linked before the first write, so a checkbox in a group starts with
       // the group's state.
       this.#relink();
@@ -358,6 +371,8 @@ export function defineElement<D extends AnyDefinition>(
       this.#unobserve = undefined;
       this.#unprovide?.();
       this.#unprovide = undefined;
+      this.#rootProvider?.stop();
+      this.#rootProvider = undefined;
       this.#unlink?.();
       this.#unlink = undefined;
       this.instance.link(undefined);
@@ -389,12 +404,35 @@ export function defineElement<D extends AnyDefinition>(
       this.instance.sync();
     }
 
+    /**
+     * Answers lookups on the root part too, while connected: an id names
+     * the part, as `form="signup"` names a `<form>`.
+     */
+    #provideOnRoot(): void {
+      if (!isOwnerDefinition(definition)) return;
+      const root = this.isConnected ? this.#parts.get('root') : undefined;
+      if (root === this.#rootProvider?.element) return;
+      this.#rootProvider?.stop();
+      this.#rootProvider =
+        root && root !== this
+          ? {
+              element: root,
+              stop: provideOwner(this.instance as Instance, root),
+            }
+          : undefined;
+    }
+
     /** Asks for a link again: on connect and when its attribute changes. */
     #relinkKey(key: LinkKey): void {
       this.#unlinks.get(key)?.();
       this.#unlinks.delete(key);
       this.instance.link(undefined, key);
       const id = this.getAttribute(linkAttribute(key)) ?? undefined;
+      // An empty attribute is no link, as HTML's empty `form` is no form.
+      if (id === '' && key.isInherited) {
+        this.instance.sync();
+        return;
+      }
       // A key found only by its attribute never takes the host around.
       if (id !== undefined || !key.isAttributeOnly) {
         this.#unlinks.set(
@@ -462,6 +500,7 @@ export function defineElement<D extends AnyDefinition>(
         }
         if (definition.itemParts?.length) this.#scanItems();
       });
+      if (this.#unprovide) this.#provideOnRoot();
     }
 
     /** Attaches item parts by key, and reads adopted collections. */
