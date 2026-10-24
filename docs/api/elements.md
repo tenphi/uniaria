@@ -30,8 +30,9 @@ HTML.
 
 ## Registering entries
 
-Each component has an entry that defines its element when imported, with the
-`uni-` prefix:
+Each component but TextInput has an entry that defines its element when
+imported, with the `uni-` prefix. TextInput has no element: a
+`<uni-text-field>` that renders only its input is the input on its own.
 
 | Entry                              | Element                | Class export       |
 | ---------------------------------- | ---------------------- | ------------------ |
@@ -51,6 +52,7 @@ Each component has an entry that defines its element when imported, with the
 | `@uniaria/elements/listbox`        | `<uni-listbox>`        | `UniListbox`       |
 | `@uniaria/elements/select`         | `<uni-select>`         | `UniSelect`        |
 | `@uniaria/elements/combobox`       | `<uni-combobox>`       | `UniCombobox`      |
+| `@uniaria/elements/autocomplete`   | `<uni-autocomplete>`   | `UniAutocomplete`  |
 
 Import an entry once, anywhere on the page; importing it again does nothing.
 Each also exports the element's class (`undefined` on the server) and its

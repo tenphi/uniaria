@@ -41,7 +41,7 @@ whole file before changing anything; it is the binding summary of the design.
 | `@uniaria/core`        | `packages/core`     | Runtime (`.`), the DOM binder and interactions (`./dom`), collections (`./collections`), the virtualizer (`./virtual`), one subpath per component (`./button`, …) | Yes       |
 | `@uniaria/react`       | `packages/react`    | Generic `useBehavior(definition, props)` and `useBehaviorState(instance, selector)`; peer `react` ≥ 18                                                            | Yes       |
 | `@uniaria/vue`         | `packages/vue`      | The same two composables for Vue, called in `setup()`; peer `vue` ≥ 3.5; its own `spec.md`                                                                        | Yes       |
-| `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component (`./button`)                               | Yes       |
+| `@uniaria/elements`    | `packages/elements` | Generic `defineElement(definition, options)`; light DOM, `uni-` prefix by default; one registering entry per component that has an element (`./button`)           | Yes       |
 | `@uniaria/testing`     | `packages/testing`  | The mount contract, the conformance runner, virtual and real screen-reader helpers; development only                                                              | Yes       |
 | `@uniaria/styles`      | `packages/styles`   | Optional default styles: prebuilt CSS (`./css`), a Tasty style object per component (`./button`), the palette; its own `spec.md`                                  | Yes       |
 | `@uniaria/conformance` | `conformance`       | Adapter-agnostic scenarios every adapter must pass                                                                                                                | No        |
@@ -204,17 +204,54 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   `is` prefix (`isOpen` → `openChange`, seeded by `defaultOpen`).
 - Adapters are generic over definitions. `@uniaria/react`, `@uniaria/vue` and
   `@uniaria/elements` contain no component-specific behavior, only optional thin sugar
-  (`@uniaria/elements` also has one registering entry per component).
+  (`@uniaria/elements` also has one registering entry per component that has
+  an element: every one but TextInput).
 - Composite components compose definitions with `ctx.use(def, props)`. Select
-  is Listbox + Popover + trigger and Combobox is Listbox + Popover + input, so
-  there is exactly one Listbox implementation. ToggleButton is Button plus
-  selection. The composed definition runs on the same instance (store,
-  lifecycle, elements), reads its props from the `props` function on every
-  access (pass callbacks through to receive its events), and renders on the
-  composing component's parts of the same name, or as `{ parts }` maps them.
+  is Listbox + Popover + trigger and Combobox is Autocomplete + Popover, where
+  Autocomplete is Field + TextInput + Listbox (composition spec), so there is
+  exactly one Listbox implementation and one text input that drives a list.
+  ToggleButton is Button plus selection. The composed definition runs on the
+  same instance (store, lifecycle, elements), reads its props from the
+  `props` function on every access (pass callbacks through to receive its
+  events), and renders on the composing component's parts of the same name,
+  or as `{ parts }` maps them.
+  A part with neither is left out, as a `null` mapping leaves it out, and the
+  DOM binder warns once per page in development; `null` silences the
+  warning, and a mapping to a part the composer lacks throws (owner,
+  2026-10-24, the composition spec).
   `expose()` and `connect()` fold in its `state()` and `connect()`. Separate instances that work
   together (a field and its control, a radio group and its radios) link
   through `ctx.owner(def)` instead (see Composition between instances).
+- `ctx.use()` returns the composed definition's `state()`, `connect()`,
+  `connectItem()`, `api` and `actions`, each action run in a batch, as on an
+  instance. Its `links` option passes one of the composer's links on: the
+  composed definition's `ctx.link()` reads it, and the composer's returns
+  `undefined` from then on, so one definition drives the linked instance
+  (Combobox passes `optionTooltip` to Autocomplete). A key passed on must be
+  one both take and the composer still holds. A composed definition reads
+  no other link (owner, 2026-10-24, the composition spec).
+- Behaviors come in two levels, both public (owner, 2026-10-24, the
+  composition spec, `packages/core/src/components/composition.md`).
+  Controls are one widget each: Button, ToggleButton, TextInput, Listbox,
+  Autocomplete, Popover, Dialog. Fields are Field around a control, with a
+  form value: TextField (Field and TextInput), NumberField (Field, TextInput
+  and two Buttons), Select, Combobox, and the checkbox, switch and radio
+  components. One Field per control: TextInput has no labelling, Listbox
+  and Autocomplete keep Field's parts as optional parts, and a composite
+  maps its control's Field instead of adding a second (Select leaves
+  Listbox's out, Autocomplete labels its input and list with its own,
+  Combobox maps Autocomplete's).
+- A definition outside UniAria that composes a control may rely on its
+  props and their `on<Event>` callbacks, `state()`, `connect()` and
+  `connectItem()` as its spec documents them, `actions`, its part names
+  (for `parts`) and its link keys (for `links`). `api` stays internal: only
+  UniAria's composites read it, since they ship in one version. Handlers
+  added to a composed part merge with `mergeHandlers()` and run in order
+  (Autocomplete ignores a `keydown` already prevented, so a handler put
+  first takes a key over); a composer of Listbox or Autocomplete declares
+  their item parts in its own `itemParts` and returns the composed
+  `connectItem()`; an element adopts only into the definition it registers,
+  so the composer declares `adopt` on its own bindable (composition spec).
 - `setup(ctx)` runs once per instance and returns the definition's internal
   API: actions and readers that `expose()`, `connect()`, composing definitions
   and owned components receive as `api`. It is never public (owner,
@@ -225,10 +262,12 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   …); it is public API, and the spec documents it.
 - `actions` lists the members of `api` consumers may call, each run in a
   batch: `instance.actions`, the React and Vue handles' `actions`, and one method per
-  action on the custom element (`element.open()`). Only the overlays have any:
-  `open` and `close` on Dialog, Popover, Tooltip, Select and Combobox (owner,
-  2026-10-19). An action is public API, and its spec's Actions section
-  documents it.
+  action on the custom element (`element.open()`). Only the overlays and
+  Autocomplete have any: `open` and `close` on Dialog, Popover, Tooltip,
+  Select and Combobox (owner, 2026-10-19), and `open`, `close` and `showAll`
+  on Autocomplete, whose `open` and `close` do nothing inline (owner,
+  2026-10-24, the composition spec). An action is public API, and its spec's
+  Actions section documents it.
 - `createInstance(definition, { props, id, env })` in the runtime is the
   instance every adapter drives. Node tests use it directly: call part
   handlers from `instance.connect()` and read `attrs` and `getState()`
@@ -259,6 +298,11 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   Either way the change callback reports the value unless it is the value
   now. Never restore a value captured at mount on an uncontrolled bindable:
   a custom element's default often arrives as a property after it connects.
+  A composed definition's bindable that its composer passes a value to
+  doesn't reset: `reset()` returns the current value and reports nothing,
+  since the composer resets its own (owner, 2026-10-24, the composition
+  spec). An uncontrolled bindable inside a composed definition resets as
+  before.
 - The core reads props only through getters and never keeps a copy.
 
 ### Composition between instances
@@ -302,7 +346,9 @@ isEqual?)` reads one selected value through `useSyncExternalStore` and
   (`attribute: 'option-tooltip'`) and come only from it (`isAttributeOnly`),
   so a component with two keys for one kind (a Select's `tooltip` and
   `optionTooltip`) inside one host takes the host for the first only (owner,
-  2026-10-22, the items spec).
+  2026-10-22, the items spec). A composed definition reads only the links
+  its composer passes on through `ctx.use()` (Behavior lives in
+  definitions).
 - Tests cover each path: nested, consumer portal (React) or `<Teleport>`
   (Vue), another branch, a React or Vue child inside a custom-element owner,
   and an owner that connects late.
@@ -501,6 +547,10 @@ nested root apart exactly (`runtime/define.ts`: `partMarker()`):
 
 - No shadow DOM, no Lit. `defineElement` creates element classes inside the
   call, never at module scope.
+- Every component has an element except TextInput (owner, 2026-10-24, the
+  composition spec), which is only composed: a TextField that renders only
+  its input part is the input on its own. React and Vue can still render
+  TextInput with `useBehavior`, since the adapters are generic.
 - The element never creates, moves or removes nodes it did not create.
   Anything it must create (a live region) goes outside the consumer's tree;
   the one exception is the live announcer, which an open modal dialog hosts
@@ -609,14 +659,16 @@ One component per task, small commits, in this order:
 
 2. **Conformance scenarios.** Written from the approved spec in
    `conformance/src/<name>/`, in commits of their own, including
-   spoken-output checks with the virtual screen reader.
+   spoken-output checks with the virtual screen reader. TextInput has no
+   suite of its own: TextField's covers it, and browser tests next to it
+   cover the rest (composition spec).
 3. **Definition.** `packages/core/src/components/<name>/`, iterated until the
    scenarios pass in every adapter. Register the subpath in three places:
    `tsdown.config.ts` entry, `package.json` `exports`, and
    `src/ssr-safety.test.ts`.
-4. **Adapters and docs.** Element registering entry, React or Vue sugar only
-   if needed, and the component's page in `docs/components/` with a live demo
-   (see Documentation).
+4. **Adapters and docs.** Element registering entry (TextInput has none),
+   React or Vue sugar only if needed, and the component's page in
+   `docs/components/` with a live demo (see Documentation).
 
 Naming: folder and subpath in kebab-case (`checkbox-group`,
 `@uniaria/core/checkbox-group`); definition export in camelCase
@@ -630,12 +682,15 @@ Checkbox, CheckboxGroup, Switch, RadioGroup → Dialog, Popover, Tooltip,
 NumberField → Listbox, Select, Combobox. Dialog and Tooltip joined on
 2026-10-16 (owner): Dialog first, since it needs no positioning and settles
 the overlay contract Popover reuses; Tooltip after Popover, whose
-positioning and top-layer fallback it reuses.
+positioning and top-layer fallback it reuses. TextInput and Autocomplete
+joined on 2026-10-24 (owner, the composition spec), with TextField,
+NumberField and Combobox rebuilt on them.
 
 Button also covers navigation (link mode with `href`); there is no separate
 Link component. Field plus a text control is `<Name>Field` (TextField,
-NumberField); TextField covers `<textarea>` too, so there is no separate
-TextArea.
+NumberField), and a text control without labelling is `<Name>Input`
+(TextInput; owner, 2026-10-24, the composition spec); TextField covers
+`<textarea>` too, so there is no separate TextArea.
 
 ## Conformance
 

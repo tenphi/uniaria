@@ -62,6 +62,13 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
    * `open()` and `close()`. Each runs in a batch, so it notifies once.
    */
   readonly actions: ActionsOf<D>;
+  /**
+   * Internal: the composed parts left out because the composer has no part
+   * of their name and maps them nowhere (composition spec, Runtime changes
+   * 1). The DOM binder warns about them in development, which the DOM-free
+   * runtime can't tell.
+   */
+  readonly leftOutParts: readonly LeftOutPart[];
   getProps(): PropsOf<D>;
   /**
    * The current value of the bindable `key`: the consumer's while
@@ -144,6 +151,15 @@ export interface Instance<D extends AnyDefinition = AnyDefinition> {
   owner(): Instance | undefined;
   /** The instance linked by `key` now: the key's prop, else the link. */
   linked(key: LinkKey): Instance | undefined;
+}
+
+/** A composed definition's part with nowhere to render. */
+export interface LeftOutPart {
+  /** The composing definition's name. */
+  readonly composer: string;
+  /** The composed definition's name. */
+  readonly composed: string;
+  readonly part: string;
 }
 
 interface Watcher {
@@ -305,6 +321,7 @@ export function createInstance<D extends AnyDefinition>(
       }
     }
   };
+  const leftOutParts: LeftOutPart[] = [];
   const watchers: Watcher[] = [];
   const effects: (() => void | (() => void))[] = [];
   let cleanups: (() => void)[] = [];
@@ -342,6 +359,21 @@ export function createInstance<D extends AnyDefinition>(
     };
   };
 
+  /** A definition's public actions on `api`, each run in a batch. */
+  const actionsOf = (scoped: AnyDefinition, api: unknown) => {
+    const result: Record<string, (...args: unknown[]) => unknown> = {};
+    for (const name of scoped.actions ?? []) {
+      const action = (api as Record<string, unknown>)[name];
+      if (typeof action !== 'function') {
+        throw new Error(
+          `[uniaria] ${scoped.name}: action "${name}" is not a function setup() returns.`,
+        );
+      }
+      result[name] = (...args) => store.batch(() => action(...args));
+    }
+    return result;
+  };
+
   const memo: SetupContext<string, PropsSchema, EventsSchema>['memo'] = (
     deps,
     compute,
@@ -365,13 +397,15 @@ export function createInstance<D extends AnyDefinition>(
   /**
    * Runs one definition's `setup()` against this instance: the component
    * itself, or one it composes with `ctx.use()`. `readProps` returns its
-   * props, and `partOf` names this instance's part for each of its parts,
-   * or `null` for a part left out.
+   * props, `partOf` names this instance's part for each of its parts, or
+   * `null` for a part left out, and `links` holds the link keys it reads:
+   * the component's own, or those its composer passed on.
    */
   const scope = (
     scoped: AnyDefinition,
     readProps: () => Readonly<Record<string, unknown>>,
     partOf: (part: string) => string | null,
+    links: Set<LinkKey>,
   ): { api: unknown; view: ViewContext<string, PropsSchema, unknown> } => {
     const readers: Record<string, (() => unknown) | Bindable<unknown>> = {};
     for (const info of scoped.schema.props) {
@@ -415,6 +449,9 @@ export function createInstance<D extends AnyDefinition>(
           beforeReport,
         }: ResetOptions<unknown> = {}) {
           const isControlledNow = isControlled();
+          // A composed definition's controlled value is its composer's, and
+          // the composer resets it (composition spec, Runtime changes 4).
+          if (isControlledNow && scoped !== definition) return get();
           // A null default reads as none, as in `get()`.
           const own = readProps()[defaultKey] ?? undefined;
           const previous =
@@ -505,9 +542,11 @@ export function createInstance<D extends AnyDefinition>(
           : undefined;
       },
       link(key) {
-        // Links are the instance's own: a composed definition, such as the
-        // Button in a Popover's trigger, never takes one.
-        if (scoped !== definition) return undefined;
+        // Links are the instance's own. A composed definition, such as the
+        // Button in a Popover's trigger, reads only those passed on to it,
+        // and a link passed on is no longer the composer's (composition
+        // spec, Runtime changes 3).
+        if (!links.has(key)) return undefined;
         const target = currentLink(key);
         return target?.definition.provides?.includes(key)
           ? (handleOf(target) as never)
@@ -516,24 +555,50 @@ export function createInstance<D extends AnyDefinition>(
       use(child, childProps, composeOptions) {
         const map: Readonly<Record<string, string | null | undefined>> =
           composeOptions?.parts ?? {};
+        // This definition's part for each of the composed one's, or `null`.
+        // A part with no mapping and no part of its name is left out, so a
+        // control that gains a part doesn't break its composers (composition
+        // spec, Runtime changes 1); a mapping to a missing part is a mistake.
+        const placed: Record<string, string | null> = {};
         for (const part of child.parts) {
-          const own = map[part] === null ? null : (map[part] ?? part);
-          if (own !== null && !scoped.parts.includes(own)) {
+          const own = map[part];
+          if (own === undefined && !scoped.parts.includes(part)) {
+            placed[part] = null;
+            leftOutParts.push({
+              composer: scoped.name,
+              composed: child.name,
+              part,
+            });
+          } else if (own !== null && !scoped.parts.includes(own ?? part)) {
             throw new Error(
               `[uniaria] ${scoped.name} composes ${child.name}, whose "${part}" part has no "${own}" part to render on.`,
             );
+          } else {
+            placed[part] = own === undefined ? part : own;
           }
+        }
+        const passed = new Set<LinkKey>();
+        for (const key of composeOptions?.links ?? []) {
+          if (!links.has(key) || !child.links?.includes(key)) {
+            throw new Error(
+              `[uniaria] ${scoped.name} passes the "${key.name}" link to ${child.name}, but only a link both take can be passed on.`,
+            );
+          }
+          links.delete(key);
+          passed.add(key);
         }
         const composed = scope(
           child,
           childProps as () => Readonly<Record<string, unknown>>,
           (part) => {
-            const own = map[part];
-            return own === null ? null : partOf(own ?? part);
+            const own = placed[part];
+            return own === null || own === undefined ? null : partOf(own);
           },
+          passed,
         );
         return {
           api: composed.api,
+          actions: actionsOf(child, composed.api),
           state: () => child.expose(composed.view),
           connect: () => child.connect(composed.view),
           connectItem: (part: string, key: string) =>
@@ -550,6 +615,7 @@ export function createInstance<D extends AnyDefinition>(
     definition,
     () => props,
     (part) => part,
+    new Set(definition.links ?? []),
   );
 
   // Subscribed before any adapter, so watchers settle state before the
@@ -599,16 +665,7 @@ export function createInstance<D extends AnyDefinition>(
   let exposed:
     { changes: number; propsVersion: number; state: unknown } | undefined;
 
-  const actions: Record<string, (...args: unknown[]) => unknown> = {};
-  for (const name of definition.actions ?? []) {
-    const action = (api as Record<string, unknown>)[name];
-    if (typeof action !== 'function') {
-      throw new Error(
-        `[uniaria] ${definition.name}: action "${name}" is not a function setup() returns.`,
-      );
-    }
-    actions[name] = (...args) => store.batch(() => action(...args));
-  }
+  const actions = actionsOf(definition, api);
 
   const instance: Instance<AnyDefinition> = {
     definition,
@@ -616,6 +673,7 @@ export function createInstance<D extends AnyDefinition>(
     ids,
     api,
     actions,
+    leftOutParts,
     getProps: () => props as never,
     getValue(key) {
       // Plain props read as functions, bindables as objects.

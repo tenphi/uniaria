@@ -124,7 +124,9 @@ export interface Bindable<T> {
    * default set later still applies. Controlled, it only asks for
    * `default<Name>`, or without one `options.fallback`. Either way the
    * change callback gets the value it goes back to, unless that is the
-   * value now.
+   * value now. In a definition composed with `ctx.use()`, a controlled value
+   * is the composer's, which resets it, so this returns the value now and
+   * does nothing (composition spec, Runtime changes 4).
    */
   reset(options?: ResetOptions<T>): T;
 }
@@ -271,13 +273,14 @@ export interface SetupContext<
    * `setup()` runs here, on this instance's store and lifecycle, and reads
    * its props from `props()` on every access, so pass this component's props
    * and callbacks through. Its parts are this component's parts of the same
-   * name, unless `options.parts` maps them. Call it during `setup()`, and
-   * fold what it returns into `expose()` and `connect()`.
+   * name, unless `options.parts` maps them; one with neither is left out.
+   * `options.links` hands it links. Call it during `setup()`, and fold what
+   * it returns into `expose()` and `connect()`.
    */
   use<D extends AnyDefinition>(
     definition: D,
     props: () => NoInfer<PropsOf<D>>,
-    options?: ComposeOptions<NoInfer<PartOf<D>>, Part>,
+    options?: ComposeOptions<NoInfer<PartOf<D>>, Part, NoInfer<LinkOf<D>>>,
   ): Composed<D>;
   /**
    * The instance of `definition` this one works inside (decision 11), or
@@ -289,27 +292,47 @@ export interface SetupContext<
   /**
    * The instance linked by `key`, one of the definition's `links`, or
    * `undefined` until there is one: the prop of the key's name, else the
-   * adapter's link. Always `undefined` in a definition composed with
-   * `ctx.use()`: links are the instance's own. Read it where it is used:
-   * while started, the linked instance's changes re-run `connect()`,
-   * `expose()` and watches.
+   * adapter's link. In a definition composed with `ctx.use()`, only the
+   * links its composer passed on (`ComposeOptions.links`); and once passed
+   * on, `undefined` in the composer. Read it where it is used: while
+   * started, the linked instance's changes re-run `connect()`, `expose()`
+   * and watches.
    */
   link<Api>(key: LinkKey<string, Api>): Linked<Api> | undefined;
 }
 
-export interface ComposeOptions<Inner extends string, Outer extends string> {
+export interface ComposeOptions<
+  Inner extends string,
+  Outer extends string,
+  Link extends LinkKey = LinkKey,
+> {
   /**
    * This component's part for each of the composed one's; same name by
    * default. `null` leaves a part out: nothing renders it, and the composed
-   * definition sees no element for it.
+   * definition sees no element for it. A part with no mapping and no part of
+   * its name is left out too, and the DOM binder warns about it in
+   * development (composition spec, Runtime changes 1); a mapping to a part
+   * this component lacks throws.
    */
   readonly parts?: Readonly<Partial<Record<Inner, Outer | null>>>;
+  /**
+   * Links handed to the composed definition, so its `ctx.link()` reads
+   * them and drives the linked instance; the composer's `ctx.link()` reads
+   * them no more. Each must be one both take (composition spec, Runtime
+   * changes 3).
+   */
+  readonly links?: readonly Link[];
 }
 
 /** A definition composed with `ctx.use()`. */
 export interface Composed<D extends AnyDefinition> {
-  /** What its `setup()` returned. */
+  /**
+   * What its `setup()` returned. Internal: only UniAria's own composites
+   * read it (composition spec, What a composing definition may use).
+   */
   readonly api: ApiOf<D>;
+  /** Its public actions, each run in a batch, as on an instance. */
+  readonly actions: ActionsOf<D>;
   /** Its `expose()` now. */
   state(): StateOf<D>;
   /** Its `connect()` now, keyed by its own part names, without part markers. */
@@ -405,6 +428,9 @@ export type ItemPartOf<D extends AnyDefinition> = NonNullable<
   D['itemParts']
 >[number];
 export type ApiOf<D extends AnyDefinition> = ReturnType<D['setup']>;
+/** The link keys a definition takes. */
+export type LinkOf<D extends AnyDefinition> =
+  D['links'] extends readonly (infer K extends LinkKey)[] ? K : never;
 /** The public actions: the members of `api` the definition lists in `actions`. */
 export type ActionsOf<D extends AnyDefinition> = Pick<
   ApiOf<D>,

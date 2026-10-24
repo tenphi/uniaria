@@ -30,7 +30,7 @@ export { createBinder } from './binder';
 export { isComposing } from './events';
 export { isDevelopment, warn } from './dev';
 export type { Binder, BinderOptions, ItemTarget } from './binder';
-export { createFocus } from './focus';
+export { createFocus, createPressFocus } from './focus';
 export type { Focus, FocusOptions } from './focus';
 export { createFocusScope } from './focus-scope';
 export type { FocusScopeOptions } from './focus-scope';

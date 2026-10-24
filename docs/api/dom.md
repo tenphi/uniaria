@@ -255,6 +255,21 @@ keyboard or assistive technology; a key pressed after a click makes it
 visible, except typing in a text field. `isTextInput()` marks a part that is
 a text field without looking like one.
 
+### createPressFocus
+
+```ts
+createPressFocus(ctx, part): { handlers }
+```
+
+Focuses a native control, such as a checkbox or a radio, when a pointer
+press ends on it or on a `label` that activates it: Safari and Firefox on
+macOS don't focus a clicked checkbox on their own. Put the handlers on the
+control and on every part around it that a press can reach it through. Keys,
+scripts and screen readers move no focus, nor does a press on a link or a
+button inside the label, or a press on the control whose `mousedown` the
+page prevented, and focus from a pointer isn't visible. Pressables need
+none: `createPress` focuses what it presses.
+
 ### createFocusWithin
 
 ```ts

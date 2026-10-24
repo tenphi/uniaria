@@ -313,6 +313,225 @@ it('toggles with the mouse and the keyboard', async () => {
 To check that every adapter behaves the same, write a conformance suite with
 `defineConformance` and run it against each; see [Testing](../api/testing.md).
 
+## Build on the controls
+
+UniAria's fields are built from smaller behaviors, and your definition can
+compose them the same way:
+
+- **TextInput** (`@uniaria/core/text-input`) is a native `<input>` or
+  `<textarea>` with TextField's value handling: uncontrolled, or controlled
+  with the typed text kept on screen until you pass it back, never written
+  in the middle of an IME composition, and back to its default on a form
+  reset. Hover and focus come with it. It has no label and no element of
+  its own: the behavior around it labels it. TextField is Field and
+  TextInput.
+- **Autocomplete** (`@uniaria/core/autocomplete`) is a text input that
+  filters a list and moves a highlight through it while focus stays in the
+  input. It has its own label, description and error parts, and an element.
+  Combobox is Autocomplete and Popover. See
+  [Autocomplete](../components/autocomplete.mdx).
+
+TextInput has no page of its own, so here is all of it:
+
+|        | TextInput                                                                                                                                                                                 |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Part   | `root`, the `<input>` or `<textarea>`: native `disabled` and `readonly`, the `value` property, and `data-hovered`, `data-focused`, `data-focus-visible`, `data-readonly`, `data-disabled` |
+| Props  | `value` (bindable, reported as `valueChange` on each edit), `isDisabled`, `isReadOnly`                                                                                                    |
+| Events | `focusChange`, when the input gains or loses focus                                                                                                                                        |
+| State  | `value`, `isFocused`, `isFocusVisible`, `isHovered`, `isDisabled`, `isReadOnly`                                                                                                           |
+
+React and Vue can render it alone with `useBehavior(textInput, props)`. On
+custom elements, a TextField that renders only its input part is the input
+on its own.
+
+### An input of your own
+
+Here TextInput handles the value, and the definition refuses typed
+characters that aren't hex:
+
+```ts
+// hex-input.ts
+import { bindable, defineBehavior } from '@uniaria/core';
+import { partEffect } from '@uniaria/core/dom';
+import { textInput } from '@uniaria/core/text-input';
+
+export const hexInput = defineBehavior({
+  name: 'hex-input',
+  parts: ['root', 'input', 'swatch'],
+  props: {
+    // The element adopts the text typed before it upgraded.
+    value: bindable('', { adopt: { part: 'input', property: 'value' } }),
+  },
+  setup(ctx) {
+    const { value } = ctx.props;
+    const text = ctx.use(
+      textInput,
+      () => ({
+        value: value.get(),
+        onValueChange: (next: string) => value.set(next),
+      }),
+      { parts: { root: 'input' } },
+    );
+    partEffect(ctx, 'input', (input) => {
+      const veto = (event: InputEvent) => {
+        if (event.data && !/^[\da-f]+$/i.test(event.data)) {
+          event.preventDefault();
+        }
+      };
+      input.addEventListener('beforeinput', veto);
+      return () => input.removeEventListener('beforeinput', veto);
+    });
+    return { text };
+  },
+  expose: ({ api }) => api.text.state(),
+  connect: ({ props, api }) => ({
+    root: { attrs: {} },
+    input: api.text.connect().root,
+    swatch: { attrs: {}, style: { '--hex-color': `#${props.value.get()}` } },
+  }),
+});
+```
+
+- `{ parts: { root: 'input' } }` renders TextInput's `root` on this
+  component's `input` part.
+- Typing, IME, a controlled value that a form library echoes back late,
+  hover and focus all come from TextInput. Label the input as any other,
+  with a `<label for>` or an `aria-label`.
+- The value is `hexInput`'s, passed down. Inside a form, reset it yourself
+  as TextField does (see
+  [Resetting a bindable](../api/core.md#resetting-a-bindable)): a TextInput
+  given its value leaves the reset to you.
+- The veto can't refuse IME text in Chromium, which doesn't let a
+  composition be cancelled.
+
+### A list behind a text box
+
+Autocomplete composes the same way. This command list runs the command the
+user chooses and clears the text, and on Enter with nothing highlighted it
+searches for the text instead:
+
+```ts
+// command-list.ts
+import { bindable, defineBehavior, event, prop } from '@uniaria/core';
+import { autocomplete } from '@uniaria/core/autocomplete';
+import { isComposing, mergeHandlers } from '@uniaria/core/dom';
+import type { DomPartProps } from '@uniaria/core/dom';
+
+interface Command {
+  readonly key: string;
+  readonly textValue: string;
+}
+
+export const commandList = defineBehavior({
+  name: 'command-list',
+  parts: ['root', 'label', 'input', 'list', 'empty'],
+  itemParts: ['option'],
+  props: {
+    // The element reads the commands from its options.
+    commands: prop<readonly Command[]>([], {
+      attribute: false,
+      adopt: { items: { item: 'option' } },
+    }),
+    query: bindable(''),
+  },
+  events: {
+    run: event<string>(),
+    search: event<string>(),
+  },
+  setup(ctx) {
+    const { commands, query } = ctx.props;
+    const search = ctx.use(
+      autocomplete,
+      () => ({
+        items: commands(),
+        inputValue: query.get(),
+        onInputChange: (next: string) => query.set(next),
+        onAction: (key: string) => {
+          ctx.emit('run', key);
+          query.set('');
+        },
+      }),
+      // The parts this component doesn't have.
+      {
+        parts: {
+          button: null,
+          popup: null,
+          scroller: null,
+          description: null,
+          error: null,
+        },
+      },
+    );
+    // Runs after Autocomplete's, which prevents an Enter that chooses.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.defaultPrevented) return;
+      if (isComposing(event) || event.altKey || event.ctrlKey) return;
+      if (event.metaKey) return;
+      const text = search.state().inputValue.trim();
+      if (text === '') return;
+      event.preventDefault();
+      ctx.emit('search', text);
+      query.set('');
+    };
+    return { search, onKeyDown };
+  },
+  expose: ({ api }) => api.search.state(),
+  connect: ({ api }) => {
+    const { root, label, input, list, empty } = api.search.connect();
+    const own = input as DomPartProps;
+    const on = mergeHandlers(own.on ?? {}, { keydown: api.onKeyDown });
+    return { root, label, input: { ...own, on }, list, empty };
+  },
+  connectItem: ({ api }, part, key) => api.search.connectItem(part, key),
+});
+```
+
+The rules for putting behaviors together:
+
+- **Parts.** A composed part renders on your part of the same name, or
+  where `parts` maps it. Map the ones you don't render to `null`. One with
+  no part of its name and no mapping is left out as well, but UniAria warns
+  about it in development, so a part you meant to render doesn't go missing
+  without a word. A part whose name you also have binds to yours, so map
+  it to `null` when it isn't meant to be there.
+- **Handlers.** Add your handlers to a composed part with `mergeHandlers`;
+  they run in the order given. Autocomplete ignores a `keydown` that is
+  already prevented, so a handler you put first takes a key over. A handler
+  for a key Autocomplete leaves alone, such as Enter with nothing
+  highlighted, goes after it and skips what Autocomplete skips: a `keydown`
+  already prevented, one that belongs to an IME composition
+  (`isComposing()`), one with Ctrl or Meta, and every key while disabled.
+- **Item parts.** `parts` maps parts, not item parts. Declare the item
+  parts you render under Autocomplete's names (`option`, `optionLabel`,
+  `group`, …) in your own `itemParts`, and return its `connectItem()` for
+  them.
+- **Adoption.** A custom element reads unset props from its markup only
+  for the definition it registers, not for the ones that definition
+  composes. Declare `adopt` on your own props, as `value` and `commands` do
+  above, for the element to take the text typed before it upgraded or the
+  options in its markup.
+- **What to rely on.** The props you pass and the events they report back,
+  `state()`, `connect()` and `connectItem()` as the component documents
+  them, `actions` (`search.actions.showAll()`), and the names of its parts
+  and links. `api` is internal and can change in any version. See
+  [Composition](../api/core.md#composition).
+
+Simpler needs don't call for a definition. TextField's `wrapper` holds
+content before and after the input, and Autocomplete's own `action` and
+`inputChange` are enough for a search box that runs a command and clears;
+`commandList` is a definition for the Enter it adds.
+
+Calling `useBehavior(textInput)` and `useBehavior(listbox)` in one React or
+Vue component instead, and spreading both on the input, doesn't work:
+
+- **The props collide.** The later spread replaces the earlier one's
+  handlers and attributes, so every adapter would have to merge them by
+  hand.
+- **Every arrow key renders again.** What joins the two (which option is
+  highlighted, whether the list shows) would live in React or Vue state.
+- **A definition does more.** It works in React, in Vue and as an element,
+  renders on the server, and runs in Node tests.
+
 ## Going further
 
 - **Events.** Declare one with `event<Detail>()` under `events` and report it
@@ -329,6 +548,7 @@ To check that every adapter behaves the same, write a conformance suite with
   See [Interactions](../api/dom.md#interactions).
 - **Reusing a component.** `ctx.use(button, props)` runs Button inside your
   definition, on its parts, as ToggleButton does. See
+  [Build on the controls](#build-on-the-controls) and
   [Composition](../api/core.md#composition).
 - **Working inside another instance.** An `owner` (a checkbox in its group)
   or a link (a tooltip) connects separate instances. See

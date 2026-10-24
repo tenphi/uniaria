@@ -21,7 +21,9 @@ from the APG, its page says so and why.
   right-to-left arrows.
 - **Focus management**: where focus goes when an overlay opens and closes,
   focus kept inside a modal dialog, a single tab stop for groups and lists,
-  and a `data-focus-visible` attribute that is consistent across browsers.
+  a press that focuses what it presses in every browser (Safari doesn't
+  focus a clicked button or checkbox on its own), and a `data-focus-visible`
+  attribute that is consistent across browsers.
 - **Input from every device**: one press event for mouse, pen, touch, keyboard
   and screen-reader clicks; hover that ignores touch; presses that a scroll
   cancels.
@@ -65,7 +67,8 @@ to the highlighted option by its key.
 ## How it is tested
 
 Each component has conformance scenarios, written from its approved
-specification before its implementation. The same scenarios run:
+specification before its implementation; TextInput, the input inside the
+text fields, is checked through TextField's. The same scenarios run:
 
 | Run                   | When        | What                                                                                                                                                             |
 | --------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -104,7 +107,8 @@ UniAria can't decide everything a page needs:
   reference, or an `aria-label`. UniAria warns in development when a list has
   no name. Icon-only buttons need an `aria-label`.
 - **Visible focus.** Style `data-focus-visible` (or `:focus-visible`) on every
-  focusable part, with enough contrast.
+  focusable part, with enough contrast. A text field shows focus however it
+  came, so draw its ring on `data-focused`.
 - **Contrast, sizes and motion.** Colors, target sizes, and respecting
   `prefers-reduced-motion` in your transitions are in your CSS.
 - **Required marks.** Mark a visual `*` with `aria-hidden="true"`; the control

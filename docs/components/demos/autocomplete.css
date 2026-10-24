@@ -1,0 +1,28 @@
+/* The page's layout. The autocomplete's look is @uniaria/styles' default. */
+:root {
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: start;
+}
+.row > uni-autocomplete {
+  inline-size: 15rem;
+}
+[data-uni='autocomplete'] [data-element='List'] {
+  max-block-size: 15rem;
+}
+output {
+  padding-block: 0.5rem;
+}

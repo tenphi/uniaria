@@ -207,6 +207,17 @@ checkbox is the browser's: WebKit doesn't, following macOS, and Cube UI Kit
 leaves it so. React Aria and Zag focus the input on a label press; UniAria
 doesn't, so `focusChange` follows the platform.
 
+Changed on 2026-10-24 (owner): a pointer press on the input, or on a `label`
+that activates it, focuses the input in every browser, as Chromium does
+natively and React Aria and Zag do on a label press, so `isFocused`,
+`data-focused` and `focusChange` don't depend on the browser. Focus comes as
+the press ends, before the click toggles the input (`dom/` `createPressFocus`):
+WebKit's `mousedown` takes focus from a control it doesn't focus, and a
+flush during the click would write the old state back. Keys, scripts and
+screen readers press nothing and move no focus, a press on interactive
+content inside the `label` activates nothing, and focus that a pointer
+gave isn't visible, so a ring on `data-focus-visible` stays off.
+
 ## Pointer and touch
 
 Native. A click on the input, the label part when it is a `label`, or a

@@ -44,5 +44,9 @@ Read the root [AGENTS.md](../../AGENTS.md) first. Local rules:
 - Each component folder holds `spec.md` (approved before code), the
   definition, its `index.ts` and its tests. Composite components compose other
   definitions with `ctx.use()` instead of duplicating them.
+- `src/components/composition.md`, the composition spec, specifies TextInput
+  and Autocomplete, the fields rebuilt on them and the contract for
+  definitions that compose them. The `text-input/` and `autocomplete/`
+  folders hold a `spec.md` that only points to it (`../composition.md`).
 - Runtime dependencies come only from the approved list in the root
   AGENTS.md.

@@ -13,6 +13,7 @@ const entries = {
   '@uniaria/core/toggle-button': () =>
     import('./components/toggle-button/index'),
   '@uniaria/core/field': () => import('./components/field/index'),
+  '@uniaria/core/text-input': () => import('./components/text-input/index'),
   '@uniaria/core/text-field': () => import('./components/text-field/index'),
   '@uniaria/core/checkbox': () => import('./components/checkbox/index'),
   '@uniaria/core/checkbox-group': () =>
@@ -26,6 +27,7 @@ const entries = {
   '@uniaria/core/number-field': () => import('./components/number-field/index'),
   '@uniaria/core/listbox': () => import('./components/listbox/index'),
   '@uniaria/core/select': () => import('./components/select/index'),
+  '@uniaria/core/autocomplete': () => import('./components/autocomplete/index'),
   '@uniaria/core/combobox': () => import('./components/combobox/index'),
   '@uniaria/core/virtual': () => import('./virtual/index'),
 };

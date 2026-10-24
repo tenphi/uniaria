@@ -19,6 +19,7 @@ export default defineConfig({
     'number-field': 'src/components/number-field.ts',
     listbox: 'src/components/listbox.ts',
     select: 'src/components/select.ts',
+    autocomplete: 'src/components/autocomplete.ts',
     combobox: 'src/components/combobox.ts',
     dialog: 'src/components/dialog.ts',
     popover: 'src/components/popover.ts',

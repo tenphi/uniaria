@@ -34,6 +34,8 @@
     "./dist/listbox.js",
     "./src/select.ts",
     "./dist/select.js",
+    "./src/autocomplete.ts",
+    "./dist/autocomplete.js",
     "./src/combobox.ts",
     "./dist/combobox.js"
   ],
@@ -102,6 +104,11 @@
       "uniaria-source": "./src/select.ts",
       "types": "./dist/select.d.ts",
       "default": "./dist/select.js"
+    },
+    "./autocomplete": {
+      "uniaria-source": "./src/autocomplete.ts",
+      "types": "./dist/autocomplete.d.ts",
+      "default": "./dist/autocomplete.js"
     },
     "./combobox": {
       "uniaria-source": "./src/combobox.ts",

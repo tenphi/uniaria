@@ -23,8 +23,15 @@ const COMPONENTS = {
   tooltip: 'tooltip',
   listbox: 'listbox',
   select: 'select',
+  autocomplete: 'autocomplete',
   combobox: 'combobox',
 };
+
+/**
+ * Every definition an adapter renders: the components, and the controls
+ * that have no element or styles of their own (composition spec).
+ */
+const DEFINITIONS = { ...COMPONENTS, 'text-input': 'textInput' };
 
 const ADAPTERS = {
   react: { ignore: ['react', 'react-dom'] },
@@ -48,7 +55,7 @@ const adapters = Object.entries(ADAPTERS).flatMap(([name, { ignore }]) => {
       ignore,
     },
   ];
-  for (const [subpath, definition] of Object.entries(COMPONENTS)) {
+  for (const [subpath, definition] of Object.entries(DEFINITIONS)) {
     checks.push({
       name: `@uniaria/${name} + ${subpath}`,
       path: [adapter, core(subpath)],
@@ -61,11 +68,11 @@ const adapters = Object.entries(ADAPTERS).flatMap(([name, { ignore }]) => {
   }
   checks.push({
     name: `@uniaria/${name} + every component`,
-    path: [adapter, ...Object.keys(COMPONENTS).map(core)],
+    path: [adapter, ...Object.keys(DEFINITIONS).map(core)],
     import: {
       [adapter]: '{ useBehavior }',
       ...Object.fromEntries(
-        Object.entries(COMPONENTS).map(([subpath, definition]) => [
+        Object.entries(DEFINITIONS).map(([subpath, definition]) => [
           core(subpath),
           `{ ${definition} }`,
         ]),

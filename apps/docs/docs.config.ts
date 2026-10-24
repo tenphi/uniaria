@@ -82,6 +82,7 @@ export default defineDocsConfig({
             items: [
               '/components/listbox',
               '/components/select',
+              '/components/autocomplete',
               '/components/combobox',
             ],
           },

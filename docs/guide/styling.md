@@ -154,7 +154,7 @@ a few carry a value. The common ones:
 | -------------------------------- | ------------------------------------------------------------------------------- |
 | `data-hovered`                   | A mouse or pen is over the part. Never from touch.                              |
 | `data-pressed`                   | A pointer or key is pressing the part.                                          |
-| `data-focused`                   | The part has focus.                                                             |
+| `data-focused`                   | The part has focus, however it came.                                            |
 | `data-focus-visible`             | The part has focus from a keyboard or a screen reader, not a pointer.           |
 | `data-focus-within`              | Focus is on the part or inside it.                                              |
 | `data-disabled`                  | The component, or this item, is disabled.                                       |
@@ -171,6 +171,12 @@ a few carry a value. The common ones:
 Each component page lists exactly which attributes go on which part. Because
 state is written on every part, you can style a label or an icon from the
 component's state without reading it in JavaScript.
+
+Draw focus rings on `data-focus-visible`. A press focuses what it presses in
+every browser, so `data-focused` follows a click too, but focus from a pointer
+is never visible. Text fields are the exception: they show focus however it
+came, as browsers do, so draw theirs on `data-focused`. The
+[default styles](./default-styles.md) do both.
 
 ### Why not `:hover`, `:active` and `:focus-visible`?
 

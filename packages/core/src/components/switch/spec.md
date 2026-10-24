@@ -154,6 +154,10 @@ As Checkbox: the input takes focus, Switch moves none, a click on the input
 or a `label` toggles natively, and hover is tracked on the wrapper (without
 one, the root) and the input, off while disabled.
 
+Changed on 2026-10-24 (owner): as Checkbox's, a pointer press on the input or
+a `label` that activates it focuses the input in every browser, and that
+focus isn't visible.
+
 ## Expected spoken output
 
 Confirmed with `@guidepup/virtual-screen-reader` on a label "Wi-Fi" and a

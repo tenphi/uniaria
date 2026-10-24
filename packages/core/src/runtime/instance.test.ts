@@ -994,7 +994,7 @@ describe('ctx.use', () => {
     });
   });
 
-  it('refuses a composed part with nothing to render on', () => {
+  it('leaves out a composed part with nowhere to go, and lists it', () => {
     const host = defineBehavior({
       name: 'host',
       parts: ['trigger'],
@@ -1003,11 +1003,191 @@ describe('ctx.use', () => {
         return ctx.use(disclosure, () => ({}));
       },
       expose: () => ({}),
+      connect: ({ api }) => ({ trigger: api.connect().trigger }),
+    });
+    const instance = createInstance(host, { id: 'h' });
+    instance.attach('trigger', {});
+    // The trigger still points at the panel's own id, which nothing renders.
+    expect(instance.connect().trigger.attrs['aria-controls']).toBe(
+      'h-disclosure-panel',
+    );
+    expect(instance.leftOutParts).toEqual([
+      { composer: 'host', composed: 'disclosure', part: 'panel' },
+    ]);
+  });
+
+  it('lists no part mapped to null', () => {
+    const host = defineBehavior({
+      name: 'host',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(disclosure, () => ({}), { parts: { panel: null } });
+      },
+      expose: () => ({}),
+      connect: () => ({ trigger: { attrs: {} } }),
+    });
+    expect(createInstance(host).leftOutParts).toEqual([]);
+  });
+
+  it('refuses a mapping to a part the composer doesn’t have', () => {
+    const host = defineBehavior({
+      name: 'host',
+      parts: ['trigger'],
+      props: {},
+      setup(ctx) {
+        return ctx.use(disclosure, () => ({}), {
+          // @ts-expect-error: the host has no body
+          parts: { panel: 'body' },
+        });
+      },
+      expose: () => ({}),
       connect: () => ({ trigger: { attrs: {} } }),
     });
     expect(() => createInstance(host)).toThrow(
-      'host composes disclosure, whose "panel" part has no "panel" part to render on.',
+      'host composes disclosure, whose "panel" part has no "body" part to render on.',
     );
+  });
+
+  describe('actions', () => {
+    const panel = defineBehavior({
+      name: 'panel',
+      parts: ['root'],
+      props: { isOpen: bindable(false) },
+      actions: ['open'],
+      setup(ctx) {
+        return {
+          open: () => ctx.props.isOpen.set(true),
+          internal: () => 'internal',
+        };
+      },
+      expose: ({ props }) => ({ isOpen: props.isOpen.get() }),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+
+    it('returns the composed definition’s actions, typed, each run in a batch', () => {
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: { isOpen: bindable(false) },
+        setup(ctx) {
+          const inner = ctx.use(panel, () => ({
+            isOpen: ctx.props.isOpen.get(),
+            onOpenChange: (isOpen: boolean) => ctx.props.isOpen.set(isOpen),
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host);
+      const { actions } = instance.api.inner;
+      expect(Object.keys(actions)).toEqual(['open']);
+      expectTypeOf(actions).toEqualTypeOf<{ open: () => void }>();
+
+      instance.start();
+      const listener = vi.fn();
+      instance.subscribe(listener);
+      actions.open();
+      expect(instance.getState().isOpen).toBe(true);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a composed action setup() does not return as a function', () => {
+      const broken = defineBehavior({
+        name: 'broken',
+        parts: ['root'],
+        props: {},
+        actions: ['open'],
+        setup: () => ({ open: 'not a function' }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: {},
+        setup: (ctx) => ({ inner: ctx.use(broken, () => ({})) }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(host)).toThrow(
+        'broken: action "open" is not a function setup() returns.',
+      );
+    });
+  });
+
+  describe('reset', () => {
+    /** A control whose `api.reset()` resets its own value. */
+    const control = defineBehavior({
+      name: 'control',
+      parts: ['root'],
+      props: { value: bindable('') },
+      setup(ctx) {
+        return {
+          set: (value: string) => ctx.props.value.set(value),
+          reset: () => ctx.props.value.reset({ fallback: 'mounted' }),
+        };
+      },
+      expose: ({ props }) => ({ value: props.value.get() }),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+
+    it('leaves a composed, controlled value to the composer', () => {
+      const onValueChange = vi.fn();
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: { value: bindable('') },
+        setup(ctx) {
+          const inner = ctx.use(control, () => ({
+            value: ctx.props.value.get(),
+            onValueChange: (value: string) => {
+              onValueChange(value);
+              ctx.props.value.set(value);
+            },
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host, {
+        props: { defaultValue: 'default' },
+      });
+      instance.api.inner.api.set('typed');
+      onValueChange.mockClear();
+
+      // The value now, with nothing reported: the composer resets its own.
+      expect(instance.api.inner.api.reset()).toBe('typed');
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(instance.getState().value).toBe('typed');
+    });
+
+    it('resets a composed value the composer leaves uncontrolled', () => {
+      const onValueChange = vi.fn();
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: {},
+        setup(ctx) {
+          const inner = ctx.use(control, () => ({
+            defaultValue: 'default',
+            onValueChange,
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host);
+      instance.api.inner.api.set('typed');
+      onValueChange.mockClear();
+
+      expect(instance.api.inner.api.reset()).toBe('default');
+      expect(onValueChange.mock.calls).toEqual([['default']]);
+      expect(instance.getState().value).toBe('default');
+    });
   });
 });
 
@@ -1397,6 +1577,88 @@ describe('links', () => {
     child.setProps({ hint: createInstance(button) });
     child.sync();
     expect(child.api.linked()).toBeUndefined();
+  });
+
+  describe('in composed definitions', () => {
+    /** Composes the button, passing its hint on when asked. */
+    const card = (shouldPassOn: boolean) =>
+      defineBehavior({
+        name: 'card',
+        parts: ['root'],
+        props: {},
+        links: [hintLink],
+        setup(ctx) {
+          const inner = ctx.use(
+            button,
+            () => ({}),
+            shouldPassOn ? { links: [hintLink] } : {},
+          );
+          return { inner, own: () => ctx.link(hintLink) };
+        },
+        expose: () => ({}),
+        connect: ({ api }) => api.inner.connect(),
+      });
+
+    it('reads none it isn’t passed', () => {
+      const linked = createInstance(hint, { props: { text: 'Linked' } });
+      const instance = createInstance(card(false), { props: { hint: linked } });
+      expect(instance.api.inner.api.linked()).toBeUndefined();
+      expect(instance.api.own()?.instance).toBe(linked);
+    });
+
+    it('reads a link passed on, which the composer reads no more', () => {
+      const linked = createInstance(hint, { props: { text: 'Linked' } });
+      const instance = createInstance(card(true), { props: { hint: linked } });
+      expect(instance.api.inner.api.linked()?.instance).toBe(linked);
+      expect(instance.api.own()).toBeUndefined();
+
+      // Followed through the composer while started.
+      instance.start();
+      const listener = vi.fn();
+      instance.subscribe(listener);
+      linked.api.setText('Changed');
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(instance.connect().root.attrs.title).toBe('Changed');
+    });
+
+    it('refuses a link the composer or the composed definition doesn’t take', () => {
+      const plain = defineBehavior({
+        name: 'plain',
+        parts: ['root'],
+        props: {},
+        setup: (ctx) => ({
+          inner: ctx.use(button, () => ({}), { links: [hintLink] }),
+        }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(plain)).toThrow(
+        'plain passes the "hint" link to button, but only a link both take can be passed on.',
+      );
+      const box = defineBehavior({
+        name: 'box',
+        parts: ['root'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const wrapper = defineBehavior({
+        name: 'wrapper',
+        parts: ['root'],
+        props: {},
+        links: [hintLink],
+        setup: (ctx) => ({
+          // @ts-expect-error: box takes no hint
+          inner: ctx.use(box, () => ({}), { links: [hintLink] }),
+        }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(wrapper)).toThrow(
+        'wrapper passes the "hint" link to box, but only a link both take can be passed on.',
+      );
+    });
   });
 });
 

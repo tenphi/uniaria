@@ -8,6 +8,7 @@
  * image, the Linux CI runs on.
  */
 
+import '@uniaria/elements/autocomplete';
 import '@uniaria/elements/button';
 import '@uniaria/elements/checkbox';
 import '@uniaria/elements/checkbox-group';
@@ -301,6 +302,17 @@ const select = (props: PickerProps = {}) => `
     </div>
   </uni-select>`;
 
+// The input's `value` seeds the text, which filters the list from the start.
+const autocomplete = (props: PickerProps & { readonly text?: string } = {}) => `
+  <uni-autocomplete${pickerAttributes(props)}>
+    <div data-uni="autocomplete" style="inline-size: 140px">
+      <label data-element="Label">Fruit</label>
+      <input data-element="Input" type="search" placeholder="Search" value="${props.text ?? ''}" />
+      <div data-element="List">${OPTIONS}</div>
+      <p data-element="Empty">No fruit matches.</p>
+    </div>
+  </uni-autocomplete>`;
+
 const combobox = (props: PickerProps = {}) => `
   <uni-combobox${pickerAttributes(props)}>
     <div data-uni="combobox">
@@ -566,6 +578,17 @@ const GALLERIES: readonly Gallery[] = [
     name: 'select-open',
     html: select({ value: ['banana'], isOpen: true }),
     layout: 'popup',
+  },
+  {
+    name: 'autocomplete',
+    html: [
+      autocomplete({ value: ['banana'] }),
+      autocomplete({ value: ['apple', 'lemon'], isMultiple: true, text: 'l' }),
+      autocomplete({ value: ['banana'], isDisabled: true }),
+      autocomplete({ text: 'zz' }),
+    ].join(''),
+    columns: 4,
+    isFocused: true,
   },
   {
     name: 'combobox',

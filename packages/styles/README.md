@@ -1,6 +1,6 @@
 # @uniaria/styles
 
-Optional default styles for UniAria's components: a neutral look for all 16,
+Optional default styles for UniAria's components: a neutral look for all 17,
 accessible in a light, a dark and a high-contrast scheme and in forced colors,
 which you can keep, retheme or replace part by part. UniAria itself has no
 look, and works without this package.

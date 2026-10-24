@@ -35,6 +35,11 @@
       "types": "./dist/field/index.d.ts",
       "default": "./dist/field/index.js"
     },
+    "./text-input": {
+      "uniaria-source": "./src/components/text-input/index.ts",
+      "types": "./dist/text-input/index.d.ts",
+      "default": "./dist/text-input/index.js"
+    },
     "./text-field": {
       "uniaria-source": "./src/components/text-field/index.ts",
       "types": "./dist/text-field/index.d.ts",
@@ -79,6 +84,11 @@
       "uniaria-source": "./src/components/select/index.ts",
       "types": "./dist/select/index.d.ts",
       "default": "./dist/select/index.js"
+    },
+    "./autocomplete": {
+      "uniaria-source": "./src/components/autocomplete/index.ts",
+      "types": "./dist/autocomplete/index.d.ts",
+      "default": "./dist/autocomplete/index.js"
     },
     "./combobox": {
       "uniaria-source": "./src/components/combobox/index.ts",

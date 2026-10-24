@@ -1,12 +1,15 @@
 ---
 title: Collections
-description: Items as data, keys, selection, typeahead and virtualization in Listbox, Select and Combobox.
+description: Items as data, keys, selection, typeahead and virtualization in Listbox, Autocomplete, Select and Combobox.
 ---
 
-[Listbox](../components/listbox.mdx), [Select](../components/select.mdx) and
+[Listbox](../components/listbox.mdx),
+[Autocomplete](../components/autocomplete.mdx),
+[Select](../components/select.mdx) and
 [Combobox](../components/combobox.mdx) show a collection of options. They
-share one implementation: Select is a listbox in a popover with a trigger,
-and Combobox is a listbox in a popover with a text input.
+share one implementation: Autocomplete is a listbox behind a text input that
+filters it, Select is a listbox in a popover with a trigger, and Combobox is
+an autocomplete with its list in a popover.
 
 ## Items are data
 
@@ -121,7 +124,7 @@ load.
 
 ## Keyboard and typeahead
 
-The arrow keys move focus between options (or a highlight, in a combo box),
+The arrow keys move focus between options (or a highlight, in Autocomplete and a combo box),
 Home and End jump to the ends, and Page Up and Page Down move by a page.
 Typing a few letters moves to the next option whose text starts with them.
 `shouldFocusWrap` makes the arrows wrap around. In multiple mode, Shift with

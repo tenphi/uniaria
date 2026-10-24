@@ -13,7 +13,7 @@ checks an adapter or a component against real input and screen readers;
 | `@uniaria/core`     | The runtime, the DOM layer, collections and one definition per component         | Always: the adapters depend on it                               |
 | `@uniaria/react`    | `useBehavior`, `useBehaviorState` and `OwnerProvider`                            | You render with React                                           |
 | `@uniaria/vue`      | `useBehavior` and `useBehaviorState`                                             | You render with Vue                                             |
-| `@uniaria/elements` | `defineElement` and one registering entry per component                          | You render HTML: plain pages, server templates, Svelte, Angular |
+| `@uniaria/elements` | `defineElement` and a registering entry per component element                    | You render HTML: plain pages, server templates, Svelte, Angular |
 | `@uniaria/testing`  | The conformance runner, the mount contract, real input and screen-reader helpers | You write an adapter or test your own components                |
 | `@uniaria/styles`   | Default styles: prebuilt CSS, a CSS builder, Tasty style objects and the palette | You want a look to start from                                   |
 
@@ -27,7 +27,7 @@ Import from these paths, never from files inside a package.
 | `@uniaria/core`                 | `defineBehavior`, `prop`, `bindable`, `event`, `createInstance` and the runtime types                                                                                    | [Runtime](./core.md)                                             |
 | `@uniaria/core/dom`             | `configure` for page-wide settings; interactions, focus, layers, positioning and the announcer for definition authors; the binder and part discovery for adapter authors | [DOM layer](./dom.md)                                            |
 | `@uniaria/core/collections`     | `createListCollection`, `createTypeahead`, `findByText`                                                                                                                  | [Collections](./collections.md)                                  |
-| `@uniaria/core/virtual`         | `virtualizer`, the engine a virtualized Listbox, Select or Combobox takes                                                                                                | [Collections](./collections.md#virtualization)                   |
+| `@uniaria/core/virtual`         | `virtualizer`, the engine a virtualized Listbox, Autocomplete, Select or Combobox takes                                                                                  | [Collections](./collections.md#virtualization)                   |
 | `@uniaria/core/<component>`     | One definition, plus its `<Name>Props` and `<Name>State` types (table below)                                                                                             | The component's page                                             |
 | `@uniaria/react`                | `useBehavior`, `useBehaviorState`, `OwnerProvider`                                                                                                                       | [React](./react.md)                                              |
 | `@uniaria/vue`                  | `useBehavior`, `useBehaviorState`                                                                                                                                        | [Vue](./vue.md)                                                  |
@@ -45,26 +45,30 @@ Import from these paths, never from files inside a package.
 ### Components
 
 Every component has a subpath of `@uniaria/core` that exports its definition,
-and a registering entry of the same name in `@uniaria/elements`.
+and every one but TextInput a registering entry of the same name in
+`@uniaria/elements`. TextInput is the native input inside the text fields,
+for definitions that compose it.
 
-| Subpath          | Definition      | Element                | Page                                              |
-| ---------------- | --------------- | ---------------------- | ------------------------------------------------- |
-| `button`         | `button`        | `<uni-button>`         | [Button](../components/button.mdx)                |
-| `toggle-button`  | `toggleButton`  | `<uni-toggle-button>`  | [ToggleButton](../components/toggle-button.mdx)   |
-| `field`          | `field`         | `<uni-field>`          | [Field](../components/field.mdx)                  |
-| `text-field`     | `textField`     | `<uni-text-field>`     | [TextField](../components/text-field.mdx)         |
-| `number-field`   | `numberField`   | `<uni-number-field>`   | [NumberField](../components/number-field.mdx)     |
-| `checkbox`       | `checkbox`      | `<uni-checkbox>`       | [Checkbox](../components/checkbox.mdx)            |
-| `checkbox-group` | `checkboxGroup` | `<uni-checkbox-group>` | [CheckboxGroup](../components/checkbox-group.mdx) |
-| `switch`         | `toggleSwitch`  | `<uni-switch>`         | [Switch](../components/switch.mdx)                |
-| `radio-group`    | `radioGroup`    | `<uni-radio-group>`    | [RadioGroup](../components/radio-group.mdx)       |
-| `radio`          | `radio`         | `<uni-radio>`          | [RadioGroup](../components/radio-group.mdx)       |
-| `dialog`         | `dialog`        | `<uni-dialog>`         | [Dialog](../components/dialog.mdx)                |
-| `popover`        | `popover`       | `<uni-popover>`        | [Popover](../components/popover.mdx)              |
-| `tooltip`        | `tooltip`       | `<uni-tooltip>`        | [Tooltip](../components/tooltip.mdx)              |
-| `listbox`        | `listbox`       | `<uni-listbox>`        | [Listbox](../components/listbox.mdx)              |
-| `select`         | `select`        | `<uni-select>`         | [Select](../components/select.mdx)                |
-| `combobox`       | `combobox`      | `<uni-combobox>`       | [Combobox](../components/combobox.mdx)            |
+| Subpath          | Definition      | Element                | Page                                                                     |
+| ---------------- | --------------- | ---------------------- | ------------------------------------------------------------------------ |
+| `button`         | `button`        | `<uni-button>`         | [Button](../components/button.mdx)                                       |
+| `toggle-button`  | `toggleButton`  | `<uni-toggle-button>`  | [ToggleButton](../components/toggle-button.mdx)                          |
+| `field`          | `field`         | `<uni-field>`          | [Field](../components/field.mdx)                                         |
+| `text-input`     | `textInput`     | None                   | [Custom components](../guide/custom-components.md#build-on-the-controls) |
+| `text-field`     | `textField`     | `<uni-text-field>`     | [TextField](../components/text-field.mdx)                                |
+| `number-field`   | `numberField`   | `<uni-number-field>`   | [NumberField](../components/number-field.mdx)                            |
+| `checkbox`       | `checkbox`      | `<uni-checkbox>`       | [Checkbox](../components/checkbox.mdx)                                   |
+| `checkbox-group` | `checkboxGroup` | `<uni-checkbox-group>` | [CheckboxGroup](../components/checkbox-group.mdx)                        |
+| `switch`         | `toggleSwitch`  | `<uni-switch>`         | [Switch](../components/switch.mdx)                                       |
+| `radio-group`    | `radioGroup`    | `<uni-radio-group>`    | [RadioGroup](../components/radio-group.mdx)                              |
+| `radio`          | `radio`         | `<uni-radio>`          | [RadioGroup](../components/radio-group.mdx)                              |
+| `dialog`         | `dialog`        | `<uni-dialog>`         | [Dialog](../components/dialog.mdx)                                       |
+| `popover`        | `popover`       | `<uni-popover>`        | [Popover](../components/popover.mdx)                                     |
+| `tooltip`        | `tooltip`       | `<uni-tooltip>`        | [Tooltip](../components/tooltip.mdx)                                     |
+| `listbox`        | `listbox`       | `<uni-listbox>`        | [Listbox](../components/listbox.mdx)                                     |
+| `autocomplete`   | `autocomplete`  | `<uni-autocomplete>`   | [Autocomplete](../components/autocomplete.mdx)                           |
+| `select`         | `select`        | `<uni-select>`         | [Select](../components/select.mdx)                                       |
+| `combobox`       | `combobox`      | `<uni-combobox>`       | [Combobox](../components/combobox.mdx)                                   |
 
 Switch's definition is `toggleSwitch` because `switch` is a reserved word.
 `@uniaria/core/tooltip` also exports `tooltipLink`, the key other components

@@ -16,8 +16,10 @@ them for you, in every adapter.
 | Button, ToggleButton, Checkbox, Switch, Radio, TextField, NumberField, Dialog, Popover | Tooltip       | Inside `<uni-tooltip>` directly, or `tooltip="<id>"` |
 
 Composite components, such as Select (a listbox, a popover and a trigger) or
-TextField (a field and an input), are one component with more parts. They
-need none of this. When one element is a part of two components at once, as
+TextField (Field and TextInput, a native input with its value handling), are
+one component with more parts. They need none of this, and your own
+definitions can compose the same pieces: see
+[Build on the controls](./custom-components.md#build-on-the-controls). When one element is a part of two components at once, as
 a component's root can be a part of the one around it in React, both use the
 id the element carries.
 

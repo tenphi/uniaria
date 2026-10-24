@@ -1,22 +1,19 @@
 /**
- * TextField, from the approved spec (`./spec.md`): Field composed on a native
- * `<input>` or `<textarea>`, plus the value (uncontrolled, or controlled and
- * buffered as Cube UI Kit's is), read-only mode, form reset, hover and focus
- * state on every part, and a press on the wrapper that focuses the input.
- * The browser keeps doing the editing.
+ * TextField, from the approved spec (`./spec.md`): Field and TextInput
+ * composed on a native `<input>` or `<textarea>`. TextInput holds the value
+ * (uncontrolled, or controlled and buffered as Cube UI Kit's is), the IME
+ * guard, hover and focus (composition spec); TextField adds the labelling,
+ * read-only mode, the form reset of its own value, its state on every part,
+ * and a press on the wrapper that focuses the input. The browser keeps doing
+ * the editing.
  */
 
-import {
-  createFocus,
-  createHover,
-  mergeHandlers,
-  partEffect,
-  partElement,
-} from '../../dom';
+import { partEffect, partElement } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { field } from '../field/field';
+import { textInput } from '../text-input/text-input';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -83,82 +80,36 @@ export const textField = defineBehavior({
       }),
       { parts: { control: 'input' } },
     );
-    const hover = createHover(ctx, {
-      part: 'input',
-      isDisabled: props.isDisabled,
-    });
-    const focus = createFocus(ctx, 'input');
-
-    // Cube UI Kit's buffered value: while a controlled consumer hasn't
-    // answered, the input keeps the typed text (the draft). The values
-    // reported and not yet echoed back are pending, oldest first.
-    const draft = ctx.state<string | undefined>(undefined);
-    let pending: string[] = [];
-    const shown = () => draft.get() ?? props.value.get();
-    const settle = () => {
-      pending = [];
-      draft.set(undefined);
-    };
-
-    // An echo of a reported value keeps the draft until the latest one
-    // arrives; any other value (a transform, a value from outside) wins.
-    ctx.watch(
-      () => props.value.get(),
-      (value) => {
-        const index = pending.indexOf(value);
-        if (index === -1) return settle();
-        pending = pending.slice(index + 1);
-        if (pending.length === 0) draft.set(undefined);
-      },
+    // The value, typing, IME, hover and focus on the input.
+    const text = ctx.use(
+      textInput,
+      () => ({
+        value: props.value.get(),
+        onValueChange: (value: string) => props.value.set(value),
+        isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
+        onFocusChange: (isFocused: boolean) =>
+          ctx.emit('focusChange', isFocused),
+      }),
+      { parts: { root: 'input' } },
     );
-
-    // A value the consumer never accepted goes back on blur.
-    ctx.watch(focus.isFocused, (isFocused) => {
-      if (!isFocused) settle();
-      ctx.emit('focusChange', isFocused);
-    });
-
-    // Writing the value mid-composition breaks the IME, so it waits.
-    const isComposing = ctx.state(false);
-
-    const onInput = () => {
-      const input = partElement(ctx, 'input') as HTMLInputElement | null;
-      if (!input) return;
-      const text = input.value;
-      if (props.value.isControlled()) {
-        pending.push(text);
-        draft.set(text);
-      }
-      props.value.set(text);
-    };
 
     // Form reset goes back to the default, as a native field does: an
     // uncontrolled field follows defaultValue again, even one set after
     // mount; a controlled one asks for it, or without one for the value it
-    // mounted with, as React Aria's does.
+    // mounted with, as React Aria's does. TextInput drops its draft and
+    // writes the text again after the native reset.
     let initial: string | undefined;
-    const resync = ctx.state(0);
     partEffect(ctx, 'input', (element) => {
       initial ??= props.value.get();
       const form = (element as HTMLInputElement).form;
       if (!form) return;
-      let timer: ReturnType<typeof setTimeout> | undefined;
       const onReset = (event: Event) => {
         if (event.defaultPrevented) return;
-        ctx.batch(() => {
-          settle();
-          props.value.reset({ fallback: initial });
-        });
-        // The native reset runs after this event and puts back the value
-        // attribute, so the value is written again after it.
-        clearTimeout(timer);
-        timer = setTimeout(() => resync.set(resync.get() + 1));
+        props.value.reset({ fallback: initial });
       };
       form.addEventListener('reset', onReset);
-      return () => {
-        form.removeEventListener('reset', onReset);
-        clearTimeout(timer);
-      };
+      return () => form.removeEventListener('reset', onReset);
     });
 
     // The wrapper draws the box around the input, so a press on it outside
@@ -175,27 +126,15 @@ export const textField = defineBehavior({
       input.focus();
     };
 
-    return {
-      field: labelling,
-      isHovered: hover.isHovered,
-      isFocused: focus.isFocused,
-      isFocusVisible: focus.isFocusVisible,
-      isComposing: () => isComposing.get(),
-      shown,
-      focusInput,
-      handlers: mergeHandlers(hover.handlers, focus.handlers, {
-        input: onInput,
-        compositionstart: () => isComposing.set(true),
-        compositionend: () => isComposing.set(false),
-      }),
-    };
+    return { field: labelling, text, focusInput };
   },
   expose({ props, api }) {
+    const { isFocused, isFocusVisible, isHovered } = api.text.state();
     return {
       value: props.value.get(),
-      isFocused: api.isFocused(),
-      isFocusVisible: api.isFocusVisible(),
-      isHovered: api.isHovered(),
+      isFocused,
+      isFocusVisible,
+      isHovered,
       isDisabled: props.isDisabled(),
       isReadOnly: props.isReadOnly(),
       isRequired: props.isRequired(),
@@ -205,14 +144,14 @@ export const textField = defineBehavior({
   },
   connect({ props, api }) {
     const { control, ...parts } = api.field.connect();
-    const isDisabled = props.isDisabled();
-    const isReadOnly = props.isReadOnly();
+    const text = api.text.connect().root;
+    const { isFocused, isFocusVisible, isHovered } = api.text.state();
     // Every part, so the box, the label and the messages can be styled.
     const state = {
-      'data-hovered': flag(api.isHovered()),
-      'data-focused': flag(api.isFocused()),
-      'data-focus-visible': flag(api.isFocusVisible()),
-      'data-readonly': flag(isReadOnly),
+      'data-hovered': flag(isHovered),
+      'data-focused': flag(isFocused),
+      'data-focus-visible': flag(isFocusVisible),
+      'data-readonly': flag(props.isReadOnly()),
     };
     const withState = (part: PartProps): PartProps => ({
       ...part,
@@ -223,15 +162,9 @@ export const textField = defineBehavior({
       attrs: { ...parts.root.attrs, ...state },
       on: { mousedown: api.focusInput },
     };
-    const input: DomPartProps = {
-      attrs: {
-        ...control.attrs,
-        ...state,
-        disabled: flag(isDisabled),
-        readonly: flag(isReadOnly),
-      },
-      on: api.handlers,
-      properties: { value: api.isComposing() ? undefined : api.shown() },
+    const input: PartProps = {
+      ...text,
+      attrs: { ...text.attrs, ...control.attrs, ...state },
     };
     return {
       root: withState(parts.root),

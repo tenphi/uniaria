@@ -24,12 +24,17 @@ Read the root [AGENTS.md](../../AGENTS.md) first, especially "Custom elements
   the value controlled, `undefined` uncontrolled, so reading and writing back
   the same value (`el.value = el.value`) controls it. Re-apply properties
   set before upgrade. Skip registration when the name is already defined.
-- Each component gets one registering entry (`src/<name>.ts`) that calls
-  `defineElement` with the default `uni-` prefix (`defineElement` returns
-  `undefined` where there is no `customElements`) and declares the tag in
-  `HTMLElementTagNameMap`. It needs an entry in `tsdown.config.ts`, an
-  `exports` entry, a line in `src/ssr-safety.test.ts`, and a place in
-  `sideEffects` in package.json, because importing it registers the element.
+- Each component with an element gets one registering entry
+  (`src/<name>.ts`) that calls `defineElement` with the default `uni-`
+  prefix (`defineElement` returns `undefined` where there is no
+  `customElements`) and declares the tag in `HTMLElementTagNameMap`. It
+  needs an entry in `tsdown.config.ts`, an `exports` entry, a line in
+  `src/ssr-safety.test.ts`, and a place in `sideEffects` in package.json,
+  because importing it registers the element.
+  TextInput has none, and `<uni-autocomplete>` has one: both are specified in
+  `packages/core/src/components/composition.md`, and their folders in
+  `packages/core/src/components/` (`text-input/`, `autocomplete/`) hold a
+  `spec.md` that points to it.
 - `src/conformance-adapter.ts` implements the mount contract (it wraps the
   template's parts in the host and sets props as properties) and
   `src/conformance.browser.test.ts` runs every suite. Raise its `phase` as

@@ -6,10 +6,17 @@ Status: approved by @tenphi on 2026-10-15
 
 A text field is a native `<input>` or `<textarea>` with a label, a
 description and an error message. TextField composes Field for the labelling
-(`ctx.use(field, props, { parts: { control: 'input' } })`) and adds the value,
-read-only mode and interaction state. The browser keeps doing the editing:
-typing, selection, IME, autofill, undo, Enter submitting the form from an
-`<input>` and adding a line in a `<textarea>`.
+(`ctx.use(field, props, { parts: { control: 'input' } })`) and TextInput for
+the value, hover and focus
+(`ctx.use(textInput, props, { parts: { root: 'input' } })`), and adds
+read-only mode, the form reset and the interaction state on every part. The
+browser keeps doing the editing: typing, selection, IME, autofill, undo,
+Enter submitting the form from an `<input>` and adding a line in a
+`<textarea>`.
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`):
+TextField is Field and TextInput, which now holds the value handling (Value).
+Its API and behavior are the same.
 
 The name follows React Aria (TextField, NumberField, SearchField): Field plus a
 text control is `<Name>Field`, and the control part keeps the element's name,
@@ -17,8 +24,10 @@ text control is `<Name>Field`, and the control part keeps the element's name,
 
 - **WAI-ARIA pattern:** none; a native text control needs none. Labelling
   follows Field and the APG practice on names and descriptions.
-- **Builds on:** Field (`ctx.use`), `hover` and `focus` from `dom/`, and a new
-  part-prop channel for live DOM properties (Resolved questions 1).
+- **Builds on:** Field and TextInput (`ctx.use`; TextInput changed on
+  2026-10-24 (owner), the composition spec), TextInput bringing `hover` and
+  `focus` from `dom/`, and a new part-prop channel for live DOM properties
+  (Resolved questions 1).
 - **Owner:** none.
 - **Tooltip:** takes a Tooltip through its `tooltip` link (Tooltip spec, Resolved
   questions 2): the tooltip instance in React (`tooltip: hint.instance`),
@@ -109,6 +118,13 @@ part that has none (root AGENTS.md → DOM, lifecycle and SSR).
 | isErrorShown   | `boolean` | Field's: invalid and not disabled.                                        |
 
 ## Value
+
+Changed on 2026-10-24 (owner), the composition spec (`../composition.md`,
+TextInput's Value): these rules are TextInput's, which TextField composes
+on its input; they moved there unchanged, and every text control shares
+them. TextField keeps the form reset of its own value, since it holds
+`defaultValue`, and the adoption before JavaScript, since an element adopts
+only into the definition it registers.
 
 The input's text lives in its `value` property, which no attribute controls
 once the user has typed. TextField writes it through the new live-property
