@@ -1544,24 +1544,26 @@ export const autocompleteConformance = defineConformance<
           props: { items: FRUIT, disabledKeys: ['date'] },
         });
         byId(mounted, 'before').focus();
-        await pointer.move(option(mounted, 'cherry'));
-        const cherry = option(mounted, 'cherry');
-        expect(cherry.hasAttribute('data-hovered')).toBe(true);
-        expect(cherry.hasAttribute('data-focused')).toBe(false);
-        expect(mounted.state().focusedKey).toBe(null);
-
-        input(mounted).focus();
         await pointer.move(option(mounted, 'banana'));
         const banana = option(mounted, 'banana');
-        expect(highlighted(mounted)).toBe('banana');
         expect(banana.hasAttribute('data-hovered')).toBe(true);
-        expect(banana.hasAttribute('data-focused')).toBe(true);
-        expect(banana.hasAttribute('data-focus-visible')).toBe(false);
+        expect(banana.hasAttribute('data-focused')).toBe(false);
+        expect(mounted.state().focusedKey).toBe(null);
+
+        // Each move goes to the next option, so the pointer crosses no other.
+        input(mounted).focus();
+        expect(mounted.state().focusedKey).toBe(null);
+        await pointer.move(option(mounted, 'cherry'));
+        const cherry = option(mounted, 'cherry');
+        expect(highlighted(mounted)).toBe('cherry');
+        expect(cherry.hasAttribute('data-hovered')).toBe(true);
+        expect(cherry.hasAttribute('data-focused')).toBe(true);
+        expect(cherry.hasAttribute('data-focus-visible')).toBe(false);
         await pointer.move(option(mounted, 'date'));
         expect(option(mounted, 'date').hasAttribute('data-hovered')).toBe(
           false,
         );
-        expect(highlighted(mounted)).toBe('banana');
+        expect(highlighted(mounted)).toBe('cherry');
       },
       PHASE,
     );
