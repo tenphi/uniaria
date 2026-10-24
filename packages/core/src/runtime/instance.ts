@@ -380,13 +380,15 @@ export function createInstance<D extends AnyDefinition>(
   /**
    * Runs one definition's `setup()` against this instance: the component
    * itself, or one it composes with `ctx.use()`. `readProps` returns its
-   * props, and `partOf` names this instance's part for each of its parts,
-   * or `null` for a part left out.
+   * props, `partOf` names this instance's part for each of its parts, or
+   * `null` for a part left out, and `links` holds the link keys it reads:
+   * the component's own, or those its composer passed on.
    */
   const scope = (
     scoped: AnyDefinition,
     readProps: () => Readonly<Record<string, unknown>>,
     partOf: (part: string) => string | null,
+    links: Set<LinkKey>,
   ): { api: unknown; view: ViewContext<string, PropsSchema, unknown> } => {
     const readers: Record<string, (() => unknown) | Bindable<unknown>> = {};
     for (const info of scoped.schema.props) {
@@ -523,9 +525,11 @@ export function createInstance<D extends AnyDefinition>(
           : undefined;
       },
       link(key) {
-        // Links are the instance's own: a composed definition, such as the
-        // Button in a Popover's trigger, never takes one.
-        if (scoped !== definition) return undefined;
+        // Links are the instance's own. A composed definition, such as the
+        // Button in a Popover's trigger, reads only those passed on to it,
+        // and a link passed on is no longer the composer's (composition
+        // spec, Runtime changes 3).
+        if (!links.has(key)) return undefined;
         const target = currentLink(key);
         return target?.definition.provides?.includes(key)
           ? (handleOf(target) as never)
@@ -542,6 +546,16 @@ export function createInstance<D extends AnyDefinition>(
             );
           }
         }
+        const passed = new Set<LinkKey>();
+        for (const key of composeOptions?.links ?? []) {
+          if (!links.has(key) || !child.links?.includes(key)) {
+            throw new Error(
+              `[uniaria] ${scoped.name} passes the "${key.name}" link to ${child.name}, but only a link both take can be passed on.`,
+            );
+          }
+          links.delete(key);
+          passed.add(key);
+        }
         const composed = scope(
           child,
           childProps as () => Readonly<Record<string, unknown>>,
@@ -549,6 +563,7 @@ export function createInstance<D extends AnyDefinition>(
             const own = map[part];
             return own === null ? null : partOf(own ?? part);
           },
+          passed,
         );
         return {
           api: composed.api,
@@ -569,6 +584,7 @@ export function createInstance<D extends AnyDefinition>(
     definition,
     () => props,
     (part) => part,
+    new Set(definition.links ?? []),
   );
 
   // Subscribed before any adapter, so watchers settle state before the

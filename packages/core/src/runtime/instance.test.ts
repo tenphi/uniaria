@@ -1539,6 +1539,88 @@ describe('links', () => {
     child.sync();
     expect(child.api.linked()).toBeUndefined();
   });
+
+  describe('in composed definitions', () => {
+    /** Composes the button, passing its hint on when asked. */
+    const card = (shouldPassOn: boolean) =>
+      defineBehavior({
+        name: 'card',
+        parts: ['root'],
+        props: {},
+        links: [hintLink],
+        setup(ctx) {
+          const inner = ctx.use(
+            button,
+            () => ({}),
+            shouldPassOn ? { links: [hintLink] } : {},
+          );
+          return { inner, own: () => ctx.link(hintLink) };
+        },
+        expose: () => ({}),
+        connect: ({ api }) => api.inner.connect(),
+      });
+
+    it('reads none it isn’t passed', () => {
+      const linked = createInstance(hint, { props: { text: 'Linked' } });
+      const instance = createInstance(card(false), { props: { hint: linked } });
+      expect(instance.api.inner.api.linked()).toBeUndefined();
+      expect(instance.api.own()?.instance).toBe(linked);
+    });
+
+    it('reads a link passed on, which the composer reads no more', () => {
+      const linked = createInstance(hint, { props: { text: 'Linked' } });
+      const instance = createInstance(card(true), { props: { hint: linked } });
+      expect(instance.api.inner.api.linked()?.instance).toBe(linked);
+      expect(instance.api.own()).toBeUndefined();
+
+      // Followed through the composer while started.
+      instance.start();
+      const listener = vi.fn();
+      instance.subscribe(listener);
+      linked.api.setText('Changed');
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(instance.connect().root.attrs.title).toBe('Changed');
+    });
+
+    it('refuses a link the composer or the composed definition doesn’t take', () => {
+      const plain = defineBehavior({
+        name: 'plain',
+        parts: ['root'],
+        props: {},
+        setup: (ctx) => ({
+          inner: ctx.use(button, () => ({}), { links: [hintLink] }),
+        }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(plain)).toThrow(
+        'plain passes the "hint" link to button, but only a link both take can be passed on.',
+      );
+      const box = defineBehavior({
+        name: 'box',
+        parts: ['root'],
+        props: {},
+        setup: () => ({}),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const wrapper = defineBehavior({
+        name: 'wrapper',
+        parts: ['root'],
+        props: {},
+        links: [hintLink],
+        setup: (ctx) => ({
+          // @ts-expect-error: box takes no hint
+          inner: ctx.use(box, () => ({}), { links: [hintLink] }),
+        }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(wrapper)).toThrow(
+        'wrapper passes the "hint" link to box, but only a link both take can be passed on.',
+      );
+    });
+  });
 });
 
 /** Rows keyed by item, one active, as a listbox's options are. */

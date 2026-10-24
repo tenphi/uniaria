@@ -54,6 +54,7 @@ export type {
   InputProps,
   ItemPartOf,
   LinkKey,
+  LinkOf,
   Linkable,
   Linked,
   Owned,
