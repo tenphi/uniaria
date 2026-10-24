@@ -31,6 +31,7 @@ export default defineConfig({
     'button/index': 'src/components/button/index.ts',
     'toggle-button/index': 'src/components/toggle-button/index.ts',
     'field/index': 'src/components/field/index.ts',
+    'text-input/index': 'src/components/text-input/index.ts',
     'text-field/index': 'src/components/text-field/index.ts',
     'checkbox/index': 'src/components/checkbox/index.ts',
     'checkbox-group/index': 'src/components/checkbox-group/index.ts',
