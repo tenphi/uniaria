@@ -26,6 +26,9 @@ const PHASE = { phase: 3 } as const;
 /** isFocusableWhenDisabled came with Tooltip (Tooltip spec, Resolved questions 12). */
 const FOCUSABLE_PHASE = { phase: 4 } as const;
 
+/** A press focuses the input in every browser (owner, 2026-10-24). */
+const PRESS_FOCUS_PHASE = { phase: 6 } as const;
+
 const PARTS = [
   'root',
   'wrapper',
@@ -789,14 +792,46 @@ export const switchConformance = defineConformance<SwitchProps, SwitchState>(
           expectOnEveryPart(mounted, 'data-focused', false);
           expectOnEveryPart(mounted, 'data-focus-visible', false);
 
-          // Whether a click focuses a switch is the browser's (WebKit
-          // doesn't), so focus follows it from script.
+          // Focus follows the click from script: the press scenario below
+          // checks that the click itself focuses the input.
           await pointer.click(input);
           input.focus();
           expectOnEveryPart(mounted, 'data-focused', true);
           expectOnEveryPart(mounted, 'data-focus-visible', false);
         },
         PHASE,
+      );
+
+      scenario(
+        'a press on the input or its label focuses the input in every browser, and the focus is not visible',
+        async ({ mount, pointer }) => {
+          const mounted = await mount({
+            template: [
+              h('input', { id: 'before', 'aria-label': 'Before' }),
+              ...wifi(),
+            ],
+            props: IN_LABEL,
+            events: EVENTS,
+          });
+          const input = inputOf(mounted);
+          const before =
+            mounted.container.querySelector<HTMLElement>('#before')!;
+
+          before.focus();
+          await pointer.click(input);
+          expect(document.activeElement).toBe(input);
+          expect(input.checked).toBe(true);
+          expectOnEveryPart(mounted, 'data-focused', true);
+          expectOnEveryPart(mounted, 'data-focus-visible', false);
+
+          before.focus();
+          await pointer.click(mounted.part('label'));
+          expect(document.activeElement).toBe(input);
+          expect(input.checked).toBe(false);
+          expectOnEveryPart(mounted, 'data-focus-visible', false);
+          expect(focusChanges(mounted)).toEqual([true, false, true]);
+        },
+        PRESS_FOCUS_PHASE,
       );
 
       scenario(
