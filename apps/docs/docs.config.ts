@@ -6,7 +6,7 @@ export default defineDocsConfig({
     title: 'UniAria',
     url: 'https://uniaria.tenphi.me',
     description:
-      'Accessible component behavior written once, for React, custom elements and any framework.',
+      'Accessible component behavior written once, for React, Vue, custom elements and any framework.',
     repository: 'https://github.com/tenphi/uniaria',
   },
   editLink: { baseUrl: 'https://github.com/tenphi/uniaria/edit/main/' },
@@ -22,7 +22,11 @@ export default defineDocsConfig({
           '/',
           {
             label: 'Start',
-            items: ['/guide/introduction', '/guide/getting-started'],
+            items: [
+              '/guide/introduction',
+              '/guide/comparison',
+              '/guide/getting-started',
+            ],
           },
           {
             label: 'Use',

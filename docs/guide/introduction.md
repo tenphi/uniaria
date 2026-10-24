@@ -64,14 +64,22 @@ locale-aware numbers, and TanStack Virtual, bundled into the optional
 
 ## What UniAria is not
 
-- **Not a styling library.** There are no themes and no default look. UniAria
-  sets a style only where a behavior can't work without it, such as
-  `touch-action` on pressable elements, and such rules yield to yours.
+- **Not a styling library.** The core and the adapters have no look. The
+  optional `@uniaria/styles` package adds one, the
+  [default styles](./default-styles.md), written against the same part
+  markers and state attributes your own CSS would use, and nothing else
+  depends on it. UniAria itself sets a style only where a behavior can't work
+  without it, such as `touch-action` on pressable elements, and such rules
+  yield to yours.
 - **Not a form library.** Fields show validation state you give them; they
   don't validate. See [Forms](./forms.md).
 - **Not a set of framework components.** In React and Vue you get a hook or
   a composable that returns props, not `<Button>` components, so your design
   system decides the component API.
+
+For how these choices set UniAria apart from React Aria, Radix, Headless UI,
+Base UI and Zag.js, and when one of them fits better, see
+[Compared with others](./comparison.md).
 
 ## Components
 
