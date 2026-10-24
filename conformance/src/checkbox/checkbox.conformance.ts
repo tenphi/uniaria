@@ -25,6 +25,9 @@ const PHASE = { phase: 3 } as const;
 /** isFocusableWhenDisabled came with Tooltip (Tooltip spec, Resolved questions 12). */
 const FOCUSABLE_PHASE = { phase: 4 } as const;
 
+/** A press focuses the input in every browser (owner, 2026-10-24). */
+const PRESS_FOCUS_PHASE = { phase: 6 } as const;
+
 const PARTS = [
   'root',
   'wrapper',
@@ -877,14 +880,113 @@ export const checkboxConformance = defineConformance<
         expectOnEveryPart(mounted, 'data-focused', false);
         expectOnEveryPart(mounted, 'data-focus-visible', false);
 
-        // Whether a click focuses a checkbox is the browser's (WebKit
-        // doesn't), so focus follows it from script.
+        // Focus follows the click from script: the press scenarios below
+        // check that the click itself focuses the input.
         await pointer.click(input);
         input.focus();
         expectOnEveryPart(mounted, 'data-focused', true);
         expectOnEveryPart(mounted, 'data-focus-visible', false);
       },
       PHASE,
+    );
+
+    scenario(
+      'a press on the input or its label focuses the input in every browser, and the focus is not visible',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            ...terms(),
+          ],
+          props: IN_LABEL,
+          events: EVENTS,
+        });
+        const input = inputOf(mounted);
+        const before = mounted.container.querySelector<HTMLElement>('#before')!;
+
+        before.focus();
+        await pointer.click(input);
+        expect(document.activeElement).toBe(input);
+        expect(input.checked).toBe(true);
+        expectOnEveryPart(mounted, 'data-focused', true);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
+        expect(mounted.state()).toMatchObject({
+          isFocused: true,
+          isFocusVisible: false,
+        });
+
+        // The label part is a `span` in the `label` wrapper, which activates
+        // the input.
+        before.focus();
+        await pointer.click(mounted.part('label'));
+        expect(document.activeElement).toBe(input);
+        expect(input.checked).toBe(false);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
+        expect(focusChanges(mounted)).toEqual([true, false, true]);
+      },
+      PRESS_FOCUS_PHASE,
+    );
+
+    scenario(
+      'a press on a `label` label part focuses the input, read-only too',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            plain(),
+          ],
+          props: { isReadOnly: true },
+        });
+        const input = inputOf(mounted);
+        mounted.container.querySelector<HTMLElement>('#before')!.focus();
+        await pointer.click(mounted.part('label'));
+        expect(document.activeElement).toBe(input);
+        expect(input.checked).toBe(false);
+        expect(input.hasAttribute('data-focused')).toBe(true);
+        expect(input.hasAttribute('data-focus-visible')).toBe(false);
+      },
+      PRESS_FOCUS_PHASE,
+    );
+
+    scenario(
+      'a press outside the label, on a control inside it, or a click from a script moves no focus to the input',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: [
+            h('input', { id: 'before', 'aria-label': 'Before' }),
+            h(
+              'div',
+              { part: 'root' },
+              h(
+                'label',
+                { part: 'wrapper' },
+                h('input', { part: 'input', type: 'checkbox' }),
+                h('span', { part: 'label' }, 'Accept terms'),
+                h('button', { id: 'read', type: 'button' }, 'Read them'),
+              ),
+              h('p', { part: 'description' }, 'We email a copy'),
+            ),
+          ],
+          props: IN_LABEL,
+        });
+        const input = inputOf(mounted);
+        const before = mounted.container.querySelector<HTMLElement>('#before')!;
+
+        before.focus();
+        await pointer.click(mounted.part('description'));
+        expect(document.activeElement).not.toBe(input);
+
+        // HTML doesn't activate a label for interactive content in it.
+        await pointer.click(mounted.container.querySelector('#read')!);
+        expect(document.activeElement).not.toBe(input);
+        expect(input.checked).toBe(false);
+
+        before.focus();
+        input.click();
+        expect(input.checked).toBe(true);
+        expect(document.activeElement).toBe(before);
+      },
+      PRESS_FOCUS_PHASE,
     );
 
     scenario(

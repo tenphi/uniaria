@@ -26,6 +26,9 @@ type MountedGroup = Mounted<RadioGroupProps, RadioGroupState>;
 
 const PHASE = { phase: 3 } as const;
 
+/** A press focuses the radio in every browser (owner, 2026-10-24). */
+const PRESS_FOCUS_PHASE = { phase: 6 } as const;
+
 const PARTS = ['root', 'label', 'description', 'error'];
 
 const RADIO_PARTS = ['root', 'input', 'indicator', 'label'];
@@ -995,6 +998,8 @@ export const radioGroupConformance = defineConformance<
         await keyboard.press('ArrowDown');
         expect(focusChanges(mounted)).toEqual([true]);
 
+        // Focus follows the click from script: the press scenario below
+        // checks that the click itself focuses the radio.
         await pointer.click(inputs(mounted)[2]!);
         inputs(mounted)[2]!.focus();
         expectOnEveryPart(mounted, 'data-focus-visible', false);
@@ -1004,6 +1009,39 @@ export const radioGroupConformance = defineConformance<
         expect(focusChanges(mounted)).toEqual([true, false]);
       },
       PHASE,
+    );
+
+    scenario(
+      'a press on a radio or its label focuses the radio in every browser, and the focus is not visible',
+      async ({ mount, pointer }) => {
+        const mounted = await mount({
+          template: between(plan()),
+          props: { defaultValue: 'free' },
+          events: EVENTS,
+        });
+        byId(mounted, 'before').focus();
+
+        await pointer.click(inputs(mounted)[1]!);
+        expect(document.activeElement).toBe(inputs(mounted)[1]);
+        expect(checked(mounted)).toEqual([false, true, false]);
+        expectOnEveryPart(mounted, 'data-focus-within', true);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
+        expect(
+          radioParts(mounted, 'root')[1]!.hasAttribute('data-focused'),
+        ).toBe(true);
+        expectOnEveryRadioPart(mounted, 'data-focus-visible', false);
+        expect(focusChanges(mounted)).toEqual([true]);
+
+        // A press on a label's text takes focus to the page first, as it
+        // does natively, so focus within may end before the radio takes it.
+        await pointer.click(radioParts(mounted, 'label')[2]!);
+        expect(document.activeElement).toBe(inputs(mounted)[2]);
+        expect(checked(mounted)).toEqual([false, false, true]);
+        expectOnEveryPart(mounted, 'data-focus-within', true);
+        expectOnEveryPart(mounted, 'data-focus-visible', false);
+        expectOnEveryRadioPart(mounted, 'data-focus-visible', false);
+      },
+      PRESS_FOCUS_PHASE,
     );
   });
 

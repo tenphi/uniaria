@@ -9,6 +9,7 @@
  * See conformance/AGENTS.md before changing anything here.
  */
 
+import { autocompleteConformance } from './autocomplete/autocomplete.conformance';
 import { buttonConformance } from './button/button.conformance';
 import { buttonItemsConformance } from './button/items.conformance';
 import { checkboxConformance } from './checkbox/checkbox.conformance';
@@ -35,6 +36,7 @@ import { tooltipConformance } from './tooltip/tooltip.conformance';
 import { tooltipItemsConformance } from './tooltip/items.conformance';
 
 export {
+  autocompleteConformance,
   buttonConformance,
   buttonItemsConformance,
   checkboxConformance,
@@ -60,6 +62,11 @@ export {
   tooltipConformance,
   tooltipItemsConformance,
 };
+export type {
+  AutocompleteItem,
+  AutocompleteProps,
+  AutocompleteState,
+} from './autocomplete/types';
 export type { ButtonProps, ButtonState, PressEvent } from './button/types';
 export type { CheckboxProps, CheckboxState } from './checkbox/types';
 export type {
@@ -128,4 +135,6 @@ export const suites = [
   listboxItemsConformance,
   selectItemsConformance,
   comboboxItemsConformance,
+  // The composition spec (phase 6).
+  autocompleteConformance,
 ];
