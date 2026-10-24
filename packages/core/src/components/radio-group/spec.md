@@ -171,6 +171,11 @@ on a native radio.
   whose input is checked when it links (the markup's `checked`, or a click
   before upgrade) as its default.
 - **Values with no radio** stay in the value: no radio is checked.
+- **Focus on a press** (changed on 2026-10-24 (owner)): as Checkbox's, a
+  pointer press on a radio's input or a `label` that activates it focuses
+  the input in every browser, and that focus isn't visible. With its roving
+  `tabindex`, WebKit already focuses a clicked radio; the rule holds for a
+  radio without one too.
 
 ## Keyboard
 

@@ -11,6 +11,7 @@
 import {
   createFocus,
   createHover,
+  createPressFocus,
   mergeHandlers,
   partEffect,
   partElement,
@@ -123,6 +124,8 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const areaHover = () =>
     partElement(ctx, 'wrapper') ? wrapperHover : rootHover;
   const focus = createFocus(ctx, 'input');
+  // A press on the input or a label focuses it in every browser.
+  const pressFocus = createPressFocus(ctx, 'input');
 
   ctx.watch(focus.isFocused, (isFocused) => {
     ctx.emit('focusChange', isFocused);
@@ -237,12 +240,18 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     isHovered: () => areaHover().isHovered() || inputHover.isHovered(),
     isFocused: focus.isFocused,
     isFocusVisible: focus.isFocusVisible,
-    rootHandlers: rootHover.handlers,
-    wrapperHandlers: wrapperHover.handlers,
-    handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
-      input: onInput,
-      click: onClick,
-    }),
+    rootHandlers: mergeHandlers(rootHover.handlers, pressFocus.handlers),
+    wrapperHandlers: mergeHandlers(wrapperHover.handlers, pressFocus.handlers),
+    labelHandlers: pressFocus.handlers,
+    handlers: mergeHandlers(
+      inputHover.handlers,
+      focus.handlers,
+      {
+        input: onInput,
+        click: onClick,
+      },
+      pressFocus.handlers,
+    ),
   };
 }
 
@@ -332,7 +341,7 @@ export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
     wrapper,
     input,
     indicator,
-    label: withState(parts.label),
+    label: { ...withState(parts.label), on: toggle.labelHandlers },
     description: withState(parts.description),
     error: withState(parts.error),
   };

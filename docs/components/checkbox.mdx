@@ -420,9 +420,11 @@ Checkbox handles no keys itself.
 - **Labelling.** Give every checkbox a label part, or an `aria-label` on the
   input. A link inside the `label` wrapper or root ("I accept the terms")
   keeps its own click.
-- **Focus.** Checkbox never moves focus. Whether a click focuses the input is
-  the browser's choice: Safari doesn't, so `focuschange` may not fire on a
-  click there.
+- **Focus.** A press on the input, or on a `label` that activates it, focuses
+  the input in every browser, Safari included, which doesn't on its own.
+  Focus from a pointer isn't visible: `data-focus-visible` stays off, so draw
+  the ring on it. Keys and scripts move no focus, and neither does a press on
+  a link inside the label.
 - **Disabled with a reason.** Natively disabled checkboxes can't be reached
   by keyboard. To explain one with a [Tooltip](./tooltip.mdx), set
   `isFocusableWhenDisabled` and link the tooltip through the `tooltip` prop
@@ -436,8 +438,8 @@ Checkbox handles no keys itself.
   `isSelected`, `defaultSelected` and `isIndeterminate`.
 - **Read-only cancels the click**, as in Zag; React Aria lets the toggle
   happen and reverts it. No `input` or `change` event fires.
-- **A label press doesn't focus the input.** React Aria and Zag focus it;
-  UniAria follows the platform.
+- **A press focuses the input,** on the input or its label, as React Aria and
+  Zag do on a label press, so focus is the same in every browser.
 - **The `checked` attribute stays the default.** Zag reflects the state into
   it, which leaves a native form reset nothing to restore.
 - **No validation.** React Aria can validate natively; UniAria shows

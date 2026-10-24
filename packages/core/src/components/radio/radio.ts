@@ -9,6 +9,7 @@
 import {
   createFocus,
   createHover,
+  createPressFocus,
   isDevelopment,
   mergeHandlers,
   partEffect,
@@ -125,6 +126,8 @@ export const radio = defineBehavior({
     const areaHover = () =>
       partElement(ctx, 'wrapper') ? wrapperHover : rootHover;
     const focus = createFocus(ctx, 'input');
+    // A press on the input or a label focuses it in every browser.
+    const pressFocus = createPressFocus(ctx, 'input');
     ctx.watch(focus.isFocused, (isFocused) => {
       ctx.emit('focusChange', isFocused);
     });
@@ -213,15 +216,25 @@ export const radio = defineBehavior({
       isHovered: () => areaHover().isHovered() || inputHover.isHovered(),
       isFocused: focus.isFocused,
       isFocusVisible: focus.isFocusVisible,
-      rootHandlers: rootHover.handlers,
-      wrapperHandlers: wrapperHover.handlers,
-      handlers: mergeHandlers(inputHover.handlers, focus.handlers, {
-        input: onInput,
-        click: onClick,
-        // The group's arrow keys reach a radio linked from outside its root.
-        keydown: (keyEvent: KeyboardEvent) =>
-          group()?.api.onRadioKeyDown(keyEvent),
-      }),
+      rootHandlers: mergeHandlers(rootHover.handlers, pressFocus.handlers),
+      wrapperHandlers: mergeHandlers(
+        wrapperHover.handlers,
+        pressFocus.handlers,
+      ),
+      labelHandlers: pressFocus.handlers,
+      handlers: mergeHandlers(
+        inputHover.handlers,
+        focus.handlers,
+        {
+          input: onInput,
+          click: onClick,
+          // The group's arrow keys reach a radio linked from outside its
+          // root.
+          keydown: (keyEvent: KeyboardEvent) =>
+            group()?.api.onRadioKeyDown(keyEvent),
+        },
+        pressFocus.handlers,
+      ),
     };
   },
   expose({ api }) {
@@ -299,7 +312,7 @@ export const radio = defineBehavior({
           ...state,
         },
       },
-      label: withState(parts.label),
+      label: { ...withState(parts.label), on: api.labelHandlers },
       description: withState(parts.description),
     };
   },
