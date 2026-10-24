@@ -308,8 +308,13 @@ export interface ComposeOptions<Inner extends string, Outer extends string> {
 
 /** A definition composed with `ctx.use()`. */
 export interface Composed<D extends AnyDefinition> {
-  /** What its `setup()` returned. */
+  /**
+   * What its `setup()` returned. Internal: only UniAria's own composites
+   * read it (composition spec, What a composing definition may use).
+   */
   readonly api: ApiOf<D>;
+  /** Its public actions, each run in a batch, as on an instance. */
+  readonly actions: ActionsOf<D>;
   /** Its `expose()` now. */
   state(): StateOf<D>;
   /** Its `connect()` now, keyed by its own part names, without part markers. */

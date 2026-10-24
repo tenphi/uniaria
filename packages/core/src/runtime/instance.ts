@@ -342,6 +342,21 @@ export function createInstance<D extends AnyDefinition>(
     };
   };
 
+  /** A definition's public actions on `api`, each run in a batch. */
+  const actionsOf = (scoped: AnyDefinition, api: unknown) => {
+    const result: Record<string, (...args: unknown[]) => unknown> = {};
+    for (const name of scoped.actions ?? []) {
+      const action = (api as Record<string, unknown>)[name];
+      if (typeof action !== 'function') {
+        throw new Error(
+          `[uniaria] ${scoped.name}: action "${name}" is not a function setup() returns.`,
+        );
+      }
+      result[name] = (...args) => store.batch(() => action(...args));
+    }
+    return result;
+  };
+
   const memo: SetupContext<string, PropsSchema, EventsSchema>['memo'] = (
     deps,
     compute,
@@ -534,6 +549,7 @@ export function createInstance<D extends AnyDefinition>(
         );
         return {
           api: composed.api,
+          actions: actionsOf(child, composed.api),
           state: () => child.expose(composed.view),
           connect: () => child.connect(composed.view),
           connectItem: (part: string, key: string) =>
@@ -599,16 +615,7 @@ export function createInstance<D extends AnyDefinition>(
   let exposed:
     { changes: number; propsVersion: number; state: unknown } | undefined;
 
-  const actions: Record<string, (...args: unknown[]) => unknown> = {};
-  for (const name of definition.actions ?? []) {
-    const action = (api as Record<string, unknown>)[name];
-    if (typeof action !== 'function') {
-      throw new Error(
-        `[uniaria] ${definition.name}: action "${name}" is not a function setup() returns.`,
-      );
-    }
-    actions[name] = (...args) => store.batch(() => action(...args));
-  }
+  const actions = actionsOf(definition, api);
 
   const instance: Instance<AnyDefinition> = {
     definition,

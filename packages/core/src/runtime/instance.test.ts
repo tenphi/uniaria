@@ -1009,6 +1009,75 @@ describe('ctx.use', () => {
       'host composes disclosure, whose "panel" part has no "panel" part to render on.',
     );
   });
+
+  describe('actions', () => {
+    const panel = defineBehavior({
+      name: 'panel',
+      parts: ['root'],
+      props: { isOpen: bindable(false) },
+      actions: ['open'],
+      setup(ctx) {
+        return {
+          open: () => ctx.props.isOpen.set(true),
+          internal: () => 'internal',
+        };
+      },
+      expose: ({ props }) => ({ isOpen: props.isOpen.get() }),
+      connect: () => ({ root: { attrs: {} } }),
+    });
+
+    it('returns the composed definition’s actions, typed, each run in a batch', () => {
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: { isOpen: bindable(false) },
+        setup(ctx) {
+          const inner = ctx.use(panel, () => ({
+            isOpen: ctx.props.isOpen.get(),
+            onOpenChange: (isOpen: boolean) => ctx.props.isOpen.set(isOpen),
+          }));
+          return { inner };
+        },
+        expose: ({ api }) => api.inner.state(),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const instance = createInstance(host);
+      const { actions } = instance.api.inner;
+      expect(Object.keys(actions)).toEqual(['open']);
+      expectTypeOf(actions).toEqualTypeOf<{ open: () => void }>();
+
+      instance.start();
+      const listener = vi.fn();
+      instance.subscribe(listener);
+      actions.open();
+      expect(instance.getState().isOpen).toBe(true);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a composed action setup() does not return as a function', () => {
+      const broken = defineBehavior({
+        name: 'broken',
+        parts: ['root'],
+        props: {},
+        actions: ['open'],
+        setup: () => ({ open: 'not a function' }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      const host = defineBehavior({
+        name: 'host',
+        parts: ['root'],
+        props: {},
+        setup: (ctx) => ({ inner: ctx.use(broken, () => ({})) }),
+        expose: () => ({}),
+        connect: () => ({ root: { attrs: {} } }),
+      });
+      expect(() => createInstance(host)).toThrow(
+        'broken: action "open" is not a function setup() returns.',
+      );
+    });
+  });
+
 });
 
 describe('part ids', () => {
