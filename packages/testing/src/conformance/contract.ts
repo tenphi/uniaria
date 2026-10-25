@@ -42,11 +42,13 @@ export interface AdapterMount {
   /** Merges props, the way the adapter's consumers update them. */
   setProps(props: Readonly<Record<string, unknown>>): Promise<void>;
   /**
-   * Calls one of the component's public actions (`open`), the way the
-   * adapter's consumers do: the React handle's `actions`, the element's
-   * method. Resolves once the DOM reflects it.
+   * Calls one of the component's public actions (`open`, `setValue(name,
+   * value)`) with `args`, the way the adapter's consumers do: the React
+   * handle's `actions`, the element's method. Resolves with what the action
+   * returned, awaited when it is a promise (Form's `submit()`), once the
+   * DOM reflects it.
    */
-  call(action: string): Promise<void>;
+  call(action: string, ...args: readonly unknown[]): Promise<unknown>;
   /** The object the definition's `expose()` returns right now. */
   state(): Readonly<Record<string, unknown>>;
   /**
@@ -101,7 +103,10 @@ export interface Mounted<Props, State> {
   clearEvents(): void;
   state(): State;
   setProps(props: Partial<Props>): Promise<void>;
-  /** Calls a public action of the component, such as `open`. */
-  call(action: string): Promise<void>;
+  /**
+   * Calls a public action of the component, such as `open`, with `args`,
+   * and resolves with what it returned, awaited.
+   */
+  call(action: string, ...args: readonly unknown[]): Promise<unknown>;
   renderCount(): number;
 }
