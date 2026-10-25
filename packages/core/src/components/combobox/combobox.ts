@@ -167,6 +167,8 @@ export const combobox = defineBehavior({
     const value = props.value;
     const isOpen = props.isOpen;
     // The field's own, or its form's, once Autocomplete is composed below.
+    // Popover takes it as a getter: a composed definition runs its props on
+    // every prop read, and these read Field's.
     const formed: {
       field?: { isDisabled(): boolean; isReadOnly(): boolean };
     } = {};
@@ -185,7 +187,9 @@ export const combobox = defineBehavior({
         isNonModal: true,
         shouldFocusOnOpen: false,
         shouldRestoreFocus: false,
-        isDisabled: isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         // The input is Popover's trigger; a press on the button toggles the
         // list through the button.
         shouldCloseOnInteractOutside: (target: Element) =>

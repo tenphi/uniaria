@@ -197,7 +197,9 @@ export const select = defineBehavior({
       }),
       { parts: { control: 'trigger' } },
     );
-    // The field's own, or its form's.
+    // The field's own, or its form's. The controls below take them as
+    // getters: a composed definition runs its props on every prop read, and
+    // these read Field's.
     const isDisabled = labelling.api.isDisabled;
     const isReadOnly = labelling.api.isReadOnly;
 
@@ -215,8 +217,12 @@ export const select = defineBehavior({
         value: value.get(),
         onValueChange: (next: readonly string[]) => setValue(next),
         selectionMode: props.selectionMode(),
-        isDisabled: isDisabled(),
-        isReadOnly: isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
         shouldFocusWrap: props.shouldFocusWrap(),
         shouldFocusOnHover: true,
         listId: props.listId(),
@@ -286,7 +292,9 @@ export const select = defineBehavior({
       () => ({
         isOpen: isOpen.get(),
         onOpenChange: (next: boolean) => isOpen.set(next),
-        isDisabled: isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         positionArea: props.positionArea(),
         positionTryFallbacks: props.positionTryFallbacks(),
       }),
@@ -324,7 +332,9 @@ export const select = defineBehavior({
     const trigger = ctx.use(
       button,
       () => ({
-        isDisabled: isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         shouldPreventFocusOnPress: true,
         onPress: (pressEvent: { pointerType: string }) => {
           if (

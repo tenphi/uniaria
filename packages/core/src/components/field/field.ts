@@ -166,6 +166,9 @@ export const field = defineBehavior({
     /** The form this field is bound to now, following only its own name. */
     const bound = (): Linked<FormLinkApi> | undefined => {
       if (handed?.isBindable && !handed.isBindable()) return undefined;
+      // The link first: outside a form, the name goes unread, since a
+      // composed field's every prop read runs its composer's props.
+      if (!(handed ? handed.link() : ctx.link(formLink))) return undefined;
       const current = key();
       if (current === undefined) return undefined;
       const select = (api: FormLinkApi) => api.view(current);
@@ -173,14 +176,14 @@ export const field = defineBehavior({
     };
     const view = (): FieldView | undefined => {
       const form = bound();
-      const current = key();
-      return form && current !== undefined ? form.api.view(current) : undefined;
+      const current = form && key();
+      return current === undefined ? undefined : form?.api.view(current);
     };
 
     const bindTo = (target: Bindable<unknown>) =>
       target.bind(() => {
         const form = bound();
-        const current = key();
+        const current = form && key();
         if (!form || current === undefined) return null;
         const path = pathOf(current);
         return {

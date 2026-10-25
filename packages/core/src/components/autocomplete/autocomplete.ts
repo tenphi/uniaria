@@ -250,7 +250,9 @@ export const autocomplete = defineBehavior({
       }),
       { parts: { control: 'input' } },
     );
-    // Its own, or the form's of the field that binds it (Combobox).
+    // Its own, or the form's of the field that binds it (Combobox). The
+    // controls below take them as getters: a composed definition runs its
+    // props on every prop read, and these read Field's.
     const isDisabled = labelling.api.isDisabled;
     const isReadOnly = labelling.api.isReadOnly;
 
@@ -336,8 +338,12 @@ export const autocomplete = defineBehavior({
       () => ({
         value: inputValue.get(),
         onValueChange: (typed: string) => inputValue.set(typed),
-        isDisabled: isDisabled(),
-        isReadOnly: isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
       }),
       { parts: { root: 'input' } },
     );
@@ -409,8 +415,12 @@ export const autocomplete = defineBehavior({
         value: value.get(),
         onValueChange: (next: readonly string[]) => value.set(next),
         selectionMode: props.selectionMode(),
-        isDisabled: isDisabled(),
-        isReadOnly: isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
         shouldFocusWrap: props.shouldFocusWrap(),
         // Inline, hover highlights on the pointer's moves instead (below).
         shouldFocusOnHover: isPopup(),
@@ -733,7 +743,9 @@ export const autocomplete = defineBehavior({
     const trigger = ctx.use(
       button,
       () => ({
-        isDisabled: isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         shouldPreventFocusOnPress: true,
         shouldExcludeFromTabOrder: true,
         onPress: (pressEvent: { pointerType: string }) => {

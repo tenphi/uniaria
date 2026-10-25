@@ -203,7 +203,9 @@ export const numberField = defineBehavior({
   },
   setup(ctx) {
     const { props } = ctx;
-    // The field's own, or its form's, once Field is composed below.
+    // The field's own, or its form's, once Field is composed below. The
+    // controls take them as getters: a composed definition runs its props on
+    // every prop read, and these read Field's.
     const formed: {
       field?: { isDisabled(): boolean; isReadOnly(): boolean };
     } = {};
@@ -518,8 +520,12 @@ export const numberField = defineBehavior({
           if (isPartial(value)) type(value);
           else editing.api.revert();
         },
-        isDisabled: isDisabled(),
-        isReadOnly: isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
         onFocusChange: (isFocused: boolean) =>
           ctx.emit('focusChange', isFocused),
       }),

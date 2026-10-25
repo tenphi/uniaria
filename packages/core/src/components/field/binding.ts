@@ -40,19 +40,39 @@ export interface FormFieldProps {
   readonly shouldPreserve: boolean;
 }
 
-/** Reads a field's form props, for the binding it hands Field. */
+/**
+ * Reads a field's form props, for the binding it hands Field. Getters: a
+ * composed field's every prop read runs its composer's props, and Field
+ * reads `name` alone on every access to the binding.
+ */
 export function readFormProps(
   props: PropReaders<typeof formFieldProps>,
 ): FormFieldProps {
   return {
-    name: props.name(),
-    validate: props.validate(),
-    validationTrigger: props.validationTrigger(),
-    validationDelay: props.validationDelay(),
-    validationMessages: props.validationMessages(),
-    dependsOn: props.dependsOn() ?? [],
-    isEqual: props.isEqual(),
-    shouldPreserve: props.shouldPreserve(),
+    get name() {
+      return props.name();
+    },
+    get validate() {
+      return props.validate();
+    },
+    get validationTrigger() {
+      return props.validationTrigger();
+    },
+    get validationDelay() {
+      return props.validationDelay();
+    },
+    get validationMessages() {
+      return props.validationMessages();
+    },
+    get dependsOn() {
+      return props.dependsOn() ?? [];
+    },
+    get isEqual() {
+      return props.isEqual();
+    },
+    get shouldPreserve() {
+      return props.shouldPreserve();
+    },
   };
 }
 
@@ -62,7 +82,7 @@ export interface FieldBinding<T> {
   readonly value: Bindable<T>;
   /** The composer's form link: `(select) => ctx.link(formLink, select)`. */
   readonly link: (
-    select: (api: FormLinkApi) => unknown,
+    select?: (api: FormLinkApi) => unknown,
   ) => Linked<FormLinkApi> | undefined;
   /** Its form props, read on every access. */
   readonly props: () => FormFieldProps;
