@@ -4,7 +4,8 @@
  * attributes UniAria owns, linking the label, the description and the error to
  * the control (only parts that are rendered, never a hidden error), the
  * invalid, required and disabled states, public state, announcing a new
- * error, and spoken output. Everything here is phase 3.
+ * error, and spoken output. Everything here is phase 3, except Field's
+ * whole public state, which includes Form's binding (phase 7).
  */
 
 import { defineConformance, h } from '@uniaria/testing';
@@ -16,6 +17,9 @@ import type { FieldProps, FieldState } from './types';
 type MountedField = Mounted<FieldProps, FieldState>;
 
 const PHASE = { phase: 3 } as const;
+
+/** Scenarios that need Form's binding. */
+const FORM_PHASE = { phase: 7 } as const;
 
 const PARTS = ['root', 'label', 'control', 'description', 'error'];
 
@@ -362,7 +366,37 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
       );
 
       scenario(
-        'public state is the three props, whether the error is shown, and no binding outside a form',
+        'public state is the three props and whether the error is shown',
+        async ({ mount }) => {
+          const mounted = await mount({ template: email() });
+          expect(mounted.state()).toMatchObject({
+            isInvalid: false,
+            isRequired: false,
+            isDisabled: false,
+            isErrorShown: false,
+          });
+
+          await mounted.setProps({ isInvalid: true, isRequired: true });
+          expect(mounted.state()).toMatchObject({
+            isInvalid: true,
+            isRequired: true,
+            isDisabled: false,
+            isErrorShown: true,
+          });
+
+          await mounted.setProps({ isDisabled: true });
+          expect(mounted.state()).toMatchObject({
+            isInvalid: true,
+            isRequired: true,
+            isDisabled: true,
+            isErrorShown: false,
+          });
+        },
+        PHASE,
+      );
+
+      scenario(
+        'outside a form, public state has no binding',
         async ({ mount }) => {
           const mounted = await mount({ template: email() });
           // A field outside a form has no binding (Form spec, Public state).
@@ -390,17 +424,8 @@ export const fieldConformance = defineConformance<FieldProps, FieldState>(
             isErrorShown: true,
             ...unbound,
           });
-
-          await mounted.setProps({ isDisabled: true });
-          expect(mounted.state()).toEqual({
-            isInvalid: true,
-            isRequired: true,
-            isDisabled: true,
-            isErrorShown: false,
-            ...unbound,
-          });
         },
-        PHASE,
+        FORM_PHASE,
       );
     });
 
