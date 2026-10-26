@@ -23,6 +23,7 @@ import { listboxItemsConformance } from './listbox/items.conformance';
 import { listboxVirtualizationConformance } from './listbox/virtualization.conformance';
 import { numberFieldConformance } from './number-field/number-field.conformance';
 import { popoverConformance } from './popover/popover.conformance';
+import { popoverInlineConformance } from './popover/inline.conformance';
 import { popoverItemsConformance } from './popover/items.conformance';
 import { radioGroupConformance } from './radio-group/radio-group.conformance';
 import { selectConformance } from './select/select.conformance';
@@ -51,6 +52,7 @@ export {
   listboxVirtualizationConformance,
   numberFieldConformance,
   popoverConformance,
+  popoverInlineConformance,
   popoverItemsConformance,
   radioGroupConformance,
   selectConformance,
@@ -161,4 +163,6 @@ export const suites = [
   autocompleteConformance,
   // The Form spec (phase 7).
   formConformance,
+  // The inline popover spec (phase 8).
+  popoverInlineConformance,
 ];
