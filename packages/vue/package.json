@@ -1,6 +1,6 @@
 {
   "name": "@uniaria/vue",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Vue adapter for UniAria: one generic useBehavior composable over any UniAria behavior definition",
   "type": "module",
   "sideEffects": false,

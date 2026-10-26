@@ -1,6 +1,6 @@
 {
   "name": "@uniaria/elements",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Light-DOM custom elements for UniAria: defineElement turns any UniAria behavior definition into a custom element",
   "type": "module",
   "sideEffects": [
