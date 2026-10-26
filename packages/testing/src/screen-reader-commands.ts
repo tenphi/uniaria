@@ -320,23 +320,35 @@ async function reportFocus(current: Running, after: string): Promise<void> {
   );
 }
 
-/** Presses a key through the screen reader and waits for its speech. */
+/**
+ * Full capture, until the screen reader stops speaking. Guidepup's default
+ * (`initial`) keeps only the first phrase after a key: NVDA's next command
+ * then cuts off the rest, and VoiceOver's is a single look 50 ms after the
+ * key. A live region read after the key's own speech (an option count after
+ * a typed letter's echo) was lost.
+ */
+const UNTIL_SILENT = { capture: true } as const;
+
+/** Presses a key through the screen reader and waits until it stops speaking. */
 export const uniScreenReaderPress: BrowserCommand<[key: string]> = async (
   _context,
   key,
 ) => {
   const current = active();
-  await current.reader.press(key);
+  await current.reader.press(key, UNTIL_SILENT);
   await reportFocus(current, key);
 };
 
-/** Types text through the screen reader, a key per character. */
+/**
+ * Types text through the screen reader, a key per character, each waiting
+ * until it stops speaking.
+ */
 export const uniScreenReaderType: BrowserCommand<[text: string]> = async (
   _context,
   text,
 ) => {
   const current = active();
-  await current.reader.type(text);
+  await current.reader.type(text, UNTIL_SILENT);
   await reportFocus(current, JSON.stringify(text));
 };
 
