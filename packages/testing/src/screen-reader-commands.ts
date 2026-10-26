@@ -37,6 +37,15 @@ interface Running {
 
 let running: Running | undefined;
 
+/**
+ * VoiceOver without its hints ("Speak instructions for using the item"),
+ * which it speaks a moment after an item and full capture would record:
+ * they say how to use VoiceOver, not what the page is.
+ */
+const VOICEOVER_SETTINGS = {
+  settings: { SCRShouldOutputVOInstructions: false },
+};
+
 const delay = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -257,7 +266,7 @@ export const uniScreenReaderStart: BrowserCommand<[]> = async (context) => {
   }
   const guidepup = await import('@guidepup/guidepup');
   const reader = name === 'voiceover' ? guidepup.voiceOver : guidepup.nvda;
-  await reader.start();
+  await reader.start(name === 'voiceover' ? VOICEOVER_SETTINGS : undefined);
   try {
     if (name === 'voiceover') await enterPageWithVoiceOver(guidepup, context);
     else await enterPageWithNvda(guidepup, context);
