@@ -2350,8 +2350,13 @@ export const autocompleteConformance = defineConformance<
         if (screenReader.name === 'nvda') await screenReader.press('Escape');
         await screenReader.press('Escape');
         expect(input(mounted).value).toBe('');
+        expect(active(mounted)).toBe(input(mounted));
         expect.soft(await screenReader.spoken()).toMatch(/4 options available/);
-        expect.soft(await screenReader.readFocus()).toMatch(/Fruit/);
+        // VoiceOver's item text for an empty input is empty: only NVDA reads
+        // the focus back.
+        if (screenReader.name === 'nvda') {
+          expect.soft(await screenReader.readFocus()).toMatch(/Fruit/);
+        }
       },
       { ...PHASE, needs: ['screenReader'] },
     );
