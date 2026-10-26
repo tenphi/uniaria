@@ -401,10 +401,18 @@ export interface BehaviorConfig<
   readonly outsideParts?: readonly Part[];
   readonly props: P;
   readonly events?: E;
-  /** The instance this component works inside, when it has one. */
-  readonly owner?: OwnerLink;
-  /** Links this component takes, each through a prop of the key's name. */
-  readonly links?: readonly LinkKey[];
+  /**
+   * The instance this component works inside, when it has one.
+   * `defineBehavior()` types it `undefined` when there is none, which a
+   * consumer's `exactOptionalPropertyTypes` accepts only with `| undefined`
+   * here.
+   */
+  readonly owner?: OwnerLink | undefined;
+  /**
+   * Links this component takes, each through a prop of the key's name;
+   * `undefined` when there are none, as `owner` is.
+   */
+  readonly links?: readonly LinkKey[] | undefined;
   /** Links this component answers, such as a tooltip's. */
   readonly provides?: readonly LinkKey[];
   /**
