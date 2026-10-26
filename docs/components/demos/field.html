@@ -1,18 +1,17 @@
-<form id="signup" novalidate>
-  <uni-field id="email-field" required>
+<form id="order" novalidate>
+  <uni-field id="country-field" required>
     <div data-uni="field">
       <label data-element="Label"
-        >Email <span aria-hidden="true">*</span></label
+        >Country <span aria-hidden="true">*</span></label
       >
-      <input
-        data-element="Control"
-        id="email"
-        name="email"
-        type="email"
-        autocomplete="email"
-      />
-      <p data-element="Description">We send the receipt here.</p>
-      <p data-element="Error" hidden>Enter your email.</p>
+      <select data-element="Control" id="country" name="country">
+        <option value="">Choose a country</option>
+        <option value="de">Germany</option>
+        <option value="fr">France</option>
+        <option value="jp">Japan</option>
+      </select>
+      <p data-element="Description">We ship your order there.</p>
+      <p data-element="Error" hidden>Choose a country.</p>
     </div>
   </uni-field>
 
@@ -28,7 +27,7 @@
   </uni-checkbox>
 
   <uni-button type="submit">
-    <button data-uni="button" data-variant="primary">Sign up</button>
+    <button data-uni="button" data-variant="primary">Order</button>
   </uni-button>
 </form>
 <output id="log">Submit the form empty to see the errors.</output>

@@ -330,6 +330,10 @@ compose them the same way:
   input. It has its own label, description and error parts, and an element.
   Combobox is Autocomplete and Popover. See
   [Autocomplete](../components/autocomplete.mdx).
+- **Field** (`@uniaria/core/field`) gives a control its label, description
+  and error, and binds its value to a [Form](../components/form.mdx) by
+  `name`. Every UniAria field has it inside. See
+  [A field of your own](#a-field-of-your-own).
 
 TextInput has no page of its own, so here is all of it:
 
@@ -396,7 +400,7 @@ export const hexInput = defineBehavior({
   component's `input` part.
 - Typing, IME, a controlled value that a form library echoes back late,
   hover and focus all come from TextInput. Label the input as any other,
-  with a `<label for>` or an `aria-label`.
+  with a `<label for>` or an `aria-label`, or wrap it in a TextField.
 - The value is `hexInput`'s, passed down. Inside a form, reset it yourself
   as TextField does (see
   [Resetting a bindable](../api/core.md#resetting-a-bindable)): a TextInput
@@ -531,6 +535,123 @@ Vue component instead, and spreading both on the input, doesn't work:
   highlighted, whether the list shows) would live in React or Vue state.
 - **A definition does more.** It works in React, in Vue and as an element,
   renders on the server, and runs in Node tests.
+
+### A field of your own
+
+A control UniAria doesn't have gets its label, description, error and form
+binding by composing Field. This star rating is a spin button: the arrows
+change the rating, Home and End go to the ends, and in a form it is required
+and submitted under its `name`:
+
+```ts
+// rating.ts
+import { defineBehavior, prop } from '@uniaria/core';
+import { mergeHandlers } from '@uniaria/core/dom';
+import type { DomPartProps } from '@uniaria/core/dom';
+import { field } from '@uniaria/core/field';
+import { formLink } from '@uniaria/core/form';
+
+const MAX = 5;
+
+export const rating = defineBehavior({
+  name: 'rating',
+  parts: ['root', 'label', 'stars', 'description', 'error', 'errorText'],
+  links: [formLink],
+  props: {
+    name: prop<string | undefined>(undefined, { type: 'string' }),
+    isRequired: prop(false),
+  },
+  setup(ctx) {
+    const { props } = ctx;
+    const labelling = ctx.use(
+      field,
+      () => ({
+        name: props.name(),
+        isRequired: props.isRequired(),
+        labelElementType: 'span',
+      }),
+      { parts: { control: 'stars' }, links: [formLink] },
+    );
+    const stars = () => {
+      const value = labelling.state().value;
+      return typeof value === 'number' ? value : 0;
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      const next = {
+        ArrowUp: Math.min(stars() + 1, MAX),
+        ArrowDown: Math.max(stars() - 1, 1),
+        Home: 1,
+        End: MAX,
+      }[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      labelling.actions.setValue(next);
+    };
+    return { labelling, stars, onKeyDown };
+  },
+  expose: ({ api }) => api.labelling.state(),
+  connect: ({ api }) => {
+    const { control, ...parts } = api.labelling.connect();
+    const own = control as DomPartProps;
+    const count = api.stars();
+    return {
+      ...parts,
+      stars: {
+        ...own,
+        attrs: {
+          ...own.attrs,
+          role: 'spinbutton',
+          tabindex: '0',
+          'aria-valuemin': '1',
+          'aria-valuemax': String(MAX),
+          'aria-valuenow': count ? String(count) : undefined,
+          'aria-valuetext': count ? `${count} of ${MAX} stars` : 'No rating',
+        },
+        style: { '--stars': String(count) },
+        on: mergeHandlers(own.on ?? {}, { keydown: api.onKeyDown }),
+      },
+    };
+  },
+});
+```
+
+In React it renders like any field, and inside a form's `OwnerProvider`,
+`<Rating name="score" isRequired />` submits `{ score: 3 }`:
+
+```tsx
+function Rating(props: { name?: string; isRequired?: boolean }) {
+  const ui = useBehavior(rating, props);
+  return (
+    <div {...ui.parts.root}>
+      <span {...ui.parts.label}>Your rating</span>
+      <div {...ui.parts.stars} />
+      <p {...ui.parts.error}>
+        <span {...ui.parts.errorText} />
+      </p>
+    </div>
+  );
+}
+```
+
+- **Parts.** `{ parts: { control: 'stars' } }` puts Field's control on the
+  spin button. Field's other parts render on the rating's parts of the same
+  name; a part you don't render, map to `null`.
+- **The form link.** A composed definition reads only the links its composer
+  passes on, so the rating declares `links: [formLink]` and passes it to
+  Field. Without it, the rating never finds its form.
+- **The value is Field's.** Render it from `labelling.state().value`, the
+  form's while bound, and report each change with
+  `labelling.actions.setValue()`. Outside a form, Field holds it.
+- **Field's control props.** Merge your attributes and handlers with them,
+  as `connect()` does: Field's handlers follow focus, so a form checks the
+  rating when focus leaves it.
+- **The label.** A `<label>` names only a native control, so the label is a
+  `<span>` (`labelElementType: 'span'`), linked through `aria-labelledby`.
+- **More of Field.** Declare the other props you need, such as
+  `isInvalid`, `validate` or `validationMessages`, and hand them on the
+  same way.
+- **A native control.** Around an `<input>` or a `<select>`, Field follows
+  the value itself: map `control` onto it and leave out `setValue`.
 
 ## Going further
 

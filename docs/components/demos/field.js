@@ -1,35 +1,29 @@
 // Field shows validation state; the form decides it. This form checks on
-// submit, then again on every edit.
-const form = document.getElementById('signup');
-const emailField = document.getElementById('email-field');
-const email = document.getElementById('email');
-const emailError = emailField.querySelector('[data-element="Error"]');
+// submit, then again on every change.
+const form = document.getElementById('order');
+const countryField = document.getElementById('country-field');
+const country = document.getElementById('country');
 const terms = document.getElementById('terms');
 const log = document.getElementById('log');
 let wasSubmitted = false;
 
 function validate() {
-  const value = email.value.trim();
-  const message =
-    value === ''
-      ? 'Enter your email.'
-      : 'Enter an email like jane@example.com.';
-  // New text while the error is shown is announced too.
-  if (emailError.textContent !== message) emailError.textContent = message;
-  emailField.toggleAttribute('invalid', value === '' || !email.validity.valid);
+  countryField.toggleAttribute('invalid', country.value === '');
   terms.toggleAttribute('invalid', !form.elements.terms.checked);
-  return !emailField.hasAttribute('invalid') && !terms.hasAttribute('invalid');
+  return (
+    !countryField.hasAttribute('invalid') && !terms.hasAttribute('invalid')
+  );
 }
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   wasSubmitted = true;
   log.textContent = validate()
-    ? `Signed up as ${email.value.trim()}.`
+    ? `Ordered for ${country.selectedOptions[0].textContent}.`
     : 'Fix the marked fields.';
 });
 const revalidate = () => {
   if (wasSubmitted) validate();
 };
-email.addEventListener('input', revalidate);
+country.addEventListener('change', revalidate);
 terms.addEventListener('selectedchange', revalidate);
