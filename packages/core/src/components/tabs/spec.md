@@ -214,8 +214,10 @@ Roving tabindex, as Listbox: DOM focus moves to the tab, never
   prevents the `mousedown`, so focus doesn't fall to the body.
 - **The focused tab goes away** or becomes disabled: focus moves to the tab
   now shown, only when focus was on it.
-- **A value set by the consumer** moves the tab stop to the new tab and never
-  moves focus.
+- **A value set by the consumer** shows the new tab and never moves focus.
+  With focus outside the list, the new tab takes the tab stop at once. With
+  focus in the list, the focused tab keeps it, so Tab and Shift+Tab still
+  leave from where focus is, and the new tab takes it once focus leaves.
 - **Panels.** Tab from the list reaches the shown panel (`tabindex="0"`), so a
   screen-reader user lands at the start of its content (the APG).
 
@@ -440,6 +442,13 @@ Decided by @tenphi on 2026-10-26, each as recommended.
    and a hidden panel keeps its own box (padding, border) on screen. (a) Plain
    `hidden` now. (b) An opt-in prop that writes `until-found` where supported
    and plain `hidden` elsewhere. Decided: (a) now.
+8. **A value set while focus is in the list.** The tab stop row gave the
+   stop to the focused tab while focus is in the list; Focus gave it to the
+   new tab. (a) The focused tab keeps it until focus leaves, then the new tab
+   takes it, as the row says: roving focus never leaves the focused element
+   out of the tab order. (b) The new tab takes it at once, so Tab from the
+   focused tab goes to whatever follows the list in the page. Decided: (a),
+   raised by the conformance scenarios.
 
 ## Open questions
 
