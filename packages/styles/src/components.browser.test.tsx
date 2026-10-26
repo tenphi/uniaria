@@ -220,6 +220,16 @@ describe.each([
       expect(style(part(root, 'Indicator'), '::before').content).toBe('none');
     });
 
+    // The root sits on a line by its baseline, which a mark in the flow of
+    // the box would set.
+    test('the check and the dash leave the checkbox where it is', async () => {
+      const top = async (props?: CheckboxProps) =>
+        (await adapter.checkbox(props)).getBoundingClientRect().top;
+      const unselected = await top();
+      expect(await top({ defaultSelected: true })).toBe(unselected);
+      expect(await top({ isIndeterminate: true })).toBe(unselected);
+    });
+
     test('the error stays hidden until the checkbox is invalid', async () => {
       expect(style(part(await adapter.checkbox(), 'Error')).display).toBe(
         'none',
