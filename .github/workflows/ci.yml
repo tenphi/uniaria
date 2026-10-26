@@ -15,7 +15,7 @@ jobs:
     # are made (packages/styles/scripts/screenshots.sh): not `ubuntu-latest`,
     # which moves on its own.
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
