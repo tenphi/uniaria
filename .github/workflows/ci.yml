@@ -7,15 +7,21 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
+# A new push to a pull request cancels the run for its previous commit. Label
+# changes get a group of their own, so adding `conformance-approved` never
+# cancels the tests, and pushes to main never cancel anything.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}-${{ (github.event.action == 'labeled' || github.event.action == 'unlabeled') && 'labels' || 'code' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  ci:
+  # Lint, format check, type check, build and the DOM-free tests (the `node`
+  # Vitest project).
+  checks:
     # Label changes only matter to the conformance check below.
     if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
-    # The Ubuntu of Playwright's Docker image, where the screenshot references
-    # are made (packages/styles/scripts/screenshots.sh): not `ubuntu-latest`,
-    # which moves on its own.
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -33,32 +39,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The `browser` Vitest project runs in Chromium, Firefox and WebKit. The
-      # binaries are cached and keyed on the lockfile, so a Playwright bump
-      # pulls matching browsers, and on the runner image (`ImageOS`, such as
-      # `ubuntu24`): Playwright builds them per Ubuntu release, and a WebKit
-      # built for one doesn't start on another.
-      - name: Runner image
-        id: image
-        run: echo "os=$ImageOS" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.image.outputs.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-
-      # System libraries live outside the cached directory, so they are
-      # reinstalled even when the browsers themselves were restored.
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium firefox webkit
-
       - name: Lint
         run: pnpm lint
 
@@ -72,7 +52,121 @@ jobs:
         run: pnpm build
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:node
+
+  # Whether the browser tests run: a pull request that changes only `docs/`,
+  # Markdown or changesets can't change what they test, since no test reads
+  # those files. The docs job still checks the site. Also the Playwright the
+  # repository installs, whose Docker image the browser jobs run in.
+  changes:
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      browser: ${{ steps.check.outputs.browser }}
+      playwright: ${{ steps.playwright.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      # The file list goes to grep as a string, not through a pipe: with
+      # `pipefail`, `grep -q` stopping early could fail `git diff` and the
+      # check with it.
+      - name: Check for changes outside the docs
+        id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: origin/${{ github.base_ref }}
+        run: |
+          browser=true
+          if [ "$EVENT" = pull_request ]; then
+            changed=$(git diff --name-only "$PR_BASE...HEAD")
+            if ! grep -qvE '^docs/|\.md$|^\.changeset/' <<< "$changed"; then
+              browser=false
+            fi
+          fi
+          echo "browser=$browser" >> "$GITHUB_OUTPUT"
+
+      # The root importer's `playwright` in the lockfile, the version
+      # `node_modules/playwright` holds after an install, as
+      # packages/styles/scripts/screenshots.sh reads it.
+      - name: Playwright version
+        id: playwright
+        run: |
+          version=$(awk '
+            /^  \.:$/ { root = 1; next }
+            /^  [^ ]/ { root = 0 }
+            root && /^      playwright:$/ { found = 1; next }
+            found && /^        version:/ { print $2; exit }
+          ' pnpm-lock.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # The `browser` Vitest project, one job per engine, side by side. Firefox
+  # runs its files one at a time (vitest.config.ts), so it is split in four:
+  # each adapter's conformance file, which take most of its time, and the
+  # rest. Files are picked by name rather than with `--shard`, which assigns
+  # them by path hash and could put two conformance files in one job.
+  browser:
+    needs: changes
+    if: needs.changes.outputs.browser == 'true'
+    name: browser (${{ matrix.id }})
+    runs-on: ubuntu-latest
+    # Playwright's Docker image for the installed Playwright: the browsers
+    # and their system libraries come with it, so nothing is downloaded from
+    # a package mirror, and the screenshot references are made in the same
+    # image (packages/styles/scripts/screenshots.sh). Its options are that
+    # script's; user 1001 is the runner's, which owns the workspace and
+    # `$HOME`, and Firefox refuses to run as root there.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.changes.outputs.playwright }}-noble
+      options: --init --ipc=host --user 1001
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: chromium
+            browser: chromium
+          - id: webkit
+            browser: webkit
+          - id: firefox-elements
+            browser: firefox
+            files: packages/elements/src/conformance.browser.test.ts
+          - id: firefox-react
+            browser: firefox
+            files: packages/react/src/conformance.browser.test.ts
+          - id: firefox-vue
+            browser: firefox
+            files: packages/vue/src/conformance.browser.test.ts
+          # Excludes the three files by name, so a new adapter's conformance
+          # file runs here rather than nowhere.
+          - id: firefox-rest
+            browser: firefox
+            files: --exclude 'packages/{elements,react,vue}/src/conformance.browser.test.ts'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm vitest run --project "browser (${{ matrix.browser }})" ${{ matrix.files }}
 
       # A screenshot that no longer matches its reference leaves the actual
       # and diff images in Vitest's attachments (packages/styles/spec.md →
@@ -81,7 +175,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: failed-screenshots
+          name: failed-screenshots-${{ matrix.id }}
           path: .vitest/attachments
           if-no-files-found: ignore
           retention-days: 7

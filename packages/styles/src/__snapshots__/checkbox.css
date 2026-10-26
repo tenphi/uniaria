@@ -49,7 +49,7 @@
   [data-uni="checkbox"] [data-element="Error"]:where(:not([data-uni="checkbox"] [data-uni]:not([data-uni="checkbox"]) *)) { color: var(--uni-danger-text-color); --current-color: var(--uni-danger-text-color); }
 }
 
-[data-uni="checkbox"] { position: relative; display: inline-grid; gap: calc(0.5 * var(--uni-gap)) var(--uni-gap); grid-template-columns: auto 1fr; align-items: center; block-size: auto; min-block-size: max(24px, 1.5rem); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, 1.5rem); max-inline-size: initial; font-size: var(--uni-font-size); line-height: var(--uni-line-height); overflow-wrap: anywhere; }
+[data-uni="checkbox"] { position: relative; display: inline-grid; gap: calc(0.5 * var(--uni-gap)) var(--uni-gap); vertical-align: top; grid-template-columns: auto 1fr; align-items: center; block-size: auto; min-block-size: max(24px, 1.5rem); max-block-size: initial; inline-size: auto; min-inline-size: max(24px, 1.5rem); max-inline-size: initial; font-size: var(--uni-font-size); line-height: var(--uni-line-height); overflow-wrap: anywhere; }
 
 @media (not (forced-colors: active)) {
   [data-uni="checkbox"]:where(:not([data-disabled]):not(:has([data-element="Input"]:disabled))) { color: var(--uni-text-color); --current-color: var(--uni-text-color); }

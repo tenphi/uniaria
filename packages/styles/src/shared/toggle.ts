@@ -12,6 +12,11 @@ import { fieldDescriptionStyles, fieldErrorStyles } from './field';
 export const toggleRowStyles = {
   position: 'relative',
   display: 'inline-grid',
+  // Hung from the top of its line, not set on the font's baseline: in a
+  // custom element's host, the line's descent under that baseline made the
+  // row taller than its 24 pixels by a font-dependent amount, and the items
+  // of a group further apart.
+  verticalAlign: 'top',
   gridColumns: 'auto 1fr',
   gap: '.5x 1x',
   alignItems: 'center',
