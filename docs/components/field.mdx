@@ -184,7 +184,7 @@ const country = useBehavior(field, { name: 'country', isRequired: true });
 
 The field binds to the form around it (through `OwnerProvider` in React), or
 to the one in its `form` prop. While the form controls the value, Field writes
-it back to an `<input>`, a `<textarea>` or a single `<select>`. See
+it back to the control, a `<select multiple>`'s options included. See
 [Field props for the form](./form.mdx#field-props-for-the-form).
 
 ### A control that isn't native
