@@ -20,10 +20,43 @@ permissions:
   id-token: write
 
 jobs:
-  release:
+  # The Playwright the repository installs, read as ci.yml's `changes` job
+  # reads it: the root importer's `playwright` in the lockfile.
+  playwright:
     if: github.ref == 'refs/heads/main'
-    # CI's Ubuntu, where the screenshot references are made (ci.yml).
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.playwright.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Playwright version
+        id: playwright
+        run: |
+          version=$(awk '
+            /^  \.:$/ { root = 1; next }
+            /^  [^ ]/ { root = 0 }
+            root && /^      playwright:$/ { found = 1; next }
+            found && /^        version:/ { print $2; exit }
+          ' pnpm-lock.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: playwright
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    # CI's image for its browser jobs (ci.yml), where the screenshot
+    # references are made: the browsers and their system libraries come with
+    # it, so nothing is downloaded from a package mirror, which timed this
+    # job out twice on 2026-10-26. User 1001 is the runner's, which owns the
+    # workspace and `$HOME`; Firefox refuses to run as root there.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright.outputs.version }}-noble
+      options: --init --ipc=host --user 1001
     timeout-minutes: 30
     environment: release
 
@@ -47,9 +80,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # What CI checks, again on the commit being released.
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-
       - name: Check
         run: pnpm lint && pnpm format:check && pnpm typecheck && pnpm build && pnpm test
 
