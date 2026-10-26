@@ -1595,7 +1595,9 @@ export const numberFieldConformance = defineConformance<
           },
           nvda: {
             field: /Quantity, Number field, How many to order, blank/,
-            value: /^0$/,
+            // The spinbutton's new value, then the field's own announcement
+            // of it (the spec's Announcements); VoiceOver reads it once.
+            value: /^0(\. 0)?$/,
           },
         }[screenReader.name];
         const mounted = await mount({
