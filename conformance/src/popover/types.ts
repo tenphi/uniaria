@@ -34,6 +34,8 @@ export interface PopoverProps {
   positionTryFallbacks: string;
   labelledBy: string | undefined;
   describedBy: string | undefined;
+  /** The inline state (`./inline.md` in the component's folder). */
+  isInline: boolean;
 }
 
 export interface PopoverState {
@@ -41,6 +43,8 @@ export interface PopoverState {
   isEntering: boolean;
   isExiting: boolean;
   placement: 'top' | 'bottom' | 'left' | 'right' | undefined;
+  /** The inline state (`./inline.md` in the component's folder). */
+  isInline: boolean;
 }
 
 export interface PopoverDismissEvent {
