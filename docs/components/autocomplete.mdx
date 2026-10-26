@@ -494,8 +494,9 @@ composing, stay with the browser.
 - **Always expanded.** The input is a combo box with `aria-expanded="true"`
   that controls the list, since the list is always shown. Escape clears the
   text rather than closing anything.
-- **The mouse highlights** an option only while focus is in the root, so a
-  resting pointer leaves nothing for Enter to choose after tabbing in. A tap
+- **The mouse highlights** an option only while focus is in the root, and
+  only as it moves, so a resting pointer leaves nothing for Enter to choose
+  after tabbing in, even when the page scrolls under it. A tap
   on a touch screen chooses an option without focusing the input, so the
   on-screen keyboard stays closed.
 - **The option count** is announced politely whenever the number of shown

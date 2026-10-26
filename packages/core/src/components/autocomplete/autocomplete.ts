@@ -21,6 +21,7 @@ import {
   isComposing,
   isDevelopment,
   mergeHandlers,
+  modalityTrackerFor,
   partEffect,
   partElement,
   warn,
@@ -768,11 +769,15 @@ export const autocomplete = defineBehavior({
      * as the pointer moves: Chromium sends an option the boundary events of
      * a pointer resting over it whenever the page changes, so a resting
      * pointer would leave an option for Enter to choose after tabbing in
-     * (Focus). A highlight the keys moved stays, as in Listbox.
+     * (Focus). WebKit sends a resting pointer a move too, after a scroll,
+     * which the modality tracker tells apart. A highlight the keys moved
+     * stays, as in Listbox.
      */
     const onPointerMove = (pointerEvent: PointerEvent) => {
       if (isPopup() || pointerEvent.pointerType === 'touch') return;
       if (!focusWithin.isFocusWithin() || list.api.isHighlightVisible()) return;
+      const target = pointerEvent.target as Element;
+      if (modalityTrackerFor(target)?.isRestingMove(pointerEvent)) return;
       const key = list.api.hoveredKey();
       if (key !== null && key !== list.api.focusedKey()) highlight(key, false);
     };
