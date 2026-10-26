@@ -25,6 +25,10 @@ const REFERENCES = [
   { name: 'spectrum-web-components', repo: 'adobe/spectrum-web-components' },
   { name: 'catalyst', repo: 'github/catalyst' },
   { name: 'auto-complete-element', repo: 'github/auto-complete-element' },
+  {
+    name: 'accessible-components-library',
+    repo: 'TetraLogical/accessible-components-library',
+  },
 ];
 
 const root = join(import.meta.dirname, '..', 'references');
