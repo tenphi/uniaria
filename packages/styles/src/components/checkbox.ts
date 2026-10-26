@@ -70,9 +70,14 @@ export const checkboxStyles = {
       '@uni-reduced-motion': false,
     },
 
+    // Out of the flow, still centered by the grid: in it, the mark would set
+    // the row's baseline, and the checkbox would move as it appears. Clicks
+    // go through to the input under it.
     '&::before': {
       // eslint-disable-next-line tasty/no-style-spread -- the shared marks; the color is the checkbox's
       ...checkMarkStyles,
+      position: 'absolute',
+      pointerEvents: 'none',
       color: {
         '': '#uni-accent-fill-text',
         invalid: '#uni-danger-fill-text',
