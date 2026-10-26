@@ -1,6 +1,6 @@
 # Tabs spec
 
-Status: draft
+Status: approved by @tenphi on 2026-10-26
 
 ## Summary
 
@@ -42,7 +42,7 @@ Not part of Tabs:
   items spec's frame and extras.
 - **Overflow handling.** UI Kit's tab picker and scroll arrows are the design
   system's: a picker is a Select over the same items.
-- **The selection indicator** that slides between tabs (Open questions 6).
+- **The selection indicator** that slides between tabs (Resolved questions 6).
 - **Rendering panels lazily.** React and Vue render a panel's content from
   `selectedKey`; Tabs only writes the panel's attributes.
 - **Looks.** Sizes, types, placement of the list beside the panels.
@@ -80,18 +80,18 @@ key has no tab.
 
 Keys are strings.
 
-| Prop               | Type                         | Default                    | Bindable | Change event  | Notes                                                                                                                     |
-| ------------------ | ---------------------------- | -------------------------- | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| items              | `readonly Item[]`            | `[]`                       | no       | —             | The tabs, in order. A property on the element; without it the element reads them from its markup (Open questions 5).      |
-| getKey             | `(item: Item) => string`     | `item.key`                 | no       | —             | Unique per list; development warns about duplicates.                                                                      |
-| isItemDisabled     | `(item: Item) => boolean`    | `item.isDisabled === true` | no       | —             | As Listbox's.                                                                                                             |
-| disabledKeys       | `readonly string[]`          | `[]`                       | no       | —             | As Listbox's; attribute `disabled-keys`, JSON.                                                                            |
-| value              | `string \| null`             | `null`                     | yes      | `valueChange` | The selected key. `null`, and a key with no enabled item, show the first enabled tab (Selection). Name: Open questions 1. |
-| keyboardActivation | `'automatic' \| 'manual'`    | `'automatic'`              | no       | —             | Whether the arrow keys, Home and End select the tab they reach. Attribute `keyboard-activation`.                          |
-| orientation        | `'horizontal' \| 'vertical'` | `'horizontal'`             | no       | —             | Which arrows move; `aria-orientation`, always written, and `data-orientation`.                                            |
-| isDisabled         | `boolean`                    | `false`                    | no       | —             | Every tab disabled: no tab stop. The shown panel stays shown.                                                             |
-| listId             | `string \| undefined`        | generated                  | no       | —             | The list's `id` where it has none of its own (`idOf`); item ids follow it.                                                |
-| labelledBy         | `string \| undefined`        | —                          | no       | —             | More ids for the list's `aria-labelledby`.                                                                                |
+| Prop               | Type                         | Default                    | Bindable | Change event  | Notes                                                                                                                         |
+| ------------------ | ---------------------------- | -------------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| items              | `readonly Item[]`            | `[]`                       | no       | —             | The tabs, in order. A property on the element; without it the element reads them from its markup (Resolved questions 5).      |
+| getKey             | `(item: Item) => string`     | `item.key`                 | no       | —             | Unique per list; development warns about duplicates.                                                                          |
+| isItemDisabled     | `(item: Item) => boolean`    | `item.isDisabled === true` | no       | —             | As Listbox's.                                                                                                                 |
+| disabledKeys       | `readonly string[]`          | `[]`                       | no       | —             | As Listbox's; attribute `disabled-keys`, JSON.                                                                                |
+| value              | `string \| null`             | `null`                     | yes      | `valueChange` | The selected key. `null`, and a key with no enabled item, show the first enabled tab (Selection). Name: Resolved questions 1. |
+| keyboardActivation | `'automatic' \| 'manual'`    | `'automatic'`              | no       | —             | Whether the arrow keys, Home and End select the tab they reach. Attribute `keyboard-activation`.                              |
+| orientation        | `'horizontal' \| 'vertical'` | `'horizontal'`             | no       | —             | Which arrows move; `aria-orientation`, always written, and `data-orientation`.                                                |
+| isDisabled         | `boolean`                    | `false`                    | no       | —             | Every tab disabled: no tab stop. The shown panel stays shown.                                                                 |
+| listId             | `string \| undefined`        | generated                  | no       | —             | The list's `id` where it has none of its own (`idOf`); item ids follow it.                                                    |
+| labelledBy         | `string \| undefined`        | —                          | no       | —             | More ids for the list's `aria-labelledby`.                                                                                    |
 
 `Item` is whatever the accessors read; without accessors it is
 `{ key: string; isDisabled?: boolean }`. Tabs need no text value: there is no
@@ -126,7 +126,7 @@ React and Vue render a panel's content from it:
   shown tab is `value` when it names an enabled tab; otherwise the first
   enabled tab, or the first tab when every tab is disabled (React Aria's
   `findDefaultSelectedKey`). This is derived on every read: it reports no
-  `valueChange`, and `value` keeps what it holds (Open questions 4).
+  `valueChange`, and `value` keeps what it holds (Resolved questions 4).
 - **Uncontrolled**, the user's choice is committed; **controlled**, it is
   requested through `valueChange` and shown once `value` changes. A controlled
   `null` stays controlled and shows the fallback.
@@ -137,7 +137,7 @@ React and Vue render a panel's content from it:
 
 ## Panels
 
-- The panel of the shown tab has no `hidden` and `tabindex="0"` (Open
+- The panel of the shown tab has no `hidden` and `tabindex="0"` (Resolved
   questions 3). Every other panel whose key is an item gets `hidden`.
 - **A panel whose key isn't an item** (no tab for it yet) gets nothing from
   UniAria, not even `hidden`, and development warns. So a page whose tabs
@@ -244,7 +244,7 @@ Roving tabindex, as Listbox: DOM focus moves to the tab, never
 | `hidden`             | panel            | Not shown; the only presentational attribute UniAria writes. |
 
 `aria-selected="true"` and `:focus-visible` work as well. No CSS variables
-(Open questions 6).
+(Resolved questions 6).
 
 ## Expected spoken output
 
@@ -315,7 +315,7 @@ subpath of `@uniaria/elements`. Attributes: `keyboard-activation`,
 event `valuechange`. Without an `items` property the element reads its tabs
 in document order, the key from `data-key`, and reads them again when the
 markup changes (Listbox's adoption, `adopt: { items: { item: 'tab' } }`), so
-tabs a script adds after the element starts join the collection (Open
+tabs a script adds after the element starts join the collection (Resolved
 questions 5). A nested `<uni-tabs>` in a panel is its own component: part
 discovery stops at it.
 
@@ -339,7 +339,7 @@ Its requirements, all covered above: automatic activation, RTL arrows,
 Home and End, wrapping, focusable panels, every panel readable without
 JavaScript, and tabs created after the element starts. Cookbook's `Tab`
 component marks its panel `data-element="Tab"` today; with these part names
-it becomes `Panel` (Open questions 2).
+it becomes `Panel` (Resolved questions 2).
 
 ## Mapping from Cube UI Kit
 
@@ -363,7 +363,7 @@ UI Kit at `references/cube-ui-kit` 27a92974, `src/components/navigation/Tabs/`
   `menuProps`, `contextMenu`, `onAction`, `actions`, `autoHideActions`,
   `isReorderable`, `keyOrder`, `onReorder`: later (Not part of Tabs).
 - The indicator (`use-tab-indicator.ts`) measures the selected tab's start
-  and size: Open questions 6.
+  and size: Resolved questions 6.
 
 ## Differences from React Aria, Zag, the APG and Cookbook
 
@@ -394,26 +394,26 @@ with closing and menus.
   and `ssr-safety.test.ts`, the element's entry in `@uniaria/elements`, and an
   entry in `.size-limit.js`; `docs/components/tabs.mdx` gets a live demo.
 
-## Open questions
+## Resolved questions
 
-Each has a recommendation.
+Decided by @tenphi on 2026-10-26, each as recommended.
 
 1. **Names.** (a) `value`, `defaultValue` and `valueChange`, as Listbox,
    RadioGroup and Select (and Zag and Radix), with `keyboardActivation` from
    React Aria, which UI Kit inherits. (b) React Aria's `selectedKey` and
    `onSelectionChange`. (c) UI Kit's `activeKey` and `onChange`, with Zag's
-   `activationMode`. Recommended: (a).
+   `activationMode`. Decided: (a).
 2. **Part names.** (a) `tab` and `panel` (`data-element="Tab"` and
    `"Panel"`), the ARIA roles, as Listbox's `option`. Cookbook's `Tab`
    component re-marks its panel `Panel`. (b) `trigger` and `content` (Zag,
    Radix). (c) `tab` and `tabPanel` (React Aria's `TabPanel`), more specific
-   than `Panel` in Tasty's sub-element names. Recommended: (a).
+   than `Panel` in Tasty's sub-element names. Decided: (a).
 3. **Panel focusability.** (a) The shown panel always has `tabindex="0"`
    (the APG example, which advises it for every panel of a set where any
    panel starts with content that can't take focus; Zag; Cookbook). (b) Only
    while it has no tabbable descendant (React Aria and UI Kit), watching the
    panel's content: no extra stop before a panel that starts with a link, but
-   panels of one set differ, and a mutation observer per panel. Recommended:
+   panels of one set differ, and a mutation observer per panel. Decided:
    (a).
 4. **A value that names no enabled tab** (`null`, a removed or disabled tab).
    (a) Derived: the first enabled tab is shown, nothing is reported, and
@@ -421,22 +421,26 @@ Each has a recommendation.
    controlled. (b) React Aria's: the selection moves to the first enabled tab
    and `valueChange` reports it (uncontrolled only). (c) The APG's Delete
    rule: the following tab, else the preceding, which needs the old order.
-   Recommended: (a).
+   Decided: (a).
 5. **The element's items from markup.** (a) From the tab parts in document
    order, keys from `data-key`, disabled from `disabled-keys`, read again when
    the markup changes; a panel whose key has no tab is left alone, so
    Cookbook's panels show until its script adds the tabs. (b) From the
    panels, so items exist before the tabs: but the tabs' order is the one the
-   keys follow. (c) Require the `items` property. Recommended: (a).
+   keys follow. (c) Require the `items` property. Decided: (a).
 6. **A sliding selection indicator.** UI Kit measures the selected tab's
    start and size to move one underline between tabs; Zag has an `indicator`
    part with CSS variables. (a) Nothing now: the selected tab's own look
    (`data-selected`) covers Cookbook. (b) CSS variables on the list with the
    shown tab's offset and size along the list, measured on selection and on
-   resize. Recommended: (a) now, (b) when UI Kit moves to UniAria.
+   resize. Decided: (a) now, (b) when UI Kit moves to UniAria.
 7. **Find in page.** `hidden="until-found"` lets the browser's find reveal
    text in a hidden panel, with `beforematch` selecting its tab: useful for
    documentation. It isn't Baseline (no Safari; Chromium 102, Firefox 148),
    and a hidden panel keeps its own box (padding, border) on screen. (a) Plain
    `hidden` now. (b) An opt-in prop that writes `until-found` where supported
-   and plain `hidden` elsewhere. Recommended: (a) now.
+   and plain `hidden` elsewhere. Decided: (a) now.
+
+## Open questions
+
+None.
