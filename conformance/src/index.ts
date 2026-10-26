@@ -30,6 +30,7 @@ import { selectItemsConformance } from './select/items.conformance';
 import { comboboxConformance } from './combobox/combobox.conformance';
 import { comboboxItemsConformance } from './combobox/items.conformance';
 import { switchConformance } from './switch/switch.conformance';
+import { tabsConformance } from './tabs/tabs.conformance';
 import { textFieldConformance } from './text-field/text-field.conformance';
 import { toggleButtonConformance } from './toggle-button/toggle-button.conformance';
 import { toggleButtonItemsConformance } from './toggle-button/items.conformance';
@@ -58,6 +59,7 @@ export {
   comboboxConformance,
   comboboxItemsConformance,
   switchConformance,
+  tabsConformance,
   textFieldConformance,
   toggleButtonConformance,
   toggleButtonItemsConformance,
@@ -123,6 +125,7 @@ export type {
   ComboboxState,
 } from './combobox/types';
 export type { SwitchProps, SwitchState } from './switch/types';
+export type { TabsItem, TabsProps, TabsState } from './tabs/types';
 export type { TextFieldProps, TextFieldState } from './text-field/types';
 export type {
   ToggleButtonProps,
@@ -161,4 +164,6 @@ export const suites = [
   autocompleteConformance,
   // The Form spec (phase 7).
   formConformance,
+  // The Tabs spec (phase 9).
+  tabsConformance,
 ];
