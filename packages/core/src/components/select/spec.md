@@ -45,6 +45,9 @@ the choice is in [Resolved questions](#resolved-questions).
 
 Not part of Select:
 
+- **Validation.** As in Field: Select shows `isInvalid`, the form decides it.
+  Inside a Form, the form checks it, and Select writes the `name` and the
+  form's id on its hidden `<select>` (Form spec, Changes to approved specs).
 - **Searching or filtering** the options, and typing a value: Combobox's. A
   searchable select (React Aria's Autocomplete in a Select popover) is a
   Combobox use.

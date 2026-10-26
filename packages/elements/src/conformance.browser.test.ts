@@ -8,4 +8,4 @@ import { runConformance } from '@uniaria/testing/browser';
 
 import { elementsAdapter } from './conformance-adapter';
 
-runConformance(elementsAdapter, suites, { phase: 6 });
+runConformance(elementsAdapter, suites, { phase: 7 });

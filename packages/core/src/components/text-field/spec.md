@@ -42,7 +42,8 @@ Not part of TextField:
 - **Validation.** As in Field: TextField shows `isInvalid`, the form decides
   it. No native `required`, `setCustomValidity` or `invalid` handling. Native
   attributes the consumer writes (`pattern`, `maxlength`) keep their native
-  effects.
+  effects. Inside a Form, the form checks it and decides it (Form spec, Changes to
+  approved specs).
 - **Formatting, masking and filtering keystrokes.** NumberField will veto
   edits in `beforeinput`, as React Aria's formatted fields do; TextField
   accepts every edit.

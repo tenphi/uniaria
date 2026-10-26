@@ -24,6 +24,7 @@ const entries = {
   '@uniaria/elements/select': () => import('./select'),
   '@uniaria/elements/autocomplete': () => import('./autocomplete'),
   '@uniaria/elements/combobox': () => import('./combobox'),
+  '@uniaria/elements/form': () => import('./form'),
 };
 
 describe('SSR safety', () => {
@@ -70,5 +71,7 @@ describe('SSR safety', () => {
     expect(UniAutocomplete).toBeUndefined();
     const { UniCombobox } = await import('./combobox');
     expect(UniCombobox).toBeUndefined();
+    const { UniForm } = await import('./form');
+    expect(UniForm).toBeUndefined();
   });
 });

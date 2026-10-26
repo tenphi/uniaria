@@ -20,6 +20,12 @@
  *   child: a button in a popover inside a tooltip isn't the tooltip's. An
  *   element around the child whose tag is defined later may turn out to be
  *   that nearest host, so the link is asked for again then.
+ * - **Inherited links** (Form spec, Runtime changes 1), a field's form, are
+ *   asked for by key as owners are: the nearest provider around the child
+ *   answers, across other hosts. One that starts providing later and sits
+ *   nearer than the one that answered takes over.
+ * - Ids are read with `getAttribute('id')`: a form's `id` property is a
+ *   control named `id`, if it has one.
  */
 
 import type { AnyDefinition, Instance, LinkKey } from '../runtime';
@@ -44,6 +50,7 @@ function isAround(owner: Element, node: Node): boolean {
 /** An owner providing on an element. */
 interface Provider {
   readonly instance: Instance;
+  readonly element: Element;
   /** Remembers a child's release; returns the function that forgets it. */
   track(release: () => void): () => void;
 }
@@ -63,8 +70,19 @@ interface Waiting {
   ask(): void;
 }
 
+/** An inherited link's request, answered or not. */
+interface Inheriting extends Waiting {
+  /** The element of the provider that answered, if one did. */
+  answeredBy(): Element | undefined;
+  /** Asks again, letting go of the provider that answered. */
+  askAgain(): void;
+}
+
 /** Requests nobody has answered yet. */
 const waiting = new Set<Waiting>();
+
+/** Inherited links' requests, which a nearer provider may take over. */
+const inheriting = new Set<Inheriting>();
 
 /** The owners provided on each element, for lookups by id. */
 const providers = new WeakMap<Element, Provider[]>();
@@ -78,6 +96,7 @@ export function provideOwner(instance: Instance, element: Element): () => void {
   const releases = new Set<() => void>();
   const provider: Provider = {
     instance,
+    element,
     track(release) {
       releases.add(release);
       return () => releases.delete(release);
@@ -99,6 +118,18 @@ export function provideOwner(instance: Instance, element: Element): () => void {
       request.matches(element)
     ) {
       request.ask();
+    }
+  }
+  for (const request of [...inheriting]) {
+    const current = request.answeredBy();
+    if (
+      current &&
+      current !== element &&
+      isAround(current, element) &&
+      answers(instance.definition, request.wanted) &&
+      request.matches(element)
+    ) {
+      request.askAgain();
     }
   }
   return () => {
@@ -132,8 +163,12 @@ export function requestOwner(
   ownerId?: string,
 ): () => void {
   const isLink = !('setup' in wanted);
+  // Inherited links are found as owners are; others only on the nearest
+  // host.
+  const isNearestHost = isLink && (wanted as LinkKey).isInherited !== true;
   let isDone = false;
   let forget: (() => void) | undefined;
+  let answeredBy: Element | undefined;
   /** A link's nearest host when it last asked. */
   let host: Element | null = null;
   /** Stops waiting for the tags around the child still undefined. */
@@ -141,8 +176,10 @@ export function requestOwner(
 
   const accept = (provider: Provider) => {
     waiting.delete(request);
+    answeredBy = provider.element;
     forget = provider.track(() => {
       forget = undefined;
+      answeredBy = undefined;
       onChange(undefined);
       ask();
     });
@@ -165,16 +202,23 @@ export function requestOwner(
     );
   };
 
-  // A tag defined between the child and its host may make a nearer host.
-  const onDefined = () => {
-    if (isDone || hostAround(element) === host) return;
+  /** Lets go of the provider that answered, and asks again. */
+  const askAgain = () => {
+    if (isDone) return;
     if (forget) {
       forget();
       forget = undefined;
+      answeredBy = undefined;
       onChange(undefined);
     }
     waiting.delete(request);
     ask();
+  };
+
+  // A tag defined between the child and its host may make a nearer host.
+  const onDefined = () => {
+    if (isDone || hostAround(element) === host) return;
+    askAgain();
   };
 
   const waitForHosts = () => {
@@ -195,8 +239,8 @@ export function requestOwner(
 
   const ask = () => {
     if (isDone) return;
-    if (ownerId !== undefined || isLink) {
-      if (isLink && ownerId === undefined) {
+    if (ownerId !== undefined || isNearestHost) {
+      if (isNearestHost && ownerId === undefined) {
         host = hostAround(element);
         waitForHosts();
       }
@@ -219,21 +263,28 @@ export function requestOwner(
     if (!isAnswered) waiting.add(request);
   };
 
-  const request: Waiting = {
+  const request: Inheriting = {
     wanted,
     matches: (owner) =>
       ownerId !== undefined
-        ? owner.id === ownerId && owner.getRootNode() === element.getRootNode()
-        : isLink
+        ? owner.getAttribute('id') === ownerId &&
+          owner.getRootNode() === element.getRootNode()
+        : isNearestHost
           ? owner === hostAround(element)
           : isAround(owner, element),
     ask,
+    answeredBy: () => answeredBy,
+    askAgain,
   };
 
+  if (isLink && !isNearestHost && ownerId === undefined) {
+    inheriting.add(request);
+  }
   ask();
   return () => {
     isDone = true;
     waiting.delete(request);
+    inheriting.delete(request);
     forget?.();
     forget = undefined;
     for (const stop of unwait) stop();

@@ -12,6 +12,9 @@
 import { isDevelopment, partElement, warn } from '../../dom';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { checkboxGroup } from '../checkbox-group/checkbox-group';
+import { formFieldProps } from '../field/binding';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import { tooltipLink } from '../tooltip/link';
 import { connectToggle, createToggle, toggleState } from './toggle';
 
@@ -27,8 +30,9 @@ export const checkbox = defineBehavior({
     'label',
     'description',
     'error',
+    'errorText',
   ],
-  links: [tooltipLink],
+  links: [tooltipLink, formLink],
   owner: { definition: checkboxGroup, attribute: 'group' },
   props: {
     // The key in a group's value, written to the input's `value`.
@@ -45,7 +49,8 @@ export const checkbox = defineBehavior({
     isFocusableWhenDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
@@ -58,6 +63,12 @@ export const checkbox = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    ...formFieldProps,
+    // The element reads the name from the input's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'input', attribute: 'name' },
+    }),
   },
   events: {
     focusChange: event<boolean>(),
@@ -87,8 +98,13 @@ export const checkbox = defineBehavior({
         props.isDisabled() || (group()?.state().isDisabled ?? false),
       isReadOnly: () =>
         props.isReadOnly() || (group()?.state().isReadOnly ?? false),
-      isInvalid: () =>
-        props.isInvalid() || (group()?.state().isInvalid ?? false),
+      // Unset without a group, so a form decides it.
+      isInvalid: () => {
+        const owner = group();
+        return owner
+          ? props.isInvalid() || owner.state().isInvalid
+          : props.isInvalid();
+      },
       isRequired: () =>
         props.isRequired() || (group()?.api.isItemRequired() ?? false),
       // The group's error explains an invalid checkbox wherever focus is.
@@ -96,6 +112,13 @@ export const checkbox = defineBehavior({
         [props.describedBy(), group()?.api.errorId()]
           .filter(Boolean)
           .join(' ') || undefined,
+      // A checkbox in a group, or in its markup before the group is found,
+      // is the group's to bind (Form spec, Finding the form).
+      isBindable: () =>
+        !ctx.owner(checkboxGroup) &&
+        !partElement(ctx, 'input')?.closest(
+          'uni-checkbox-group, [data-uni="checkbox-group"]',
+        ),
     });
 
     if (isDevelopment()) {
@@ -132,7 +155,7 @@ export const checkbox = defineBehavior({
     ctx.watch(() => partElement(ctx, 'input'), joinChecked);
     ctx.watch(() => group()?.instance, joinChecked);
 
-    return { ...toggle, groupName: () => group()?.api.name() };
+    return { ...toggle, groupAttrs: () => group()?.api.submitAttrs() ?? {} };
   },
   expose({ props, api }) {
     return { ...toggleState(api), isIndeterminate: props.isIndeterminate() };
@@ -140,13 +163,13 @@ export const checkbox = defineBehavior({
   connect({ props, api }) {
     const isIndeterminate = props.isIndeterminate();
     const value = props.value();
-    const name = api.groupName();
     return connectToggle(api, {
       state: { 'data-indeterminate': flag(isIndeterminate) },
-      // Only when set: otherwise the consumer may write them.
+      // Only when set: otherwise the consumer may write them. The group's
+      // `name` and `form` go on each of its checkboxes.
       input: {
         ...(value === undefined ? {} : { value }),
-        ...(name === undefined ? {} : { name }),
+        ...api.groupAttrs(),
       },
       properties: { indeterminate: isIndeterminate },
     });

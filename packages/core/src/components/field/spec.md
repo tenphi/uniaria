@@ -30,8 +30,11 @@ Not part of Field:
 
 - **Validation.** No rules, no constraint validation (`setCustomValidity`,
   the `invalid` event), no display timing and no focusing the first invalid
-  field on submit. React Aria's native validation does these; Cube UI Kit's
-  form engine does its own. A later Form component can take them on.
+  field on submit on its own. React Aria's native validation does these;
+  Cube UI Kit's form engine does its own. Form does them (`../form/spec.md`),
+  and Field binds a field to it: the value, the form's errors through an
+  `errorText` part, `isInvalid` unset by default, the binding in its public
+  state and a `setValue` action (Form spec, Changes to approved specs).
 - **Disabling the control.** `isDisabled` marks the field's parts and hides
   the error, but the control is disabled by its own component (TextField and
   the rest pass it on), or by the consumer for a native control.

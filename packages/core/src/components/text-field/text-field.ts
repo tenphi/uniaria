@@ -12,7 +12,10 @@ import { partEffect, partElement } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
+import { formFieldProps, readFormProps } from '../field/binding';
 import { field } from '../field/field';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import { textInput } from '../text-input/text-input';
 import { linkTooltip, tooltipLink } from '../tooltip/link';
 
@@ -24,8 +27,16 @@ const CONTROLS =
 
 export const textField = defineBehavior({
   name: 'text-field',
-  parts: ['root', 'wrapper', 'label', 'input', 'description', 'error'],
-  links: [tooltipLink],
+  parts: [
+    'root',
+    'wrapper',
+    'label',
+    'input',
+    'description',
+    'error',
+    'errorText',
+  ],
+  links: [tooltipLink, formLink],
   props: {
     // The element adopts the input's current text: the markup's value, or
     // what the user typed before upgrade.
@@ -33,7 +44,8 @@ export const textField = defineBehavior({
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
@@ -46,6 +58,12 @@ export const textField = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    ...formFieldProps,
+    // The element reads the name from the input's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'input', attribute: 'name' },
+    }),
   },
   events: {
     focusChange: event<boolean>(),
@@ -67,6 +85,7 @@ export const textField = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
         labelledBy:
@@ -86,13 +105,26 @@ export const textField = defineBehavior({
       () => ({
         value: props.value.get(),
         onValueChange: (value: string) => props.value.set(value),
-        isDisabled: props.isDisabled(),
-        isReadOnly: props.isReadOnly(),
+        // The field's own, or its form's.
+        isDisabled: labelling.api.isDisabled(),
+        isReadOnly: labelling.api.isReadOnly(),
         onFocusChange: (isFocused: boolean) =>
           ctx.emit('focusChange', isFocused),
       }),
       { parts: { root: 'input' } },
     );
+
+    // In a form, the form holds the value (Form spec, Field binds).
+    labelling.api.bindValue({
+      value: props.value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toField: (value) =>
+        value === null || value === undefined ? '' : String(value),
+      kind: 'text',
+      defaultTrigger: 'blur',
+      isFocusWithin: () => text.state().isFocused,
+    });
 
     // Form reset goes back to the default, as a native field does: an
     // uncontrolled field follows defaultValue again, even one set after
@@ -117,7 +149,12 @@ export const textField = defineBehavior({
     const focusInput = (event: MouseEvent) => {
       const input = partElement(ctx, 'input');
       const wrapper = partElement(ctx, 'wrapper');
-      if (!input || !wrapper || event.button !== 0 || props.isDisabled()) {
+      if (
+        !input ||
+        !wrapper ||
+        event.button !== 0 ||
+        labelling.api.isDisabled()
+      ) {
         return;
       }
       const control = (event.target as Element).closest(CONTROLS);
@@ -135,14 +172,14 @@ export const textField = defineBehavior({
       isFocused,
       isFocusVisible,
       isHovered,
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
     };
   },
-  connect({ props, api }) {
+  connect({ api }) {
     const { control, ...parts } = api.field.connect();
     const text = api.text.connect().root;
     const { isFocused, isFocusVisible, isHovered } = api.text.state();
@@ -151,7 +188,7 @@ export const textField = defineBehavior({
       'data-hovered': flag(isHovered),
       'data-focused': flag(isFocused),
       'data-focus-visible': flag(isFocusVisible),
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(api.field.api.isReadOnly()),
     };
     const withState = (part: PartProps): PartProps => ({
       ...part,
@@ -173,6 +210,7 @@ export const textField = defineBehavior({
       input,
       description: withState(parts.description),
       error: withState(parts.error),
+      errorText: withState(parts.errorText),
     };
   },
 });

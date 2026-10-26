@@ -132,6 +132,7 @@ export const autocomplete = defineBehavior({
     'empty',
     'description',
     'error',
+    'errorText',
   ],
   itemParts: [
     'option',
@@ -189,7 +190,8 @@ export const autocomplete = defineBehavior({
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     shouldFocusWrap: prop(false),
     locale: prop<string | undefined>(undefined, { type: 'string' }),
     buttonLabel: prop('Show suggestions', { attribute: false }),
@@ -240,6 +242,7 @@ export const autocomplete = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         controlId: props.inputId(),
         labelElementType: props.labelElementType(),
         labelledBy: props.labelledBy(),
@@ -247,6 +250,11 @@ export const autocomplete = defineBehavior({
       }),
       { parts: { control: 'input' } },
     );
+    // Its own, or the form's of the field that binds it (Combobox). The
+    // controls below take them as getters: a composed definition runs its
+    // props on every prop read, and these read Field's.
+    const isDisabled = labelling.api.isDisabled;
+    const isReadOnly = labelling.api.isReadOnly;
 
     // The filter's language: the prop, else the input's, else the
     // browser's, as NumberField's.
@@ -330,8 +338,12 @@ export const autocomplete = defineBehavior({
       () => ({
         value: inputValue.get(),
         onValueChange: (typed: string) => inputValue.set(typed),
-        isDisabled: props.isDisabled(),
-        isReadOnly: props.isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
       }),
       { parts: { root: 'input' } },
     );
@@ -388,7 +400,7 @@ export const autocomplete = defineBehavior({
     // the root holds when it is rendered; it is optional.
     const focusWithin = createFocusWithin(ctx, {
       part: ['root', 'input', 'button', 'popup', 'list'],
-      isDisabled: props.isDisabled,
+      isDisabled,
     });
 
     const list = ctx.use(
@@ -403,8 +415,12 @@ export const autocomplete = defineBehavior({
         value: value.get(),
         onValueChange: (next: readonly string[]) => value.set(next),
         selectionMode: props.selectionMode(),
-        isDisabled: props.isDisabled(),
-        isReadOnly: props.isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
         shouldFocusWrap: props.shouldFocusWrap(),
         // Inline, hover highlights on the pointer's moves instead (below).
         shouldFocusOnHover: isPopup(),
@@ -516,7 +532,7 @@ export const autocomplete = defineBehavior({
 
     let opening: Opening = 'typing';
     const open = (how: Opening) => {
-      if (!isPopup() || props.isDisabled() || props.isOpen.get()) return;
+      if (!isPopup() || isDisabled() || props.isOpen.get()) return;
       // Opened again after typing that matches nothing, the list shows
       // every option (Filtering).
       if (how !== 'typing' && isFiltering() && visible()?.size === 0) {
@@ -620,7 +636,7 @@ export const autocomplete = defineBehavior({
 
     const onInputKeyDown = (keyEvent: KeyboardEvent) => {
       if (keyEvent.defaultPrevented || isComposing(keyEvent)) return;
-      if (props.isDisabled() || keyEvent.ctrlKey || keyEvent.metaKey) return;
+      if (isDisabled() || keyEvent.ctrlKey || keyEvent.metaKey) return;
       const isNowShown = isShown();
       const options = list.api.collection();
       const current = isNowShown ? list.api.focusedKey() : null;
@@ -690,7 +706,7 @@ export const autocomplete = defineBehavior({
           }
           // Inline: the text clears, then Escape is the page's, so a dialog
           // around it closes.
-          if (text() === '' || props.isReadOnly()) return;
+          if (text() === '' || isReadOnly()) return;
           keyEvent.preventDefault();
           revertText();
           inputValue.set('');
@@ -727,7 +743,9 @@ export const autocomplete = defineBehavior({
     const trigger = ctx.use(
       button,
       () => ({
-        isDisabled: props.isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         shouldPreventFocusOnPress: true,
         shouldExcludeFromTabOrder: true,
         onPress: (pressEvent: { pointerType: string }) => {
@@ -741,7 +759,7 @@ export const autocomplete = defineBehavior({
       if (pointerEvent.button !== 0 || pointerEvent.pointerType === 'touch') {
         return;
       }
-      if (props.isDisabled()) return;
+      if (isDisabled()) return;
       toggle('button');
     };
 
@@ -792,7 +810,7 @@ export const autocomplete = defineBehavior({
         return;
       }
       mouseEvent.preventDefault();
-      if (!isPopup() && pressType !== 'touch' && !props.isDisabled()) {
+      if (!isPopup() && pressType !== 'touch' && !isDisabled()) {
         focusInput();
       }
     };
@@ -917,11 +935,11 @@ export const autocomplete = defineBehavior({
       isOpen: isShown,
       focusedKey: isShown ? list.focusedKey : null,
       isEmpty: list.isEmpty,
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
       isVirtualized: list.isVirtualized,
@@ -936,13 +954,14 @@ export const autocomplete = defineBehavior({
     const buttonRoot = api.trigger.connect().root as DomPartProps;
     const isPopup = props.hasPopup();
     const isShown = api.isShown();
-    const isDisabled = props.isDisabled();
+    const isDisabled = api.field.api.isDisabled();
     const state = {
       'data-open': flag(isShown),
       'data-disabled': flag(isDisabled),
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(api.field.api.isReadOnly()),
       'data-required': flag(props.isRequired()),
-      'data-invalid': flag(props.isInvalid()),
+      'data-invalid': flag(api.field.api.isInvalid()),
+      'data-validating': flag(api.field.api.status() === 'validating'),
       'data-empty': flag(api.list.state().isEmpty),
       'data-focus-within': flag(api.isFocusWithin()),
       'data-focus-visible': flag(api.isFocusVisible()),
@@ -1042,6 +1061,7 @@ export const autocomplete = defineBehavior({
       empty: pressable(withState(listParts.empty)),
       description: withState(fieldParts.description),
       error: withState(fieldParts.error),
+      errorText: withState(fieldParts.errorText),
     };
   },
   connectItem({ api }, part, key) {

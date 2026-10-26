@@ -34,7 +34,10 @@ import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { NO_ITEM_PARTS, button } from '../button/button';
+import { formFieldProps, readFormProps } from '../field/binding';
 import { field } from '../field/field';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import { listbox, optionTooltipSource } from '../listbox/listbox';
 import { renderedKeysChange, virtualProps } from '../listbox/virtual-list';
 import { popover } from '../popover/popover';
@@ -96,6 +99,7 @@ export const select = defineBehavior({
     'close',
     'description',
     'error',
+    'errorText',
     'hiddenSelect',
   ],
   itemParts: [
@@ -106,7 +110,7 @@ export const select = defineBehavior({
     'group',
     'groupLabel',
   ],
-  links: [tooltipLink, optionTooltipLink],
+  links: [tooltipLink, optionTooltipLink, formLink],
   props: {
     // Listbox's. The element reads them from its option and group parts
     // while the consumer sets none.
@@ -134,7 +138,8 @@ export const select = defineBehavior({
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     shouldFocusWrap: prop(false),
     positionArea: prop<PositionArea>('block-end span-inline-end'),
     positionTryFallbacks: prop('flip-block, flip-inline'),
@@ -157,6 +162,12 @@ export const select = defineBehavior({
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
     // Listbox's virtualization, forwarded to the list.
     ...virtualProps,
+    ...formFieldProps,
+    // The element reads the name from the hidden select's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'hiddenSelect', attribute: 'name' },
+    }),
   },
   // The only members of setup()'s result consumers may call (spec,
   // Actions).
@@ -178,6 +189,7 @@ export const select = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         controlId: props.triggerId(),
         labelElementType: props.labelElementType(),
         labelledBy: props.labelledBy(),
@@ -185,6 +197,11 @@ export const select = defineBehavior({
       }),
       { parts: { control: 'trigger' } },
     );
+    // The field's own, or its form's. The controls below take them as
+    // getters: a composed definition runs its props on every prop read, and
+    // these read Field's.
+    const isDisabled = labelling.api.isDisabled;
+    const isReadOnly = labelling.api.isReadOnly;
 
     // Field's label, description and error are the trigger's, so the list
     // has none of its own, and isn't required or invalid itself.
@@ -200,8 +217,12 @@ export const select = defineBehavior({
         value: value.get(),
         onValueChange: (next: readonly string[]) => setValue(next),
         selectionMode: props.selectionMode(),
-        isDisabled: props.isDisabled(),
-        isReadOnly: props.isReadOnly(),
+        get isDisabled() {
+          return isDisabled();
+        },
+        get isReadOnly() {
+          return isReadOnly();
+        },
         shouldFocusWrap: props.shouldFocusWrap(),
         shouldFocusOnHover: true,
         listId: props.listId(),
@@ -237,7 +258,7 @@ export const select = defineBehavior({
     };
 
     const open = (edge: 'first' | 'last') => {
-      if (props.isDisabled()) return;
+      if (isDisabled()) return;
       openEdge = edge;
       isOpen.set(true);
       // A consumer that keeps it closed leaves nothing for a later open.
@@ -271,7 +292,9 @@ export const select = defineBehavior({
       () => ({
         isOpen: isOpen.get(),
         onOpenChange: (next: boolean) => isOpen.set(next),
-        isDisabled: props.isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         positionArea: props.positionArea(),
         positionTryFallbacks: props.positionTryFallbacks(),
       }),
@@ -309,7 +332,9 @@ export const select = defineBehavior({
     const trigger = ctx.use(
       button,
       () => ({
-        isDisabled: props.isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         shouldPreventFocusOnPress: true,
         onPress: (pressEvent: { pointerType: string }) => {
           if (
@@ -363,7 +388,7 @@ export const select = defineBehavior({
     // select without opening, in single mode.
     const typeahead = createTypeahead();
     const choose = (key: string | null) => {
-      if (key === null || props.isReadOnly()) return;
+      if (key === null || isReadOnly()) return;
       if (!isSameKeys([key], value.get())) setValue([key]);
     };
     const step = (direction: 1 | -1) => {
@@ -378,7 +403,7 @@ export const select = defineBehavior({
 
     const onTriggerKeyDown = (keyEvent: KeyboardEvent) => {
       if (keyEvent.defaultPrevented || isComposing(keyEvent)) return;
-      if (props.isDisabled() || isOpen.get()) return;
+      if (isDisabled() || isOpen.get()) return;
       if (keyEvent.ctrlKey || keyEvent.metaKey) return;
       const isSingle = !isMultiple();
       // Space while a query is in progress joins it instead (Keyboard).
@@ -403,13 +428,13 @@ export const select = defineBehavior({
           return;
         case 'ArrowLeft':
         case 'ArrowRight':
-          if (!isSingle || props.isReadOnly()) return;
+          if (!isSingle || isReadOnly()) return;
           if (keyEvent.shiftKey || keyEvent.altKey) return;
           keyEvent.preventDefault();
           step(keyEvent.key === 'ArrowRight' ? 1 : -1);
           return;
       }
-      if (!isSingle || props.isReadOnly()) return;
+      if (!isSingle || isReadOnly()) return;
       const current = value.get()[0] ?? null;
       const result = typeahead.handleKey(keyEvent, (query) => {
         const options = collection();
@@ -435,7 +460,7 @@ export const select = defineBehavior({
         return;
       }
       const element = triggerElement();
-      if (!element || props.isDisabled()) return;
+      if (!element || isDisabled()) return;
       // Before opening, which moves focus into the list; the press itself
       // doesn't focus the trigger, or its mousedown would take focus back.
       focusTrigger();
@@ -503,7 +528,7 @@ export const select = defineBehavior({
     /** A press on the label focuses the trigger as the keyboard would. */
     const onLabelClick = () => {
       const element = triggerElement();
-      if (!element || props.isDisabled()) return;
+      if (!element || isDisabled()) return;
       modalityTrackerFor(element)?.set('keyboard');
       element.focus();
     };
@@ -575,6 +600,38 @@ export const select = defineBehavior({
     };
     const hiddenSelect = () =>
       partElement(ctx, 'hiddenSelect') as HTMLSelectElement | null;
+
+    // In a form, the form holds the value: the key in single mode, read in
+    // the mode of the moment (Form spec, Fields in a form). The keys are
+    // kept while the form's value is the same, so reading them changes
+    // nothing.
+    let fromForm: unknown;
+    let asKeys: readonly string[] = [];
+    labelling.api.bindValue({
+      value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toForm: (keys) => (isMultiple() ? keys : (keys[0] ?? null)),
+      toField: (next) => {
+        if (Object.is(next, fromForm)) return asKeys;
+        fromForm = next;
+        asKeys = Array.isArray(next)
+          ? (next as readonly string[])
+          : typeof next === 'string'
+            ? [next]
+            : [];
+        return asKeys;
+      },
+      kind: 'select',
+      defaultTrigger: 'change',
+      isFocusWithin: () => focusWithin.isFocusWithin(),
+      focusTarget: triggerElement,
+      submitControls: () => {
+        const element = hiddenSelect();
+        return element ? [element] : [];
+      },
+      isControlSubmitted: false,
+    });
     /**
      * Sets the value with the hidden select already holding it, as a native
      * select does before its `change`: a `valueChange` listener's FormData
@@ -723,11 +780,11 @@ export const select = defineBehavior({
       isOpen: props.isOpen.get(),
       focusedKey: list.focusedKey,
       isEmpty: list.isEmpty,
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
       isVirtualized: list.isVirtualized,
@@ -743,15 +800,17 @@ export const select = defineBehavior({
     const buttonRoot = buttonParts.root as DomPartProps;
     const isOpen = props.isOpen.get();
     const isMultiple = props.selectionMode() === 'multiple';
-    const isDisabled = props.isDisabled();
+    const isDisabled = api.field.api.isDisabled();
+    const isReadOnly = api.field.api.isReadOnly();
     const state = {
       'data-open': flag(isOpen),
       'data-entering': flag(api.layer.api.isEntering()),
       'data-exiting': flag(api.layer.api.isExiting()),
       'data-disabled': flag(isDisabled),
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(isReadOnly),
       'data-required': flag(props.isRequired()),
-      'data-invalid': flag(props.isInvalid()),
+      'data-invalid': flag(api.field.api.isInvalid()),
+      'data-validating': flag(api.field.api.status() === 'validating'),
       'data-multiple': flag(isMultiple),
       'data-placeholder': flag(api.isPlaceholder()),
       'data-focus-within': flag(api.isFocusWithin()),
@@ -783,7 +842,7 @@ export const select = defineBehavior({
         'aria-haspopup': 'listbox',
         'aria-expanded': String(isOpen),
         'aria-controls': listRoot.attrs.id,
-        'aria-readonly': props.isReadOnly() ? 'true' : undefined,
+        'aria-readonly': isReadOnly ? 'true' : undefined,
         ...state,
       },
       on: mergeHandlers(
@@ -843,6 +902,7 @@ export const select = defineBehavior({
       close: withState(layerParts.close),
       description: withState(fieldParts.description),
       error: withState(fieldParts.error),
+      errorText: withState(fieldParts.errorText),
       hiddenSelect: {
         attrs: {
           'aria-hidden': 'true',
@@ -851,6 +911,7 @@ export const select = defineBehavior({
           // selection when its `multiple` prop changes.
           required: flag(props.isRequired()),
           disabled: flag(isDisabled),
+          ...api.field.api.submitAttrs(),
         },
       },
     };

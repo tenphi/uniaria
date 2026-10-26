@@ -403,8 +403,10 @@ Enter commits before the form submits, and a press on a submit button commits
 by moving focus out of the input. On the form's `reset`, an uncontrolled
 field goes back to `defaultValue` (empty without one), even one set after it
 rendered, and `valueChange` reports it. A controlled field reports
-`defaultValue`, or without one the value it started with. See
-[Forms](../guide/forms.md).
+`defaultValue`, or without one the value it started with. In a
+[Form](./form.mdx), the form holds the number under the field's `name`,
+checks `minValue`, `maxValue` and `step` when focus leaves the input, and
+writes the `name` on the hidden input. See [Forms](../guide/forms.md).
 
 ### Other languages
 
@@ -438,6 +440,7 @@ screen reader says its own word for a text box.
 | `hiddenInput` | `input type="hidden"` | Optional. UniAria writes `type="hidden"`, `disabled` while the field is, and the `value` property: the committed number, or `''`. Put `name` here.                                                                                                                                                                                                                                                          |
 | `description` | any                   | As Field's description.                                                                                                                                                                                                                                                                                                                                                                                     |
 | `error`       | any                   | As Field's error: hidden until `isInvalid`.                                                                                                                                                                                                                                                                                                                                                                 |
+| `errorText`   | any, inside `error`   | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                                                                                                                                                                                                                                      |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
@@ -449,28 +452,33 @@ attributes and removes yours.
 
 ## Props
 
-| Prop                     | Attribute                                                 | Type                       | Default                     | Description                                                                                                                       |
-| ------------------------ | --------------------------------------------------------- | -------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `number \| null`           | `null`                      | The committed number; `null` when empty. Changes come from `valueChange`.                                                         |
-| `minValue`               | `min-value`                                               | `number`                   | —                           | Commits and steps stay at or above it. A minus sign can be typed only when it is unset or below 0.                                |
-| `maxValue`               | `max-value`                                               | `number`                   | —                           | Commits and steps stay at or below it.                                                                                            |
-| `step`                   | `step`                                                    | `number`                   | —                           | When set, a commit moves to the nearest step, counted from `minValue` (or 0). Steps move by it, else by 1, or 1% for percentages. |
-| `pageStep`               | `page-step`                                               | `number`                   | 10 steps                    | What PageUp and PageDown move by.                                                                                                 |
-| `formatOptions`          | — (property only)                                         | `Intl.NumberFormatOptions` | `{}`                        | How the number is shown and read.                                                                                                 |
-| `locale`                 | `locale`                                                  | `string`                   | the input's language        | A BCP 47 tag, such as `de-DE`.                                                                                                    |
-| `isWheelDisabled`        | `wheel-disabled`                                          | `boolean`                  | `false`                     | Turns off stepping with the wheel.                                                                                                |
-| `isDisabled`             | `disabled`                                                | `boolean`                  | `false`                     | Native `disabled` on the input and the hidden input. The buttons can't step. Marks every part and hides the error.                |
-| `isReadOnly`             | `readonly`                                                | `boolean`                  | `false`                     | Native `readonly` on the input: no key, button or wheel changes the value.                                                        |
-| `isRequired`             | `required`                                                | `boolean`                  | `false`                     | `aria-required="true"` on the input, never the native `required`.                                                                 |
-| `isInvalid`              | `invalid`                                                 | `boolean`                  | `false`                     | `aria-invalid="true"` on the input. Shows, links and announces the error.                                                         |
-| `incrementLabel`         | `increment-label`                                         | `string`                   | "Increase" and the label    | The increment button's whole name.                                                                                                |
-| `decrementLabel`         | `decrement-label`                                         | `string`                   | "Decrease" and the label    | The decrement button's whole name.                                                                                                |
-| `roleDescription`        | `role-description`                                        | `string`                   | `'Number field'` in English | The input's `aria-roledescription`. None in other languages unless you pass one.                                                  |
-| `inputId`                | —                                                         | `string`                   | generated                   | The input's `id` while the input has none of its own.                                                                             |
-| `labelElementType`       | — (read from the label's tag)                             | `string`                   | `'label'`                   | The label's tag; `for` goes on a `label` only.                                                                                    |
-| `labelledBy`             | `labelled-by`                                             | `string`                   | —                           | More ids for the input's `aria-labelledby`, after the label's. They also follow the buttons' default names.                       |
-| `describedBy`            | `described-by`                                            | `string`                   | —                           | More ids for the input's `aria-describedby`, after the description and the error.                                                 |
-| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance       | —                           | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly.                  |
+| Prop                     | Attribute                                                 | Type                       | Default                     | Description                                                                                                                           |
+| ------------------------ | --------------------------------------------------------- | -------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `number \| null`           | `null`                      | The committed number; `null` when empty. Changes come from `valueChange`.                                                             |
+| `minValue`               | `min-value`                                               | `number`                   | —                           | Commits and steps stay at or above it. A minus sign can be typed only when it is unset or below 0.                                    |
+| `maxValue`               | `max-value`                                               | `number`                   | —                           | Commits and steps stay at or below it.                                                                                                |
+| `step`                   | `step`                                                    | `number`                   | —                           | When set, a commit moves to the nearest step, counted from `minValue` (or 0). Steps move by it, else by 1, or 1% for percentages.     |
+| `pageStep`               | `page-step`                                               | `number`                   | 10 steps                    | What PageUp and PageDown move by.                                                                                                     |
+| `formatOptions`          | — (property only)                                         | `Intl.NumberFormatOptions` | `{}`                        | How the number is shown and read.                                                                                                     |
+| `locale`                 | `locale`                                                  | `string`                   | the input's language        | A BCP 47 tag, such as `de-DE`.                                                                                                        |
+| `isWheelDisabled`        | `wheel-disabled`                                          | `boolean`                  | `false`                     | Turns off stepping with the wheel.                                                                                                    |
+| `isDisabled`             | `disabled`                                                | `boolean`                  | `false`                     | Native `disabled` on the input and the hidden input. The buttons can't step. Marks every part and hides the error.                    |
+| `isReadOnly`             | `readonly`                                                | `boolean`                  | `false`                     | Native `readonly` on the input: no key, button or wheel changes the value.                                                            |
+| `isRequired`             | `required`                                                | `boolean`                  | `false`                     | `aria-required="true"` on the input, never the native `required`.                                                                     |
+| `isInvalid`              | `invalid`                                                 | `boolean`                  | —                           | `aria-invalid="true"` on the input. Shows, links and announces the error. Unset in a [Form](./form.mdx), the form's errors decide it. |
+| `incrementLabel`         | `increment-label`                                         | `string`                   | "Increase" and the label    | The increment button's whole name.                                                                                                    |
+| `decrementLabel`         | `decrement-label`                                         | `string`                   | "Decrease" and the label    | The decrement button's whole name.                                                                                                    |
+| `roleDescription`        | `role-description`                                        | `string`                   | `'Number field'` in English | The input's `aria-roledescription`. None in other languages unless you pass one.                                                      |
+| `inputId`                | —                                                         | `string`                   | generated                   | The input's `id` while the input has none of its own.                                                                                 |
+| `labelElementType`       | — (read from the label's tag)                             | `string`                   | `'label'`                   | The label's tag; `for` goes on a `label` only.                                                                                        |
+| `labelledBy`             | `labelled-by`                                             | `string`                   | —                           | More ids for the input's `aria-labelledby`, after the label's. They also follow the buttons' default names.                           |
+| `describedBy`            | `described-by`                                            | `string`                   | —                           | More ids for the input's `aria-describedby`, after the description and the error.                                                     |
+| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance       | —                           | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly.                      |
+
+In a [Form](./form.mdx), NumberField also takes `name`, `form`, `validate`,
+`validationTrigger`, `validationDelay`, `validationMessages`, `dependsOn`,
+`isEqual` and `shouldPreserve`: see [Field props for the
+form](./form.mdx#field-props-for-the-form).
 
 An attribute that isn't a number, and a `step` or `pageStep` of 0 or less,
 count as unset.
@@ -499,10 +507,10 @@ well as UniAria's.
 | `isFocused`      | `boolean`        | The input has focus.                                                               |
 | `isFocusVisible` | `boolean`        | The input has focus from a keyboard or a screen reader.                            |
 | `isHovered`      | `boolean`        | A mouse or pen is over the input.                                                  |
-| `isDisabled`     | `boolean`        | The `isDisabled` prop.                                                             |
-| `isReadOnly`     | `boolean`        | The `isReadOnly` prop.                                                             |
+| `isDisabled`     | `boolean`        | The `isDisabled` prop, or the form's.                                              |
+| `isReadOnly`     | `boolean`        | The `isReadOnly` prop, or the form's.                                              |
 | `isRequired`     | `boolean`        | The `isRequired` prop.                                                             |
-| `isInvalid`      | `boolean`        | The `isInvalid` prop.                                                              |
+| `isInvalid`      | `boolean`        | The `isInvalid` prop, else in a form whether it holds errors.                      |
 | `isErrorShown`   | `boolean`        | The error is shown: invalid and not disabled.                                      |
 
 `canIncrement` and `canDecrement` follow the text as it is typed: typing 100

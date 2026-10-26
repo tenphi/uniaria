@@ -25,6 +25,7 @@ const COMPONENTS = {
   select: 'select',
   autocomplete: 'autocomplete',
   combobox: 'combobox',
+  form: 'form',
 };
 
 /**
@@ -115,13 +116,16 @@ const elements = [
   },
 ];
 
+/** Components `@uniaria/styles` has no file for yet. */
+const UNSTYLED = new Set(['form']);
+
 /**
  * The prebuilt CSS as shipped (not minified), brotlied.
  * @type {Check[]}
  */
 const styles = [
   ...['index', 'layered', 'tokens', 'positioning'],
-  ...Object.keys(COMPONENTS),
+  ...Object.keys(COMPONENTS).filter((subpath) => !UNSTYLED.has(subpath)),
 ].map((file) => ({
   name: `@uniaria/styles/css/${file}.css`,
   path: `packages/styles/dist/css/${file}.css`,

@@ -229,9 +229,12 @@ or without one the value it started with, and keeps your value until you
 accept. A reset cancelled with `preventDefault()` before it reaches the form
 changes nothing.
 
-TextField doesn't validate. Set `isInvalid` from your own checks, for example
-when `focusChange` reports `false`, as the demo does. See
-[Forms](../guide/forms.md).
+In a [Form](./form.mdx), the form holds the value under the field's `name`,
+checks it when focus leaves the input (`isRequired`, the constraints you
+write on the input, such as `type="email"` or `minlength`, and `validate`)
+and shows the first error in the `errorText` part. Without a form, set
+`isInvalid` from your own checks, for example when `focusChange` reports
+`false`, as the demo does. See [Forms](../guide/forms.md).
 
 ## Anatomy
 
@@ -243,6 +246,7 @@ when `focusChange` reports `false`, as the demo does. See
 | `input`       | `input` or `textarea` | UniAria writes Field's `id` (unless it has one), `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`, plus `disabled`, `readonly` and the `value` property. You own `name`, `type`, `placeholder`, `autocomplete` and the other native attributes. |
 | `description` | any                   | As Field's description.                                                                                                                                                                                                                                                  |
 | `error`       | any                   | As Field's error: hidden until `isInvalid`.                                                                                                                                                                                                                              |
+| `errorText`   | any, inside `error`   | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                                                                                                   |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
@@ -254,18 +258,23 @@ props, not on the input: UniAria writes those attributes and removes yours.
 
 ## Props
 
-| Prop                     | Attribute                                                 | Type                 | Default   | Description                                                                                                      |
-| ------------------------ | --------------------------------------------------------- | -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
-| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `string`             | `''`      | The text. Changes come from `valueChange`.                                                                       |
-| `isDisabled`             | `disabled`                                                | `boolean`            | `false`   | Native `disabled` on the input. Marks every part and hides the error.                                            |
-| `isReadOnly`             | `readonly`                                                | `boolean`            | `false`   | Native `readonly`: the input stays focusable and selectable, but can't be edited.                                |
-| `isRequired`             | `required`                                                | `boolean`            | `false`   | `aria-required="true"` on the input, never the native `required`.                                                |
-| `isInvalid`              | `invalid`                                                 | `boolean`            | `false`   | `aria-invalid="true"` on the input. Shows, links and announces the error.                                        |
-| `inputId`                | —                                                         | `string`             | generated | The input's `id` while the input has none of its own.                                                            |
-| `labelElementType`       | — (read from the label's tag)                             | `string`             | `'label'` | The label's tag; `for` goes on a `label` only.                                                                   |
-| `labelledBy`             | `labelled-by`                                             | `string`             | —         | More ids for the input's `aria-labelledby`, after the label's.                                                   |
-| `describedBy`            | `described-by`                                            | `string`             | —         | More ids for the input's `aria-describedby`, after the description and the error.                                |
-| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance | —         | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly. |
+| Prop                     | Attribute                                                 | Type                 | Default   | Description                                                                                                                           |
+| ------------------------ | --------------------------------------------------------- | -------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` / `defaultValue` | `default-value`; the `value` property makes it controlled | `string`             | `''`      | The text. Changes come from `valueChange`.                                                                                            |
+| `isDisabled`             | `disabled`                                                | `boolean`            | `false`   | Native `disabled` on the input. Marks every part and hides the error.                                                                 |
+| `isReadOnly`             | `readonly`                                                | `boolean`            | `false`   | Native `readonly`: the input stays focusable and selectable, but can't be edited.                                                     |
+| `isRequired`             | `required`                                                | `boolean`            | `false`   | `aria-required="true"` on the input, never the native `required`.                                                                     |
+| `isInvalid`              | `invalid`                                                 | `boolean`            | —         | `aria-invalid="true"` on the input. Shows, links and announces the error. Unset in a [Form](./form.mdx), the form's errors decide it. |
+| `inputId`                | —                                                         | `string`             | generated | The input's `id` while the input has none of its own.                                                                                 |
+| `labelElementType`       | — (read from the label's tag)                             | `string`             | `'label'` | The label's tag; `for` goes on a `label` only.                                                                                        |
+| `labelledBy`             | `labelled-by`                                             | `string`             | —         | More ids for the input's `aria-labelledby`, after the label's.                                                                        |
+| `describedBy`            | `described-by`                                            | `string`             | —         | More ids for the input's `aria-describedby`, after the description and the error.                                                     |
+| `tooltip`                | `tooltip` (the tooltip's id)                              | a Tooltip's instance | —         | A [Tooltip](./tooltip.mdx) for the input. Without it, the element links the `<uni-tooltip>` it sits in directly.                      |
+
+In a [Form](./form.mdx), TextField also takes `name`, `form`, `validate`,
+`validationTrigger`, `validationDelay`, `validationMessages`, `dependsOn`,
+`isEqual` and `shouldPreserve`: see [Field props for the
+form](./form.mdx#field-props-for-the-form).
 
 ## Events
 
@@ -289,10 +298,10 @@ Vue, a listener of your own runs beside UniAria's.
 | `isFocused`      | `boolean` | The input has focus.                                                                                        |
 | `isFocusVisible` | `boolean` | The input has focus from a keyboard or a screen reader. Typing after a click doesn't set it.                |
 | `isHovered`      | `boolean` | A mouse or pen is over the input (not the label or the wrapper's padding).                                  |
-| `isDisabled`     | `boolean` | The `isDisabled` prop.                                                                                      |
-| `isReadOnly`     | `boolean` | The `isReadOnly` prop.                                                                                      |
+| `isDisabled`     | `boolean` | The `isDisabled` prop, or the form's.                                                                       |
+| `isReadOnly`     | `boolean` | The `isReadOnly` prop, or the form's.                                                                       |
 | `isRequired`     | `boolean` | The `isRequired` prop.                                                                                      |
-| `isInvalid`      | `boolean` | The `isInvalid` prop.                                                                                       |
+| `isInvalid`      | `boolean` | The `isInvalid` prop, else in a form whether it holds errors.                                               |
 | `isErrorShown`   | `boolean` | The error is shown: invalid and not disabled.                                                               |
 
 Typing, hovering and focusing never render your component again. To render
@@ -371,9 +380,9 @@ TextField handles no keys; the input keeps its native editing.
   TextField; there is no `elementType` to set.
 - **The box focuses the input.** A press on the wrapper outside any control
   focuses the input. React Aria has no such part.
-- **No native validation.** There is no `validate` or
-  `validationBehavior="native"`: pass `isInvalid`. Native attributes such as
-  `pattern` still work if you use the browser's validation yourself.
+- **Validation is the form's.** In a [Form](./form.mdx), `validate` and the
+  native constraints you write on the input are checked, as React Aria's
+  `validate` and native validation do; outside one, pass `isInvalid`.
 - **Form reset** goes back to the `defaultValue` the field has when the form
   resets, as a native input does; React Aria keeps the one it started with. A
   controlled field without `defaultValue` goes back to the value it started

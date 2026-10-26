@@ -15,9 +15,11 @@ description, the error and the required and invalid states when the control
 gets focus. Field renders no control of its own: its `control` part goes on a
 native `<input>`, `<textarea>` or `<select>`, or on a custom widget.
 
-Field shows validation state; it doesn't validate. Your form decides when a
-field is invalid and passes `isInvalid`. See [Forms](../guide/forms.md) for the
-whole picture.
+Field shows validation state. In a [Form](./form.mdx), it also binds its
+field to the form: the form holds the value under the field's `name`, checks
+it and gives Field its errors. Without one, your code decides when a field is
+invalid and passes `isInvalid`. See [Forms](../guide/forms.md) for the whole
+picture.
 
 There is no WAI-ARIA pattern for a field. Field follows the APG practice on
 [names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
@@ -241,6 +243,7 @@ warns. To build your own component on Field, see
 | `control`     | any control: `input`, `textarea`, `select`, or a custom widget | UniAria writes `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`. You own the rest: `name`, `type`, `value`, `disabled`, `readonly`, a custom widget's role. |
 | `description` | any                                                            | UniAria writes its `id` (unless it has one).                                                                                                                                               |
 | `error`       | any                                                            | UniAria writes its `id` (unless it has one), and `hidden` while the error isn't shown. You own the content.                                                                                |
+| `errorText`   | any, inside `error`                                            | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                     |
 
 Every part is optional. Every part keeps an `id` (unless it has one) you give it, and the links
 below use it; UniAria writes an `id` (unless it has one) only on a part that has none. Write it
@@ -268,26 +271,41 @@ The parts link like this:
 
 ## Props
 
-| Prop               | Attribute                     | Type      | Default   | Description                                                                                                                                     |
-| ------------------ | ----------------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `isInvalid`        | `invalid`                     | `boolean` | `false`   | `aria-invalid="true"` on the control, removed when false (never `"false"`). Shows, links and announces the error.                               |
-| `isRequired`       | `required`                    | `boolean` | `false`   | `aria-required="true"` on the control. Never the native `required`, which would start the browser's own validation.                             |
-| `isDisabled`       | `disabled`                    | `boolean` | `false`   | `data-disabled` on every part, and hides the error. It doesn't disable the control: disable a native control yourself.                          |
-| `controlId`        | —                             | `string`  | generated | The control's `id` while the control has none of its own. Server HTML from React or Vue has it, so the label's `for` is right before hydration. |
-| `labelElementType` | — (read from the label's tag) | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                                  |
-| `labelledBy`       | `labelled-by`                 | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                                               |
-| `describedBy`      | `described-by`                | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example.                  |
+| Prop               | Attribute                     | Type      | Default   | Description                                                                                                                                                                   |
+| ------------------ | ----------------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isInvalid`        | `invalid`                     | `boolean` | —         | `aria-invalid="true"` on the control, removed when false (never `"false"`). Shows, links and announces the error. Unset in a [Form](./form.mdx), the form's errors decide it. |
+| `isRequired`       | `required`                    | `boolean` | `false`   | `aria-required="true"` on the control. Never the native `required`, which would start the browser's own validation.                                                           |
+| `isDisabled`       | `disabled`                    | `boolean` | `false`   | `data-disabled` on every part, and hides the error. It doesn't disable the control: disable a native control yourself.                                                        |
+| `controlId`        | —                             | `string`  | generated | The control's `id` while the control has none of its own. Server HTML from React or Vue has it, so the label's `for` is right before hydration.                               |
+| `labelElementType` | — (read from the label's tag) | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                                                                |
+| `labelledBy`       | `labelled-by`                 | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                                                                             |
+| `describedBy`      | `described-by`                | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example.                                                |
+
+In a [Form](./form.mdx), Field also takes `name`, `form`, `validate`,
+`validationTrigger`, `validationDelay`, `validationMessages`, `dependsOn`,
+`isEqual` and `shouldPreserve`: see [Field props for the
+form](./form.mdx#field-props-for-the-form).
 
 Field has no events and handles no keys: the control keeps its own.
 
 ## State
 
-| Field          | Type      | Meaning                                       |
-| -------------- | --------- | --------------------------------------------- |
-| `isInvalid`    | `boolean` | The `isInvalid` prop.                         |
-| `isRequired`   | `boolean` | The `isRequired` prop.                        |
-| `isDisabled`   | `boolean` | The `isDisabled` prop.                        |
-| `isErrorShown` | `boolean` | The error is shown: invalid and not disabled. |
+| Field          | Type                                                    | Meaning                                                               |
+| -------------- | ------------------------------------------------------- | --------------------------------------------------------------------- |
+| `isInvalid`    | `boolean`                                               | The `isInvalid` prop, else in a form whether it holds errors.         |
+| `isRequired`   | `boolean`                                               | The `isRequired` prop.                                                |
+| `isDisabled`   | `boolean`                                               | The `isDisabled` prop, or the form's.                                 |
+| `isErrorShown` | `boolean`                                               | The error is shown: invalid and not disabled.                         |
+| `value`        | `unknown`                                               | The value: the control's, or the form's under its `name` while bound. |
+| `errors`       | `unknown[]`                                             | The form's errors for it; `[]` outside a form.                        |
+| `status`       | `'unvalidated' \| 'validating' \| 'valid' \| 'invalid'` | Its last check in the form.                                           |
+| `isTouched`    | `boolean`                                               | The user changed or left it, in a form.                               |
+| `isDirty`      | `boolean`                                               | Its value differs from its default, in a form.                        |
+| `isBound`      | `boolean`                                               | It is bound to a form.                                                |
+
+Field has one action, `setValue(value)`: a user's change from a custom
+control, which a form takes as typing in a native one. Around a native
+`input`, `select` or `textarea`, Field follows the control's value itself.
 
 You rarely need it: the state attributes below cover styling. In React or
 Vue, select a value with `useBehaviorState` (Vue gives a ref), and the
@@ -353,8 +371,9 @@ invalid border; any other control, such as a group, keeps its own look.
   announces nothing when one appears. Field announces it, as the
   `role="alert"` messages of many design systems do. Lion makes the error a
   live region instead.
-- **No validation.** There is no counterpart to React Aria's `validate`,
-  `validationBehavior="native"` or native constraint messages: pass
+- **Validation is the form's.** In a [Form](./form.mdx), a field checks
+  `isRequired`, the native constraints on its control and `validate`, as
+  React Aria's `validate` and native validation do. Outside one, pass
   `isInvalid` from your form library or your own checks.
 - **No `aria-errormessage`.** VoiceOver and NVDA don't read it, so the error
   goes in `aria-describedby`, as React Aria, Lion and Spectrum Web Components

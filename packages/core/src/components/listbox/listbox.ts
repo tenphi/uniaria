@@ -246,7 +246,8 @@ export const listbox = defineBehavior({
         labelledBy: props.labelledBy(),
         describedBy: props.describedBy(),
       }),
-      { parts: { control: 'list' } },
+      // A list has no form value, so no error of a form's (Form spec).
+      { parts: { control: 'list', errorText: null } },
     );
     const focusWithin = createFocusWithin(ctx, {
       part: 'list',

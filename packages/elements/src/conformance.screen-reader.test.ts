@@ -9,4 +9,4 @@ import { runConformance } from '@uniaria/testing/browser';
 
 import { elementsAdapter } from './conformance-adapter';
 
-runConformance(elementsAdapter, suites, { phase: 6, screenReader: true });
+runConformance(elementsAdapter, suites, { phase: 7, screenReader: true });

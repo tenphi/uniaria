@@ -6,6 +6,9 @@
 
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { connectToggle, createToggle, toggleState } from '../checkbox/toggle';
+import { formFieldProps } from '../field/binding';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import { tooltipLink } from '../tooltip/link';
 
 export const toggleSwitch = defineBehavior({
@@ -18,8 +21,9 @@ export const toggleSwitch = defineBehavior({
     'label',
     'description',
     'error',
+    'errorText',
   ],
-  links: [tooltipLink],
+  links: [tooltipLink, formLink],
   props: {
     // The element adopts the input's checked state: the markup's `checked`,
     // or a click before upgrade.
@@ -32,7 +36,8 @@ export const toggleSwitch = defineBehavior({
     isFocusableWhenDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     // Field's `controlId`: the input's id where it has none of its own.
     inputId: prop<string | undefined>(undefined, {
       attribute: false,
@@ -45,6 +50,12 @@ export const toggleSwitch = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    ...formFieldProps,
+    // The element reads the name from the input's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'input', attribute: 'name' },
+    }),
   },
   events: {
     focusChange: event<boolean>(),

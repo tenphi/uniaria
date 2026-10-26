@@ -4,10 +4,11 @@
  * holds only the stable instance, so it re-renders nothing. A component
  * finds its owner during render, which gives the first render and the server
  * HTML the owner's state. Contexts nest: each component takes the nearest
- * owner of the definition it names.
+ * owner of the definition it names, and of each inherited link key it takes.
  */
 
-import type { AnyDefinition, Instance } from '@uniaria/core';
+import type { AnyDefinition, Instance, LinkKey } from '@uniaria/core';
+import { answers } from '@uniaria/core';
 import type { ReactNode } from 'react';
 import { createContext, createElement, useContext, useMemo } from 'react';
 
@@ -36,13 +37,17 @@ export function OwnerProvider<D extends AnyDefinition>({
   return createElement(OwnerContext.Provider, { value: scope }, children);
 }
 
-/** The nearest owner of `definition` in the context, if any. */
+/**
+ * The nearest owner of `wanted` in the context, if any: an instance of the
+ * owner's definition, or one answering a link key, as a form answers its
+ * fields' inherited link (Form spec, Runtime changes 1).
+ */
 export function findOwner(
   scope: Scope | null,
-  definition: AnyDefinition,
+  wanted: AnyDefinition | LinkKey,
 ): Instance | undefined {
   for (let current = scope; current; current = current.parent) {
-    if (current.instance.definition === definition) return current.instance;
+    if (answers(current.instance.definition, wanted)) return current.instance;
   }
   return undefined;
 }

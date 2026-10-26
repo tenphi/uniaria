@@ -25,7 +25,10 @@ import type {
   PropsSchema,
   SetupContext,
 } from '../../runtime';
+import { readFormProps } from '../field/binding';
+import type { formFieldProps } from '../field/binding';
 import { field } from '../field/field';
+import { formLink } from '../form/link';
 import { linkTooltip } from '../tooltip/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
@@ -41,16 +44,19 @@ type TogglePart =
   | 'indicator'
   | 'label'
   | 'description'
-  | 'error';
+  | 'error'
+  | 'errorText';
+
+type FormSchema = typeof formFieldProps;
 
 /** The props both definitions declare. */
-interface ToggleSchema extends PropsSchema {
+interface ToggleSchema extends PropsSchema, FormSchema {
   readonly isSelected: BindableSpec<boolean>;
   readonly isDisabled: PropSpec<boolean>;
   readonly isFocusableWhenDisabled: PropSpec<boolean>;
   readonly isReadOnly: PropSpec<boolean>;
   readonly isRequired: PropSpec<boolean>;
-  readonly isInvalid: PropSpec<boolean>;
+  readonly isInvalid: PropSpec<boolean | undefined>;
   readonly inputId: PropSpec<string | undefined>;
   readonly labelElementType: PropSpec<string>;
   readonly labelledBy: PropSpec<string | undefined>;
@@ -76,18 +82,20 @@ export interface ToggleOptions {
   readonly external?: () => ExternalSelection | undefined;
   readonly isDisabled?: () => boolean;
   readonly isReadOnly?: () => boolean;
-  readonly isInvalid?: () => boolean;
+  readonly isInvalid?: () => boolean | undefined;
   readonly isRequired?: () => boolean;
   readonly describedBy?: () => string | undefined;
+  /** Whether it binds to a form now: never inside a group, which binds. */
+  readonly isBindable?: () => boolean;
 }
 
 export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const { props } = ctx;
   const external = options.external ?? (() => undefined);
   const isSelected = () => external()?.isSelected() ?? props.isSelected.get();
-  const isDisabled = options.isDisabled ?? props.isDisabled;
-  const isReadOnly = options.isReadOnly ?? props.isReadOnly;
-  const isInvalid = options.isInvalid ?? props.isInvalid;
+  const ownDisabled = options.isDisabled ?? props.isDisabled;
+  const ownReadOnly = options.isReadOnly ?? props.isReadOnly;
+  const ownInvalid = options.isInvalid ?? props.isInvalid;
   const isRequired = options.isRequired ?? props.isRequired;
   const describedBy = options.describedBy ?? props.describedBy;
   // Focusable while disabled: never toggles, and never submitted.
@@ -104,9 +112,10 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
   const labelling = ctx.use(
     field,
     () => ({
-      isInvalid: isInvalid(),
+      isInvalid: ownInvalid(),
       isRequired: isRequired(),
-      isDisabled: isDisabled(),
+      isDisabled: ownDisabled(),
+      isReadOnly: ownReadOnly(),
       controlId: props.inputId(),
       labelElementType: props.labelElementType(),
       labelledBy: references(props.labelledBy(), tooltip.labelledBy()),
@@ -114,6 +123,10 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
     }),
     { parts: { control: 'input' } },
   );
+  // The field's own, or its form's.
+  const isDisabled = labelling.api.isDisabled;
+  const isReadOnly = labelling.api.isReadOnly;
+  const isInvalid = labelling.api.isInvalid;
 
   // The wrapper is the label area that takes clicks, or the root when there
   // is no wrapper; the input counts too, for a control without either.
@@ -129,6 +142,18 @@ export function createToggle(ctx: ToggleContext, options: ToggleOptions = {}) {
 
   ctx.watch(focus.isFocused, (isFocused) => {
     ctx.emit('focusChange', isFocused);
+  });
+
+  // In a form, the form holds the selected state (Form spec, Field binds).
+  labelling.api.bindValue({
+    value: props.isSelected,
+    link: (select) => ctx.link(formLink, select),
+    props: () => readFormProps(props),
+    toField: (value) => value === true,
+    kind: 'checkbox',
+    defaultTrigger: 'change',
+    isFocusWithin: focus.isFocused,
+    ...(options.isBindable ? { isBindable: options.isBindable } : {}),
   });
 
   // Bumped to write the state to the input again when the element and
@@ -344,5 +369,6 @@ export function connectToggle(toggle: Toggle, extras: ToggleExtras = {}) {
     label: { ...withState(parts.label), on: toggle.labelHandlers },
     description: withState(parts.description),
     error: withState(parts.error),
+    errorText: withState(parts.errorText),
   };
 }

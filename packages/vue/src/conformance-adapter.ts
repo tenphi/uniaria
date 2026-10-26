@@ -12,6 +12,7 @@ import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
 import { autocomplete } from '@uniaria/core/autocomplete';
 import { combobox } from '@uniaria/core/combobox';
+import { form } from '@uniaria/core/form';
 import { dialog } from '@uniaria/core/dialog';
 import { field } from '@uniaria/core/field';
 import { listbox } from '@uniaria/core/listbox';
@@ -67,6 +68,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   select,
   autocomplete,
   combobox,
+  form,
 };
 
 /** Form values a consumer writes as starting values in a Vue template. */

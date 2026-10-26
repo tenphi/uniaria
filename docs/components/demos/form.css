@@ -1,0 +1,30 @@
+/* The page's layout. The fields' look is @uniaria/styles' default. */
+:root {
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+}
+body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem;
+  background: var(--uni-surface-color);
+  color: var(--uni-text-color);
+}
+form {
+  display: grid;
+  gap: 1rem;
+  max-inline-size: 20rem;
+}
+h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.submit-error {
+  margin: 0;
+  color: var(--uni-danger-text-color);
+}

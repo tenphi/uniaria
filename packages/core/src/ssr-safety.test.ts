@@ -29,6 +29,7 @@ const entries = {
   '@uniaria/core/select': () => import('./components/select/index'),
   '@uniaria/core/autocomplete': () => import('./components/autocomplete/index'),
   '@uniaria/core/combobox': () => import('./components/combobox/index'),
+  '@uniaria/core/form': () => import('./components/form/index'),
   '@uniaria/core/virtual': () => import('./virtual/index'),
 };
 

@@ -285,9 +285,11 @@ See [State](../guide/state.md).
   mounted with. It leaves `indeterminate` alone, as the browser does.
 - **Disabled.** A disabled checkbox is never submitted, and neither is one
   disabled with `isFocusableWhenDisabled`. A read-only one is submitted.
-- **Validation.** Checkbox never validates. `isRequired` writes
-  `aria-required`, not the native `required`, so the browser shows no
-  message of its own; you decide when it is invalid and set `isInvalid`.
+- **Validation.** In a [Form](./form.mdx), the form holds the selected
+  state under its `name` and checks it on each change: `isRequired` fails
+  while it is off. `isRequired` writes `aria-required`, not the native
+  `required`, so the browser shows no message of its own. Without a form,
+  you decide when it is invalid and set `isInvalid`.
 
 See [Forms](../guide/forms.md).
 
@@ -302,6 +304,7 @@ See [Forms](../guide/forms.md).
 | `label`       | `label` by default, any element through `labelElementType` | Names the checkbox. A `span` inside a `label` wrapper or root.                                                                                                                                                                                                                     |
 | `description` | Any                                                        | Optional. Outside a `label` wrapper or root.                                                                                                                                                                                                                                       |
 | `error`       | Any                                                        | Optional. Outside a `label` wrapper or root. Hidden unless invalid.                                                                                                                                                                                                                |
+| `errorText`   | any, inside `error`                                        | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                                                                                                             |
 
 A part keeps an `id` you give it, and everything that refers to the part
 follows it; UniAria writes an `id` only on a part that has none (see
@@ -320,13 +323,18 @@ You own every part's content. UniAria fills none of them.
 | `isFocusableWhenDisabled` | `focusable-when-disabled` | `boolean`  | `false`   | While disabled, `aria-disabled` instead of `disabled`: focusable, so a tooltip can explain it, but never toggles or submits. |
 | `isReadOnly`              | `readonly`                | `boolean`  | `false`   | `aria-readonly="true"`, and every toggle is cancelled. Focusable and submitted.                                              |
 | `isRequired`              | `required`                | `boolean`  | `false`   | `aria-required="true"`, not the native `required`.                                                                           |
-| `isInvalid`               | `invalid`                 | `boolean`  | `false`   | `aria-invalid="true"`, and shows and announces the error.                                                                    |
+| `isInvalid`               | `invalid`                 | `boolean`  | —         | `aria-invalid="true"`, and shows and announces the error. Unset in a [Form](./form.mdx), the form's errors decide it.        |
 | `value`                   | `value`                   | `string`   | —         | The checkbox's key in a CheckboxGroup's value, written to the input's `value`. Required in a group.                          |
 | `owner`                   | `group` (an id)           | `Instance` | —         | The [CheckboxGroup](./checkbox-group.mdx) of a checkbox that isn't inside it.                                                |
 | `inputId`                 | —                         | `string`   | generated | The input's `id` while the input has none of its own.                                                                        |
 | `labelElementType`        | — (read from the tag)     | `string`   | `'label'` | The label part's tag. `'span'` inside a `label` wrapper or root; only a `label` gets `for`.                                  |
 | `labelledBy`              | `labelled-by`             | `string`   | —         | More ids for `aria-labelledby`, after the label part's.                                                                      |
 | `describedBy`             | `described-by`            | `string`   | —         | More ids for `aria-describedby`, after the description's and the error's.                                                    |
+
+In a [Form](./form.mdx), Checkbox also takes `name`, `form`, `validate`,
+`validationTrigger`, `validationDelay`, `validationMessages`, `dependsOn`,
+`isEqual` and `shouldPreserve`: see [Field props for the
+form](./form.mdx#field-props-for-the-form).
 
 ## Events
 

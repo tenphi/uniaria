@@ -10,7 +10,9 @@ import { createFocusWithin, partEffect, partElement } from '../../dom';
 import type { DomPartProps } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
+import { formFieldProps, readFormProps } from '../field/binding';
 import { field } from '../field/field';
+import { formLink } from '../form/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -25,15 +27,15 @@ const NEXT: Readonly<Record<string, number>> = {
 
 export const radioGroup = defineBehavior({
   name: 'radio-group',
-  parts: ['root', 'label', 'description', 'error'],
+  parts: ['root', 'label', 'description', 'error', 'errorText'],
+  links: [formLink],
   props: {
     value: bindable<string | null>(null, { attribute: false }),
-    // Written to every radio, so they form one native group.
-    name: prop<string | undefined>(undefined, { type: 'string' }),
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a group in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     orientation: prop<Orientation | undefined>(undefined, { type: 'string' }),
     // A group can't be labelled natively. The element reads the label's tag.
     labelElementType: prop('span', {
@@ -42,6 +44,8 @@ export const radioGroup = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    // `name` is written to every radio, so they form one native group.
+    ...formFieldProps,
   },
   events: {
     focusChange: event<boolean>(),
@@ -54,6 +58,7 @@ export const radioGroup = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         labelElementType: props.labelElementType(),
         labelledBy: props.labelledBy(),
         describedBy: props.describedBy(),
@@ -62,7 +67,7 @@ export const radioGroup = defineBehavior({
     );
     const focusWithin = createFocusWithin(ctx, {
       part: 'root',
-      isDisabled: props.isDisabled,
+      isDisabled: labelling.api.isDisabled,
     });
     ctx.watch(focusWithin.isFocusWithin, (isFocusWithin) => {
       ctx.emit('focusChange', isFocusWithin);
@@ -71,7 +76,15 @@ export const radioGroup = defineBehavior({
     // From the generated id, read before any element attaches: an id the
     // consumer gives the root doesn't rename the radios' form field.
     const generatedName = ctx.ids.root;
-    const name = () => props.name() ?? generatedName;
+    const name = () => labelling.api.submitAttrs().name ?? generatedName;
+    const groupRadios = () => {
+      const current = name();
+      return Array.from(
+        partElement(ctx, 'root')?.querySelectorAll<HTMLInputElement>(
+          'input[type="radio"]',
+        ) ?? [],
+      ).filter((radio) => radio.name === current);
+    };
 
     // Until the first change, an uncontrolled group with no default takes
     // the value of the radio that was checked when it linked: the element's
@@ -139,6 +152,24 @@ export const radioGroup = defineBehavior({
         current === item || current === null || !items.get().includes(current)
       );
     };
+
+    // In a form, the form holds the value (Form spec, Field binds).
+    labelling.api.bindValue({
+      value: props.value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toField: (next) => (typeof next === 'string' ? next : null),
+      kind: 'radio',
+      defaultTrigger: 'change',
+      isFocusWithin: focusWithin.isFocusWithin,
+      // Its tab stop: the checked radio, else the first enabled one.
+      focusTarget: () => {
+        const enabled = groupRadios().filter((radio) => !radio.disabled);
+        return enabled.find((radio) => radio.checked) ?? enabled[0] ?? null;
+      },
+      submitControls: groupRadios,
+      isControlSubmitted: false,
+    });
 
     const adopt = (item: string) => {
       if (
@@ -256,6 +287,8 @@ export const radioGroup = defineBehavior({
       isFocusVisible: focusWithin.isFocusVisible,
       value,
       name,
+      /** `name` and `form` for each radio. */
+      submitAttrs: () => ({ ...labelling.api.submitAttrs(), name: name() }),
       isSelected: (item: string) => value() === item,
       select,
       adopt,
@@ -280,18 +313,18 @@ export const radioGroup = defineBehavior({
   expose({ props, api }) {
     return {
       value: api.value(),
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
     };
   },
   connect({ props, api }) {
     const { root, control, ...parts } = api.field.connect();
-    const isReadOnly = props.isReadOnly();
+    const isReadOnly = api.field.api.isReadOnly();
     const orientation = props.orientation();
     // Every part, so the box around the group and its label can be styled.
     const state = {
@@ -310,7 +343,7 @@ export const radioGroup = defineBehavior({
         ...control.attrs,
         ...state,
         role: 'radiogroup',
-        'aria-disabled': props.isDisabled() ? 'true' : undefined,
+        'aria-disabled': api.field.api.isDisabled() ? 'true' : undefined,
         'aria-readonly': isReadOnly ? 'true' : undefined,
         'aria-orientation': orientation,
       },
@@ -323,6 +356,7 @@ export const radioGroup = defineBehavior({
       label: withState({ attrs: { ...parts.label.attrs, for: undefined } }),
       description: withState(parts.description),
       error: withState(parts.error),
+      errorText: withState(parts.errorText),
     };
   },
 });

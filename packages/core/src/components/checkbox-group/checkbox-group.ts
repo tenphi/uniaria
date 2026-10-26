@@ -6,10 +6,12 @@
  * read-only modes, and its required and invalid states and error.
  */
 
-import { createFocusWithin, partEffect } from '../../dom';
+import { createFocusWithin, partEffect, partElement } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
+import { formFieldProps, readFormProps } from '../field/binding';
 import { field } from '../field/field';
+import { formLink } from '../form/link';
 
 const flag = (isOn: boolean): string | undefined => (isOn ? '' : undefined);
 
@@ -18,16 +20,15 @@ const isSame = (a: readonly string[], b: readonly string[]): boolean =>
 
 export const checkboxGroup = defineBehavior({
   name: 'checkbox-group',
-  parts: ['root', 'label', 'description', 'error'],
+  parts: ['root', 'label', 'description', 'error', 'errorText'],
+  links: [formLink],
   props: {
     value: bindable<readonly string[]>([], { attribute: false }),
-    // Written to every checkbox while set; unlike RadioGroup, none is
-    // generated, since checkboxes don't need a shared name.
-    name: prop<string | undefined>(undefined, { type: 'string' }),
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a group in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     // A group can't be labelled natively. The element reads the label's tag.
     labelElementType: prop('span', {
       attribute: false,
@@ -35,6 +36,9 @@ export const checkboxGroup = defineBehavior({
     }),
     labelledBy: prop<string | undefined>(undefined, { type: 'string' }),
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
+    // `name` is written to every checkbox while set; unlike RadioGroup,
+    // none is generated, since checkboxes don't need a shared name.
+    ...formFieldProps,
   },
   events: {
     focusChange: event<boolean>(),
@@ -47,6 +51,7 @@ export const checkboxGroup = defineBehavior({
         isInvalid: props.isInvalid(),
         isRequired: props.isRequired(),
         isDisabled: props.isDisabled(),
+        isReadOnly: props.isReadOnly(),
         labelElementType: props.labelElementType(),
         labelledBy: props.labelledBy(),
         describedBy: props.describedBy(),
@@ -55,7 +60,28 @@ export const checkboxGroup = defineBehavior({
     );
     const focusWithin = createFocusWithin(ctx, {
       part: 'root',
-      isDisabled: props.isDisabled,
+      isDisabled: labelling.api.isDisabled,
+    });
+    const checkboxes = () =>
+      Array.from(
+        partElement(ctx, 'root')?.querySelectorAll<HTMLInputElement>(
+          'input[type="checkbox"]',
+        ) ?? [],
+      );
+    // In a form, the form holds the value (Form spec, Field binds).
+    labelling.api.bindValue({
+      value: props.value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toField: (value) =>
+        Array.isArray(value) ? (value as readonly string[]) : [],
+      kind: 'checkbox',
+      defaultTrigger: 'change',
+      isFocusWithin: focusWithin.isFocusWithin,
+      focusTarget: () =>
+        checkboxes().find((checkbox) => !checkbox.disabled) ?? null,
+      submitControls: checkboxes,
+      isControlSubmitted: false,
     });
     ctx.watch(focusWithin.isFocusWithin, (isFocusWithin) => {
       ctx.emit('focusChange', isFocusWithin);
@@ -135,7 +161,8 @@ export const checkboxGroup = defineBehavior({
       field: labelling,
       isFocusWithin: focusWithin.isFocusWithin,
       isFocusVisible: focusWithin.isFocusVisible,
-      name: props.name,
+      /** `name` and `form` for each checkbox. */
+      submitAttrs: labelling.api.submitAttrs,
       value,
       isSelected: (item: string) => value().includes(item),
       setSelected,
@@ -152,21 +179,21 @@ export const checkboxGroup = defineBehavior({
   expose({ props, api }) {
     return {
       value: api.value(),
-      isDisabled: props.isDisabled(),
-      isReadOnly: props.isReadOnly(),
+      isDisabled: api.field.api.isDisabled(),
+      isReadOnly: api.field.api.isReadOnly(),
       isRequired: props.isRequired(),
-      isInvalid: props.isInvalid(),
-      isErrorShown: api.field.state().isErrorShown,
+      isInvalid: api.field.api.isInvalid(),
+      isErrorShown: api.field.api.isErrorShown(),
       isFocusWithin: api.isFocusWithin(),
       isFocusVisible: api.isFocusVisible(),
     };
   },
-  connect({ props, api }) {
+  connect({ api }) {
     const { root, control, ...parts } = api.field.connect();
-    const isDisabled = props.isDisabled();
+    const isDisabled = api.field.api.isDisabled();
     // Every part, so the box around the group and its label can be styled.
     const state = {
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(api.field.api.isReadOnly()),
       'data-focus-within': flag(api.isFocusWithin()),
       'data-focus-visible': flag(api.isFocusVisible()),
     };
@@ -192,6 +219,7 @@ export const checkboxGroup = defineBehavior({
       label: withState({ attrs: { ...parts.label.attrs, for: undefined } }),
       description: withState(parts.description),
       error: withState(parts.error),
+      errorText: withState(parts.errorText),
     };
   },
 });

@@ -1,11 +1,12 @@
 ---
 title: Forms
-description: Labels, descriptions and errors, form submission, reset and validation state.
+description: Labels, descriptions and errors, the Form that holds and checks the values, submission and reset.
 ---
 
 UniAria's form controls are native controls underneath, so they submit, reset
 and autofill the way HTML does. UniAria adds the labelling, the states and
-the keyboard behavior; validation itself stays with you.
+the keyboard behavior, and [Form](../components/form.mdx) holds the values,
+checks them and shows the errors. Without a Form, validation stays with you.
 
 ## Labels, descriptions and errors
 
@@ -34,10 +35,35 @@ and invalid states when the control gets focus.
 Field also works around any control of your own, native or custom: see the
 [Field page](../components/field.mdx).
 
-## Validation state
+## Validation
 
-UniAria shows validation state; it doesn't validate. Decide when a value is
-invalid (on blur, on submit, from the server) and pass `isInvalid`:
+Put the fields in a [Form](../components/form.mdx) and give each a `name`.
+The form holds their values, checks them on each field's trigger, shows
+their errors and focuses the first invalid field after a failed submit:
+
+```html
+<uni-form>
+  <form data-uni="form" action="/signup" method="post" novalidate>
+    <uni-text-field required>
+      <label data-element="Label">Email</label>
+      <input data-element="Input" name="email" type="email" />
+      <p data-element="Error"><span data-element="ErrorText"></span></p>
+    </uni-text-field>
+    <button type="submit">Sign up</button>
+  </form>
+</uni-form>
+```
+
+A field checks `isRequired`, the native constraints you write on its input
+(`type="email"`, `pattern`, `minlength`, …) and its own `validate`. A text
+field checks when focus leaves it, a checkbox or a selection when it
+changes, and every field on submit. The field shows the first error in its
+`errorText` part. See [Form](../components/form.mdx#checks).
+
+### Without a Form
+
+Fields show validation state from `isInvalid` as well. Decide when a value is
+invalid (on blur, on submit, from the server) and pass it:
 
 ```tsx
 const email = useBehavior(textField, {
@@ -46,11 +72,18 @@ const email = useBehavior(textField, {
 });
 ```
 
+Inside a form, `isInvalid` you set wins over the form's errors.
+
+### What invalid looks and sounds like
+
 While invalid, the control gets `aria-invalid="true"`, every part gets
-`data-invalid`, and the error part is shown and linked. When the error
-appears, its text is announced, as `role="alert"` would, and a change to the
-text while shown is announced too. An error already shown on load isn't
-announced; it is read when the control gets focus.
+`data-invalid`, and the error part is shown and linked. Outside a form, when
+the error appears its text is announced, as `role="alert"` would, and a
+change to the text while shown is announced too. An error already shown on
+load isn't announced; it is read when the control gets focus. In a form, the
+form decides what is said: an error shown when focus leaves a field is
+announced with the field's label, and a failed submit moves focus to the
+first error instead.
 
 `isRequired` sets `aria-required="true"` and `data-required`, but not the
 native `required` attribute, so the browser's own validation bubbles never
@@ -75,8 +108,12 @@ and links the group's error to each.
 | Listbox       | Nothing: a listbox has no native form value. Read its `value` state.                                          |
 | Autocomplete  | The input's text, under its own `name` if you give it one. The selection isn't submitted.                     |
 
-Put `name`, `form` and `autocomplete` on those parts yourself; UniAria owns the
-value. A checkbox or switch disabled with `isFocusableWhenDisabled` stays out of
+Give a field its `name` (or put `name` on those parts; custom elements read it
+from there), and UniAria writes it on the control the field submits through.
+Put `autocomplete` on them yourself; UniAria owns the value. In a
+[Form](../components/form.mdx), a field outside the `<form>` element gets the
+form's id in its control's `form` attribute, so the native post includes it,
+and a form without `handleSubmit` checks its fields before it posts. A checkbox or switch disabled with `isFocusableWhenDisabled` stays out of
 the form's data, as a natively disabled one does.
 
 Enter submits a form natively from a text input (a text area adds a line), a
@@ -86,7 +123,10 @@ option highlighted, as it would without UniAria.
 
 ## Reset
 
-On the form's `reset` event, each control goes back to its default, as a
+In a [Form](../components/form.mdx), a reset puts every value back to the
+form's default for its name and clears the errors; the fields write their
+controls again. Outside a Form, on the `<form>`'s `reset` event, each control
+goes back to its default, as a
 native control goes back to its `value` or `checked` attribute. An
 uncontrolled control forgets the user's changes and follows
 `default<Value>` again, as it is at that moment: a default set after the

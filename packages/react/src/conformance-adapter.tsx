@@ -12,6 +12,7 @@ import { checkbox } from '@uniaria/core/checkbox';
 import { checkboxGroup } from '@uniaria/core/checkbox-group';
 import { autocomplete } from '@uniaria/core/autocomplete';
 import { combobox } from '@uniaria/core/combobox';
+import { form } from '@uniaria/core/form';
 import { dialog } from '@uniaria/core/dialog';
 import { popover } from '@uniaria/core/popover';
 import { radio } from '@uniaria/core/radio';
@@ -62,6 +63,7 @@ const definitions: Readonly<Record<string, AnyDefinition>> = {
   select,
   autocomplete,
   combobox,
+  form,
 };
 
 /** Form values a consumer would pass as defaults in React. */

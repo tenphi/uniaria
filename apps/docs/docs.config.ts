@@ -60,6 +60,7 @@ export default defineDocsConfig({
           {
             label: 'Forms',
             items: [
+              '/components/form',
               '/components/field',
               '/components/text-field',
               '/components/number-field',

@@ -25,6 +25,9 @@ import type { DomHandlers, DomPartProps, PositionArea } from '../../dom';
 import type { PartProps } from '../../runtime';
 import { bindable, defineBehavior, event, prop } from '../../runtime';
 import { autocomplete } from '../autocomplete/autocomplete';
+import { formFieldProps, readFormProps } from '../field/binding';
+import { formLink } from '../form/link';
+import type { Name } from '../form/values';
 import type {
   AutocompleteFilter,
   AutocompletePopupTrigger,
@@ -65,6 +68,7 @@ export const combobox = defineBehavior({
     'empty',
     'description',
     'error',
+    'errorText',
     'hiddenInput',
   ],
   itemParts: [
@@ -76,7 +80,7 @@ export const combobox = defineBehavior({
     'groupLabel',
   ],
   // One tooltip for every option (items spec), which Autocomplete drives.
-  links: [optionTooltipLink],
+  links: [optionTooltipLink, formLink],
   props: {
     // Listbox's. The element reads them from its option and group parts
     // while the consumer sets none.
@@ -114,7 +118,8 @@ export const combobox = defineBehavior({
     isDisabled: prop(false),
     isReadOnly: prop(false, { attribute: 'readonly' }),
     isRequired: prop(false),
-    isInvalid: prop(false),
+    // Unset, a field in a form shows the form's state.
+    isInvalid: prop<boolean | undefined>(undefined, { type: 'boolean' }),
     shouldFocusWrap: prop(false),
     positionArea: prop<PositionArea>('block-end span-inline-end'),
     positionTryFallbacks: prop('flip-block, flip-inline'),
@@ -143,6 +148,12 @@ export const combobox = defineBehavior({
     describedBy: prop<string | undefined>(undefined, { type: 'string' }),
     // Listbox's virtualization, forwarded to the list.
     ...virtualProps,
+    ...formFieldProps,
+    // The element reads the name from the hidden input's (Form spec).
+    name: prop<Name | undefined>(undefined, {
+      type: 'string',
+      adopt: { part: 'hiddenInput', attribute: 'name' },
+    }),
   },
   // The only members of setup()'s result consumers may call (spec,
   // Actions).
@@ -155,6 +166,14 @@ export const combobox = defineBehavior({
     const { props } = ctx;
     const value = props.value;
     const isOpen = props.isOpen;
+    // The field's own, or its form's, once Autocomplete is composed below.
+    // Popover takes it as a getter: a composed definition runs its props on
+    // every prop read, and these read Field's.
+    const formed: {
+      field?: { isDisabled(): boolean; isReadOnly(): boolean };
+    } = {};
+    const isDisabled = () => formed.field?.isDisabled() ?? props.isDisabled();
+    const isReadOnly = () => formed.field?.isReadOnly() ?? props.isReadOnly();
     const inputElement = () =>
       partElement(ctx, 'input') as HTMLInputElement | null;
 
@@ -168,7 +187,9 @@ export const combobox = defineBehavior({
         isNonModal: true,
         shouldFocusOnOpen: false,
         shouldRestoreFocus: false,
-        isDisabled: props.isDisabled(),
+        get isDisabled() {
+          return isDisabled();
+        },
         // The input is Popover's trigger; a press on the button toggles the
         // list through the button.
         shouldCloseOnInteractOutside: (target: Element) =>
@@ -266,6 +287,34 @@ export const combobox = defineBehavior({
       { parts: { popup: 'popover' }, links: [optionTooltipLink] },
     );
     composed.options = search.api.collection;
+    formed.field = search.api.field.api;
+
+    // In a form, the form holds the value: the key, or the custom text
+    // (Form spec, Fields in a form). The keys are kept while the form's
+    // value is the same, so reading them changes nothing.
+    let fromForm: unknown;
+    let asKeys: readonly string[] = [];
+    search.api.field.api.bindValue({
+      value,
+      link: (select) => ctx.link(formLink, select),
+      props: () => readFormProps(props),
+      toForm: (keys) => keys[0] ?? null,
+      toField: (next) => {
+        if (Object.is(next, fromForm)) return asKeys;
+        fromForm = next;
+        asKeys = typeof next === 'string' ? [next] : [];
+        return asKeys;
+      },
+      kind: 'text',
+      defaultTrigger: 'blur',
+      isFocusWithin: () => search.api.isFocusWithin(),
+      focusTarget: inputElement,
+      submitControls: () => {
+        const hidden = partElement(ctx, 'hiddenInput');
+        return hidden ? [hidden] : [];
+      },
+      isControlSubmitted: false,
+    });
 
     /** The text on screen, the draft included. */
     const text = () => search.api.text();
@@ -308,7 +357,7 @@ export const combobox = defineBehavior({
       const typed = text();
       const wasFiltering = search.api.isFiltering();
       if (!wasFiltering && typed === settledText()) return;
-      if (props.isReadOnly() || props.isDisabled()) return revert();
+      if (isReadOnly() || isDisabled()) return revert();
       const query = typed.trim();
       let next: readonly string[] | null = null;
       if (query === '') {
@@ -342,7 +391,7 @@ export const combobox = defineBehavior({
     // Keyboard), after its own, skipping what it skips.
     const onInputKeyDown = (keyEvent: KeyboardEvent) => {
       if (keyEvent.defaultPrevented || isComposing(keyEvent)) return;
-      if (props.isDisabled() || keyEvent.ctrlKey || keyEvent.metaKey) return;
+      if (isDisabled() || keyEvent.ctrlKey || keyEvent.metaKey) return;
       if (keyEvent.altKey) return;
       switch (keyEvent.key) {
         case 'Enter':
@@ -476,15 +525,18 @@ export const combobox = defineBehavior({
     const parts = api.search.connect();
     const layerParts = api.layer.connect();
     const searchState = api.search.state();
-    const isDisabled = props.isDisabled();
+    const isDisabled = searchState.isDisabled;
     const state = {
       'data-open': flag(props.isOpen.get()),
       'data-entering': flag(api.layer.api.isEntering()),
       'data-exiting': flag(api.layer.api.isExiting()),
       'data-disabled': flag(isDisabled),
-      'data-readonly': flag(props.isReadOnly()),
+      'data-readonly': flag(searchState.isReadOnly),
       'data-required': flag(props.isRequired()),
-      'data-invalid': flag(props.isInvalid()),
+      'data-invalid': flag(searchState.isInvalid),
+      'data-validating': flag(
+        api.search.api.field.api.status() === 'validating',
+      ),
       'data-empty': flag(searchState.isEmpty),
       'data-focus-within': flag(searchState.isFocusWithin),
       'data-focus-visible': flag(searchState.isFocusVisible),
@@ -532,8 +584,13 @@ export const combobox = defineBehavior({
       empty: withState(parts.empty),
       description: withState(parts.description),
       error: withState(parts.error),
+      errorText: withState(parts.errorText),
       hiddenInput: {
-        attrs: { type: 'hidden', disabled: flag(isDisabled) },
+        attrs: {
+          type: 'hidden',
+          disabled: flag(isDisabled),
+          ...api.search.api.field.api.submitAttrs(),
+        },
         properties: { value: value ?? '' },
       },
     };

@@ -40,7 +40,9 @@ Not part of NumberField:
 - **Validation messages.** As in Field: NumberField shows `isInvalid`, the form
   decides it. React Aria's `commitBehavior: 'validate'` (out-of-range values
   kept and reported through a hidden `type="number"` input's native messages)
-  is left out: UI Kit never uses it (Resolved questions 11).
+  is left out: UI Kit never uses it (Resolved questions 11). Inside a Form,
+  the form checks `minValue`, `maxValue` and `step` and decides it (Form
+  spec, Changes to approved specs).
 - **Scrubbing** (Zag's drag-to-change handle with pointer lock): pointer lock
   is not Baseline. It can come later as its own part.
 - **Formatting while typing** (grouping digits as they are typed): no reference

@@ -4,10 +4,12 @@
  * content included, through `provide()`, which holds only the stable
  * instance and renders nothing. A component finds its owner during setup,
  * so the first render and the server HTML have the owner's state. Scopes
- * nest: each component takes the nearest owner of the definition it names.
+ * nest: each component takes the nearest owner of the definition it names,
+ * and of each inherited link key it takes.
  */
 
-import type { AnyDefinition, Instance } from '@uniaria/core';
+import type { AnyDefinition, Instance, LinkKey } from '@uniaria/core';
+import { answers } from '@uniaria/core';
 import type { InjectionKey } from 'vue';
 import { getCurrentInstance, inject, provide } from 'vue';
 
@@ -44,13 +46,17 @@ export function provideScope(instance: Instance, parent: Scope | null): void {
   provide(OWNER_SCOPE, scope);
 }
 
-/** The nearest owner of `definition` in the scope, if any. */
+/**
+ * The nearest owner of `wanted` in the scope, if any: an instance of the
+ * owner's definition, or one answering a link key, as a form answers its
+ * fields' inherited link (Form spec, Runtime changes 1).
+ */
 export function findOwner(
   scope: Scope | null,
-  definition: AnyDefinition,
+  wanted: AnyDefinition | LinkKey,
 ): Instance | undefined {
   for (let current = scope; current; current = current.parent) {
-    if (current.instance.definition === definition) return current.instance;
+    if (answers(current.instance.definition, wanted)) return current.instance;
   }
   return undefined;
 }

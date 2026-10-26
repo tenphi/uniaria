@@ -15,6 +15,7 @@ import type {
   ApiOf,
   Bindable,
   BindableKeyOf,
+  BindableSource,
   Cell,
   ConnectedParts,
   Env,
@@ -30,7 +31,7 @@ import type {
   StateOf,
   ViewContext,
 } from './define';
-import { partMarker } from './define';
+import { linkTarget, partMarker } from './define';
 import type { BindableSpec, EventsSchema, PropsSchema } from './schema';
 import { callbackName } from './schema';
 import { createStore } from './store';
@@ -277,8 +278,16 @@ export function createInstance<D extends AnyDefinition>(
   let linked: Instance | undefined;
   const currentOwner = () => (props.owner as Instance | undefined) ?? linked;
   const linkedByKey = new Map<LinkKey, Instance>();
-  const currentLink = (key: LinkKey) =>
-    (props[key.name] as Instance | undefined) ?? linkedByKey.get(key);
+  // The key's prop wins: an instance or a handle, and `null` for none
+  // (Form spec, Runtime changes 4).
+  const currentLink = (key: LinkKey) => {
+    const own = linkTarget(props[key.name]);
+    return own === null ? undefined : (own ?? linkedByKey.get(key));
+  };
+  // What a definition follows of each linked instance (`ctx.link(key,
+  // select)`), and what it last selected.
+  const selectors = new Map<LinkKey, (api: unknown) => unknown>();
+  const selected = new Map<LinkKey, unknown>();
   // One handle per owner, so `ctx.owner()` is stable while it is the same.
   const handles = new WeakMap<Instance, Owned<AnyDefinition>>();
   const handleOf = (owner: Instance): Owned<AnyDefinition> => {
@@ -295,8 +304,33 @@ export function createInstance<D extends AnyDefinition>(
   };
   // While started, the owner's and linked instances' changes count as this
   // instance's, so the binder re-runs connect() and watchers see them;
-  // nothing renders.
+  // nothing renders. A key followed through a selector counts only the
+  // changes that change what it selects.
   const following = new Map<Instance, () => void>();
+  /** The keys `target` is linked by now; none when it is the owner. */
+  const keysOf = (target: Instance): LinkKey[] | null => {
+    if (currentOwner() === target) return null;
+    return (definition.links ?? []).filter(
+      (key: LinkKey) => currentLink(key) === target,
+    );
+  };
+  const onLinkedChange = (target: Instance) => {
+    const keys = keysOf(target);
+    if (keys === null) return changed();
+    let hasChanged = false;
+    for (const key of keys) {
+      const select = selectors.get(key);
+      if (!select) {
+        hasChanged = true;
+        continue;
+      }
+      const value = select(target.api);
+      if (selected.has(key) && Object.is(selected.get(key), value)) continue;
+      selected.set(key, value);
+      hasChanged = true;
+    }
+    if (hasChanged) changed();
+  };
   const follow = () => {
     const next = new Set<Instance>();
     if (isStarted) {
@@ -316,9 +350,13 @@ export function createInstance<D extends AnyDefinition>(
       if (!following.has(target)) {
         following.set(
           target,
-          target.subscribe(() => changed()),
+          target.subscribe(() => onLinkedChange(target)),
         );
       }
+    }
+    // A new link, or none, is selected afresh.
+    for (const key of Array.from(selected.keys())) {
+      if (!currentLink(key)) selected.delete(key);
     }
   };
   const leftOutParts: LeftOutPart[] = [];
@@ -422,19 +460,32 @@ export function createInstance<D extends AnyDefinition>(
       let isDirty = false;
       let inner: unknown;
       const onChange = callbackName(info.changeEvent!);
-      const isControlled = () => readProps()[key] !== undefined;
+      // A source the value is bound to (Form spec, Runtime changes 2).
+      let source: (() => BindableSource<unknown> | null) | undefined;
+      const bound = () => source?.() ?? null;
+      const isControlled = () =>
+        bound() !== null || readProps()[key] !== undefined;
       const get = () => {
-        if (isControlled()) return readProps()[key];
+        const target = bound();
+        if (target) return target.get();
+        if (readProps()[key] !== undefined) return readProps()[key];
         if (isDirty) return inner;
         return readProps()[defaultKey] ?? defaultValue;
       };
       readers[key] = {
         get,
         isControlled,
+        getDefault: () => readProps()[defaultKey] ?? undefined,
+        bind(next) {
+          source = next;
+          changed();
+        },
         set(value) {
           if (Object.is(value, get())) return;
           store.batch(() => {
-            if (!isControlled()) {
+            const target = bound();
+            if (target) target.set(value);
+            else if (readProps()[key] === undefined) {
               inner = value;
               isDirty = true;
               changed();
@@ -448,6 +499,8 @@ export function createInstance<D extends AnyDefinition>(
           isEqual = Object.is,
           beforeReport,
         }: ResetOptions<unknown> = {}) {
+          // A bound value is its source's, which resets it.
+          if (bound()) return get();
           const isControlledNow = isControlled();
           // A composed definition's controlled value is its composer's, and
           // the composer resets it (composition spec, Runtime changes 4).
@@ -541,12 +594,13 @@ export function createInstance<D extends AnyDefinition>(
           ? (handleOf(owner) as never)
           : undefined;
       },
-      link(key) {
+      link(key, select) {
         // Links are the instance's own. A composed definition, such as the
         // Button in a Popover's trigger, reads only those passed on to it,
         // and a link passed on is no longer the composer's (composition
         // spec, Runtime changes 3).
         if (!links.has(key)) return undefined;
+        if (select) selectors.set(key, select as (api: unknown) => unknown);
         const target = currentLink(key);
         return target?.definition.provides?.includes(key)
           ? (handleOf(target) as never)

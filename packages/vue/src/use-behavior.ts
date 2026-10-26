@@ -12,6 +12,7 @@ import type {
   AnyDefinition,
   Instance,
   ItemPartOf,
+  LinkKey,
   OwnerLink,
   PartOf,
   PartProps,
@@ -350,10 +351,54 @@ export function useBehavior<D extends AnyDefinition>(
     ? findOwner(scope, ownerLink.definition)
     : undefined;
   if (scopeOwner) instance.link(scopeOwner);
+  // Inherited links (a field's form) the same way, unless the key's prop
+  // gives the instance, or `null` for none (Form spec, Runtime changes 1).
+  const inherited = ((definition.links ?? []) as readonly LinkKey[]).filter(
+    (key) => key.isInherited,
+  );
+  const keysInScope = new Set<LinkKey>();
+  for (const key of inherited) {
+    const found = findOwner(scope, key);
+    if (found) {
+      keysInScope.add(key);
+      instance.link(found, key);
+    }
+  }
   provideScope(instance as unknown as Instance, scope);
 
   let isRunning = false;
   let lookup: (() => void) | null = null;
+  /** Inherited links looked up in the DOM, by key. */
+  const keyLookups = new Map<LinkKey, () => void>();
+  /** Looks up the inherited links neither a prop nor a provide gives. */
+  const updateKeyLookups = () => {
+    const props = instance.getProps() as Readonly<Record<string, unknown>>;
+    const element = definition.parts
+      .map((part: string) => instance.element(part as PartOf<D>))
+      .find(Boolean) as Element | undefined;
+    for (const key of inherited) {
+      const isWanted =
+        isRunning &&
+        element !== undefined &&
+        !keysInScope.has(key) &&
+        props[key.name] === undefined;
+      if (isWanted === keyLookups.has(key)) continue;
+      if (!isWanted) {
+        keyLookups.get(key)!();
+        keyLookups.delete(key);
+        continue;
+      }
+      const forget = requestOwner(element, key, (target) => {
+        instance.link(target, key);
+        instance.sync();
+      });
+      keyLookups.set(key, () => {
+        forget();
+        instance.link(undefined, key);
+        instance.sync();
+      });
+    }
+  };
   const isLinkedByDom = () =>
     ownerLink !== undefined &&
     scopeOwner === undefined &&
@@ -386,6 +431,7 @@ export function useBehavior<D extends AnyDefinition>(
     flushAttaching(internal);
     instance.sync();
     if (isRunning) updateLookup();
+    updateKeyLookups();
   };
   watch(
     read,
@@ -424,11 +470,13 @@ export function useBehavior<D extends AnyDefinition>(
       : [];
     isRunning = true;
     updateLookup();
+    updateKeyLookups();
     instance.sync();
     stop = () => {
       isRunning = false;
       lookup?.();
       lookup = null;
+      updateKeyLookups();
       for (const forget of unprovide) forget();
       binder.stop();
       instance.stop();
