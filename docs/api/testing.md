@@ -404,10 +404,15 @@ locally.
 | `name`               | `'voiceover'` or `'nvda'`.                                                                                             |
 | `startFrom(element)` | Clicks `element` (a text field before the component), waits for the speech, and forgets it: start from there with Tab. |
 | `press(key)`         | Presses a key through the screen reader and waits until it stops speaking.                                             |
-| `type(text)`         | Types text, a key per character.                                                                                       |
+| `type(text)`         | Types text, a key per character, and waits after each until the screen reader stops speaking.                          |
 | `next()`             | Moves the screen reader's own cursor to the next item.                                                                 |
 | `readFocus()`        | What the screen reader holds for the focused element, a check that holds when the speech on arrival is cut short.      |
 | `spoken()`           | What it said since `startFrom` or the last call, each key's phrases joined with `/`.                                   |
+
+`spoken()` holds everything a key made the screen reader say, a live region
+read after the key's own speech included. VoiceOver runs with its hints
+("Speak instructions for using the item") off, so what it says is the page,
+not how to use VoiceOver.
 
 The screen readers word things differently (`check box` in NVDA, `checkbox` in
 VoiceOver), so match what you need to hear, not whole phrases:

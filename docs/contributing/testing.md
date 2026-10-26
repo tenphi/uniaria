@@ -242,11 +242,13 @@ that runs them with `{ phase: 5, screenReader: true }`.
 - **How.** Each job prepares the runner with `@guidepup/setup` (permissions
   and settings on macOS, NVDA's configuration on Windows), installs the
   screen reader, then runs `pnpm test:screen-readers` with
-  `UNIARIA_SCREEN_READERS` set. The project runs one file at a time, retries
-  a failed test once, and gives each test two minutes.
+  `UNIARIA_SCREEN_READERS` set, with VoiceOver's hints turned off. The
+  project runs one file at a time, retries a failed test once, and gives
+  each test two minutes.
 - **What a scenario can do.** `screenReader.startFrom(element)` clicks an
   element before the component and forgets what was said; `press(key)` and
-  `type(text)` go through the operating system, as a user's keys would;
+  `type(text)` go through the operating system, as a user's keys would, and
+  wait after each key until the reader stops speaking;
   `next()` moves the reader's own cursor; `spoken()` returns what it said
   since; `readFocus()` returns what it holds for the focused element, for
   checks where the speech on arrival is cut short. VoiceOver and NVDA word
