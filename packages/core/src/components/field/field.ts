@@ -220,6 +220,26 @@ export const field = defineBehavior({
       }
       props.value.set(value);
     };
+    // A multiple select's selection is on its options, not in a property
+    // `connect()` can write, so Field sets each option's `selected` while a
+    // form or the consumer controls the value (Form spec, Field binds).
+    const selection = (): string | null => {
+      if (handed || native.get() !== 'multiple') return null;
+      if (!props.value.isControlled()) return null;
+      const value = props.value.get();
+      return JSON.stringify(Array.isArray(value) ? value.map(String) : []);
+    };
+    const select = (keys: string | null) => {
+      const control = partElement(ctx, 'control') as HTMLSelectElement | null;
+      if (keys === null || !control) return;
+      const chosen = new Set(JSON.parse(keys) as string[]);
+      for (const option of control.options) {
+        const isChosen = chosen.has(option.value);
+        if (option.selected !== isChosen) option.selected = isChosen;
+      }
+    };
+    partEffect(ctx, 'control', () => select(selection()));
+    ctx.watch(selection, select);
     const controlHandlers = {
       input: onNativeChange,
       change: onNativeChange,

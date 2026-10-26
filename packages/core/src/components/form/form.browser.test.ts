@@ -4,6 +4,7 @@ import { commands, userEvent } from 'vitest/browser';
 import { createBinder, destroyAnnouncer } from '../../dom';
 import { createInstance } from '../../runtime';
 import type { AnyDefinition, Instance } from '../../runtime';
+import { field } from '../field/field';
 import { textField } from '../text-field/text-field';
 import { form } from './form';
 import { formLink } from './link';
@@ -198,4 +199,72 @@ it('checks on blur once a press on Submit ends elsewhere', async () => {
   await mouse.uniPointerMove('#after', 'center');
   await mouse.uniPointerUp('left');
   await expect.poll(() => error.hidden).toBe(false);
+});
+
+/** Field alone around a `<select multiple>`, bound to a form when given one. */
+function tags(formProps?: Record<string, unknown>, fieldProps = {}) {
+  document.body.innerHTML = `
+    <div id="form-host">
+      <form data-uni="form" novalidate>
+        <div id="tags-field">
+          <div data-uni="field">
+            <label data-element="Label">Tags</label>
+            <select data-element="Control" multiple>
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+              <option value="blue">Blue</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>`;
+  const fieldElement = document.querySelector<HTMLElement>('#tags-field')!;
+  const tagsField = bind(field, fieldElement, { name: 'tags', ...fieldProps });
+  const owner = formProps
+    ? bind(form, document.querySelector('#form-host')!, formProps, () => false)
+    : undefined;
+  if (owner) tagsField.instance.link(owner.instance, formLink);
+  start(...(owner ? [owner, tagsField] : [tagsField]));
+  const setProps = (next: Record<string, unknown>) => {
+    tagsField.instance.setProps({
+      ...tagsField.instance.getProps(),
+      ...next,
+    } as never);
+    tagsField.instance.sync();
+  };
+  return {
+    form: owner?.instance,
+    select: fieldElement.querySelector('select')!,
+    setProps,
+  };
+}
+
+const selectedOf = (select: HTMLSelectElement) =>
+  Array.from(select.selectedOptions, (option) => option.value);
+
+it("writes the form's value to a multiple select", async () => {
+  const { form: owner, select } = tags({
+    defaultValues: { tags: ['green'] },
+  });
+  await expect.poll(() => selectedOf(select)).toEqual(['green']);
+  owner!.actions.setValue('tags', ['red', 'blue']);
+  await expect.poll(() => selectedOf(select)).toEqual(['red', 'blue']);
+  owner!.actions.reset();
+  await expect.poll(() => selectedOf(select)).toEqual(['green']);
+});
+
+it("takes the user's selection in a multiple select", async () => {
+  const { form: owner, select } = tags({ defaultValues: { tags: [] } });
+  await userEvent.selectOptions(select, ['green', 'blue']);
+  expect((owner!.getState() as { values: unknown }).values).toEqual({
+    tags: ['green', 'blue'],
+  });
+  expect(selectedOf(select)).toEqual(['green', 'blue']);
+});
+
+it('writes a controlled value to a multiple select outside a form', async () => {
+  const { select, setProps } = tags(undefined, { value: ['blue'] });
+  await expect.poll(() => selectedOf(select)).toEqual(['blue']);
+  setProps({ value: ['red', 'green'] });
+  await expect.poll(() => selectedOf(select)).toEqual(['red', 'green']);
 });
