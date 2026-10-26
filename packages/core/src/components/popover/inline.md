@@ -1,6 +1,6 @@
 # Inline popover spec (a responsive drawer)
 
-Status: draft
+Status: approved by @tenphi on 2026-10-26
 
 ## Summary
 
@@ -22,10 +22,10 @@ relies on but its spec doesn't say, and a finding from probing.
 3. **A toggle that sits apart.** A drawer's toggle is in the header and the
    drawer is in the page frame, so no element wraps both. Without a trigger
    part, the consumer opens it with `open()` and keeps its own toggle's
-   ARIA. A trigger linked by id is left for later (Open questions 3).
+   ARIA. A trigger linked by id is left for later (Resolved questions 3).
 4. **The backdrop.** A press on a manual popover's `::backdrop` reaches the
    page below it (probed), so it already counts as outside and acts on what
-   it hit, as every press outside a popover does (Open questions 2).
+   it hit, as every press outside a popover does (Resolved questions 2).
 
 - **Named consumer:** Cookbook's mobile navigation (`@tenphi/renderer`,
   `#cookbook__sidebar` and its `cookbook-sidebar-pane` element), which does
@@ -61,7 +61,7 @@ an overlay at all.
   `overscroll-behavior: contain` keeps its scrolling in.
 - **Closing on a link inside**: the consumer's (Popover spec, Resolved
   questions 12). Cookbook calls `close()` on a link click.
-- **Watching the media query**: the consumer's (Open questions 1).
+- **Watching the media query**: the consumer's (Resolved questions 1).
 - **Looks**: the drawer's slide and its dimmed `::backdrop` are the
   consumer's CSS, on `data-entering`, `data-exiting` and `data-inline`.
 
@@ -308,7 +308,9 @@ request. The scenarios this spec implies:
 None. The overlay form is the Popover spec's, and the inline form is the
 root's own semantics.
 
-## Open questions
+## Resolved questions
+
+Decided by @tenphi on 2026-10-26, each as recommended.
 
 1. **How the inline state is set.** (a) `isInline`, a boolean the consumer
    sets (here, from `matchMedia`; in React, a media-query hook): the
@@ -317,7 +319,7 @@ root's own semantics.
    string UniAria watches, as UI Kit's `mobileViewport`: declarative on
    elements (`inline-media="(min-width: 50rem)"`), no script, but a second
    way to say the same thing and still unknown on the server. (c) Both.
-   Recommended: (a).
+   Decided: (a).
 2. **A press on a dimmed backdrop.** It closes the drawer and acts on what
    is below (probed; the owner's rule for presses outside a popover, and
    what Cookbook's `popover="auto"` drawer does today). A drawer's scrim
@@ -327,15 +329,19 @@ root's own semantics.
    or an underlay, which it also bans for popovers. (c) Leave it to the
    consumer: an element of its own inside the root, under the panel, as the
    scrim; a press on it is inside, so its handler calls `close()`.
-   Recommended: (a), with (c) documented for those who want a blocking
+   Decided: (a), with (c) documented for those who want a blocking
    scrim.
 3. **A trigger linked by id.** (a) Not now: `open()` and the consumer's
    `aria-expanded` cover it in a few lines (A toggle that sits apart). (b) A
    `trigger` attribute naming the toggle's id, as `popovertarget` does and
    Spectrum Web Components' `trigger="id@click"`, giving it the trigger
    part's attributes and press: a change to the custom-element contract
-   (parts found by id, outside the host). Recommended: (a); revisit when a
+   (parts found by id, outside the host). Decided: (a); revisit when a
    second consumer needs it.
 4. **The prop's name.** (a) `isInline`, attribute `inline` (Fluent's
    `InlineDrawer`). (b) `isDocked`, attribute `docked`. (c) `isStatic`.
-   Recommended: (a).
+   Decided: (a).
+
+## Open questions
+
+None.
