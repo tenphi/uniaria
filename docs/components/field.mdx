@@ -12,20 +12,32 @@ import javascript from './demos/field.js?raw';
 A field gives a form control its label, description and error message, and
 links them with ids and ARIA, so a screen reader reads the label, the
 description, the error and the required and invalid states when the control
-gets focus. Field renders no control of its own: its `control` part goes on a
-native `<input>`, `<textarea>` or `<select>`, or on a custom widget.
+gets focus. In a [Form](./form.mdx), it also binds the control's value to the
+form by its `name`. Field renders no control: its `control` part goes on
+yours.
 
-Field shows validation state. In a [Form](./form.mdx), it also binds its
-field to the form: the form holds the value under the field's `name`, checks
-it and gives Field its errors. Without one, your code decides when a field is
-invalid and passes `isInvalid`. See [Forms](../guide/forms.md) for the whole
-picture.
+Every UniAria form component already has Field inside, with its own `label`,
+`description` and `error` parts: a TextField, a RadioGroup or a Combobox
+needs no Field around it (see [In UniAria components](#in-uniaria-components)).
+Use Field itself for a control UniAria doesn't have:
+
+- **A native control** UniAria has no component for: a `<select>`, or a date,
+  color or file `<input>`.
+- **A third-party widget**, such as a date picker or a rich text editor (see
+  [A control that isn't native](#a-control-that-isnt-native)).
+- **A control of your own.** Compose Field into its behavior, and it gets the
+  labelling and the form binding (see
+  [A field of your own](../guide/custom-components.md#a-field-of-your-own)).
+
+Field shows validation state. In a form, the form checks the field and gives
+Field its errors; without one, your code decides when a field is invalid and
+passes `isInvalid`. See [Forms](../guide/forms.md) for the whole picture.
 
 There is no WAI-ARIA pattern for a field. Field follows the APG practice on
 [names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
 
 <Preview
-  title="Sign-up form"
+  title="Order form"
   scripts={['/demo/field.js']}
   html={html}
   css={css}
@@ -41,19 +53,24 @@ There is no WAI-ARIA pattern for a field. Field follows the APG practice on
 import { field } from '@uniaria/core/field';
 import { useBehavior } from '@uniaria/react';
 
-export function EmailField(props: { error?: string }) {
-  const email = useBehavior(field, {
-    isInvalid: props.error !== undefined,
+export function CountryField(props: { error?: string }) {
+  const country = useBehavior(field, {
+    name: 'country',
     isRequired: true,
+    isInvalid: props.error !== undefined,
   });
   return (
-    <div {...email.parts.root}>
-      <label {...email.parts.label}>
-        Email <span aria-hidden="true">*</span>
+    <div {...country.parts.root}>
+      <label {...country.parts.label}>
+        Country <span aria-hidden="true">*</span>
       </label>
-      <input {...email.parts.control} name="email" type="email" />
-      <p {...email.parts.description}>We never share it</p>
-      <p {...email.parts.error}>{props.error}</p>
+      <select {...country.parts.control}>
+        <option value="">Choose a country</option>
+        <option value="de">Germany</option>
+        <option value="fr">France</option>
+      </select>
+      <p {...country.parts.description}>We ship your order there.</p>
+      <p {...country.parts.error}>{props.error}</p>
     </div>
   );
 }
@@ -69,20 +86,25 @@ import { useBehavior } from '@uniaria/vue';
 
 const props = defineProps<{ error?: string }>();
 
-const email = useBehavior(field, () => ({
-  isInvalid: props.error !== undefined,
+const country = useBehavior(field, () => ({
+  name: 'country',
   isRequired: true,
+  isInvalid: props.error !== undefined,
 }));
 </script>
 
 <template>
-  <div v-bind="email.parts.root">
-    <label v-bind="email.parts.label">
-      Email <span aria-hidden="true">*</span>
+  <div v-bind="country.parts.root">
+    <label v-bind="country.parts.label">
+      Country <span aria-hidden="true">*</span>
     </label>
-    <input v-bind="email.parts.control" name="email" type="email" />
-    <p v-bind="email.parts.description">We never share it</p>
-    <p v-bind="email.parts.error">{{ error }}</p>
+    <select v-bind="country.parts.control">
+      <option value="">Choose a country</option>
+      <option value="de">Germany</option>
+      <option value="fr">France</option>
+    </select>
+    <p v-bind="country.parts.description">We ship your order there.</p>
+    <p v-bind="country.parts.error">{{ error }}</p>
   </div>
 </template>
 ```
@@ -91,26 +113,44 @@ const email = useBehavior(field, () => ({
 <Tab label="HTML">
 
 ```html
-<uni-field id="email-field" required>
-  <label data-element="Label">Email <span aria-hidden="true">*</span></label>
-  <input data-element="Control" id="email" name="email" type="email" />
-  <p data-element="Description">We never share it</p>
-  <p data-element="Error" hidden>Enter a valid email</p>
+<uni-field id="country-field" required>
+  <label data-element="Label">Country <span aria-hidden="true">*</span></label>
+  <select data-element="Control" id="country" name="country">
+    <option value="">Choose a country</option>
+    <option value="de">Germany</option>
+    <option value="fr">France</option>
+  </select>
+  <p data-element="Description">We ship your order there.</p>
+  <p data-element="Error" hidden>Choose a country.</p>
 </uni-field>
 
 <script type="module">
   import '@uniaria/elements/field';
 
-  const email = document.querySelector('#email');
-  email.addEventListener('change', () => {
-    const isValid = email.value !== '' && email.validity.valid;
-    document.querySelector('#email-field').toggleAttribute('invalid', !isValid);
+  const country = document.querySelector('#country');
+  country.addEventListener('change', () => {
+    document
+      .querySelector('#country-field')
+      .toggleAttribute('invalid', country.value === '');
   });
 </script>
 ```
 
 </Tab>
 </Tabs>
+
+`parts.control` holds what Field writes on your control: its `id` (unless it
+has one), `aria-labelledby`, `aria-describedby`, `aria-invalid`,
+`aria-required` and `name`, and listeners that follow its value and focus.
+The rest of the control is yours: its options, `type`, `multiple`,
+`disabled`.
+
+Give the name to Field, not to the control. Field writes it on the control,
+so a native form post sends it. In React and Vue, Field doesn't read the
+control's attributes: a `name` written only on the `<select>` leaves the field
+without one, and in a [Form](./form.mdx) it doesn't bind. The custom element
+is the exception: `<uni-field>` reads the name from its control's `name`
+attribute.
 
 Render the error part every time: Field hides it with `hidden` while the
 field is valid.
@@ -127,30 +167,68 @@ An error already shown when the field starts isn't announced: the screen
 reader reads it when the control gets focus. Nothing is announced while the
 field is disabled, or for an error part that is missing or empty.
 
-### A control that isn't an input
+### In a form
 
-Only a native control can be labelled by a `<label>`. For anything else, such
-as an element with `role="radiogroup"` or a custom widget, render the label as
-another element and pass its tag as `labelElementType`. The label then gets no
-`for`, and names the control through `aria-labelledby` only. A click on it
-doesn't focus the control.
+In a [Form](./form.mdx), leave `isInvalid` unset: the form checks the field
+(`isRequired`, the native constraints on the control, then `validate`) and
+gives Field its errors. Field follows the control's value, and an `errorText`
+part inside the error shows the first error:
 
-<Tabs label="A control that isn't an input">
+```tsx
+const country = useBehavior(field, { name: 'country', isRequired: true });
+
+<p {...country.parts.error}>
+  <span {...country.parts.errorText} />
+</p>;
+```
+
+The field binds to the form around it (through `OwnerProvider` in React), or
+to the one in its `form` prop. While the form controls the value, Field writes
+it back to the control, a `<select multiple>`'s options included. See
+[Field props for the form](./form.mdx#field-props-for-the-form).
+
+### A control that isn't native
+
+A widget that isn't a native control (a date picker from another library, a
+rich text editor) needs two things from you:
+
+- **The label as another element.** Only a native control can be labelled by
+  a `<label>`. Render the label as a `<span>` and pass its tag as
+  `labelElementType`. The label then gets no `for`, and names the control
+  through `aria-labelledby` only. A click on it doesn't focus the control.
+- **The value.** Field can't read a widget's value. Report each change with
+  Field's `setValue` action, and render the value from Field's state: the
+  form's while bound.
+
+<Tabs label="A control that isn't native">
 <Tab label="React">
 
 ```tsx
-const plan = useBehavior(field, {
-  labelElementType: 'span',
-  isRequired: true,
-});
-return (
-  <>
-    <span {...plan.parts.label}>Plan</span>
-    <div {...plan.parts.control} role="radiogroup">
-      {/* your radios */}
+import { field } from '@uniaria/core/field';
+import { useBehavior, useBehaviorState } from '@uniaria/react';
+
+export function DueDateField() {
+  const due = useBehavior(field, {
+    name: 'due',
+    isRequired: true,
+    labelElementType: 'span',
+  });
+  const value = useBehaviorState(due, (state) => state.value as Date | null);
+  return (
+    <div {...due.parts.root}>
+      <span {...due.parts.label}>Due date</span>
+      {/* It must pass the props to its focusable element. */}
+      <DatePicker
+        {...due.parts.control}
+        value={value}
+        onChange={(date) => due.actions.setValue(date)}
+      />
+      <p {...due.parts.error}>
+        <span {...due.parts.errorText} />
+      </p>
     </div>
-  </>
-);
+  );
+}
 ```
 
 </Tab>
@@ -158,16 +236,29 @@ return (
 
 ```vue
 <script setup lang="ts">
-const plan = useBehavior(field, {
-  labelElementType: 'span',
+import { field } from '@uniaria/core/field';
+import { useBehavior, useBehaviorState } from '@uniaria/vue';
+
+const due = useBehavior(field, {
+  name: 'due',
   isRequired: true,
+  labelElementType: 'span',
 });
+const value = useBehaviorState(due, (state) => state.value as Date | null);
 </script>
 
 <template>
-  <span v-bind="plan.parts.label">Plan</span>
-  <div v-bind="plan.parts.control" role="radiogroup">
-    <!-- your radios -->
+  <div v-bind="due.parts.root">
+    <span v-bind="due.parts.label">Due date</span>
+    <!-- It must pass the attributes to its focusable element. -->
+    <DatePicker
+      v-bind="due.parts.control"
+      :model-value="value"
+      @update:model-value="(date) => due.actions.setValue(date)"
+    />
+    <p v-bind="due.parts.error">
+      <span v-bind="due.parts.errorText" />
+    </p>
   </div>
 </template>
 ```
@@ -176,21 +267,30 @@ const plan = useBehavior(field, {
 <Tab label="HTML">
 
 ```html
-<uni-field required>
-  <span data-element="Label">Plan</span>
-  <div data-element="Control" role="radiogroup">
-    <!-- your radios -->
-  </div>
+<uni-field id="due-field" required>
+  <span data-element="Label">Due date</span>
+  <date-picker data-element="Control"></date-picker>
+  <p data-element="Error"><span data-element="ErrorText"></span></p>
 </uni-field>
+
+<script type="module">
+  import '@uniaria/elements/field';
+
+  const due = document.querySelector('#due-field');
+  due.querySelector('date-picker').addEventListener('change', (event) => {
+    due.setValue(event.target.value);
+  });
+</script>
 ```
 
-The element reads the label's tag, so there is no attribute for it.
+The element reads the label's tag, so there is no attribute for it. Its
+`setValue()` method is the action, and its `value` property the value.
 
 </Tab>
 </Tabs>
 
-For radios and checkboxes, [RadioGroup](./radio-group.mdx) and
-[CheckboxGroup](./checkbox-group.mdx) already do this.
+For radios and checkboxes, use [RadioGroup](./radio-group.mdx) and
+[CheckboxGroup](./checkbox-group.mdx), which have Field built in.
 
 ### Extra labels and descriptions
 
@@ -208,8 +308,35 @@ Field owns them and replaces them.
 
 Every UniAria form component has Field built in: its label, description and
 error are parts of the component itself, with the same props, the same
-linking and the same error announcements. Field's `control` is the element
-the component's label names:
+linking, the same error announcements and the same form binding. Render them
+on the component, with no Field around it:
+
+```tsx
+const plan = useBehavior(radioGroup, { name: 'plan', isRequired: true });
+
+<div {...plan.parts.root}>
+  <span {...plan.parts.label}>Plan</span>
+  <OwnerProvider owner={plan}>{/* the radios */}</OwnerProvider>
+  <p {...plan.parts.description}>You can change it later.</p>
+  <p {...plan.parts.error}>
+    <span {...plan.parts.errorText} />
+  </p>
+</div>;
+
+const fruit = useBehavior(combobox, { items: fruits, name: 'fruit' });
+
+<div {...fruit.parts.root}>
+  <label {...fruit.parts.label}>Fruit</label>
+  <div {...fruit.parts.anchor}>{/* the input and its button */}</div>
+  <p {...fruit.parts.description}>We deliver it fresh.</p>
+  <p {...fruit.parts.error}>
+    <span {...fruit.parts.errorText} />
+  </p>
+  {/* the popover with the list */}
+</div>;
+```
+
+Field's `control` is the element the component's label names:
 
 | Component                             | Field's control | Label element by default | Notes                                                                                                                                 |
 | ------------------------------------- | --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -232,18 +359,18 @@ Use Field itself only for native and third-party controls. Don't wrap a
 UniAria component in `<uni-field>`: the field doesn't look inside another
 UniAria element, so its label would link to nothing, and in development it
 warns. To build your own component on Field, see
-[Custom components](../guide/custom-components.md).
+[A field of your own](../guide/custom-components.md#a-field-of-your-own).
 
 ## Anatomy
 
-| Part          | Element                                                        | Notes                                                                                                                                                                                      |
-| ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `root`        | any; usually `div`                                             | Optional. The outermost element, around the other parts, for styling. No role.                                                                                                             |
-| `label`       | `label` by default; any element through `labelElementType`     | You own the content. UniAria writes its `id` (unless it has one), and `for` when it is a `label`.                                                                                          |
-| `control`     | any control: `input`, `textarea`, `select`, or a custom widget | UniAria writes `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`. You own the rest: `name`, `type`, `value`, `disabled`, `readonly`, a custom widget's role. |
-| `description` | any                                                            | UniAria writes its `id` (unless it has one).                                                                                                                                               |
-| `error`       | any                                                            | UniAria writes its `id` (unless it has one), and `hidden` while the error isn't shown. You own the content.                                                                                |
-| `errorText`   | any, inside `error`                                            | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                     |
+| Part          | Element                                                        | Notes                                                                                                                                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root`        | any; usually `div`                                             | Optional. The outermost element, around the other parts, for styling. No role.                                                                                                                                                                                                                                            |
+| `label`       | `label` by default; any element through `labelElementType`     | You own the content. UniAria writes its `id` (unless it has one), and `for` when it is a `label`.                                                                                                                                                                                                                         |
+| `control`     | any control: `input`, `textarea`, `select`, or a custom widget | UniAria writes `id`, `aria-labelledby`, `aria-describedby`, `aria-invalid` and `aria-required`; `name` from the `name` prop, and `form` when it sits outside its form's `<form>`; a native control's value while a form or `value` controls it. You own the rest: `type`, `disabled`, `readonly`, a custom widget's role. |
+| `description` | any                                                            | UniAria writes its `id` (unless it has one).                                                                                                                                                                                                                                                                              |
+| `error`       | any                                                            | UniAria writes its `id` (unless it has one), and `hidden` while the error isn't shown. You own the content.                                                                                                                                                                                                               |
+| `errorText`   | any, inside `error`                                            | Optional. In a [Form](./form.mdx), UniAria writes the first error's text here; leave it out to render errors yourself.                                                                                                                                                                                                    |
 
 Every part is optional. Every part keeps an `id` (unless it has one) you give it, and the links
 below use it; UniAria writes an `id` (unless it has one) only on a part that has none. Write it
@@ -280,13 +407,16 @@ The parts link like this:
 | `labelElementType` | — (read from the label's tag) | `string`  | `'label'` | The label's tag. `for` goes on a `label` only.                                                                                                                                |
 | `labelledBy`       | `labelled-by`                 | `string`  | —         | More ids for the control's `aria-labelledby`, space-separated, after the label's.                                                                                             |
 | `describedBy`      | `described-by`                | `string`  | —         | More ids for the control's `aria-describedby`, after the description and the error: a hint elsewhere on the page, for example.                                                |
+| `value`            | — (property only)             | `unknown` | —         | Bindable: what a native control holds, or what `setValue` gave a custom one. Seeded by `defaultValue`, reported as `valueChange`. Ignored while bound to a form.              |
 
-In a [Form](./form.mdx), Field also takes `name`, `form`, `validate`,
-`validationTrigger`, `validationDelay`, `validationMessages`, `dependsOn`,
-`isEqual` and `shouldPreserve`: see [Field props for the
+Field also takes the props every field takes for a form: `name`, written on
+the control even outside a form, `form`, `validate`, `validationTrigger`,
+`validationDelay`, `validationMessages`, `dependsOn`, `isEqual` and
+`shouldPreserve`. See [Field props for the
 form](./form.mdx#field-props-for-the-form).
 
-Field has no events and handles no keys: the control keeps its own.
+Field reports `valueChange` for the user's changes and handles no keys: the
+control keeps its own.
 
 ## State
 
