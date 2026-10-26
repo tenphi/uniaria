@@ -15,7 +15,7 @@
 
 [data-uni="checkbox"]:where(:not([data-indeterminate]):not([data-selected]):not(:has([data-element="Input"]:checked))) [data-element="Indicator"]:where(:not([data-uni="checkbox"] [data-uni]:not([data-uni="checkbox"]) *))::before { content: none; }
 
-[data-uni="checkbox"] [data-element="Indicator"]:where(:not([data-uni="checkbox"] [data-uni]:not([data-uni="checkbox"]) *))::before { box-sizing: border-box; }
+[data-uni="checkbox"] [data-element="Indicator"]:where(:not([data-uni="checkbox"] [data-uni]:not([data-uni="checkbox"]) *))::before { box-sizing: border-box; position: absolute; pointer-events: none; }
 
 [data-uni="checkbox"]:where(:not([data-indeterminate])) [data-element="Indicator"]:where(:not([data-uni="checkbox"] [data-uni]:not([data-uni="checkbox"]) *))::before { inline-size: .25rem; min-inline-size: .25rem; max-inline-size: .25rem; block-size: .5rem; min-block-size: .5rem; max-block-size: .5rem; margin-block: -.125rem 0; border-top: 0 solid currentcolor; border-right: calc(2 * var(--uni-border-width)) solid currentcolor; border-bottom: calc(2 * var(--uni-border-width)) solid currentcolor; border-left: 0 solid currentcolor; rotate: 45deg; }
 
