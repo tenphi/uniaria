@@ -160,8 +160,9 @@ to a pull request cancels the run for the previous one:
 
 - **`checks`:** `pnpm install --frozen-lockfile`, then `pnpm lint`,
   `pnpm format:check`, `pnpm typecheck`, `pnpm build` and `pnpm test:node`.
-- **`browser`:** the `browser` project, one job per engine, each with its
-  own Playwright browser (cached per lockfile). That runs the conformance
+- **`browser`:** the `browser` project, one job per engine, each in
+  Playwright's Docker image for the Playwright the lockfile installs, which
+  has the browsers and their system libraries. That runs the conformance
   scenarios in three engines and every adapter, spoken-output checks
   included; only the scenarios that need a real screen reader wait for the
   nightly run. Firefox runs its files one at a time, so it is split in four
