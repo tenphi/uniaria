@@ -1117,7 +1117,7 @@ export const tabsConformance = defineConformance<TabsProps, TabsState>(
       );
 
       scenario(
-        'a value the consumer sets moves the tab stop and never focus',
+        'with focus outside the list, a value the consumer sets moves the tab stop and never focus',
         async ({ mount, keyboard }) => {
           const mounted = await mount({
             template: between(installation()),
@@ -1128,6 +1128,28 @@ export const tabsConformance = defineConformance<TabsProps, TabsState>(
           expect(tabStops(mounted)).toEqual(['-1', '-1', '0']);
           expect(activeElement(mounted)).toBe(byId(mounted, 'before'));
           await keyboard.tab();
+          expect(focusedKey(mounted)).toBe('yarn');
+        },
+        PHASE,
+      );
+
+      scenario(
+        'with focus in the list, a value the consumer sets leaves the tab stop on the focused tab until focus leaves',
+        async ({ mount, keyboard }) => {
+          const mounted = await mount({
+            template: between(installation()),
+            props: { items: MANAGERS, value: 'npm' },
+          });
+          await tabIn(mounted, keyboard);
+          await mounted.setProps({ value: 'yarn' });
+          expect(mounted.state().selectedKey).toBe('yarn');
+          expect(focusedKey(mounted)).toBe('npm');
+          expect(tabStops(mounted)).toEqual(['0', '-1', '-1']);
+
+          await keyboard.tab();
+          expect(activeElement(mounted)).toBe(panel(mounted, 'yarn'));
+          expect(tabStops(mounted)).toEqual(['-1', '-1', '0']);
+          await keyboard.tab({ isBackward: true });
           expect(focusedKey(mounted)).toBe('yarn');
         },
         PHASE,
