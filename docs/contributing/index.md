@@ -155,13 +155,21 @@ The same steps are in `.cursor/commands/submit-changes.md`.
 ### CI
 
 `.github/workflows/ci.yml` runs on every push to `main` and on every pull
-request, on Ubuntu with Node 22:
+request, on Ubuntu with Node 22. Its jobs run side by side, and a new push
+to a pull request cancels the run for the previous one:
 
-- **`ci`:** `pnpm install --frozen-lockfile`, the Playwright browsers (cached
-  per lockfile), then `pnpm lint`, `pnpm format:check`, `pnpm typecheck`,
-  `pnpm build` and `pnpm test`. That runs the conformance scenarios in three
-  engines and every adapter, spoken-output checks included; only the
-  scenarios that need a real screen reader wait for the nightly run.
+- **`checks`:** `pnpm install --frozen-lockfile`, then `pnpm lint`,
+  `pnpm format:check`, `pnpm typecheck`, `pnpm build` and `pnpm test:node`.
+- **`browser`:** the `browser` project, one job per engine, each with its
+  own Playwright browser (cached per lockfile). That runs the conformance
+  scenarios in three engines and every adapter, spoken-output checks
+  included; only the scenarios that need a real screen reader wait for the
+  nightly run. Firefox runs its files one at a time, so it is split in four
+  jobs: each adapter's conformance file, and the rest. A pull request that
+  changes only `docs/`, Markdown or `.changeset/` skips these jobs, since no
+  test reads those files.
+- **`docs`:** `pnpm -C apps/docs validate` (see
+  [Documentation](./documentation.md)).
 - **`conformance-separation`:** `scripts/check-conformance-separation.mjs`
   checks each pushed commit, or a pull request's whole diff, for changes to
   both `conformance/` and non-test files under `packages/*/src/`. On a pull

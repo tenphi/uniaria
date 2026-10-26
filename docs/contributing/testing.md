@@ -215,9 +215,9 @@ reference images in `packages/styles/src/__references__/`. Text renders
 differently on every engine and OS, so the references are Chromium's on
 Linux, as CI runs it, and the test skips anywhere else. A change to how a
 component looks fails it in CI until the references change too; the failed
-run's `failed-screenshots` artifact holds each actual image and its diff.
-Remake them in Playwright's Docker image, then review the changed images and
-commit them with the change:
+run's `failed-screenshots-chromium` artifact holds each actual image and its
+diff. Remake them in Playwright's Docker image, then review the changed
+images and commit them with the change:
 
 ```sh
 pnpm -C packages/styles screenshots
