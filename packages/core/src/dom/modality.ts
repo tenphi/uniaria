@@ -23,7 +23,9 @@
  * There is one tracker per window, stored on the window under a `Symbol.for`
  * key so that every copy of UniAria on a page shares it. It starts listening
  * when the first interaction asks for it and never stops, so the modality is
- * already known when the next instance mounts.
+ * already known when the next instance mounts. It also marks the pointer
+ * moves that didn't move the pointer (`isRestingMove()`), which WebKit sends
+ * after a scroll.
  *
  * Like React Aria, the tracker wraps `HTMLElement.prototype.focus` (once per
  * window, calling the original): a script's `focus()` call is not input, and
@@ -56,6 +58,12 @@ export interface ModalityTracker {
    * one iOS emulates after a tap.
    */
   isEmulatingMouse(): boolean;
+  /**
+   * A `pointermove` where the pointer's last one was, which no hand made:
+   * WebKit sends one to a resting pointer after the page scrolls (probed in
+   * WebKit 26). Hover that follows the pointer's moves skips it.
+   */
+  isRestingMove(event: PointerEvent): boolean;
   /**
    * Called on keyboard input, pointer down, focus with no input before it,
    * and `set()`. Pointer moves change the modality without notifying, so a
@@ -138,6 +146,10 @@ function createTracker(view: Window): ModalityTracker {
   // The window lost focus; the browser restores focus when it comes back.
   let hasBlurredWindow = false;
   let lastTouchUp = -Infinity;
+  // Where the last pointer move put the pointer (numbers only, so no removed
+  // element stays referenced), and the moves that didn't move it.
+  let lastMove = '';
+  const restingMoves = new WeakSet<PointerEvent>();
   const isMacPlatform = isMac(view);
 
   const notify = (next: Modality, event: ModalityEvent) => {
@@ -165,6 +177,12 @@ function createTracker(view: Window): ModalityTracker {
   const onPointer = (event: PointerEvent) => {
     if (event.type === 'pointerup' && event.pointerType === 'touch') {
       lastTouchUp = view.performance.now();
+    }
+    if (event.type === 'pointermove') {
+      const { pointerId, clientX, clientY, screenX, screenY } = event;
+      const move = `${pointerId} ${clientX} ${clientY} ${screenX} ${screenY}`;
+      if (move === lastMove) restingMoves.add(event);
+      lastMove = move;
     }
     if (event.type === 'pointerdown') {
       hasInputBeforeFocus = true;
@@ -253,6 +271,7 @@ function createTracker(view: Window): ModalityTracker {
     isFocusVisible: () => modality !== 'pointer',
     isEmulatingMouse: () =>
       view.performance.now() - lastTouchUp < EMULATED_MOUSE_WINDOW,
+    isRestingMove: (event) => restingMoves.has(event),
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

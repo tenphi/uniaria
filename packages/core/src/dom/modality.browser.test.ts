@@ -171,6 +171,32 @@ describe('modalityTracker', () => {
     expect(tracker.isEmulatingMouse()).toBe(false);
   });
 
+  it('marks a pointer move that leaves the pointer where it was as resting', () => {
+    const tracker = modalityTracker(window);
+    const move = (x: number, y: number, pointerId = 1) => {
+      const event = new PointerEvent('pointermove', {
+        bubbles: true,
+        pointerId,
+        clientX: x,
+        clientY: y,
+        screenX: x + 100,
+        screenY: y + 100,
+      });
+      document.body.dispatchEvent(event);
+      return event;
+    };
+
+    expect(tracker.isRestingMove(move(17, 23))).toBe(false);
+    // WebKit's move to a resting pointer after a scroll.
+    expect(tracker.isRestingMove(move(17, 23))).toBe(true);
+    expect(tracker.isRestingMove(move(18, 23))).toBe(false);
+    expect(tracker.isRestingMove(move(18, 23, 2))).toBe(false);
+    // An event the tracker never saw.
+    expect(
+      tracker.isRestingMove(new PointerEvent('pointermove', { pointerId: 2 })),
+    ).toBe(false);
+  });
+
   it('notifies with no event when set explicitly', () => {
     const tracker = modalityTracker(window);
     const listener = vi.fn();
