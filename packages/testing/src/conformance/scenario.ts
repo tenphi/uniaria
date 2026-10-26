@@ -95,7 +95,10 @@ export interface ScreenReaderInput {
    * `ArrowDown`, `Shift+Tab`) and waits until it stops speaking.
    */
   press(key: string): Promise<void>;
-  /** Types text through the screen reader, a key per character. */
+  /**
+   * Types text through the screen reader, a key per character, and waits
+   * until it stops speaking.
+   */
   type(text: string): Promise<void>;
   /** Moves the screen reader's own cursor to the next item. */
   next(): Promise<void>;
