@@ -97,7 +97,10 @@ describe.each([
   },
 );
 
-test('a component styles itself from its object, its states included', () => {
+test('a component styles itself from its object, its states included', async () => {
+  // Ending media emulation restores the host's scheme; assert this palette
+  // under its own scheme even when the machine prefers dark mode.
+  await emulateMedia({ colorScheme: 'light', contrast: 'no-preference' });
   const indicator = container.querySelector('[data-element="Indicator"]');
   if (!indicator) throw new Error('No indicator.');
   // The schemes above changed its colors, through its transitions.
