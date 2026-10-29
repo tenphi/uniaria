@@ -11,9 +11,9 @@ minimumReleaseAgeIgnoreMissingTime: false
 # Remove once 3.19.6 is 14 days old (2026-10-30).
 minimumReleaseAgeExclude:
   - '@tanstack/virtual-core@3.19.6'
-  # The owner's own packages (owner, 2026-10-19): Cookbook, which builds the
-  # documentation site, and the Tasty and Glaze it styles with.
+  # Owner-approved first-party namespaces are exempt from the release-age gate.
   - '@tenphi/*'
+  - '@uniaria/*'
 # Install scripts run only when listed true here. esbuild's (through Astro)
 # just checks its platform binary, which pnpm installs anyway.
 allowBuilds:
