@@ -15,7 +15,7 @@
     "validate": "pnpm typecheck && cookbook doctor && pnpm build && cookbook check-build"
   },
   "dependencies": {
-    "@tenphi/cookbook": "^0.31.0",
+    "@tenphi/cookbook": "^0.31.1",
     "astro": "^7.3.2"
   },
   "devDependencies": {
