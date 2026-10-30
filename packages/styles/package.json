@@ -175,7 +175,7 @@
     }
   },
   "devDependencies": {
-    "@tenphi/glaze": "^2.0.1",
+    "@tenphi/glaze": "^2.0.2",
     "@tenphi/tasty": "^3.16.0",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
