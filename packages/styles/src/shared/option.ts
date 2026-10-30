@@ -28,7 +28,7 @@ import {
  * after the pseudo-element (`::after:where([data-selected])`), where it
  * never matches.
  */
-/* eslint-disable tasty/no-own-at-root -- spread into the option parts, where @own() reads the option's own state */
+
 export const optionStyles = {
   position: 'relative',
   inlineInset: '0 end',
@@ -98,7 +98,6 @@ export const optionStyles = {
     rotate: '45deg',
   },
 } satisfies Styles;
-/* eslint-enable tasty/no-own-at-root */
 
 /**
  * The option and the parts around it, as Listbox, Select and Combobox

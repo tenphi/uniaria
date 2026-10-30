@@ -8,7 +8,7 @@ import type { Styles } from '@tenphi/tasty';
  * control, TextField's and NumberField's wrapper, and an input without a
  * wrapper take it.
  */
-/* eslint-disable tasty/no-own-at-root -- spread into parts only, where @own() reads the part's own state */
+
 export const inputBoxStyles = {
   boxSizing: 'border-box',
   // eslint-disable-next-line tasty/consistent-token-usage -- WCAG 2.5.8 counts CSS pixels, whatever the root font size
@@ -38,7 +38,6 @@ export const inputBoxStyles = {
     '@uni-reduced-motion': false,
   },
 } satisfies Styles;
-/* eslint-enable tasty/no-own-at-root */
 
 /** The text you type: one line of the page's type, a soft placeholder. */
 export const inputTextStyles = {
@@ -95,7 +94,7 @@ export const wrappedInputStyles = {
  * corners concentric with the box's. It reads its own state, which
  * UniAria writes as Button's: a stepper is disabled while it can't step.
  */
-/* eslint-disable tasty/no-own-at-root -- spread into button parts, where @own() reads the button's own state */
+
 export const boxButtonStyles = {
   display: 'grid',
   placeItems: 'center',
@@ -146,4 +145,3 @@ export const boxButtonStyles = {
     '@uni-reduced-motion': false,
   },
 } satisfies Styles;
-/* eslint-enable tasty/no-own-at-root */
