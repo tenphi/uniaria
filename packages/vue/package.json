@@ -54,6 +54,6 @@
     "@uniaria/conformance": "workspace:*",
     "@uniaria/elements": "workspace:*",
     "@uniaria/testing": "workspace:*",
-    "vue": "^3.5.43"
+    "vue": "^3.5.44"
   }
 }
