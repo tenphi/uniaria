@@ -11,7 +11,7 @@ import type { Styles } from '@tenphi/tasty';
  * part takes its own `data-placement`; UniAria writes its offset along the
  * edge inline: `left` above or below, `top` beside.
  */
-/* eslint-disable tasty/no-own-at-root -- spread into arrow parts, where @own() reads the arrow's placement */
+
 export const arrowStyles = {
   position: 'absolute',
   boxSizing: 'border-box',
@@ -41,4 +41,3 @@ export const arrowStyles = {
     rotate: '45deg',
   },
 } satisfies Styles;
-/* eslint-enable tasty/no-own-at-root */

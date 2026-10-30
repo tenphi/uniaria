@@ -23,7 +23,7 @@ import type { Styles } from '@tenphi/tasty';
  * Spread into a popup part whose own `data-placement` UniAria writes
  * (Select's and Combobox's popover); the root states are its component's.
  */
-/* eslint-disable tasty/no-own-at-root -- spread into a popover part, where @own() reads its placement */
+
 export const popupMotionStyles = {
   opacity: { '': 1, 'entering | exiting': 0 },
   translate: {
@@ -50,7 +50,6 @@ export const popupMotionStyles = {
     '@uni-reduced-motion': false,
   },
 } satisfies Styles;
-/* eslint-enable tasty/no-own-at-root */
 
 /**
  * Tooltip's motion: the popups', from .8 instead of .9, on the tooltip's
