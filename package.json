@@ -1,7 +1,7 @@
 {
   "name": "uniaria-monorepo",
   "private": true,
-  "description": "UniAria \u2014 framework-agnostic headless UI behavior with React and custom-element adapters",
+  "description": "UniAria — framework-agnostic headless UI behavior with React and custom-element adapters",
   "type": "module",
   "scripts": {
     "build": "pnpm --filter \"./packages/*\" build",
