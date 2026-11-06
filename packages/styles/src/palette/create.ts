@@ -4,6 +4,7 @@ import type { GlazeTheme } from '@tenphi/glaze';
 import {
   colorToken,
   DEFAULT_COLORS,
+  DEFAULT_ONLY,
   GLAZE_CONFIG,
   SCHEMES,
   SEEDS,
@@ -52,6 +53,13 @@ export function createPalette(seeds: PaletteSeeds = {}): Palette {
         value,
       ]),
     );
+  }
+  // The white surface is identical in both light schemes. Glaze's intensity
+  // pair switches contrast, not scheme: zero avoids an unreachable shadow on
+  // high-contrast black, but white still needs its generated dimming overlay.
+  for (const role of DEFAULT_ONLY) {
+    const token = colorToken('default', role);
+    palette.lightContrast[token] = palette.light[token]!;
   }
   return palette;
 }

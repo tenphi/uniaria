@@ -37,6 +37,8 @@ It comes three ways, from one source written as
 [`@tenphi/tasty`](https://www.npmjs.com/package/@tenphi/tasty) and
 [`@tenphi/glaze`](https://www.npmjs.com/package/@tenphi/glaze) are optional
 peer dependencies: add them only for the outputs that need them.
+Custom palettes support Glaze 2 and 3. The prebuilt CSS uses Glaze 3's
+contrast-solved palette and tone-step shadows.
 
 ## Documentation
 
