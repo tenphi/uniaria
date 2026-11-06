@@ -163,7 +163,7 @@
     "node": ">=22"
   },
   "peerDependencies": {
-    "@tenphi/glaze": "^2.0.1",
+    "@tenphi/glaze": "^2.0.1 || ^3.0.0",
     "@tenphi/tasty": "^3.12.0"
   },
   "peerDependenciesMeta": {
@@ -175,7 +175,7 @@
     }
   },
   "devDependencies": {
-    "@tenphi/glaze": "^2.0.2",
+    "@tenphi/glaze": "^3.0.0",
     "@tenphi/tasty": "^3.17.1",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",

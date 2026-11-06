@@ -136,19 +136,15 @@ export const DEFAULT_COLORS: ColorMap = {
   shadow: {
     type: 'shadow',
     bg: 'surface',
-    fg: 'text',
-    intensity: 10,
+    intensity: [2, 0],
     inherit: false,
   },
-  // UI Kit's overlay is a fixed color at half alpha, which lightens the
-  // dark page; a shadow color darkens every scheme's. The cap keeps the
-  // page behind it in sight: half in light, .6 in dark.
+  // Four Glaze 3 tone steps keep the default scrim below .6 alpha.
+  // High contrast reaches black, so decorative lighting has no headroom.
   backdrop: {
     type: 'shadow',
     bg: 'surface',
-    fg: 'text',
-    intensity: 60,
-    tuning: { alphaMax: 0.6 },
+    intensity: [4, 0],
     inherit: false,
   },
 };
