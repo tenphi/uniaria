@@ -1,5 +1,15 @@
 # @uniaria/styles
 
+## 0.4.0
+
+### Minor Changes
+
+- [#65](https://github.com/tenphi/uniaria/pull/65) [`aa23750`](https://github.com/tenphi/uniaria/commit/aa2375095e3e50ce421cbed70bd7a2352832a8cc) Thanks [@tenphi](https://github.com/tenphi)! - Support Glaze 3 alongside Glaze 2 and build the default palette with Glaze 3.
+  The palette's contrast-solved colors and shadows change with Glaze's new tone
+  solver. Keep the backdrop below 60% opacity, dim white pages in high contrast,
+  and avoid unreachable shadows on high-contrast black. Existing color roles,
+  scheme selectors and component styles stay compatible.
+
 ## 0.3.0
 
 ### Minor Changes
