@@ -21,8 +21,8 @@ importers:
         specifier: ^14.2.0
         version: 14.2.0(size-limit@14.2.0)
       '@tenphi/eslint-plugin-tasty':
-        specifier: ^1.17.1
-        version: 1.17.1(@tenphi/tasty@3.17.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
+        specifier: ^1.18.0
+        version: 1.18.0(@tenphi/tasty@3.17.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
@@ -1591,6 +1591,19 @@ packages:
 
   '@tenphi/eslint-plugin-tasty@1.17.1':
     resolution: {integrity: sha512-N1dt6qfXoAHUh2Oqx1VZuC05xdwbsP13EdnJLIGg8NJq8RQKme1xrpOftbKdwV2YyffKdDXOigN4kfpFXy1idA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@tenphi/tasty': '>=3.8.0'
+      eslint: '>=8.0.0'
+      typescript: '>=5.6.3 <7'
+    peerDependenciesMeta:
+      '@tenphi/tasty':
+        optional: true
+      typescript:
+        optional: true
+
+  '@tenphi/eslint-plugin-tasty@1.18.0':
+    resolution: {integrity: sha512-IzI1GvpciTNErFpXiqoR7jWYpc9XY0XLOsiKgCyK2lq8IBPW3Hhse58bkLp5TN9hFJEvSgj04xRw1WpjxgNQ3w==}
     engines: {node: '>=20'}
     peerDependencies:
       '@tenphi/tasty': '>=3.8.0'
@@ -5318,6 +5331,19 @@ snapshots:
       - supports-color
 
   '@tenphi/eslint-plugin-tasty@1.17.1(@tenphi/tasty@3.17.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/utils': 8.71.0(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint: 10.11.0(jiti@2.7.0)
+      jiti: 2.7.0
+      postcss-selector-parser: 7.1.6
+      semver: 7.8.5
+    optionalDependencies:
+      '@tenphi/tasty': 3.17.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0)
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@tenphi/eslint-plugin-tasty@1.18.0(@tenphi/tasty@3.17.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/utils': 8.71.0(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.11.0(jiti@2.7.0)
