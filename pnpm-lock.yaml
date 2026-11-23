@@ -163,8 +163,8 @@ importers:
   packages/styles:
     devDependencies:
       '@tenphi/glaze':
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
       '@tenphi/tasty':
         specifier: ^3.19.1
         version: 3.19.1(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(jiti@2.7.0)(react@19.3.0)
@@ -1604,6 +1604,10 @@ packages:
 
   '@tenphi/glaze@3.1.1':
     resolution: {integrity: sha512-mxfXtGBwUXZXI5hDOJt1fb5ySPuhdw9gep1ufBRR7S8QH1Ay5kf9jzpFRS5L1PdrFFNe1YrJQSkNEH0EQRrIAA==}
+    engines: {node: '>=20'}
+
+  '@tenphi/glaze@3.2.0':
+    resolution: {integrity: sha512-KcI9hpEeBQtf5Yy93KwQ+APrPPO3a8/HHXSVeRmuqCLhAo1SSjVBpZX5HGzDFPczAwqCbu9/fWYjxVVLY658dQ==}
     engines: {node: '>=20'}
 
   '@tenphi/renderer@0.33.2':
@@ -5368,6 +5372,8 @@ snapshots:
       - supports-color
 
   '@tenphi/glaze@3.1.1': {}
+
+  '@tenphi/glaze@3.2.0': {}
 
   '@tenphi/renderer@0.33.2(@astrojs/markdown-satteri@0.4.2)(@babel/core@7.29.7)(@babel/helper-plugin-utils@7.29.7)(@babel/types@7.29.8)(@types/node@22.20.4)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@22.20.4)(jiti@2.7.0)(yaml@2.9.1))(esbuild@0.28.2)(eslint@10.11.0(jiti@2.7.0))(jiti@2.7.0)(typescript@6.0.3)(yaml@2.9.1)':
     dependencies:
