@@ -633,9 +633,7 @@ reused. The approved runtime dependencies are:
 `@uniaria/core/virtual`, with `process.env.NODE_ENV` compiled out of its
 files only, and pinned to one exact version (3.19.6). Upgrade it by hand
 once a newer release passes the 14-day release-age policy and the
-virtualization scenarios. 3.19.6 itself was a one-time owner exception to
-that policy (2026-10-18): its `minimumReleaseAgeExclude` entry in
-`pnpm-workspace.yaml` goes once it is 14 days old, on 2026-10-30.
+virtualization scenarios.
 
 The documentation site's (owner, 2026-10-19): `@tenphi/cookbook`, `astro`
 and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root.
