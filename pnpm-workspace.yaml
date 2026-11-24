@@ -11,6 +11,29 @@ minimumReleaseAgeIgnoreMissingTime: false
 # Remove once 3.19.6 is 14 days old (2026-10-30).
 minimumReleaseAgeExclude:
   - '@tanstack/virtual-core@3.19.6'
+  # One-time owner exception (2026-11-24): the parser that Cookbook 0.34.1's
+  # Tasty lint plugin pulls in. Remove once 0.159.0 is 14 days old (2026-11-30).
+  - 'oxc-parser@0.159.0'
+  - '@oxc-project/types@0.159.0'
+  - '@oxc-parser/binding-android-arm-eabi@0.159.0'
+  - '@oxc-parser/binding-android-arm64@0.159.0'
+  - '@oxc-parser/binding-darwin-arm64@0.159.0'
+  - '@oxc-parser/binding-darwin-x64@0.159.0'
+  - '@oxc-parser/binding-freebsd-x64@0.159.0'
+  - '@oxc-parser/binding-linux-arm-gnueabihf@0.159.0'
+  - '@oxc-parser/binding-linux-arm-musleabihf@0.159.0'
+  - '@oxc-parser/binding-linux-arm64-gnu@0.159.0'
+  - '@oxc-parser/binding-linux-arm64-musl@0.159.0'
+  - '@oxc-parser/binding-linux-ppc64-gnu@0.159.0'
+  - '@oxc-parser/binding-linux-riscv64-gnu@0.159.0'
+  - '@oxc-parser/binding-linux-riscv64-musl@0.159.0'
+  - '@oxc-parser/binding-linux-s390x-gnu@0.159.0'
+  - '@oxc-parser/binding-linux-x64-gnu@0.159.0'
+  - '@oxc-parser/binding-linux-x64-musl@0.159.0'
+  - '@oxc-parser/binding-openharmony-arm64@0.159.0'
+  - '@oxc-parser/binding-win32-arm64-msvc@0.159.0'
+  - '@oxc-parser/binding-win32-ia32-msvc@0.159.0'
+  - '@oxc-parser/binding-win32-x64-msvc@0.159.0'
   # Owner-approved first-party namespaces are exempt from the release-age gate.
   - '@tenphi/*'
   - '@uniaria/*'

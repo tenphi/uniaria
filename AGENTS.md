@@ -643,7 +643,10 @@ and `vite` in `apps/docs`, and `@tenphi/eslint-plugin-tasty` at the root.
 as optional peers and development dependencies. `@uniaria/vue`'s (owner,
 2026-10-21): `vue`, a peer (`^3.5.0`) and a development dependency. The
 owner's own `@tenphi/*` packages are exempt from the 14-day release age
-(`minimumReleaseAgeExclude` in `pnpm-workspace.yaml`).
+(`minimumReleaseAgeExclude` in `pnpm-workspace.yaml`). `oxc-parser` 0.159.0,
+its `@oxc-parser/binding-*` packages and `@oxc-project/types`, which
+Cookbook 0.34.1's Tasty lint plugin pulls in, were a one-time owner exception
+(2026-11-24): their entries go once they are 14 days old, on 2026-11-30.
 
 Approved development dependencies for testing: `@guidepup/virtual-screen-reader`,
 `@guidepup/guidepup`, `@guidepup/playwright`, and `react-aria` in
